@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:8000; base-uri 'none'; form-action 'self'; frame-ancestors 'none'" />
+  <title>팀 운영실 · GROW-GATE Local EX</title>
+  <meta name="description" content="GROW-GATE Local EX 팀 협업용 데이터·기획·입상 가능성 대시보드" />
+  <link rel="stylesheet" href="styles.css" />
+  <script src="team.js" defer></script>
+</head>
+<body class="home-page team-page" data-dashboard="team">
+  <div class="app-shell">
+    <nav class="global-nav" aria-label="주요 화면">
+      <a class="brand-mark" href="index.html">GROW-GATE Local EX</a>
+      <div>
+        <a href="index.html">홈</a>
+        <a href="workspace.html">AI 진단</a>
+        <a href="data.html">데이터 파이프라인</a>
+        <a href="roadmap.html">실행 로드맵</a>
+        <a class="active" href="team.html">팀 운영실</a>
+        <a href="code-gate.html">코드 게이트</a>
+      </div>
+    </nav>
+
+    <header class="team-hero">
+      <section>
+        <p class="eyebrow">TEAM OPERATIONS ROOM</p>
+        <h1>데이터, 기획, 입상 가능성을 한 화면에서 봅니다</h1>
+        <p>
+          공공데이터 근거와 역할자별 평가를 묶어 팀의 현재 완성도를 판단하고,
+          다음 행동이 점수를 올리는지 낮추는지 빠르게 확인합니다.
+        </p>
+      </section>
+      <aside class="award-card" aria-label="입상 가능성 요약">
+        <span>입상 가능성 추정</span>
+        <strong>71%</strong>
+        <p>현재 프로토타입 근거 기준 · 신뢰도 중간</p>
+      </aside>
+    </header>
+
+    <section class="team-metrics" aria-label="팀 운영 핵심 지표">
+      <article>
+        <span>활용 데이터</span>
+        <strong>5</strong>
+        <p>무역, 공급망, 인증·리콜, 특허, 지원사업</p>
+      </article>
+      <article>
+        <span>기획 완성도</span>
+        <strong>84</strong>
+        <p>실행 로드맵과 데이터 계약은 강점, 실증 데이터는 보강 필요</p>
+      </article>
+      <article>
+        <span>평가 역할</span>
+        <strong>13</strong>
+        <p>심사위원부터 수출입 실무자까지 관점별 점수화</p>
+      </article>
+      <article>
+        <span>코드 게이트</span>
+        <strong>대기</strong>
+        <p><a href="code-gate.html">리뷰·체크·커밋 가이드 열기</a></p>
+      </article>
+    </section>
+
+    <main class="team-grid">
+      <section class="strategy-panel span-2">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">PUBLIC DATA COVERAGE</p>
+            <h2>수집·활용 중인 공공데이터</h2>
+          </div>
+          <span class="badge green">evidence linked</span>
+        </div>
+        <div id="teamDataSources" class="source-list"></div>
+        <div id="sourceDetail" class="source-detail" aria-live="polite"></div>
+      </section>
+
+      <section class="strategy-panel">
+        <div class="panel-heading">
+          <p class="eyebrow">DATA GAP</p>
+          <h2>더 필요한 데이터</h2>
+        </div>
+        <div id="missingDataList" class="gap-list"></div>
+      </section>
+
+      <section class="strategy-panel span-3">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">STAKEHOLDER SCORE</p>
+            <h2>역할자별 기획 완성도 평가</h2>
+          </div>
+          <span class="badge yellow">heuristic review</span>
+        </div>
+        <div id="stakeholderScores" class="role-score-grid"></div>
+      </section>
+
+      <section class="strategy-panel">
+        <div class="panel-heading">
+          <p class="eyebrow">AWARD PROBABILITY</p>
+          <h2>입상 가능성 근거</h2>
+        </div>
+        <p class="probability-note">
+          이 수치는 실제 심사 결과 예측이 아니라 현재 산출물의 설득력, 데이터 근거, 구현 완성도를 바탕으로 한 팀 내부 판단 지표입니다.
+        </p>
+        <div id="awardFactors" class="factor-list"></div>
+      </section>
+
+      <section class="strategy-panel span-2">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">ACTION SIMULATOR</p>
+            <h2>추가 행동이 점수에 주는 영향</h2>
+          </div>
+          <span class="badge">click action</span>
+        </div>
+        <div class="action-layout">
+          <div id="actionSimulator" class="action-simulator"></div>
+          <div id="selectedActionInsight" class="insight-box" aria-live="polite"></div>
+        </div>
+      </section>
+
+      <section class="strategy-panel span-3">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">CODE STATUS SUMMARY</p>
+            <h2>개발 협업 상태</h2>
+          </div>
+          <a class="text-link" href="code-gate.html">코드 게이트로 이동</a>
+        </div>
+        <div class="code-summary">
+          <article><strong>2</strong><span>리뷰 집중 영역</span><p>정적 대시보드 렌더링, Git 동작 표현 안전성</p></article>
+          <article><strong>6</strong><span>커밋 전 체크</span><p>반응형, CSP, 데이터 근거, 테스트, 화면 캡처, 문서</p></article>
+          <article><strong>3</strong><span>철회 후보 버전</span><p>설계 승인 전, 대시보드 추가 전, 최종 커밋 전</p></article>
+        </div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

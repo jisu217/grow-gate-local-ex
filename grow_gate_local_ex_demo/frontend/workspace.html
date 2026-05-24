@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:8000; base-uri 'none'; form-action 'self'; frame-ancestors 'none'" />
+  <title>AI 진단 워크스페이스 · GROW-GATE Local EX</title>
+  <meta name="description" content="지역 제조기업 수출규제·인증 실행 AI 에이전트 시연 화면" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="workspace-page">
+  <div class="app-shell">
+    <nav class="global-nav" aria-label="주요 화면">
+      <a class="brand-mark" href="index.html">GROW-GATE Local EX</a>
+      <div>
+        <a href="index.html">홈</a>
+        <a class="active" href="workspace.html">AI 진단</a>
+        <a href="data.html">데이터 파이프라인</a>
+        <a href="roadmap.html">실행 로드맵</a>
+        <a href="team.html">팀 운영실</a>
+        <a href="code-gate.html">코드 게이트</a>
+      </div>
+    </nav>
+    <div class="workspace-layout">
+      <aside class="workspace-sidebar" aria-label="AI 진단 업무 메뉴">
+        <div class="workspace-profile">
+          <span>현재 진단</span>
+          <strong>경남 배터리테크</strong>
+          <p>리튬이온 배터리팩 · Germany / EU</p>
+        </div>
+        <nav>
+          <a href="#workspace-overview"><span>00</span>진단 개요</a>
+          <a href="#workspace-input"><span>01</span>제품 입력</a>
+          <a href="#screen-s02"><span>02</span>데이터 호출</a>
+          <a href="#screen-s03"><span>03</span>ML 예측</a>
+          <a href="#workspace-market"><span>04</span>시장성</a>
+          <a href="#screen-s05"><span>05</span>규제·인증</a>
+          <a href="#screen-s06"><span>06</span>리콜 위험</a>
+          <a href="#screen-s07"><span>07</span>FTO·지원</a>
+          <a href="#screen-s08"><span>08</span>실행 보드</a>
+          <a href="#workspace-report"><span>09</span>리포트</a>
+          <a href="#workspace-evidence"><span>10</span>근거 데이터</a>
+        </nav>
+        <div class="sidebar-action">
+          <a href="roadmap.html">업무 보드로 이동</a>
+        </div>
+      </aside>
+
+      <div class="workspace-content">
+    <header id="workspace-overview" class="hero">
+      <section class="hero-title">
+        <p class="eyebrow">산업부 공공데이터 활용 서비스 시연</p>
+        <h1>GROW-GATE <span>Local EX</span></h1>
+        <p class="subtitle">Regulation-to-Market Twin for Regional SMEs</p>
+        <p class="korean-subtitle">AI가 연결하는 통관·규제·인증·리콜·특허·지원사업 원스톱 수출 의사결정 플랫폼</p>
+      </section>
+
+      <section class="hero-metrics" aria-label="핵심 지표">
+        <article class="metric-card score-card">
+          <div>
+            <p class="metric-label">READINESS SCORE</p>
+            <strong id="readinessScore">82</strong><span>/100</span>
+            <p>Export Readiness</p>
+          </div>
+          <div id="scoreRing" class="score-ring" aria-hidden="true"></div>
+        </article>
+        <article class="metric-card">
+          <p class="metric-label">REGULATION PASSPORT</p>
+          <strong id="passportMarkets">EU · US · ASEAN</strong>
+          <p id="passportState">Up to date · 6 rules matched</p>
+        </article>
+        <article class="metric-card">
+          <p class="metric-label">SUPPORT PROGRAM</p>
+          <strong id="programCount">5</strong>
+          <p>Programs Matched</p>
+        </article>
+      </section>
+    </header>
+
+    <main id="workspace-input" class="dashboard-grid">
+      <aside class="panel form-panel">
+        <div class="panel-heading">
+          <p class="eyebrow">INPUT</p>
+          <h2>기업·제품 입력</h2>
+        </div>
+        <form id="analysisForm">
+          <label>기업명
+            <input id="companyName" name="company_name" value="경남 배터리테크" />
+          </label>
+          <div class="two-col">
+            <label>지역
+              <select id="region" name="region">
+                <option>경남</option><option>대구</option><option>울산</option><option>충북</option><option>전북</option><option>부산</option>
+              </select>
+            </label>
+            <label>업종
+              <select id="industry" name="industry">
+                <option>전기전자</option><option>배터리부품</option><option>생활용품</option><option>산업재</option><option>IoT기기</option><option>소재부품</option>
+              </select>
+            </label>
+          </div>
+          <label>제품명
+            <input id="productName" name="product_name" value="리튬이온 배터리팩" />
+          </label>
+          <div class="two-col">
+            <label>HS Code
+              <input id="hsCode" name="hs_code" value="850760" maxlength="10" />
+            </label>
+            <label>대상국
+              <select id="targetMarket" name="target_market">
+                <option>Germany / EU</option><option>United States</option><option>Vietnam</option><option>Thailand</option><option>Singapore</option><option>Indonesia</option><option>China</option>
+              </select>
+            </label>
+          </div>
+          <fieldset>
+            <legend>제품 특성</legend>
+            <label class="check"><input type="checkbox" value="battery" checked /> 배터리 탑재</label>
+            <label class="check"><input type="checkbox" value="electronics" checked /> 전기전자</label>
+            <label class="check"><input type="checkbox" value="industrial" checked /> 산업재</label>
+            <label class="check"><input type="checkbox" value="digital" /> 디지털 기능</label>
+            <label class="check"><input type="checkbox" value="iot" /> IoT/무선</label>
+            <label class="check"><input type="checkbox" value="consumer" /> 소비재/B2C</label>
+            <label class="check"><input type="checkbox" value="carbon_material" /> 탄소·소재 규제</label>
+          </fieldset>
+          <fieldset>
+            <legend>준비 자료</legend>
+            <label class="check"><input id="hasBom" type="checkbox" checked /> BOM/소재정보 보유</label>
+            <label class="check"><input id="hasTestReport" type="checkbox" checked /> 시험성적서 보유</label>
+            <label class="check"><input id="hasLabelDraft" type="checkbox" checked /> 라벨·매뉴얼 초안 보유</label>
+          </fieldset>
+          <div class="button-row">
+            <button type="submit" class="primary">AI Agent 분석 실행</button>
+            <button type="button" id="fillSample" class="secondary">샘플값</button>
+          </div>
+          <label class="switch-row">
+            <input id="useBackend" type="checkbox" />
+            <span>FastAPI 백엔드 사용</span>
+            <small id="backendState">OFF · 로컬 JS 분석</small>
+          </label>
+        </form>
+      </aside>
+
+      <section class="map-panel panel">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">AI ANALYTICS ENGINE</p>
+            <h2>Regulation-to-Market Twin</h2>
+          </div>
+          <div class="live-badge"><span></span> DEMO LIVE</div>
+        </div>
+
+        <div class="map-stage" role="img" aria-label="한국에서 EU, 미국, 동남아로 연결되는 수출 분석 지도">
+          <svg viewBox="0 0 900 430" class="world-map" aria-hidden="true">
+            <defs>
+              <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+                <stop offset="45%" stop-color="#55ccff" stop-opacity="0.9"/>
+                <stop offset="100%" stop-color="#1a7cff" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <path class="continent" d="M80,165 C135,110 220,105 292,130 C360,152 402,130 456,165 C505,196 492,240 428,248 C346,260 300,228 236,244 C170,260 92,230 80,165Z" />
+            <path class="continent" d="M545,125 C625,88 742,105 808,162 C850,199 835,270 760,285 C680,302 640,260 585,275 C535,288 500,235 520,190 C528,172 528,142 545,125Z" />
+            <path class="continent" d="M585,305 C630,288 700,315 735,365 C685,398 615,392 575,360 C555,344 560,318 585,305Z" />
+            <path id="routeEU" class="route route-main" d="M650,205 C525,60 325,42 162,128" />
+            <path id="routeUS" class="route route-main" d="M650,205 C475,170 260,190 108,250" />
+            <path id="routeSEA" class="route route-sea" d="M650,205 C655,260 630,318 610,360" />
+            <path class="route route-sea" d="M650,205 C708,245 740,282 780,320" />
+            <path class="route route-sea" d="M650,205 C690,285 685,340 670,386" />
+            <circle class="node korea" cx="650" cy="205" r="18" />
+            <circle class="node" cx="162" cy="128" r="14" />
+            <circle class="node" cx="108" cy="250" r="14" />
+            <circle class="node small" cx="610" cy="360" r="10" />
+            <circle class="node small" cx="780" cy="320" r="10" />
+            <circle class="node small" cx="670" cy="386" r="10" />
+            <text x="642" y="177" class="map-label">KOREA</text>
+            <text x="135" y="162" class="map-label">GERMANY</text>
+            <text x="70" y="286" class="map-label">US</text>
+            <text x="590" y="348" class="map-label">VIETNAM</text>
+            <text x="760" y="310" class="map-label">THAILAND</text>
+            <text x="650" y="410" class="map-label">ASEAN</text>
+          </svg>
+          <div class="route-chip chip-eu">AIR FREIGHT<br><b>2-3 DAYS</b></div>
+          <div class="route-chip chip-us">OCEAN FREIGHT<br><b>15-22 DAYS</b></div>
+          <div class="route-chip chip-sea">SEA FREIGHT<br><b>5-12 DAYS</b></div>
+        </div>
+
+        <div class="data-flow" aria-label="데이터 처리 흐름">
+          <div class="flow-item active">AI Agent</div>
+          <div class="flow-item">무역 데이터</div>
+          <div class="flow-item">규제·관세</div>
+          <div class="flow-item">인증·표준</div>
+          <div class="flow-item">리콜 정보</div>
+          <div class="flow-item">특허·FTO</div>
+          <div class="flow-item">지원사업</div>
+          <div class="flow-item success">수출 가능성 예측</div>
+        </div>
+      </section>
+
+      <aside class="panel insight-panel">
+        <div class="panel-heading">
+          <p class="eyebrow">RESULT</p>
+          <h2>실행 인사이트</h2>
+        </div>
+        <div id="insightCards" class="insight-cards"></div>
+        <div class="roadmap-mini">
+          <p>30 / 60 / 90 DAY ROADMAP</p>
+          <div class="timeline-dots"><span></span><span></span><span></span></div>
+          <div class="timeline-labels"><b>Certification</b><b>Market Test</b><b>Scale & Export</b></div>
+        </div>
+      </aside>
+    </main>
+
+    <section class="screen-workspace">
+      <div class="screen-topbar">
+        <div>
+          <p class="eyebrow">SCREEN FLOW</p>
+          <h2>기획서 기반 실행 화면</h2>
+        </div>
+        <nav class="screen-tabs" aria-label="화면 이동">
+          <a href="#screen-s02">S02 데이터</a>
+          <a href="#screen-s03">S03 ML 진단</a>
+          <a href="#screen-s05">S05 인증</a>
+          <a href="#screen-s06">S06 리콜</a>
+          <a href="#screen-s07">S07 FTO</a>
+          <a href="#screen-s08">S08 실행</a>
+        </nav>
+      </div>
+
+      <section id="screen-s02" class="screen-panel screen-split">
+        <div>
+          <p class="eyebrow">S02 DATA CONNECTORS</p>
+          <h2>공공데이터 호출 오케스트레이션</h2>
+          <p class="screen-copy">무역, 국가, 인증·리콜, 특허, 지원사업 데이터를 같은 실행 단위로 정규화하고 근거 ID를 연결합니다.</p>
+        </div>
+        <div id="connectorRail" class="connector-rail"></div>
+      </section>
+
+      <section id="screen-s03" class="screen-panel">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">S03 XGBOOST PREDICTION LAB</p>
+            <h2>예측·추정 모델 진단</h2>
+          </div>
+          <span class="model-chip">XGBoost · deterministic demo training</span>
+        </div>
+        <div id="mlPredictionGrid" class="ml-grid"></div>
+        <div id="importanceChart" class="importance-chart"></div>
+      </section>
+
+      <section id="screen-s05" class="screen-panel">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">S05 REGULATION PASSPORT</p>
+            <h2>규제·인증 우선순위 매트릭스</h2>
+          </div>
+        </div>
+        <div id="regulationMatrix" class="matrix-grid"></div>
+      </section>
+
+      <section id="screen-s06" class="screen-panel screen-split">
+        <div>
+          <p class="eyebrow">S06 RECALL COPILOT</p>
+          <h2>위해원인 클러스터와 시험 전 체크</h2>
+          <p class="screen-copy">유사 리콜을 설계 보완, 시험 항목, FMEA 초안으로 전환합니다.</p>
+        </div>
+        <div id="recallRiskViz" class="risk-viz"></div>
+      </section>
+
+      <section id="screen-s07" class="screen-panel">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">S07 FTO & SUPPORT</p>
+            <h2>특허 위험지도와 지원사업 적합도</h2>
+          </div>
+        </div>
+        <div id="ftoSupportViz" class="dual-viz"></div>
+      </section>
+
+      <section id="screen-s08" class="screen-panel">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">S08 EXECUTION ROADMAP</p>
+            <h2>30·60·90일 실행 보드</h2>
+          </div>
+        </div>
+        <div id="executionBoard" class="execution-board"></div>
+      </section>
+    </section>
+
+    <section id="workspace-market" class="result-layout">
+      <article class="panel wide-panel">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">MARKET</p>
+            <h2>수출기회 대시보드</h2>
+          </div>
+          <button id="downloadJson" class="secondary small">JSON 다운로드</button>
+        </div>
+        <div id="marketCards" class="market-cards"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <p class="eyebrow">SCORE</p>
+          <h2>준비도 세부 점수</h2>
+        </div>
+        <div id="scoreBreakdown" class="score-breakdown"></div>
+      </article>
+    </section>
+
+    <section id="workspace-report" class="result-layout bottom">
+      <article class="panel wide-panel">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">ROADMAP</p>
+            <h2>30·60·90일 실행 로드맵</h2>
+          </div>
+          <button id="printReport" class="primary small">보고서 인쇄</button>
+        </div>
+        <div id="roadmap" class="roadmap"></div>
+      </article>
+
+      <article class="panel report-summary-panel">
+        <div class="panel-heading">
+          <p class="eyebrow">AI REPORT</p>
+          <h2>에이전트 요약</h2>
+        </div>
+        <p id="aiSummary" class="ai-summary"></p>
+        <div id="reportHighlights" class="report-highlights"></div>
+        <div id="guardrails" class="guardrails"></div>
+      </article>
+    </section>
+
+    <section id="workspace-detail-lists" class="result-layout bottom">
+      <article class="panel">
+        <div class="panel-heading"><p class="eyebrow">REGULATION</p><h2>규제·인증 패스포트</h2></div>
+        <div id="regulationList" class="stack-list"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-heading"><p class="eyebrow">RECALL</p><h2>리콜 위험 Copilot</h2></div>
+        <div id="recallList" class="stack-list"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-heading"><p class="eyebrow">FTO & SUPPORT</p><h2>특허·지원사업</h2></div>
+        <div id="patentSupportList" class="stack-list"></div>
+      </article>
+    </section>
+
+    <section id="workspace-evidence" class="result-layout bottom">
+      <article class="panel wide-panel">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">PUBLIC DATA PIPELINE</p>
+            <h2>화면별 공공데이터 출처</h2>
+          </div>
+          <button id="collectPublicData" class="secondary small">파이프라인 실행</button>
+        </div>
+        <div id="dataSourceMap" class="source-grid"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-heading">
+          <p class="eyebrow">COLLECTION STATUS</p>
+          <h2>수집·정규화 상태</h2>
+        </div>
+        <div id="pipelineStatus" class="stack-list"></div>
+      </article>
+    </section>
+
+      </div>
+    </div>
+
+    <footer>
+      <strong>GROW-GATE Local EX</strong> · 이 화면은 공모전 발표 시연용 프로토타입입니다. 데이터는 로컬 샘플이며, 실제 서비스에서는 공공데이터 API와 인증·통상 전문가 검증 절차를 연결합니다.
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>

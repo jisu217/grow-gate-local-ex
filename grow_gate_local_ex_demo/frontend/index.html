@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:8000; base-uri 'none'; form-action 'self'; frame-ancestors 'none'" />
+  <title>GROW-GATE Local EX</title>
+  <meta name="description" content="지역 제조기업 수출규제·인증 실행 AI 에이전트 홈" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body class="home-page">
+  <div class="app-shell">
+    <nav class="global-nav" aria-label="주요 화면">
+      <a class="brand-mark" href="index.html">GROW-GATE Local EX</a>
+      <div>
+        <a class="active" href="index.html">홈</a>
+        <a href="workspace.html">AI 진단</a>
+        <a href="data.html">데이터 파이프라인</a>
+        <a href="roadmap.html">실행 로드맵</a>
+        <a href="team.html">팀 운영실</a>
+        <a href="code-gate.html">코드 게이트</a>
+      </div>
+    </nav>
+
+    <main class="home-hero">
+      <section class="home-greeting">
+        <p class="eyebrow">EXPORT DECISION OS</p>
+        <h1>안녕하세요, 수출 담당자님.</h1>
+        <p class="home-lead">당신의 수출 의사결정을 도와드리는 원스톱 수출 실행 플랫폼입니다.</p>
+        <p class="home-copy">
+          GROW-GATE Local EX는 제품명과 HS Code만으로 시장성, 인증·규제, 리콜 위험, 특허/FTO,
+          지원사업, 30·60·90일 실행계획을 한 번에 정리합니다. 정보 조회가 아니라 오늘 처리할 업무를 정하는 데 초점을 둡니다.
+        </p>
+        <div class="home-actions">
+          <a class="primary home-button" href="workspace.html">새 수출 진단 시작</a>
+          <a class="secondary home-button" href="roadmap.html">오늘 할 일 보기</a>
+        </div>
+      </section>
+
+      <aside class="home-brief">
+        <div class="brief-score">
+          <span>최근 진단</span>
+          <strong>83</strong>
+          <small>/100 · HIGH</small>
+        </div>
+        <dl>
+          <dt>기업</dt><dd>경남 배터리테크</dd>
+          <dt>제품</dt><dd>리튬이온 배터리팩 · HS 850760</dd>
+          <dt>대상 시장</dt><dd>Germany / EU</dd>
+          <dt>우선 업무</dt><dd>UN38.3 운송시험, IEC 62133, EU 배터리 여권</dd>
+        </dl>
+      </aside>
+    </main>
+
+    <section class="home-grid" aria-label="업무 시작 카드">
+      <a class="home-card" href="workspace.html">
+        <span>01</span>
+        <h2>AI 통합 진단</h2>
+        <p>제품 정보를 입력하고 XGBoost 예측, 규제 매칭, 리콜/FTO 위험을 한 번에 분석합니다.</p>
+        <b>진단 시작</b>
+      </a>
+      <a class="home-card" href="data.html">
+        <span>02</span>
+        <h2>공공데이터 파이프라인</h2>
+        <p>관세청, KOTRA, Safety Korea, KIPRIS, 지원사업 공고의 수집 상태와 근거를 확인합니다.</p>
+        <b>데이터 보기</b>
+      </a>
+      <a class="home-card" href="roadmap.html">
+        <span>03</span>
+        <h2>30·60·90일 실행</h2>
+        <p>품질·인증·해외영업 담당자가 오늘 처리할 업무와 산출물을 일정별로 봅니다.</p>
+        <b>로드맵 열기</b>
+      </a>
+    </section>
+
+    <section class="today-panel">
+      <div>
+        <p class="eyebrow">TODAY</p>
+        <h2>오늘 먼저 확인할 업무</h2>
+      </div>
+      <div class="today-list">
+        <article><span>인증</span><p>UN38.3 시험성적서와 MSDS 최신본을 같은 폴더로 정리</p></article>
+        <article><span>지원</span><p>해외규격인증획득지원사업 신청 가능 여부 확인</p></article>
+        <article><span>리스크</span><p>배터리팩 낙하·충격 후 내부 단락 체크리스트 담당자 배정</p></article>
+      </div>
+    </section>
+  </div>
+</body>
+</html>
