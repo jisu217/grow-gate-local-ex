@@ -510,12 +510,17 @@ function renderGitResult(action, httpOk, payload) {
   const panel = qs("#gitBackendPanel");
   if (!panel) return;
   const ok = Boolean(httpOk && payload.ok !== false);
-  const steps = Array.isArray(payload.steps) ? payload.steps : [payload];
+  const steps = Array.isArray(payload.steps)
+    ? payload.steps
+    : [payload.status, payload.remote, payload].filter(Boolean);
   const statusText = ok ? "완료" : "확인 필요";
+  const summary = payload.is_repo
+    ? `브랜치 ${payload.branch || "unknown"} · ${payload.project_root || ""}`
+    : (payload.hint || "백엔드 Git 요청 결과입니다.");
   panel.className = `git-backend-panel ${ok ? "success" : "error"}`;
   panel.innerHTML = `
     <strong>${escapeHtml(statusText)} · ${escapeHtml(action)}</strong>
-    <p>${escapeHtml(payload.hint || "백엔드 Git 요청 결과입니다.")}</p>
+    <p>${escapeHtml(summary)}</p>
     <div class="git-step-list">
       ${steps.map(renderGitStep).join("")}
     </div>

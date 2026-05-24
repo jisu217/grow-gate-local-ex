@@ -24,7 +24,13 @@ def _cors_origins() -> list[str]:
     configured = os.getenv("GROW_GATE_CORS_ORIGINS")
     if configured:
         return [origin.strip() for origin in configured.split(",") if origin.strip()]
-    return ["http://127.0.0.1:8000", "http://localhost:8000", "null"]
+    return [
+        "http://127.0.0.1:8000",
+        "http://localhost:8000",
+        "http://127.0.0.1:8765",
+        "http://localhost:8765",
+        "null",
+    ]
 
 
 def _safe_output_path(path: Path) -> str:
