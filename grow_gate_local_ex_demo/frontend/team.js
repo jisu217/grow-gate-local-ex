@@ -160,6 +160,8 @@ const gateState = {
   rollbackOpen: false
 };
 
+let activeSourceId = null;
+
 function qs(selector) {
   return document.querySelector(selector);
 }
@@ -179,7 +181,7 @@ function renderTeamDashboard() {
   renderStakeholderScores();
   renderAwardFactors();
   renderActionSimulator();
-  selectDataSource(dataSources[0].id);
+  closeDataSourceDetail();
 }
 
 function renderDataSources() {
@@ -211,10 +213,25 @@ function renderDataSources() {
   });
 }
 
+function closeDataSourceDetail() {
+  activeSourceId = null;
+  qs(".source-workbench")?.classList.remove("detail-open");
+  qs("#teamDataSources")?.querySelectorAll("[data-source-id]").forEach((row) => {
+    row.classList.remove("selected");
+  });
+  const target = qs("#sourceDetail");
+  if (!target) return;
+  target.hidden = true;
+  target.innerHTML = "";
+}
+
 function selectDataSource(id) {
   const source = dataSources.find((item) => item.id === id) || dataSources[0];
   const target = qs("#sourceDetail");
   if (!target) return;
+  activeSourceId = source.id;
+  target.hidden = false;
+  qs(".source-workbench")?.classList.add("detail-open");
   qs("#teamDataSources")?.querySelectorAll("[data-source-id]").forEach((row) => {
     row.classList.toggle("selected", row.dataset.sourceId === source.id);
   });
@@ -224,12 +241,15 @@ function selectDataSource(id) {
         <p class="eyebrow">SOURCE DETAIL</p>
         <h2>${escapeHtml(source.name)}</h2>
       </div>
-      <span class="badge">${escapeHtml(source.table)}</span>
+      <div class="source-detail-actions">
+        <span class="badge source-table-badge">${escapeHtml(source.table)}</span>
+        <button class="source-detail-close" type="button">목록만 보기</button>
+      </div>
     </div>
     <div class="source-detail-summary">
-      <article><span>신뢰도</span><strong>${source.reliability}</strong><p>seed와 공식 출처 매핑 기준</p></article>
-      <article><span>정규화</span><strong>${escapeHtml(source.stats.targetTable)}</strong><p>Agent 입력 계약</p></article>
-      <article><span>연결 화면</span><strong>${escapeHtml(source.stats.screens)}</strong><p>근거 표시 위치</p></article>
+      <article><span>신뢰도</span><strong class="score-value">${source.reliability}</strong><p>seed와 공식 출처 매핑 기준</p></article>
+      <article><span>정규화</span><strong class="chip-value">${escapeHtml(source.stats.targetTable)}</strong><p>Agent 입력 계약</p></article>
+      <article><span>연결 화면</span><strong class="chip-value">${escapeHtml(source.stats.screens)}</strong><p>근거 표시 위치</p></article>
     </div>
     <div class="source-detail-grid">
       <article class="source-detail-card">
@@ -255,6 +275,11 @@ function selectDataSource(id) {
       </article>
     </div>
   `;
+  qs(".source-detail-close")?.addEventListener("click", () => {
+    const rowToFocus = qs(`[data-source-id="${activeSourceId}"]`);
+    closeDataSourceDetail();
+    rowToFocus?.focus();
+  });
 }
 
 function renderMissingData() {
