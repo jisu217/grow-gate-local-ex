@@ -226,20 +226,25 @@ function selectDataSource(id) {
       </div>
       <span class="badge">${escapeHtml(source.table)}</span>
     </div>
+    <div class="source-detail-summary">
+      <article><span>신뢰도</span><strong>${source.reliability}</strong><p>seed와 공식 출처 매핑 기준</p></article>
+      <article><span>정규화</span><strong>${escapeHtml(source.stats.targetTable)}</strong><p>Agent 입력 계약</p></article>
+      <article><span>연결 화면</span><strong>${escapeHtml(source.stats.screens)}</strong><p>근거 표시 위치</p></article>
+    </div>
     <div class="source-detail-grid">
-      <article>
+      <article class="source-detail-card">
         <h3>활용 내역 요약</h3>
         <ul>${source.usage.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
       </article>
-      <article>
+      <article class="source-detail-card">
         <h3>실제 코드 연결</h3>
         <ul>${source.codeRefs.map((item) => `<li><code>${escapeHtml(item)}</code></li>`).join("")}</ul>
       </article>
-      <article>
+      <article class="source-detail-card">
         <h3>데이터 형태</h3>
         <pre><code>${escapeHtml(source.dataShape.join("\n"))}</code></pre>
       </article>
-      <article>
+      <article class="source-detail-card">
         <h3>간단 통계</h3>
         <dl>
           <dt>레코드</dt><dd>${escapeHtml(source.stats.records)}</dd>
@@ -488,22 +493,25 @@ function buildGitUrl(action) {
 }
 
 function buildGitOptions(action, remoteUrl, message) {
+  const token = qs("#gitActionToken")?.value || "";
+  const headers = { "Accept": "application/json" };
+  if (token) headers["X-GrowGate-Git-Token"] = token;
   if (action === "status") return { method: "GET", headers: { "Accept": "application/json" } };
   if (action === "init") {
     return {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      headers: { ...headers, "Content-Type": "application/json" },
       body: JSON.stringify({ remote_url: remoteUrl, branch: "main" })
     };
   }
   if (action === "commit") {
     return {
       method: "POST",
-      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      headers: { ...headers, "Content-Type": "application/json" },
       body: JSON.stringify({ message })
     };
   }
-  return { method: "POST", headers: { "Accept": "application/json" } };
+  return { method: "POST", headers };
 }
 
 function renderGitResult(action, httpOk, payload) {
@@ -516,11 +524,15 @@ function renderGitResult(action, httpOk, payload) {
   const statusText = ok ? "완료" : "확인 필요";
   const summary = payload.is_repo
     ? `브랜치 ${payload.branch || "unknown"} · ${payload.project_root || ""}`
-    : (payload.hint || "백엔드 Git 요청 결과입니다.");
+    : (payload.hint || payload.detail || "백엔드 Git 요청 결과입니다.");
+  const gitOps = payload.git_ops
+    ? `<p class="git-ops-state">${payload.git_ops.enabled && payload.git_ops.token_configured ? "Git 실행 가능" : "Git 쓰기 잠김"} · ${escapeHtml(payload.git_ops.hint)}</p>`
+    : "";
   panel.className = `git-backend-panel ${ok ? "success" : "error"}`;
   panel.innerHTML = `
     <strong>${escapeHtml(statusText)} · ${escapeHtml(action)}</strong>
     <p>${escapeHtml(summary)}</p>
+    ${gitOps}
     <div class="git-step-list">
       ${steps.map(renderGitStep).join("")}
     </div>

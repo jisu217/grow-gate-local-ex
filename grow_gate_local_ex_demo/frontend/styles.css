@@ -1918,10 +1918,17 @@ textarea::placeholder {
   gap: 12px;
 }
 
+.source-workbench {
+  display: grid;
+  grid-template-columns: minmax(360px, .95fr) minmax(420px, 1.05fr);
+  gap: 14px;
+  align-items: start;
+}
+
 .source-row {
   display: grid;
-  grid-template-columns: minmax(0, 1.5fr) minmax(190px, .7fr) 82px;
-  gap: 14px;
+  grid-template-columns: minmax(0, 1fr) 72px;
+  gap: 12px;
   align-items: center;
   padding: 16px;
   border: 1px solid rgba(15, 23, 42, .08);
@@ -1976,6 +1983,11 @@ textarea::placeholder {
   font-size: 12px;
 }
 
+.source-row > dl {
+  grid-column: 1 / -1;
+  grid-template-columns: 46px 1fr;
+}
+
 .source-row dt,
 .insight-box dt {
   color: #64748b;
@@ -2013,16 +2025,53 @@ textarea::placeholder {
 }
 
 .source-detail {
-  margin-top: 14px;
   padding: 18px;
   border: 1px solid rgba(10, 132, 255, .16);
   border-radius: 8px;
   background: rgba(239, 246, 255, .78);
+  position: sticky;
+  top: 92px;
+}
+
+.source-detail-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+.source-detail-summary article {
+  padding: 12px;
+  border: 1px solid rgba(15, 23, 42, .08);
+  border-radius: 8px;
+  background: rgba(255, 255, 255, .72);
+}
+
+.source-detail-summary span {
+  color: #64748b;
+  font-size: 11px;
+  font-weight: 950;
+}
+
+.source-detail-summary strong {
+  display: block;
+  margin: 5px 0;
+  color: #0a84ff;
+  font-size: 22px;
+  line-height: 1.05;
+  overflow-wrap: anywhere;
+}
+
+.source-detail-summary p {
+  margin: 0;
+  color: #475569;
+  font-size: 11px;
+  line-height: 1.4;
 }
 
 .source-detail-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 12px;
 }
 
@@ -2397,7 +2446,7 @@ textarea::placeholder {
 
 .git-bridge {
   display: grid;
-  grid-template-columns: minmax(280px, 1fr) minmax(260px, .85fr) auto;
+  grid-template-columns: minmax(260px, 1fr) minmax(240px, .85fr) minmax(190px, .6fr) auto;
   gap: 12px;
   align-items: end;
   margin-top: 16px;
@@ -2454,6 +2503,10 @@ textarea::placeholder {
   color: #475569;
   font-size: 13px;
   line-height: 1.55;
+}
+
+.git-ops-state {
+  font-weight: 800;
 }
 
 .git-step-list {
@@ -2537,6 +2590,8 @@ textarea::placeholder {
   .pipeline-strip { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .team-hero,
   .action-layout { grid-template-columns: 1fr; }
+  .source-workbench { grid-template-columns: 1fr; }
+  .source-detail { position: static; }
   .team-metrics,
   .role-score-grid,
   .gate-status,
@@ -2578,7 +2633,8 @@ textarea::placeholder {
   .code-summary,
   .gate-status,
   .rollback-grid,
-  .source-detail-grid { grid-template-columns: 1fr; }
+  .source-detail-grid,
+  .source-detail-summary { grid-template-columns: 1fr; }
   .source-row { grid-template-columns: 1fr; }
   .mini-score { width: 62px; height: 62px; }
 }

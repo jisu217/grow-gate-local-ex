@@ -6,6 +6,7 @@ Run:
 from __future__ import annotations
 
 import os
+import secrets
 import subprocess
 from pathlib import Path
 from typing import Any, Dict
@@ -29,7 +30,6 @@ def _cors_origins() -> list[str]:
         "http://localhost:8000",
         "http://127.0.0.1:8765",
         "http://localhost:8765",
-        "null",
     ]
 
 
@@ -42,12 +42,40 @@ def _safe_output_path(path: Path) -> str:
 
 PROJECT_ROOT = ROOT.parent
 LOCAL_CLIENTS = {"127.0.0.1", "::1", "localhost"}
+GIT_TOKEN_HEADER = "x-growgate-git-token"
 
 
 def _require_local_request(request: Request) -> None:
     client_host = request.client.host if request.client else ""
     if client_host not in LOCAL_CLIENTS:
         raise HTTPException(status_code=403, detail="Git operations are only available from localhost.")
+
+
+def _git_ops_state() -> Dict[str, Any]:
+    enabled = os.getenv("GROW_GATE_ENABLE_GIT_OPS") == "1"
+    token_configured = bool(os.getenv("GROW_GATE_GIT_TOKEN"))
+    return {
+        "enabled": enabled,
+        "token_configured": token_configured,
+        "hint": (
+            "Git write operations enabled."
+            if enabled and token_configured
+            else "Set GROW_GATE_ENABLE_GIT_OPS=1 and GROW_GATE_GIT_TOKEN to enable commit/push from Code Gate."
+        ),
+    }
+
+
+def _require_git_write_access(request: Request) -> None:
+    _require_local_request(request)
+    state = _git_ops_state()
+    if not state["enabled"]:
+        raise HTTPException(status_code=403, detail=state["hint"])
+    expected_token = os.getenv("GROW_GATE_GIT_TOKEN")
+    if not expected_token:
+        raise HTTPException(status_code=403, detail="GROW_GATE_GIT_TOKEN is not configured.")
+    provided_token = request.headers.get(GIT_TOKEN_HEADER, "")
+    if not secrets.compare_digest(provided_token, expected_token):
+        raise HTTPException(status_code=403, detail="Invalid or missing Code Gate token.")
 
 
 def _run_git(args: list[str], timeout: int = 30) -> Dict[str, Any]:
@@ -109,7 +137,7 @@ app.add_middleware(
     allow_origins=_cors_origins(),
     allow_credentials=False,
     allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["Content-Type", "Accept"],
+    allow_headers=["Content-Type", "Accept", "X-GrowGate-Git-Token"],
 )
 
 agent = GrowGateAgent()
@@ -204,6 +232,7 @@ def git_status(request: Request) -> Dict[str, Any]:
             "ok": False,
             "is_repo": False,
             "project_root": str(PROJECT_ROOT),
+            "git_ops": _git_ops_state(),
             "hint": "This folder is not a Git repository. Initialize it before committing.",
         }
     status = _run_git(["status", "--short"])
@@ -214,6 +243,7 @@ def git_status(request: Request) -> Dict[str, Any]:
         "is_repo": True,
         "project_root": str(PROJECT_ROOT),
         "branch": branch["stdout"],
+        "git_ops": _git_ops_state(),
         "status": status,
         "remote": remote,
     }
@@ -226,7 +256,7 @@ def git_init(payload: GitInitRequest, request: Request) -> Dict[str, Any]:
     This does not store credentials. Push succeeds only when GitHub auth is
     already configured on the user's machine.
     """
-    _require_local_request(request)
+    _require_git_write_access(request)
     steps: list[Dict[str, Any]] = []
     if not _is_git_repo():
         steps.append(_run_git(["init"]))
@@ -249,7 +279,7 @@ def git_init(payload: GitInitRequest, request: Request) -> Dict[str, Any]:
 @app.post("/git/commit")
 def git_commit(payload: GitCommitRequest, request: Request) -> Dict[str, Any]:
     """Stage safe project paths and create a local commit."""
-    _require_local_request(request)
+    _require_git_write_access(request)
     if not _is_git_repo():
         raise HTTPException(status_code=409, detail="This folder is not a Git repository. Run /git/init first.")
     include_paths = _safe_project_paths(payload.include_paths)
@@ -274,7 +304,7 @@ def git_commit(payload: GitCommitRequest, request: Request) -> Dict[str, Any]:
 @app.post("/git/push")
 def git_push(request: Request, branch: str = Query(default="main", pattern=r"^[A-Za-z0-9._/-]+$")) -> Dict[str, Any]:
     """Push the current branch to GitHub using local credentials."""
-    _require_local_request(request)
+    _require_git_write_access(request)
     if not _is_git_repo():
         raise HTTPException(status_code=409, detail="This folder is not a Git repository. Run /git/init first.")
     result = _run_git(["push", "-u", "origin", branch], timeout=60)
