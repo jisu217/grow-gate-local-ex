@@ -1,0 +1,2048 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>GROW-GATE Local EX Demo</title>
+  <meta name="description" content="지역 제조기업 수출규제·인증 실행 AI 에이전트 시연 화면" />
+  <style>
+:root {
+  --bg: #06111f;
+  --bg-2: #081a2d;
+  --panel: rgba(10, 27, 48, 0.78);
+  --panel-strong: rgba(12, 35, 62, 0.95);
+  --line: rgba(126, 198, 255, 0.25);
+  --line-strong: rgba(83, 174, 255, 0.45);
+  --text: #eaf6ff;
+  --muted: #95abc0;
+  --blue: #25a8ff;
+  --cyan: #49e6ff;
+  --green: #44f08a;
+  --yellow: #ffbe3b;
+  --red: #ff5d5d;
+  --shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+}
+
+* { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: Inter, Pretendard, "Noto Sans KR", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color: var(--text);
+  background:
+    radial-gradient(circle at 72% 18%, rgba(39, 135, 255, 0.26), transparent 32%),
+    radial-gradient(circle at 24% 8%, rgba(17, 231, 255, 0.16), transparent 28%),
+    linear-gradient(160deg, #030812 0%, #06111f 45%, #09182b 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px);
+  background-size: 48px 48px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,.8), transparent 85%);
+}
+
+button, input, select, textarea { font: inherit; }
+button { cursor: pointer; }
+
+.app-shell {
+  position: relative;
+  width: min(1720px, 100%);
+  margin: 0 auto;
+  padding: 32px;
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: minmax(420px, 1fr) auto;
+  gap: 24px;
+  align-items: start;
+  margin-bottom: 24px;
+}
+
+.eyebrow {
+  margin: 0 0 8px;
+  color: var(--cyan);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+h1, h2, h3, p { margin-top: 0; }
+
+h1 {
+  margin-bottom: 4px;
+  font-size: clamp(44px, 5vw, 82px);
+  line-height: .95;
+  letter-spacing: -0.06em;
+  text-shadow: 0 0 36px rgba(37, 168, 255, .25);
+}
+
+h1 span {
+  color: var(--blue);
+  letter-spacing: -0.04em;
+}
+
+.subtitle {
+  margin: 10px 0 0;
+  font-size: clamp(18px, 2vw, 30px);
+  color: #e6f3ff;
+}
+
+.korean-subtitle {
+  margin: 12px 0 0;
+  color: #b8d2ea;
+  font-size: 16px;
+}
+
+.hero-metrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(190px, 1fr));
+  gap: 14px;
+}
+
+.metric-card, .panel {
+  border: 1px solid var(--line);
+  background: linear-gradient(145deg, rgba(12, 35, 62, 0.92), rgba(5, 16, 30, 0.76));
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  backdrop-filter: blur(18px);
+}
+
+.metric-card {
+  min-height: 120px;
+  padding: 20px;
+}
+
+.metric-label {
+  margin-bottom: 8px;
+  color: #d7eaff;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: .04em;
+}
+
+.metric-card strong {
+  display: inline-block;
+  color: var(--green);
+  font-size: 38px;
+  line-height: 1;
+}
+
+.metric-card span { color: var(--muted); }
+.metric-card p:last-child { margin-bottom: 0; color: var(--muted); font-size: 13px; }
+
+.score-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+}
+
+.score-ring {
+  --score: 82;
+  width: 64px;
+  height: 64px;
+  flex: 0 0 auto;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at center, #06111f 55%, transparent 56%),
+    conic-gradient(var(--green) calc(var(--score) * 1%), rgba(107, 166, 220, .24) 0);
+  box-shadow: 0 0 28px rgba(68, 240, 138, .28);
+}
+
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: 330px minmax(620px, 1fr) 330px;
+  gap: 22px;
+  align-items: stretch;
+}
+
+.panel { padding: 22px; }
+
+.panel-heading { margin-bottom: 18px; }
+.panel-heading h2 { margin: 0; font-size: 20px; letter-spacing: -0.02em; }
+.panel-heading.horizontal { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
+
+.form-panel label, fieldset legend {
+  display: block;
+  margin: 0 0 8px;
+  color: #dceeff;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.form-panel input[type="text"], .form-panel input:not([type]), .form-panel select, .form-panel textarea {
+  width: 100%;
+  margin: 7px 0 14px;
+  padding: 11px 12px;
+  color: var(--text);
+  border: 1px solid rgba(126, 198, 255, 0.28);
+  border-radius: 10px;
+  background: rgba(4, 12, 24, 0.72);
+  outline: none;
+}
+
+.form-panel input:focus, .form-panel select:focus {
+  border-color: var(--cyan);
+  box-shadow: 0 0 0 3px rgba(73, 230, 255, 0.12);
+}
+
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+fieldset {
+  margin: 4px 0 16px;
+  padding: 14px;
+  border: 1px solid rgba(126, 198, 255, 0.22);
+  border-radius: 12px;
+}
+
+.check {
+  display: flex !important;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0 !important;
+  color: #bfd8ef !important;
+  font-weight: 600 !important;
+}
+
+.check input { accent-color: var(--blue); }
+
+.button-row { display: grid; grid-template-columns: 1fr auto; gap: 10px; }
+button {
+  border: 0;
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-weight: 800;
+  transition: transform .16s ease, box-shadow .16s ease, opacity .16s ease;
+}
+button:hover { transform: translateY(-1px); }
+button:active { transform: translateY(0); opacity: .85; }
+
+.primary {
+  color: #03111d;
+  background: linear-gradient(135deg, var(--cyan), var(--green));
+  box-shadow: 0 10px 24px rgba(73, 230, 255, .22);
+}
+
+.secondary {
+  color: var(--text);
+  border: 1px solid rgba(126, 198, 255, .28);
+  background: rgba(11, 32, 56, .92);
+}
+
+.small { padding: 9px 12px; font-size: 12px; }
+
+.switch-row {
+  display: grid !important;
+  grid-template-columns: auto 1fr;
+  gap: 7px 10px;
+  align-items: center;
+  margin-top: 14px !important;
+}
+.switch-row small { grid-column: 2; color: var(--muted); font-weight: 600; }
+
+.map-panel { min-height: 650px; overflow: hidden; }
+.live-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  border: 1px solid rgba(68, 240, 138, .35);
+  border-radius: 999px;
+  color: var(--green);
+  font-size: 12px;
+  font-weight: 900;
+  background: rgba(68, 240, 138, .08);
+}
+.live-badge span {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--green);
+  box-shadow: 0 0 12px var(--green);
+}
+
+.map-stage {
+  position: relative;
+  min-height: 438px;
+  border: 1px solid rgba(126, 198, 255, .16);
+  border-radius: 18px;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 70% 48%, rgba(47, 166, 255, .24), transparent 20%),
+    radial-gradient(circle at 24% 35%, rgba(20, 111, 255, .16), transparent 18%),
+    linear-gradient(180deg, rgba(5, 18, 34, .78), rgba(3, 10, 20, .7));
+}
+.map-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle, rgba(255,255,255,.13) 1px, transparent 1px);
+  background-size: 26px 26px;
+  opacity: .16;
+}
+.world-map {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.continent { fill: rgba(116, 159, 194, .12); stroke: rgba(126, 198, 255, .17); stroke-width: 1.2; }
+.route {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: 4;
+  filter: drop-shadow(0 0 7px rgba(37,168,255,.9));
+  stroke-dasharray: 9 10;
+  animation: dash 2.2s linear infinite;
+}
+.route-main { stroke: #168cff; }
+.route-sea { stroke: #35f7ff; stroke-width: 3; opacity: .88; }
+@keyframes dash { to { stroke-dashoffset: -38; } }
+.node { fill: url(#nodeGlow); filter: drop-shadow(0 0 12px rgba(73,230,255,.9)); }
+.node.korea { filter: drop-shadow(0 0 20px rgba(73,230,255,1)); }
+.node.small { opacity: .9; }
+.map-label { fill: #dff5ff; font-weight: 800; font-size: 12px; paint-order: stroke; stroke: #06111f; stroke-width: 4px; }
+.route-chip {
+  position: absolute;
+  padding: 8px 10px;
+  color: #dceeff;
+  border: 1px solid rgba(126,198,255,.22);
+  border-radius: 999px;
+  background: rgba(6, 17, 31, .76);
+  font-size: 10px;
+  line-height: 1.35;
+}
+.route-chip b { color: #ffffff; }
+.chip-eu { left: 45%; top: 18%; }
+.chip-us { left: 25%; top: 56%; }
+.chip-sea { left: 56%; top: 70%; }
+
+.data-flow {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(82px, 1fr));
+  gap: 8px;
+  margin-top: 16px;
+}
+.flow-item {
+  position: relative;
+  min-height: 56px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 8px;
+  color: #bdd7ee;
+  border: 1px solid rgba(126,198,255,.2);
+  border-radius: 12px;
+  background: rgba(9, 28, 50, .7);
+  font-size: 12px;
+  font-weight: 800;
+}
+.flow-item.active { color: var(--cyan); border-color: rgba(73,230,255,.45); }
+.flow-item.success { color: var(--green); border-color: rgba(68,240,138,.4); }
+
+.insight-cards { display: grid; gap: 12px; }
+.insight-card {
+  padding: 14px;
+  border: 1px solid rgba(126,198,255,.22);
+  border-radius: 14px;
+  background: rgba(5, 18, 33, .6);
+}
+.insight-card .label { color: var(--muted); font-size: 11px; font-weight: 800; letter-spacing: .07em; }
+.insight-card .value { margin: 5px 0 4px; font-size: 18px; font-weight: 900; }
+.insight-card .sub { margin: 0; color: #b6d1e8; font-size: 12px; line-height: 1.45; }
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 8px;
+  border-radius: 999px;
+  background: rgba(37,168,255,.12);
+  color: var(--cyan);
+  border: 1px solid rgba(73,230,255,.24);
+  font-size: 11px;
+  font-weight: 900;
+}
+.badge.green { color: var(--green); background: rgba(68,240,138,.1); border-color: rgba(68,240,138,.25); }
+.badge.yellow { color: var(--yellow); background: rgba(255,190,59,.1); border-color: rgba(255,190,59,.24); }
+.badge.red { color: var(--red); background: rgba(255,93,93,.1); border-color: rgba(255,93,93,.25); }
+
+.roadmap-mini {
+  margin-top: 18px;
+  padding: 14px;
+  border: 1px solid rgba(126,198,255,.22);
+  border-radius: 14px;
+  background: rgba(4, 14, 26, .58);
+}
+.roadmap-mini p { margin-bottom: 12px; font-size: 12px; font-weight: 900; color: #b9d8f7; }
+.timeline-dots { display: flex; align-items: center; justify-content: space-between; position: relative; margin: 0 14px 9px; }
+.timeline-dots::before { content: ""; position: absolute; left: 6px; right: 6px; top: 50%; height: 3px; background: linear-gradient(90deg, var(--green), var(--blue)); transform: translateY(-50%); }
+.timeline-dots span { position: relative; width: 14px; height: 14px; border: 3px solid var(--green); border-radius: 50%; background: #06111f; }
+.timeline-dots span:last-child { border-color: var(--blue); }
+.timeline-labels { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; color: var(--muted); font-size: 10px; text-align: center; }
+
+.result-layout {
+  display: grid;
+  grid-template-columns: minmax(580px, 2fr) minmax(320px, 1fr);
+  gap: 22px;
+  margin-top: 22px;
+}
+.result-layout.bottom { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.wide-panel { min-width: 0; }
+.market-cards { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.market-card {
+  padding: 16px;
+  border: 1px solid rgba(126,198,255,.22);
+  border-radius: 16px;
+  background: rgba(4, 15, 28, .55);
+}
+.market-card h3 { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 12px; font-size: 17px; }
+.market-card dl { display: grid; grid-template-columns: 1fr auto; gap: 7px 12px; margin: 0; color: #c0d7eb; font-size: 13px; }
+.market-card dt { color: var(--muted); }
+.market-card dd { margin: 0; font-weight: 800; }
+
+.score-breakdown { display: grid; gap: 13px; }
+.score-row { display: grid; grid-template-columns: 112px 1fr 38px; align-items: center; gap: 10px; font-size: 13px; color: #cfe4f7; }
+.score-row .track { height: 9px; border-radius: 999px; background: rgba(126,198,255,.16); overflow: hidden; }
+.score-row .bar { height: 100%; width: var(--value); border-radius: inherit; background: linear-gradient(90deg, var(--blue), var(--green)); box-shadow: 0 0 14px rgba(73,230,255,.32); }
+.score-row b { text-align: right; }
+
+.roadmap { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.roadmap-card {
+  padding: 16px;
+  border: 1px solid rgba(126,198,255,.22);
+  border-radius: 16px;
+  background: rgba(4, 15, 28, .55);
+}
+.roadmap-card h3 { margin-bottom: 9px; color: var(--cyan); font-size: 18px; }
+.roadmap-card h4 { margin: 0 0 10px; font-size: 15px; }
+.roadmap-card ul { margin: 0; padding-left: 18px; color: #c5daee; font-size: 13px; line-height: 1.55; }
+.output { margin-top: 12px; padding-top: 10px; border-top: 1px dashed rgba(126,198,255,.22); color: var(--green); font-size: 12px; font-weight: 800; }
+
+.ai-summary {
+  color: #d5eaff;
+  line-height: 1.75;
+}
+.guardrails { display: grid; gap: 8px; }
+.guardrail {
+  padding: 10px;
+  color: #b4ccdf;
+  border: 1px solid rgba(255,190,59,.2);
+  border-radius: 10px;
+  background: rgba(255,190,59,.06);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.stack-list { display: grid; gap: 12px; }
+.stack-item {
+  padding: 14px;
+  border: 1px solid rgba(126,198,255,.2);
+  border-radius: 14px;
+  background: rgba(4, 15, 28, .52);
+}
+.stack-item h3 { display: flex; justify-content: space-between; gap: 8px; margin-bottom: 8px; font-size: 15px; }
+.stack-item p { margin-bottom: 8px; color: #bcd6ea; font-size: 13px; line-height: 1.5; }
+.stack-item ul { margin: 8px 0 0; padding-left: 18px; color: #c9dced; font-size: 12px; line-height: 1.55; }
+
+footer {
+  margin-top: 22px;
+  padding: 18px 20px;
+  color: #b7cce0;
+  border: 1px solid rgba(126,198,255,.18);
+  border-radius: 16px;
+  background: rgba(5, 17, 31, .62);
+  font-size: 13px;
+}
+
+.toast {
+  position: fixed;
+  right: 24px;
+  bottom: 24px;
+  z-index: 20;
+  padding: 13px 16px;
+  border: 1px solid rgba(73,230,255,.26);
+  border-radius: 12px;
+  color: #eaf6ff;
+  background: rgba(3, 12, 22, .92);
+  box-shadow: var(--shadow);
+  transform: translateY(18px);
+  opacity: 0;
+  transition: transform .18s ease, opacity .18s ease;
+}
+.toast.show { transform: translateY(0); opacity: 1; }
+
+@media (max-width: 1280px) {
+  .hero { grid-template-columns: 1fr; }
+  .hero-metrics { grid-template-columns: repeat(3, 1fr); }
+  .dashboard-grid { grid-template-columns: 1fr; }
+  .map-panel { min-height: auto; }
+  .result-layout, .result-layout.bottom { grid-template-columns: 1fr; }
+  .market-cards, .roadmap { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 780px) {
+  .app-shell { padding: 18px; }
+  .hero-metrics { grid-template-columns: 1fr; }
+  .two-col { grid-template-columns: 1fr; }
+  .data-flow { grid-template-columns: repeat(2, 1fr); }
+  .map-stage { min-height: 320px; }
+}
+
+@media print {
+  body { background: white; color: #111827; }
+  .form-panel, .data-flow, footer, #downloadJson, #printReport { display: none !important; }
+  .app-shell { padding: 0; width: 100%; }
+  .panel, .metric-card { box-shadow: none; background: white; color: #111827; border-color: #d1d5db; }
+}
+
+</style>
+</head>
+<body>
+  <div class="app-shell">
+    <header class="hero">
+      <section class="hero-title">
+        <p class="eyebrow">산업부 공공데이터 활용 서비스 시연</p>
+        <h1>GROW-GATE <span>Local EX</span></h1>
+        <p class="subtitle">Regulation-to-Market Twin for Regional SMEs</p>
+        <p class="korean-subtitle">AI가 연결하는 통관·규제·인증·리콜·특허·지원사업 원스톱 수출 의사결정 플랫폼</p>
+      </section>
+
+      <section class="hero-metrics" aria-label="핵심 지표">
+        <article class="metric-card score-card">
+          <div>
+            <p class="metric-label">READINESS SCORE</p>
+            <strong id="readinessScore">82</strong><span>/100</span>
+            <p>Export Readiness</p>
+          </div>
+          <div id="scoreRing" class="score-ring" aria-hidden="true"></div>
+        </article>
+        <article class="metric-card">
+          <p class="metric-label">REGULATION PASSPORT</p>
+          <strong id="passportMarkets">EU · US · ASEAN</strong>
+          <p id="passportState">Up to date · 6 rules matched</p>
+        </article>
+        <article class="metric-card">
+          <p class="metric-label">SUPPORT PROGRAM</p>
+          <strong id="programCount">5</strong>
+          <p>Programs Matched</p>
+        </article>
+      </section>
+    </header>
+
+    <main class="dashboard-grid">
+      <aside class="panel form-panel">
+        <div class="panel-heading">
+          <p class="eyebrow">INPUT</p>
+          <h2>기업·제품 입력</h2>
+        </div>
+        <form id="analysisForm">
+          <label>기업명
+            <input id="companyName" name="company_name" value="경남 배터리테크" />
+          </label>
+          <div class="two-col">
+            <label>지역
+              <select id="region" name="region">
+                <option>경남</option><option>대구</option><option>울산</option><option>충북</option><option>전북</option><option>부산</option>
+              </select>
+            </label>
+            <label>업종
+              <select id="industry" name="industry">
+                <option>전기전자</option><option>배터리부품</option><option>생활용품</option><option>산업재</option><option>IoT기기</option><option>소재부품</option>
+              </select>
+            </label>
+          </div>
+          <label>제품명
+            <input id="productName" name="product_name" value="리튬이온 배터리팩" />
+          </label>
+          <div class="two-col">
+            <label>HS Code
+              <input id="hsCode" name="hs_code" value="850760" maxlength="10" />
+            </label>
+            <label>대상국
+              <select id="targetMarket" name="target_market">
+                <option>Germany / EU</option><option>United States</option><option>Vietnam</option><option>Thailand</option><option>Singapore</option><option>Indonesia</option><option>China</option>
+              </select>
+            </label>
+          </div>
+          <fieldset>
+            <legend>제품 특성</legend>
+            <label class="check"><input type="checkbox" value="battery" checked /> 배터리 탑재</label>
+            <label class="check"><input type="checkbox" value="electronics" checked /> 전기전자</label>
+            <label class="check"><input type="checkbox" value="industrial" checked /> 산업재</label>
+            <label class="check"><input type="checkbox" value="digital" /> 디지털 기능</label>
+            <label class="check"><input type="checkbox" value="iot" /> IoT/무선</label>
+            <label class="check"><input type="checkbox" value="consumer" /> 소비재/B2C</label>
+            <label class="check"><input type="checkbox" value="carbon_material" /> 탄소·소재 규제</label>
+          </fieldset>
+          <fieldset>
+            <legend>준비 자료</legend>
+            <label class="check"><input id="hasBom" type="checkbox" checked /> BOM/소재정보 보유</label>
+            <label class="check"><input id="hasTestReport" type="checkbox" checked /> 시험성적서 보유</label>
+            <label class="check"><input id="hasLabelDraft" type="checkbox" checked /> 라벨·매뉴얼 초안 보유</label>
+          </fieldset>
+          <div class="button-row">
+            <button type="submit" class="primary">AI Agent 분석 실행</button>
+            <button type="button" id="fillSample" class="secondary">샘플값</button>
+          </div>
+          <label class="switch-row">
+            <input id="useBackend" type="checkbox" />
+            <span>FastAPI 백엔드 사용</span>
+            <small id="backendState">OFF · 로컬 JS 분석</small>
+          </label>
+        </form>
+      </aside>
+
+      <section class="map-panel panel">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">AI ANALYTICS ENGINE</p>
+            <h2>Regulation-to-Market Twin</h2>
+          </div>
+          <div class="live-badge"><span></span> DEMO LIVE</div>
+        </div>
+
+        <div class="map-stage" role="img" aria-label="한국에서 EU, 미국, 동남아로 연결되는 수출 분석 지도">
+          <svg viewBox="0 0 900 430" class="world-map" aria-hidden="true">
+            <defs>
+              <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+                <stop offset="45%" stop-color="#55ccff" stop-opacity="0.9"/>
+                <stop offset="100%" stop-color="#1a7cff" stop-opacity="0"/>
+              </radialGradient>
+            </defs>
+            <path class="continent" d="M80,165 C135,110 220,105 292,130 C360,152 402,130 456,165 C505,196 492,240 428,248 C346,260 300,228 236,244 C170,260 92,230 80,165Z" />
+            <path class="continent" d="M545,125 C625,88 742,105 808,162 C850,199 835,270 760,285 C680,302 640,260 585,275 C535,288 500,235 520,190 C528,172 528,142 545,125Z" />
+            <path class="continent" d="M585,305 C630,288 700,315 735,365 C685,398 615,392 575,360 C555,344 560,318 585,305Z" />
+            <path id="routeEU" class="route route-main" d="M650,205 C525,60 325,42 162,128" />
+            <path id="routeUS" class="route route-main" d="M650,205 C475,170 260,190 108,250" />
+            <path id="routeSEA" class="route route-sea" d="M650,205 C655,260 630,318 610,360" />
+            <path class="route route-sea" d="M650,205 C708,245 740,282 780,320" />
+            <path class="route route-sea" d="M650,205 C690,285 685,340 670,386" />
+            <circle class="node korea" cx="650" cy="205" r="18" />
+            <circle class="node" cx="162" cy="128" r="14" />
+            <circle class="node" cx="108" cy="250" r="14" />
+            <circle class="node small" cx="610" cy="360" r="10" />
+            <circle class="node small" cx="780" cy="320" r="10" />
+            <circle class="node small" cx="670" cy="386" r="10" />
+            <text x="642" y="177" class="map-label">KOREA</text>
+            <text x="135" y="162" class="map-label">GERMANY</text>
+            <text x="70" y="286" class="map-label">US</text>
+            <text x="590" y="348" class="map-label">VIETNAM</text>
+            <text x="760" y="310" class="map-label">THAILAND</text>
+            <text x="650" y="410" class="map-label">ASEAN</text>
+          </svg>
+          <div class="route-chip chip-eu">AIR FREIGHT<br><b>2-3 DAYS</b></div>
+          <div class="route-chip chip-us">OCEAN FREIGHT<br><b>15-22 DAYS</b></div>
+          <div class="route-chip chip-sea">SEA FREIGHT<br><b>5-12 DAYS</b></div>
+        </div>
+
+        <div class="data-flow" aria-label="데이터 처리 흐름">
+          <div class="flow-item active">AI Agent</div>
+          <div class="flow-item">무역 데이터</div>
+          <div class="flow-item">규제·관세</div>
+          <div class="flow-item">인증·표준</div>
+          <div class="flow-item">리콜 정보</div>
+          <div class="flow-item">특허·FTO</div>
+          <div class="flow-item">지원사업</div>
+          <div class="flow-item success">수출 가능성 예측</div>
+        </div>
+      </section>
+
+      <aside class="panel insight-panel">
+        <div class="panel-heading">
+          <p class="eyebrow">RESULT</p>
+          <h2>실행 인사이트</h2>
+        </div>
+        <div id="insightCards" class="insight-cards"></div>
+        <div class="roadmap-mini">
+          <p>30 / 60 / 90 DAY ROADMAP</p>
+          <div class="timeline-dots"><span></span><span></span><span></span></div>
+          <div class="timeline-labels"><b>Certification</b><b>Market Test</b><b>Scale & Export</b></div>
+        </div>
+      </aside>
+    </main>
+
+    <section class="result-layout">
+      <article class="panel wide-panel">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">MARKET</p>
+            <h2>수출기회 대시보드</h2>
+          </div>
+          <button id="downloadJson" class="secondary small">JSON 다운로드</button>
+        </div>
+        <div id="marketCards" class="market-cards"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <p class="eyebrow">SCORE</p>
+          <h2>준비도 세부 점수</h2>
+        </div>
+        <div id="scoreBreakdown" class="score-breakdown"></div>
+      </article>
+    </section>
+
+    <section class="result-layout bottom">
+      <article class="panel wide-panel">
+        <div class="panel-heading horizontal">
+          <div>
+            <p class="eyebrow">ROADMAP</p>
+            <h2>30·60·90일 실행 로드맵</h2>
+          </div>
+          <button id="printReport" class="primary small">보고서 인쇄</button>
+        </div>
+        <div id="roadmap" class="roadmap"></div>
+      </article>
+
+      <article class="panel">
+        <div class="panel-heading">
+          <p class="eyebrow">AI REPORT</p>
+          <h2>에이전트 요약</h2>
+        </div>
+        <p id="aiSummary" class="ai-summary"></p>
+        <div id="guardrails" class="guardrails"></div>
+      </article>
+    </section>
+
+    <section class="result-layout bottom">
+      <article class="panel">
+        <div class="panel-heading"><p class="eyebrow">REGULATION</p><h2>규제·인증 패스포트</h2></div>
+        <div id="regulationList" class="stack-list"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-heading"><p class="eyebrow">RECALL</p><h2>리콜 위험 Copilot</h2></div>
+        <div id="recallList" class="stack-list"></div>
+      </article>
+      <article class="panel">
+        <div class="panel-heading"><p class="eyebrow">FTO & SUPPORT</p><h2>특허·지원사업</h2></div>
+        <div id="patentSupportList" class="stack-list"></div>
+      </article>
+    </section>
+
+    <footer>
+      <strong>GROW-GATE Local EX</strong> · 이 화면은 공모전 발표 시연용 프로토타입입니다. 데이터는 로컬 샘플이며, 실제 서비스에서는 공공데이터 API와 인증·통상 전문가 검증 절차를 연결합니다.
+    </footer>
+  </div>
+
+  <script>
+const DATA = {
+  "metadata": {
+    "service": "GROW-GATE Local EX",
+    "version": "0.1.0-demo",
+    "description": "시연용 로컬 데이터셋입니다. 실제 서비스에서는 산업부·무역·해외시장·시험인증·제품안전·특허·지원사업 공공데이터 API로 대체합니다.",
+    "last_updated": "2026-05-15"
+  },
+  "markets": [
+    {
+      "code": "DE",
+      "name": "Germany / EU",
+      "region": "EU",
+      "main_port": "Hamburg",
+      "import_growth_yoy": 14.7,
+      "tariff_mfn": 0.0,
+      "logistics_days_air": "2-3",
+      "logistics_days_sea": "28-35",
+      "route_label": "EU Customs & SPC Check",
+      "demand_tags": [
+        "battery",
+        "electronics",
+        "industrial",
+        "safety"
+      ],
+      "regulation_pressure": 0.92,
+      "market_opportunity": 0.91
+    },
+    {
+      "code": "US",
+      "name": "United States",
+      "region": "North America",
+      "main_port": "Los Angeles",
+      "import_growth_yoy": 11.3,
+      "tariff_mfn": 2.7,
+      "logistics_days_air": "2-4",
+      "logistics_days_sea": "15-22",
+      "route_label": "US CBP Clearance",
+      "demand_tags": [
+        "battery",
+        "electronics",
+        "consumer",
+        "industrial"
+      ],
+      "regulation_pressure": 0.78,
+      "market_opportunity": 0.88
+    },
+    {
+      "code": "VN",
+      "name": "Vietnam",
+      "region": "ASEAN",
+      "main_port": "Ho Chi Minh",
+      "import_growth_yoy": 9.1,
+      "tariff_mfn": 3.2,
+      "logistics_days_air": "1-2",
+      "logistics_days_sea": "5-7",
+      "route_label": "ASEAN Customs & BTB Check",
+      "demand_tags": [
+        "electronics",
+        "industrial",
+        "component"
+      ],
+      "regulation_pressure": 0.55,
+      "market_opportunity": 0.79
+    },
+    {
+      "code": "TH",
+      "name": "Thailand",
+      "region": "ASEAN",
+      "main_port": "Laem Chabang",
+      "import_growth_yoy": 7.4,
+      "tariff_mfn": 3.5,
+      "logistics_days_air": "2-3",
+      "logistics_days_sea": "6-8",
+      "route_label": "ASEAN Customs",
+      "demand_tags": [
+        "battery",
+        "consumer",
+        "industrial"
+      ],
+      "regulation_pressure": 0.52,
+      "market_opportunity": 0.72
+    },
+    {
+      "code": "SG",
+      "name": "Singapore",
+      "region": "ASEAN",
+      "main_port": "Singapore",
+      "import_growth_yoy": 6.8,
+      "tariff_mfn": 0.0,
+      "logistics_days_air": "2-3",
+      "logistics_days_sea": "7-10",
+      "route_label": "ASEAN Hub",
+      "demand_tags": [
+        "electronics",
+        "digital",
+        "component"
+      ],
+      "regulation_pressure": 0.58,
+      "market_opportunity": 0.74
+    },
+    {
+      "code": "ID",
+      "name": "Indonesia",
+      "region": "ASEAN",
+      "main_port": "Tanjung Priok",
+      "import_growth_yoy": 8.6,
+      "tariff_mfn": 4.0,
+      "logistics_days_air": "2-4",
+      "logistics_days_sea": "8-12",
+      "route_label": "ASEAN Import Check",
+      "demand_tags": [
+        "consumer",
+        "industrial",
+        "battery"
+      ],
+      "regulation_pressure": 0.5,
+      "market_opportunity": 0.71
+    },
+    {
+      "code": "CN",
+      "name": "China",
+      "region": "East Asia",
+      "main_port": "Shanghai",
+      "import_growth_yoy": 5.2,
+      "tariff_mfn": 4.5,
+      "logistics_days_air": "1-2",
+      "logistics_days_sea": "3-5",
+      "route_label": "CCC / China Customs",
+      "demand_tags": [
+        "electronics",
+        "battery",
+        "industrial"
+      ],
+      "regulation_pressure": 0.72,
+      "market_opportunity": 0.68
+    }
+  ],
+  "regulations": [
+    {
+      "id": "CE-LVD-EMC",
+      "title": "CE / LVD / EMC 적합성 검토",
+      "scope": "EU 전기전자 제품",
+      "triggers": {
+        "regions": [
+          "EU"
+        ],
+        "features": [
+          "electronics",
+          "digital"
+        ],
+        "hs_prefixes": [
+          "84",
+          "85",
+          "90"
+        ]
+      },
+      "priority": "high",
+      "typical_evidence": [
+        "제품 사양서",
+        "회로도",
+        "시험성적서",
+        "DoC",
+        "사용설명서"
+      ],
+      "action": "대상 지침을 분류하고 시험기관 견적·일정을 먼저 확보합니다."
+    },
+    {
+      "id": "UN38.3",
+      "title": "UN38.3 리튬전지 운송시험",
+      "scope": "리튬이온 셀·팩·장착 제품 국제 운송",
+      "triggers": {
+        "regions": [
+          "EU",
+          "North America",
+          "ASEAN",
+          "East Asia"
+        ],
+        "features": [
+          "battery"
+        ],
+        "hs_prefixes": [
+          "8507"
+        ]
+      },
+      "priority": "critical",
+      "typical_evidence": [
+        "셀/팩 정보",
+        "UN38.3 시험성적서",
+        "MSDS",
+        "운송 라벨",
+        "포장 사양"
+      ],
+      "action": "항공·해상 운송 전 UN38.3, MSDS, 포장·라벨 자료를 확정합니다."
+    },
+    {
+      "id": "IEC62133",
+      "title": "IEC 62133 배터리 안전시험",
+      "scope": "휴대기기용 리튬이온 배터리 안전",
+      "triggers": {
+        "regions": [
+          "EU",
+          "North America",
+          "ASEAN"
+        ],
+        "features": [
+          "battery"
+        ],
+        "hs_prefixes": [
+          "8507"
+        ]
+      },
+      "priority": "high",
+      "typical_evidence": [
+        "셀 인증서",
+        "팩 회로 보호 설계",
+        "BMS 사양",
+        "충방전 시험 데이터"
+      ],
+      "action": "셀 인증서와 팩 보호회로 자료를 수집하고 갭 시험 항목을 산정합니다."
+    },
+    {
+      "id": "EU-BATTERY-PASSPORT",
+      "title": "EU 배터리 여권 준비도",
+      "scope": "배터리팩, ESS, 전기차·산업용 배터리 등",
+      "triggers": {
+        "regions": [
+          "EU"
+        ],
+        "features": [
+          "battery"
+        ],
+        "hs_prefixes": [
+          "8507"
+        ]
+      },
+      "priority": "high",
+      "typical_evidence": [
+        "배터리 모델·용량",
+        "셀 공급망",
+        "재활용 원료",
+        "탄소발자국",
+        "QR 식별체계"
+      ],
+      "action": "여권 데이터 항목을 공급망 단위로 나누고 누락 데이터를 표준 필드로 관리합니다."
+    },
+    {
+      "id": "GPSR",
+      "title": "EU 일반제품안전규정(GPSR) 체크",
+      "scope": "EU 소비재·온라인 판매 제품",
+      "triggers": {
+        "regions": [
+          "EU"
+        ],
+        "features": [
+          "consumer",
+          "ecommerce"
+        ],
+        "hs_prefixes": [
+          "84",
+          "85",
+          "95"
+        ]
+      },
+      "priority": "medium",
+      "typical_evidence": [
+        "EU 책임 경제운영자",
+        "위험성 평가",
+        "사용자 경고문",
+        "추적성 정보",
+        "라벨"
+      ],
+      "action": "책임자·추적성·위험성 평가·라벨 표시 항목을 상품페이지와 함께 점검합니다."
+    },
+    {
+      "id": "CBAM",
+      "title": "CBAM 탄소국경조정 대상 여부",
+      "scope": "철강·알루미늄·시멘트·비료·수소·전력 등 일부 품목",
+      "triggers": {
+        "regions": [
+          "EU"
+        ],
+        "features": [
+          "carbon_material"
+        ],
+        "hs_prefixes": [
+          "72",
+          "73",
+          "76",
+          "25",
+          "28",
+          "31"
+        ]
+      },
+      "priority": "medium",
+      "typical_evidence": [
+        "HS Code",
+        "원산지",
+        "내재배출량",
+        "공정정보",
+        "공급사 데이터"
+      ],
+      "action": "CBAM 해당 HS 여부를 먼저 검토하고 공급사 배출량 자료를 수집합니다."
+    },
+    {
+      "id": "CRA",
+      "title": "EU 사이버보안 규제(CRA) 준비도",
+      "scope": "디지털 요소가 있는 하드웨어·소프트웨어 제품",
+      "triggers": {
+        "regions": [
+          "EU"
+        ],
+        "features": [
+          "digital",
+          "iot",
+          "software"
+        ],
+        "hs_prefixes": [
+          "84",
+          "85"
+        ]
+      },
+      "priority": "medium",
+      "typical_evidence": [
+        "SBOM",
+        "취약점 대응 정책",
+        "보안 업데이트 기간",
+        "사고 보고 프로세스"
+      ],
+      "action": "SBOM, 취약점 모니터링, 보안 업데이트 정책을 인증 준비 문서에 포함합니다."
+    },
+    {
+      "id": "UL-FCC",
+      "title": "미국 UL / FCC 후보 검토",
+      "scope": "미국 전기전자·무선 제품",
+      "triggers": {
+        "regions": [
+          "North America"
+        ],
+        "features": [
+          "electronics",
+          "digital",
+          "iot"
+        ],
+        "hs_prefixes": [
+          "84",
+          "85",
+          "90"
+        ]
+      },
+      "priority": "high",
+      "typical_evidence": [
+        "전기안전 시험성적서",
+        "무선 모듈 정보",
+        "사용설명서",
+        "제품 라벨"
+      ],
+      "action": "UL 안전성 여부와 FCC 무선·전자파 요건을 제품 기능별로 분리해 검토합니다."
+    },
+    {
+      "id": "ASEAN-SAFETY",
+      "title": "ASEAN 전기안전·통관 적합성 체크",
+      "scope": "동남아 전기전자·소비재 수출",
+      "triggers": {
+        "regions": [
+          "ASEAN"
+        ],
+        "features": [
+          "electronics",
+          "consumer"
+        ],
+        "hs_prefixes": [
+          "84",
+          "85"
+        ]
+      },
+      "priority": "medium",
+      "typical_evidence": [
+        "인보이스",
+        "원산지증명",
+        "시험성적서",
+        "라벨",
+        "현지 수입자 정보"
+      ],
+      "action": "국가별 수입자 등록·라벨·통관 서류 요건을 먼저 확인합니다."
+    }
+  ],
+  "recalls": [
+    {
+      "id": "R-001",
+      "product": "리튬이온 보조배터리",
+      "category": "battery",
+      "keywords": [
+        "리튬",
+        "배터리",
+        "충전",
+        "과열",
+        "화재",
+        "pack",
+        "cell"
+      ],
+      "hazard": "과충전 보호회로 미흡에 따른 과열·발화 위험",
+      "severity": 0.92,
+      "recommended_tests": [
+        "과충전 시험",
+        "단락 시험",
+        "온도상승 시험",
+        "BMS 보호회로 검증"
+      ],
+      "design_actions": [
+        "셀 공급사 인증서 검증",
+        "PCM/BMS 이중 보호",
+        "충전 전류 제한값 문서화"
+      ]
+    },
+    {
+      "id": "R-002",
+      "product": "전동공구 배터리팩",
+      "category": "battery",
+      "keywords": [
+        "전동공구",
+        "배터리팩",
+        "충격",
+        "낙하",
+        "과열",
+        "charger"
+      ],
+      "hazard": "낙하 충격 후 내부 단락 및 충전 중 온도상승 위험",
+      "severity": 0.88,
+      "recommended_tests": [
+        "낙하 시험",
+        "진동 시험",
+        "충격 시험",
+        "충방전 내구 시험"
+      ],
+      "design_actions": [
+        "셀 홀더 강화",
+        "절연 시트 추가",
+        "충격 후 보호회로 동작 확인"
+      ]
+    },
+    {
+      "id": "R-003",
+      "product": "휴대용 전자기기 충전기",
+      "category": "electronics",
+      "keywords": [
+        "충전기",
+        "어댑터",
+        "절연",
+        "감전",
+        "과열",
+        "전자파"
+      ],
+      "hazard": "절연거리 부족 및 부품 정격 미달에 따른 감전·화재 위험",
+      "severity": 0.74,
+      "recommended_tests": [
+        "절연내력 시험",
+        "누설전류 시험",
+        "온도상승 시험",
+        "EMC 시험"
+      ],
+      "design_actions": [
+        "절연거리 재검토",
+        "퓨즈·서미스터 정격 확인",
+        "인쇄회로 패턴 간격 확대"
+      ]
+    },
+    {
+      "id": "R-004",
+      "product": "IoT 센서 장치",
+      "category": "iot",
+      "keywords": [
+        "iot",
+        "센서",
+        "무선",
+        "펌웨어",
+        "취약점",
+        "업데이트"
+      ],
+      "hazard": "기본 비밀번호·취약 펌웨어로 인한 원격 침해 가능성",
+      "severity": 0.67,
+      "recommended_tests": [
+        "기본계정 점검",
+        "펌웨어 무결성 검증",
+        "통신 암호화 시험"
+      ],
+      "design_actions": [
+        "초기 비밀번호 정책",
+        "서명된 업데이트",
+        "취약점 접수·패치 프로세스"
+      ]
+    },
+    {
+      "id": "R-005",
+      "product": "생활용품 플라스틱 부품",
+      "category": "consumer",
+      "keywords": [
+        "플라스틱",
+        "생활용품",
+        "파손",
+        "날카로운",
+        "어린이"
+      ],
+      "hazard": "파손 시 날카로운 모서리 발생 및 삼킴 위험",
+      "severity": 0.54,
+      "recommended_tests": [
+        "인장 시험",
+        "낙하 시험",
+        "모서리 안전성",
+        "소형부품 시험"
+      ],
+      "design_actions": [
+        "모서리 라운딩",
+        "재질 취성 개선",
+        "경고문·연령 표시"
+      ]
+    }
+  ],
+  "patents": [
+    {
+      "keyword": "lithium battery pack",
+      "korean_keyword": "리튬 배터리팩",
+      "ipc": [
+        "H01M",
+        "B60L"
+      ],
+      "filings": 12840,
+      "recent_growth": 0.19,
+      "risk": 0.78,
+      "avoidance_hints": [
+        "BMS 알고리즘 청구항 회피 검토",
+        "셀 밸런싱 구조 차별화",
+        "방열 구조 선행문헌 조사"
+      ]
+    },
+    {
+      "keyword": "battery management system",
+      "korean_keyword": "배터리 관리 시스템",
+      "ipc": [
+        "H02J",
+        "H01M"
+      ],
+      "filings": 9630,
+      "recent_growth": 0.22,
+      "risk": 0.81,
+      "avoidance_hints": [
+        "충전 제어 로직 비교",
+        "SOC 추정 알고리즘 검토",
+        "펌웨어 업데이트 방식 차별화"
+      ]
+    },
+    {
+      "keyword": "portable power station",
+      "korean_keyword": "휴대용 전원장치",
+      "ipc": [
+        "H02J",
+        "H01M"
+      ],
+      "filings": 3210,
+      "recent_growth": 0.28,
+      "risk": 0.64,
+      "avoidance_hints": [
+        "인버터·배터리 결합 구조 검토",
+        "열관리 구조 비교",
+        "사용자 인터페이스 디자인권 확인"
+      ]
+    },
+    {
+      "keyword": "industrial sensor gateway",
+      "korean_keyword": "산업용 센서 게이트웨이",
+      "ipc": [
+        "G05B",
+        "H04L"
+      ],
+      "filings": 4200,
+      "recent_growth": 0.17,
+      "risk": 0.59,
+      "avoidance_hints": [
+        "통신 프로토콜 특허 확인",
+        "데이터 수집·전송 구조 회피",
+        "보안 업데이트 청구항 검토"
+      ]
+    }
+  ],
+  "support_programs": [
+    {
+      "id": "P-001",
+      "name": "수출바우처 맞춤형 해외진출 지원",
+      "fit_tags": [
+        "export",
+        "marketing",
+        "certification",
+        "regional_sme"
+      ],
+      "benefit": "해외마케팅, 인증, 컨설팅, 디자인 등 패키지 지원",
+      "priority_rule": "수출 초기·성장 단계 기업 우선 검토",
+      "roadmap_stage": "30days"
+    },
+    {
+      "id": "P-002",
+      "name": "해외규격인증획득지원사업",
+      "fit_tags": [
+        "certification",
+        "CE",
+        "UL",
+        "IEC",
+        "SME"
+      ],
+      "benefit": "해외 인증 시험·컨설팅 비용 일부 지원",
+      "priority_rule": "인증 미보유 또는 신규 국가 진출 기업에 적합",
+      "roadmap_stage": "30days"
+    },
+    {
+      "id": "P-003",
+      "name": "KOTRA 해외시장조사·지사화 연계",
+      "fit_tags": [
+        "market",
+        "buyer",
+        "export"
+      ],
+      "benefit": "해외시장 조사, 바이어 발굴, 현지 네트워크 연계",
+      "priority_rule": "대상국과 품목이 확정된 기업에 적합",
+      "roadmap_stage": "60days"
+    },
+    {
+      "id": "P-004",
+      "name": "테크노파크 제품고도화·시험분석 지원",
+      "fit_tags": [
+        "regional_sme",
+        "testing",
+        "prototype",
+        "quality"
+      ],
+      "benefit": "시제품 개선, 시험분석, 전문가 컨설팅 지원",
+      "priority_rule": "지역 주력산업·산단 입주기업에 적합",
+      "roadmap_stage": "30days"
+    },
+    {
+      "id": "P-005",
+      "name": "중소기업 기술보호·특허 전략 컨설팅",
+      "fit_tags": [
+        "patent",
+        "FTO",
+        "technology"
+      ],
+      "benefit": "선행기술 조사, 회피설계, 권리화 전략 상담",
+      "priority_rule": "기술 기반 제조기업·해외 FTO 위험이 있는 기업에 적합",
+      "roadmap_stage": "60days"
+    },
+    {
+      "id": "P-006",
+      "name": "스마트공장·품질혁신 연계 지원",
+      "fit_tags": [
+        "quality",
+        "traceability",
+        "manufacturing"
+      ],
+      "benefit": "품질 데이터 수집, 추적성, 공정 개선 지원",
+      "priority_rule": "리콜 위험·품질 데이터 보완이 필요한 제조기업에 적합",
+      "roadmap_stage": "90days"
+    }
+  ],
+  "regions": [
+    {
+      "name": "경남",
+      "industry_focus": [
+        "기계",
+        "전기전자",
+        "항공",
+        "조선",
+        "배터리부품"
+      ],
+      "weight": 1.06
+    },
+    {
+      "name": "대구",
+      "industry_focus": [
+        "로봇",
+        "전기차부품",
+        "섬유",
+        "의료기기"
+      ],
+      "weight": 1.03
+    },
+    {
+      "name": "울산",
+      "industry_focus": [
+        "자동차",
+        "화학",
+        "에너지",
+        "배터리"
+      ],
+      "weight": 1.05
+    },
+    {
+      "name": "충북",
+      "industry_focus": [
+        "이차전지",
+        "바이오",
+        "반도체",
+        "화장품"
+      ],
+      "weight": 1.04
+    },
+    {
+      "name": "전북",
+      "industry_focus": [
+        "농기계",
+        "상용차",
+        "탄소소재",
+        "식품"
+      ],
+      "weight": 1.02
+    },
+    {
+      "name": "부산",
+      "industry_focus": [
+        "물류",
+        "기계부품",
+        "해양",
+        "소비재"
+      ],
+      "weight": 1.04
+    }
+  ]
+};
+
+const API_BASE = "http://127.0.0.1:8000";
+let lastResult = null;
+
+const $ = (selector) => document.querySelector(selector);
+const $$ = (selector) => Array.from(document.querySelectorAll(selector));
+
+function clamp(value, low = 0, high = 100) {
+  return Math.max(low, Math.min(high, value));
+}
+
+function normalizeHs(hsCode) {
+  return String(hsCode || "").replace(/\D/g, "");
+}
+
+function tokenize(text) {
+  const matches = String(text || "").toLowerCase().match(/[a-z0-9가-힣]+/g);
+  return matches ? matches : [];
+}
+
+function tokenSimilarity(a, b) {
+  const aSet = new Set(tokenize(a));
+  const bSet = new Set(tokenize(b));
+  if (!aSet.size || !bSet.size) return 0;
+  const union = new Set([...aSet, ...bSet]);
+  let intersection = 0;
+  aSet.forEach((token) => { if (bSet.has(token)) intersection += 1; });
+  let bonus = 0;
+  const aLower = String(a || "").toLowerCase();
+  const bLower = String(b || "").toLowerCase();
+  aSet.forEach((token) => { if (token.length >= 3 && bLower.includes(token)) bonus += 0.04; });
+  bSet.forEach((token) => { if (token.length >= 3 && aLower.includes(token)) bonus += 0.04; });
+  return Math.min(1, intersection / union.size + bonus);
+}
+
+function matchTags(features, tags) {
+  const f = new Set((features || []).map((x) => x.toLowerCase()));
+  const t = new Set((tags || []).map((x) => x.toLowerCase()));
+  if (!f.size || !t.size) return 0;
+  const union = new Set([...f, ...t]);
+  let hit = 0;
+  f.forEach((x) => { if (t.has(x)) hit += 1; });
+  return hit / union.size;
+}
+
+function hsPrefixMatches(hsCode, prefixes) {
+  const hs = normalizeHs(hsCode);
+  return (prefixes || []).some((prefix) => hs.startsWith(prefix));
+}
+
+function findTargetMarket(targetMarket) {
+  const query = String(targetMarket || "").toLowerCase();
+  return DATA.markets.find((market) =>
+    market.name.toLowerCase().includes(query) ||
+    query.includes(market.name.toLowerCase()) ||
+    market.code.toLowerCase() === query ||
+    market.region.toLowerCase() === query
+  ) || DATA.markets[0];
+}
+
+function findRegionProfile(regionName) {
+  return DATA.regions.find((region) => region.name === regionName) || { name: regionName, industry_focus: [], weight: 1 };
+}
+
+function scoreMarket(market, features, regionWeight, preferredName) {
+  const growth = clamp(Number(market.import_growth_yoy || 0) * 3.2, 0, 45);
+  const tariff = clamp(20 - Number(market.tariff_mfn || 0) * 2.2, 0, 20);
+  const demand = matchTags(features, market.demand_tags) * 25;
+  const base = Number(market.market_opportunity || 0.5) * 25;
+  const regionBonus = preferredName && market.name.toLowerCase().includes(preferredName.toLowerCase()) ? 8 : 0;
+  const score = Math.round(clamp((growth + tariff + demand + base + regionBonus) * regionWeight, 1, 99));
+  const reason = `수입 증가율 ${market.import_growth_yoy}%, MFN 관세 ${market.tariff_mfn}%, 제품 태그 적합도 ${matchTags(features, market.demand_tags).toFixed(2)}를 반영했습니다.`;
+  return [score, reason];
+}
+
+function selectRegulations(regulations, targetRegion, hsCode, features) {
+  const featureSet = new Set((features || []).map((x) => x.toLowerCase()));
+  const priorityWeight = { critical: 100, high: 75, medium: 50, low: 25 };
+  return regulations
+    .map((item) => {
+      const trigger = item.triggers || {};
+      const regionHit = (trigger.regions || []).includes(targetRegion) || (trigger.regions || []).includes("ALL");
+      const triggerFeatures = new Set((trigger.features || []).map((x) => x.toLowerCase()));
+      let featureHitCount = 0;
+      featureSet.forEach((x) => { if (triggerFeatures.has(x)) featureHitCount += 1; });
+      const hsHit = hsPrefixMatches(hsCode, trigger.hs_prefixes || []);
+      if (!(regionHit && (featureHitCount > 0 || hsHit))) return null;
+      const parts = [];
+      if (regionHit) parts.push(`대상 권역 ${targetRegion} 일치`);
+      if (featureHitCount) parts.push(`제품 특성 ${featureHitCount}개 일치`);
+      if (hsHit) parts.push("HS Code 접두어 일치");
+      return {
+        ...item,
+        matched_reason: parts.join(", "),
+        _score: (priorityWeight[item.priority] || 50) + featureHitCount * 12 + (hsHit ? 18 : 0),
+      };
+    })
+    .filter(Boolean)
+    .sort((a, b) => b._score - a._score)
+    .slice(0, 8)
+    .map(({ _score, ...item }) => item);
+}
+
+function scoreRecallRisks(recalls, productName, features) {
+  const query = `${productName} ${features.join(" ")}`;
+  return recalls
+    .map((recall) => {
+      const text = `${recall.product} ${recall.hazard} ${(recall.keywords || []).join(" ")} ${recall.category}`;
+      const similarity = tokenSimilarity(query, text);
+      const featureOverlap = matchTags(features, [recall.category]);
+      const riskScore = Math.min(1, similarity * 0.62 + featureOverlap * 0.28 + Number(recall.severity || 0) * 0.1);
+      const risk_level = riskScore >= 0.68 ? "HIGH" : riskScore >= 0.38 ? "MEDIUM" : "LOW";
+      return { ...recall, similarity: round(similarity, 3), risk_score: round(riskScore, 3), risk_level };
+    })
+    .sort((a, b) => b.risk_score - a.risk_score)
+    .slice(0, 3);
+}
+
+function scorePatentRisks(patents, productName, features) {
+  const query = `${productName} ${features.join(" ")}`;
+  return patents
+    .map((patent) => {
+      const text = `${patent.keyword} ${patent.korean_keyword} ${(patent.ipc || []).join(" ")}`;
+      const similarity = tokenSimilarity(query, text);
+      const filingsNorm = Math.min(1, Math.log10(Math.max(1, patent.filings || 1)) / 5);
+      const score = Math.min(1, similarity * 0.45 + Number(patent.risk || 0) * 0.32 + Number(patent.recent_growth || 0) * 0.13 + filingsNorm * 0.1);
+      const risk_level = score >= 0.68 ? "HIGH" : score >= 0.42 ? "MEDIUM" : "LOW";
+      return { ...patent, similarity: round(similarity, 3), risk_score: round(score, 3), risk: round(score, 3), risk_level };
+    })
+    .sort((a, b) => b.risk_score - a.risk_score)
+    .slice(0, 3);
+}
+
+function scoreSupportPrograms(programs, features, regulations, recalls, patents) {
+  const needs = new Set([...features, "export", "regional_sme"]);
+  if (regulations.length) needs.add("certification");
+  if (recalls.some((item) => ["MEDIUM", "HIGH"].includes(item.risk_level))) { needs.add("testing"); needs.add("quality"); }
+  if (patents.some((item) => ["MEDIUM", "HIGH"].includes(item.risk_level))) { needs.add("patent"); needs.add("FTO"); needs.add("technology"); }
+  const lowerNeeds = new Set([...needs].map((x) => x.toLowerCase()));
+  return programs
+    .map((program) => {
+      const tags = (program.fit_tags || []).map((x) => x.toLowerCase());
+      const overlap = tags.filter((tag) => lowerNeeds.has(tag)).length;
+      const score = Math.round(clamp(45 + overlap * 13 + (program.roadmap_stage === "30days" ? 6 : 0), 30, 99));
+      return {
+        ...program,
+        fit_score: score,
+        reason: `현재 갭 태그(${[...needs].sort().join(", ")})와 지원사업 태그 ${overlap}개가 일치합니다.`,
+      };
+    })
+    .sort((a, b) => b.fit_score - a.fit_score)
+    .slice(0, 5);
+}
+
+function round(value, digits = 0) {
+  const factor = Math.pow(10, digits);
+  return Math.round(value * factor) / factor;
+}
+
+function scoreReadiness(marketScores, regulations, recalls, patents, supports, request) {
+  const market = Math.round(clamp(marketScores.slice(0, 3).reduce((a, b) => a + b, 0) / Math.max(1, Math.min(3, marketScores.length)), 0, 100));
+  const certCoverage = Math.min(100, (request.certifications || []).length * 15 + (request.has_test_report ? 20 : 0));
+  const doc = Math.round(clamp(20 + (request.has_bom ? 25 : 0) + (request.has_test_report ? 25 : 0) + (request.has_label_draft ? 20 : 0), 0, 100));
+  const support = Math.round(clamp(supports.slice(0, 3).reduce((acc, p) => acc + (p.fit_score || 0), 0) / Math.max(1, Math.min(3, supports.length)), 0, 100));
+  const criticalRegs = regulations.filter((r) => r.priority === "critical").length;
+  const highRegs = regulations.filter((r) => r.priority === "high").length;
+  const regPenalty = criticalRegs * 11 + highRegs * 6 + Math.max(0, regulations.length - (request.certifications || []).length) * 2;
+  const regulation = Math.round(clamp(100 - regPenalty + certCoverage * 0.25, 0, 100));
+  const recallPenalty = recalls.reduce((acc, r) => acc + (r.risk_level === "HIGH" ? 28 : r.risk_level === "MEDIUM" ? 13 : 4), 0);
+  const recall = Math.round(clamp(100 - recallPenalty, 0, 100));
+  const patentPenalty = patents.reduce((acc, p) => acc + (p.risk_level === "HIGH" ? 24 : p.risk_level === "MEDIUM" ? 11 : 3), 0);
+  const patent = Math.round(clamp(100 - patentPenalty, 0, 100));
+  const score = Math.round(clamp(market * 0.24 + regulation * 0.24 + recall * 0.14 + patent * 0.12 + support * 0.12 + doc * 0.14, 0, 100));
+  return [score, {
+    "시장성": market,
+    "규제·인증": regulation,
+    "리콜·품질": recall,
+    "특허·FTO": patent,
+    "지원사업 적합도": support,
+    "문서 준비도": doc,
+  }];
+}
+
+function readinessLevel(score) {
+  if (score >= 78) return "HIGH";
+  if (score >= 55) return "MEDIUM";
+  return "LOW";
+}
+
+function buildRoadmap(request, regulations, recalls, patents, supports) {
+  const criticalRegs = regulations.filter((r) => ["critical", "high"].includes(r.priority));
+  const regTitles = (criticalRegs.length ? criticalRegs : regulations).slice(0, 3).map((r) => r.title);
+  const tests = [...new Set(recalls.flatMap((r) => r.recommended_tests || []))];
+  const supportNames = supports.filter((p) => p.roadmap_stage === "30days").slice(0, 2).map((p) => p.name);
+  const patentHints = [...new Set(patents.flatMap((p) => p.avoidance_hints || []))];
+  return [
+    {
+      day_bucket: "30일",
+      title: "제품·규제 갭 진단과 지원사업 선신청",
+      tasks: [
+        `${request.product_name} 사양서, BOM, HS Code 근거자료를 한 폴더로 정리`,
+        `우선 인증 후보: ${regTitles.join(", ") || "대상국 규제 확인"}`,
+        `시험 전 체크리스트: ${tests.slice(0, 4).join(", ") || "시험항목 확인"}`,
+        `추천 지원사업 신청 검토: ${(supportNames.length ? supportNames : [supports[0]?.name || "지역 수출지원사업"]).join(", ")}`,
+      ],
+      output: "수출 준비도 진단서 v1, 인증·시험 견적요청서, 지원사업 신청 초안",
+      owner: "품질·인증 담당자 / 해외영업 담당자",
+    },
+    {
+      day_bucket: "60일",
+      title: "시험·인증 실행과 바이어 검증",
+      tasks: [
+        "시험기관 상담 후 필수 시험·선택 시험·샘플 수량을 확정",
+        "대상국 라벨, 사용설명서, DoC/기술문서 초안을 작성",
+        "KOTRA·현지 네트워크로 바이어 요구 인증과 포장 조건을 확인",
+        `특허/FTO 1차 검토: ${patentHints.slice(0, 3).join(", ") || "선행기술 키워드 확장"}`,
+      ],
+      output: "시험 신청서, 기술문서 패키지 초안, 바이어 검증 메모, FTO 키워드 맵",
+      owner: "인증 담당자 / 기술개발 담당자",
+    },
+    {
+      day_bucket: "90일",
+      title: "시장 테스트와 스케일 수출 준비",
+      tasks: [
+        "시험 결과 보완사항을 설계·라벨·포장에 반영",
+        "리콜 위험 기반 FMEA와 출하 전 품질 체크리스트를 운영",
+        "수출단가, 물류 리드타임, 통관 서류, A/S 정책을 견적서에 반영",
+        "성공 가능성이 높은 1개 국가부터 파일럿 주문·샘플 발송을 진행",
+      ],
+      output: "수출 실행 패키지, FMEA, 파일럿 바이어 제안서, 2차 지원사업 계획",
+      owner: "대표이사 / 해외영업 / 품질책임자",
+    },
+  ];
+}
+
+function analyzeLocal(request) {
+  const target = findTargetMarket(request.target_market);
+  const regionProfile = findRegionProfile(request.region);
+  const markets = DATA.markets.map((market) => {
+    const [score, reason] = scoreMarket(market, request.features, Number(regionProfile.weight || 1), target.name);
+    return {
+      code: market.code,
+      name: market.name,
+      region: market.region,
+      main_port: market.main_port,
+      import_growth_yoy: market.import_growth_yoy,
+      tariff_mfn: market.tariff_mfn,
+      logistics_days_air: market.logistics_days_air,
+      logistics_days_sea: market.logistics_days_sea,
+      route_label: market.route_label,
+      opportunity_score: score,
+      reason,
+    };
+  }).sort((a, b) => b.opportunity_score - a.opportunity_score).slice(0, 5);
+  const regulations = selectRegulations(DATA.regulations, target.region, request.hs_code, request.features);
+  const recalls = scoreRecallRisks(DATA.recalls, request.product_name, request.features);
+  const patents = scorePatentRisks(DATA.patents, request.product_name, request.features);
+  const support_programs = scoreSupportPrograms(DATA.support_programs, request.features, regulations, recalls, patents);
+  const roadmap = buildRoadmap(request, regulations, recalls, patents, support_programs);
+  const [readiness_score, score_breakdown] = scoreReadiness(markets.map((m) => m.opportunity_score), regulations, recalls, patents, support_programs, request);
+  const topMarket = markets[0]?.name || request.target_market;
+  const topReg = regulations[0]?.title || "대상국 규제 확인 필요";
+  const topRecall = recalls[0]?.hazard || "유사 리콜 위험 낮음";
+  const topSupport = support_programs[0]?.name || "지원사업 확인 필요";
+  const topPatent = patents[0]?.korean_keyword || "선행기술";
+  const ai_summary = `${request.region} 소재 ${request.industry} 기업의 '${request.product_name}'은 ${topMarket} 진출 기준 수출 준비도 ${readiness_score}/100으로 산정되었습니다. 우선순위는 ${topReg} 검토, 리콜 위험(${topRecall})에 대한 시험 전 점검, ${topPatent} 관련 FTO 키워드 검토, 그리고 ${topSupport} 신청입니다. 30일 내 제품자료·시험견적·지원사업 신청을 끝내고, 60일 내 인증 실행과 바이어 요구사항 검증, 90일 내 파일럿 수출 패키지 완성을 권장합니다.`;
+  return {
+    request,
+    readiness_score,
+    readiness_level: readinessLevel(readiness_score),
+    score_breakdown,
+    markets,
+    regulations,
+    recalls: recalls.map((item) => {
+      const { risk_score, keywords, category, ...rest } = item;
+      return rest;
+    }),
+    patents: patents.map((item) => {
+      const { risk_score, similarity, ...rest } = item;
+      return rest;
+    }),
+    support_programs,
+    roadmap,
+    ai_summary,
+    guardrails: [
+      "본 결과는 공공데이터와 데모 규칙 기반의 1차 진단이며, 최종 인증 가능 여부는 시험기관·관세사·변리사 확인이 필요합니다.",
+      "HS Code와 제품 사양이 바뀌면 대상 규제와 지원사업 우선순위가 달라질 수 있습니다.",
+      "실서비스에서는 데이터 호출 시점, 출처 URL, 문서 버전, 불확실성 점수를 함께 표시해야 합니다.",
+    ],
+    raw_signals: { agent_plan: ["market", "regulation", "recall", "patent", "support", "roadmap", "report"], target_region: target.region, region_profile: regionProfile },
+  };
+}
+
+function collectForm() {
+  const features = $$("fieldset input[type='checkbox']:checked")
+    .map((input) => input.value)
+    .filter((value) => value && !["on"].includes(value));
+  return {
+    company_name: $("#companyName").value.trim(),
+    region: $("#region").value,
+    industry: $("#industry").value,
+    product_name: $("#productName").value.trim(),
+    hs_code: $("#hsCode").value.trim(),
+    target_market: $("#targetMarket").value,
+    features,
+    annual_export_usd: 0,
+    certifications: $("#hasTestReport").checked ? ["KC", "UN38.3"] : [],
+    has_bom: $("#hasBom").checked,
+    has_test_report: $("#hasTestReport").checked,
+    has_label_draft: $("#hasLabelDraft").checked,
+    notes: null,
+  };
+}
+
+async function runAnalysis(event) {
+  if (event) event.preventDefault();
+  const request = collectForm();
+  const useBackend = $("#useBackend").checked;
+  setBusy(true);
+  try {
+    if (useBackend) {
+      const response = await fetch(`${API_BASE}/analyze`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(request),
+      });
+      if (!response.ok) throw new Error(`API ${response.status}`);
+      lastResult = await response.json();
+      showToast("FastAPI AI Agent 분석 완료");
+    } else {
+      await wait(240);
+      lastResult = analyzeLocal(request);
+      showToast("로컬 JS AI Agent 분석 완료");
+    }
+  } catch (error) {
+    console.warn(error);
+    lastResult = analyzeLocal(request);
+    $("#useBackend").checked = false;
+    updateBackendState();
+    showToast("백엔드 연결 실패 · 로컬 분석으로 전환");
+  } finally {
+    render(lastResult);
+    setBusy(false);
+  }
+}
+
+function wait(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
+
+function setBusy(isBusy) {
+  const button = $("button[type='submit']");
+  button.disabled = isBusy;
+  button.textContent = isBusy ? "분석 중..." : "AI Agent 분석 실행";
+}
+
+function updateBackendState() {
+  const checked = $("#useBackend").checked;
+  $("#backendState").textContent = checked ? "ON · http://127.0.0.1:8000" : "OFF · 로컬 JS 분석";
+}
+
+function riskBadge(level) {
+  const lower = String(level || "LOW").toLowerCase();
+  if (lower === "high" || lower === "critical") return "red";
+  if (lower === "medium") return "yellow";
+  return "green";
+}
+
+function priorityKo(priority) {
+  return { critical: "긴급", high: "높음", medium: "보통", low: "낮음" }[priority] || priority;
+}
+
+function render(result) {
+  if (!result) return;
+  renderHero(result);
+  renderInsightCards(result);
+  renderMarkets(result.markets || []);
+  renderScoreBreakdown(result.score_breakdown || {});
+  renderRoadmap(result.roadmap || []);
+  renderLists(result);
+  $("#aiSummary").textContent = result.ai_summary;
+  $("#guardrails").innerHTML = (result.guardrails || []).map((text) => `<div class="guardrail">${escapeHtml(text)}</div>`).join("");
+}
+
+function renderHero(result) {
+  $("#readinessScore").textContent = result.readiness_score;
+  $("#scoreRing").style.setProperty("--score", result.readiness_score);
+  const markets = [...new Set((result.markets || []).map((m) => m.region))].slice(0, 3).join(" · ");
+  $("#passportMarkets").textContent = markets || "EU · US · ASEAN";
+  $("#passportState").textContent = `Up to date · ${(result.regulations || []).length} rules matched`;
+  $("#programCount").textContent = String((result.support_programs || []).length);
+}
+
+function renderInsightCards(result) {
+  const request = result.request || {};
+  const topReg = (result.regulations || [])[0];
+  const topRecall = (result.recalls || [])[0];
+  const topPatent = (result.patents || [])[0];
+  const cards = [
+    { label: "HS CODE", value: request.hs_code || "-", sub: `${request.product_name || "제품"} · ${request.target_market || "대상국"}` },
+    { label: "PRODUCT", value: featureLabel(request.features || []), sub: "Export Focus Category" },
+    { label: "CERTIFICATION", value: topReg ? topReg.title : "인증 후보 없음", sub: topReg ? topReg.matched_reason : "추가 데이터 확인 필요", badge: topReg ? priorityKo(topReg.priority) : "확인", badgeClass: topReg ? riskBadge(topReg.priority) : "yellow" },
+    { label: "RECALL RISK", value: topRecall ? topRecall.risk_level : "LOW", sub: topRecall ? topRecall.hazard : "유사 리콜 없음", badge: topRecall ? topRecall.risk_level : "LOW", badgeClass: topRecall ? riskBadge(topRecall.risk_level) : "green" },
+    { label: "FTO", value: topPatent ? topPatent.risk_level : "LOW", sub: topPatent ? `${topPatent.korean_keyword} · ${topPatent.ipc.join(", ")}` : "특허 혼잡도 낮음", badge: topPatent ? topPatent.risk_level : "LOW", badgeClass: topPatent ? riskBadge(topPatent.risk_level) : "green" },
+  ];
+  $("#insightCards").innerHTML = cards.map((card) => `
+    <article class="insight-card">
+      <div class="label">${escapeHtml(card.label)}</div>
+      <div class="value">${escapeHtml(card.value)} ${card.badge ? `<span class="badge ${card.badgeClass}">${escapeHtml(card.badge)}</span>` : ""}</div>
+      <p class="sub">${escapeHtml(card.sub)}</p>
+    </article>`).join("");
+}
+
+function featureLabel(features) {
+  const labels = { battery: "Battery Product", electronics: "Electronics", industrial: "Industrial", digital: "Digital Product", iot: "IoT Device", consumer: "Consumer Goods", carbon_material: "Carbon Material" };
+  return (features || []).map((f) => labels[f] || f).slice(0, 2).join(" / ") || "Product";
+}
+
+function renderMarkets(markets) {
+  $("#marketCards").innerHTML = markets.slice(0, 3).map((market) => `
+    <article class="market-card">
+      <h3>${escapeHtml(market.name)} <span class="badge ${market.opportunity_score >= 80 ? "green" : "yellow"}">${market.opportunity_score}</span></h3>
+      <dl>
+        <dt>Import Growth</dt><dd>+${market.import_growth_yoy}%</dd>
+        <dt>Tariff(MFN)</dt><dd>${market.tariff_mfn}%</dd>
+        <dt>Main Port</dt><dd>${escapeHtml(market.main_port)}</dd>
+        <dt>Air / Sea</dt><dd>${market.logistics_days_air}d / ${market.logistics_days_sea}d</dd>
+      </dl>
+      <p class="sub" style="margin:12px 0 0;color:#9fbad1;font-size:12px;line-height:1.45">${escapeHtml(market.reason)}</p>
+    </article>`).join("");
+}
+
+function renderScoreBreakdown(breakdown) {
+  $("#scoreBreakdown").innerHTML = Object.entries(breakdown).map(([label, value]) => `
+    <div class="score-row">
+      <span>${escapeHtml(label)}</span>
+      <div class="track"><div class="bar" style="--value:${Number(value)}%"></div></div>
+      <b>${Number(value)}</b>
+    </div>`).join("");
+}
+
+function renderRoadmap(roadmap) {
+  $("#roadmap").innerHTML = roadmap.map((item) => `
+    <article class="roadmap-card">
+      <h3>${escapeHtml(item.day_bucket)}</h3>
+      <h4>${escapeHtml(item.title)}</h4>
+      <ul>${(item.tasks || []).map((task) => `<li>${escapeHtml(task)}</li>`).join("")}</ul>
+      <div class="output">산출물 · ${escapeHtml(item.output)}<br>담당 · ${escapeHtml(item.owner)}</div>
+    </article>`).join("");
+}
+
+function renderLists(result) {
+  $("#regulationList").innerHTML = (result.regulations || []).slice(0, 5).map((item) => `
+    <article class="stack-item">
+      <h3>${escapeHtml(item.title)} <span class="badge ${riskBadge(item.priority)}">${priorityKo(item.priority)}</span></h3>
+      <p>${escapeHtml(item.scope)} · ${escapeHtml(item.matched_reason || "조건 일치")}</p>
+      <p><b>실행:</b> ${escapeHtml(item.action)}</p>
+      <ul>${(item.typical_evidence || []).slice(0, 4).map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+    </article>`).join("");
+
+  $("#recallList").innerHTML = (result.recalls || []).map((item) => `
+    <article class="stack-item">
+      <h3>${escapeHtml(item.product)} <span class="badge ${riskBadge(item.risk_level)}">${item.risk_level}</span></h3>
+      <p>${escapeHtml(item.hazard)} · 유사도 ${Math.round((item.similarity || 0) * 100)}%</p>
+      <ul>${(item.recommended_tests || []).slice(0, 4).map((x) => `<li>시험: ${escapeHtml(x)}</li>`).join("")}</ul>
+    </article>`).join("");
+
+  const patentHtml = (result.patents || []).slice(0, 2).map((item) => `
+    <article class="stack-item">
+      <h3>${escapeHtml(item.korean_keyword)} <span class="badge ${riskBadge(item.risk_level)}">${item.risk_level}</span></h3>
+      <p>IPC ${escapeHtml((item.ipc || []).join(", "))} · 출원밀집도 ${escapeHtml(String(item.filings))}</p>
+      <ul>${(item.avoidance_hints || []).slice(0, 3).map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+    </article>`).join("");
+  const supportHtml = (result.support_programs || []).slice(0, 3).map((item) => `
+    <article class="stack-item">
+      <h3>${escapeHtml(item.name)} <span class="badge green">${item.fit_score}</span></h3>
+      <p>${escapeHtml(item.benefit)}</p>
+      <p>${escapeHtml(item.priority_rule)}</p>
+    </article>`).join("");
+  $("#patentSupportList").innerHTML = patentHtml + supportHtml;
+}
+
+function escapeHtml(value) {
+  return String(value ?? "")
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
+}
+
+function showToast(message) {
+  let toast = $(".toast");
+  if (!toast) {
+    toast = document.createElement("div");
+    toast.className = "toast";
+    document.body.appendChild(toast);
+  }
+  toast.textContent = message;
+  toast.classList.add("show");
+  clearTimeout(showToast.timer);
+  showToast.timer = setTimeout(() => toast.classList.remove("show"), 2200);
+}
+
+function fillSample() {
+  $("#companyName").value = "경남 배터리테크";
+  $("#region").value = "경남";
+  $("#industry").value = "전기전자";
+  $("#productName").value = "리튬이온 배터리팩";
+  $("#hsCode").value = "850760";
+  $("#targetMarket").value = "Germany / EU";
+  $$("fieldset input[type='checkbox']").forEach((input) => {
+    input.checked = ["battery", "electronics", "industrial"].includes(input.value);
+  });
+  $("#hasBom").checked = true;
+  $("#hasTestReport").checked = true;
+  $("#hasLabelDraft").checked = true;
+  runAnalysis();
+}
+
+function downloadJson() {
+  if (!lastResult) runAnalysis();
+  const blob = new Blob([JSON.stringify(lastResult, null, 2)], { type: "application/json;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `grow-gate-local-ex-report-${Date.now()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function printReport() {
+  if (!lastResult) return;
+  const report = buildReportHtml(lastResult);
+  const popup = window.open("", "_blank", "width=980,height=900");
+  if (!popup) {
+    showToast("팝업 차단을 해제하면 보고서 인쇄가 가능합니다.");
+    return;
+  }
+  popup.document.write(report);
+  popup.document.close();
+  popup.focus();
+  setTimeout(() => popup.print(), 250);
+}
+
+function buildReportHtml(result) {
+  const request = result.request;
+  return `<!doctype html><html lang="ko"><head><meta charset="utf-8"><title>GROW-GATE Local EX Report</title>
+    <style>
+      body{font-family:system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;margin:36px;color:#111827;line-height:1.65}
+      h1{font-size:30px;margin-bottom:0} h2{margin-top:28px;border-bottom:2px solid #e5e7eb;padding-bottom:6px}
+      .meta{display:grid;grid-template-columns:repeat(2,1fr);gap:8px 18px;background:#f8fafc;border:1px solid #e5e7eb;border-radius:14px;padding:16px;margin:20px 0}
+      .score{font-size:42px;font-weight:900;color:#0f766e} .card{border:1px solid #e5e7eb;border-radius:12px;padding:14px;margin:10px 0} ul{margin-top:6px}
+      .badge{display:inline-block;border-radius:999px;padding:2px 8px;background:#ecfeff;color:#0369a1;font-size:12px;font-weight:800}
+    </style></head><body>
+    <h1>GROW-GATE Local EX 수출 준비도 리포트</h1>
+    <p>Regulation-to-Market Twin for Regional SMEs</p>
+    <div class="meta">
+      <div><b>기업</b><br>${escapeHtml(request.company_name)}</div>
+      <div><b>지역/업종</b><br>${escapeHtml(request.region)} / ${escapeHtml(request.industry)}</div>
+      <div><b>제품/HS Code</b><br>${escapeHtml(request.product_name)} / ${escapeHtml(request.hs_code)}</div>
+      <div><b>대상 시장</b><br>${escapeHtml(request.target_market)}</div>
+    </div>
+    <div class="score">${result.readiness_score}/100 <span class="badge">${result.readiness_level}</span></div>
+    <h2>AI 요약</h2><p>${escapeHtml(result.ai_summary)}</p>
+    <h2>규제·인증 우선순위</h2>${(result.regulations || []).slice(0,5).map((r) => `<div class="card"><b>${escapeHtml(r.title)}</b> <span class="badge">${escapeHtml(r.priority)}</span><br>${escapeHtml(r.action)}<br><small>${escapeHtml((r.typical_evidence || []).join(', '))}</small></div>`).join('')}
+    <h2>30·60·90일 실행 로드맵</h2>${(result.roadmap || []).map((r) => `<div class="card"><b>${escapeHtml(r.day_bucket)} · ${escapeHtml(r.title)}</b><ul>${(r.tasks || []).map((t) => `<li>${escapeHtml(t)}</li>`).join('')}</ul><small>산출물: ${escapeHtml(r.output)} / 담당: ${escapeHtml(r.owner)}</small></div>`).join('')}
+    <h2>유의사항</h2><ul>${(result.guardrails || []).map((g) => `<li>${escapeHtml(g)}</li>`).join('')}</ul>
+    </body></html>`;
+}
+
+function init() {
+  $("#analysisForm").addEventListener("submit", runAnalysis);
+  $("#fillSample").addEventListener("click", fillSample);
+  $("#useBackend").addEventListener("change", updateBackendState);
+  $("#downloadJson").addEventListener("click", downloadJson);
+  $("#printReport").addEventListener("click", printReport);
+  updateBackendState();
+  runAnalysis();
+}
+
+document.addEventListener("DOMContentLoaded", init);
+
+</script>
+</body>
+</html>
