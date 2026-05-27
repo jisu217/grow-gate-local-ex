@@ -17,6 +17,7 @@
         <a href="index.html">홈</a>
         <a href="workspace.html">AI 진단</a>
         <a href="data.html">데이터 파이프라인</a>
+        <a href="data-catalog.html">데이터 명세</a>
         <a href="roadmap.html">실행 로드맵</a>
         <a class="active" href="team.html">팀 운영실</a>
         <a href="code-gate.html">코드 게이트</a>
@@ -42,8 +43,8 @@
     <section class="team-metrics" aria-label="팀 운영 핵심 지표">
       <article>
         <span>활용 데이터</span>
-        <strong>5</strong>
-        <p>무역, 공급망, 인증·리콜, 특허, 지원사업</p>
+        <strong id="catalogSourceCount">5</strong>
+        <p id="catalogStatusSummary">무역, 공급망, 인증·리콜, 특허, 지원사업</p>
       </article>
       <article>
         <span>기획 완성도</span>
@@ -67,14 +68,15 @@
         <div class="panel-heading horizontal">
           <div>
             <p class="eyebrow">PUBLIC DATA COVERAGE</p>
-            <h2>수집·활용 중인 공공데이터</h2>
+            <h2>수집·활용 가능한 전체 데이터</h2>
           </div>
-          <span class="badge green">evidence linked</span>
+          <a class="text-link" href="data-catalog.html">명세·그래프 보기</a>
         </div>
         <div class="source-workbench">
           <div id="teamDataSources" class="source-list" aria-label="공공데이터 소스 목록"></div>
           <div id="sourceDetail" class="source-detail" aria-live="polite"></div>
         </div>
+        <div id="sourcePager" class="source-pager" aria-label="데이터 소스 페이지"></div>
       </section>
 
       <section class="strategy-panel">
