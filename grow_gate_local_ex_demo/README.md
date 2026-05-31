@@ -154,3 +154,13 @@ curl -X POST "http://127.0.0.1:8000/public-data/collect?use_live=true"
 ## 8. 발표 시연 멘트
 
 > 이 서비스는 수출 유망국을 단순 추천하는 서비스가 아니라, 지역 제조기업이 실제로 해외시장에 들어가기 위해 필요한 규제·인증·리콜·특허·지원사업 실행순서를 AI가 30·60·90일 로드맵으로 짜주는 서비스입니다.
+
+## 9. 진행 현황
+
+### 1차 스프린트 (2026-05-31)
+
+- 다중 화면 정적 프론트엔드(홈·워크스페이스·데이터·로드맵) 구성 완료
+- FastAPI 백엔드 및 Planner/Data/Market/Regulation/Recall/FTO/Support/Roadmap Agent 파이프라인 구현
+- 공공데이터 커넥터 계층과 seed 기반 ETL preview, RAG 문서화 파이프라인 구성
+- XGBoost(또는 Gradient Boosting fallback) 기반 예측/추정 레이어 적용
+- 로컬 샘플 데이터 기반 end-to-end 시연 시나리오 동작 확인
