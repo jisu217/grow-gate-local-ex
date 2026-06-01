@@ -536,67 +536,6 @@ button:active { transform: translateY(0); opacity: .85; }
   box-shadow: 0 18px 48px rgba(18, 32, 53, .08);
 }
 
-.ai-search-page-layout {
-  display: grid;
-  grid-template-columns: minmax(320px, .42fr) minmax(620px, 1fr);
-  gap: 22px;
-  align-items: start;
-}
-
-.ai-search-page .ai-search-workbench {
-  margin-top: 0;
-}
-
-.ai-search-context {
-  min-width: 0;
-  border: 1px solid rgba(15, 23, 42, .1);
-  border-radius: 8px;
-  background: rgba(255,255,255,.78);
-  box-shadow: 0 18px 48px rgba(18, 32, 53, .08);
-}
-
-.context-form {
-  display: grid;
-  gap: 8px;
-}
-
-.context-form label,
-.context-form fieldset legend {
-  display: block;
-  margin: 0 0 7px;
-  color: #334155;
-  font-size: 12px;
-  font-weight: 900;
-}
-
-.context-form input:not([type="checkbox"]),
-.context-form select {
-  width: 100%;
-  min-height: 40px;
-  margin: 6px 0 10px;
-  padding: 9px 11px;
-  border: 1px solid rgba(15, 23, 42, .13);
-  border-radius: 8px;
-  color: #0f172a;
-  background: rgba(255,255,255,.9);
-  outline: none;
-}
-
-.context-form input:focus,
-.context-form select:focus {
-  border-color: #0a84ff;
-  box-shadow: 0 0 0 3px rgba(10,132,255,.12);
-}
-
-.context-form fieldset {
-  border-color: rgba(15, 23, 42, .12);
-  background: rgba(248,250,252,.62);
-}
-
-.context-form .check {
-  color: #475569 !important;
-}
-
 .search-scope-group {
   display: flex;
   flex-wrap: wrap;
@@ -3272,7 +3211,6 @@ textarea::placeholder {
   .result-layout, .result-layout.bottom { grid-template-columns: 1fr; }
   #workspace-report.result-layout.bottom { grid-template-columns: 1fr; }
   #workspace-evidence.result-layout.bottom { grid-template-columns: 1fr; }
-  .ai-search-page-layout { grid-template-columns: 1fr; }
   .ai-search-output { grid-template-columns: 1fr; }
   .market-cards, .roadmap { grid-template-columns: 1fr; }
   .source-grid { grid-template-columns: 1fr; }

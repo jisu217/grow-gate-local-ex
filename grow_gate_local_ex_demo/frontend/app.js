@@ -1370,7 +1370,7 @@ async function runAiSearch(event) {
   if (event) event.preventDefault();
   if (!lastResult) {
     lastResult = analyzeLocal(collectForm());
-    if ($("#readinessScore")) render(lastResult);
+    render(lastResult);
   }
   const input = $("#aiSearchInput");
   const status = $("#aiSearchStatus");
@@ -1387,7 +1387,6 @@ async function runAiSearch(event) {
     scope: currentSearchScope,
     product_id: product.product_id || null,
     analysis_run_id: run.run_id || null,
-    product_input: collectForm(),
     filters: {
       target_market: lastResult.request?.target_market,
       hs_code: lastResult.request?.hs_code,
@@ -1534,22 +1533,11 @@ function handleAiSearchAction(event) {
     return;
   }
   if (action === "run_analysis") {
-    if ($("#analysisForm")) {
-      runAnalysis();
-    } else {
-      lastResult = analyzeLocal(collectForm());
-      runAiSearch();
-      showToast("제품 문맥을 다시 계산했습니다.");
-    }
+    runAnalysis();
     return;
   }
   const targetId = payload.target || (action === "open_roadmap" ? "workspace-report" : "workspace-evidence");
-  const target = document.getElementById(targetId) || (action === "open_evidence" ? $("#aiSearchEvidence") : null);
-  if (target) {
-    target.scrollIntoView({ behavior: "smooth", block: "start" });
-  } else if (action === "open_roadmap") {
-    window.location.href = "roadmap.html";
-  }
+  document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 function setupAiSearch() {
@@ -1890,18 +1878,16 @@ function setupWorkspaceNavigation() {
 }
 
 function init() {
-  $("#analysisForm")?.addEventListener("submit", runAnalysis);
-  $("#fillSample")?.addEventListener("click", fillSample);
-  $("#useBackend")?.addEventListener("change", updateBackendState);
-  $("#downloadJson")?.addEventListener("click", downloadJson);
-  $("#printReport")?.addEventListener("click", printReport);
-  $("#collectPublicData")?.addEventListener("click", collectPublicData);
+  $("#analysisForm").addEventListener("submit", runAnalysis);
+  $("#fillSample").addEventListener("click", fillSample);
+  $("#useBackend").addEventListener("change", updateBackendState);
+  $("#downloadJson").addEventListener("click", downloadJson);
+  $("#printReport").addEventListener("click", printReport);
+  $("#collectPublicData").addEventListener("click", collectPublicData);
   setupAiSearch();
   setupWorkspaceNavigation();
-  if ($("#analysisForm")) {
-    updateBackendState();
-    runAnalysis();
-  }
+  updateBackendState();
+  runAnalysis();
 }
 
 document.addEventListener("DOMContentLoaded", init);
