@@ -187,6 +187,6 @@ This is a local prototype. The code includes guardrails for demo safety:
 - Frontend rendering escapes dynamic text before inserting HTML.
 - GitHub credentials are never stored by the app.
 
-## License
+## License 
 
 See [LICENSE](LICENSE).
