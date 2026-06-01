@@ -21,6 +21,7 @@ from .ml_models import (
     score_support_programs,
     select_regulations,
 )
+from .rag import DemoRAGIndex, attach_evidence_by_title
 from .schemas import (
     AnalysisResult,
     MarketSignal,
@@ -290,8 +291,10 @@ class GrowGateAgent:
     """End-to-end orchestration agent."""
 
     def __init__(self, connector: PublicDataConnector | None = None) -> None:
+        connector = connector or PublicDataConnector()
         self.planner = PlannerAgent()
         self.data = DataConnectorAgent(connector)
+        self.rag = DemoRAGIndex(connector)
         self.market = MarketScoringAgent()
         self.regulation = RegulationAgent()
         self.recall = RecallAgent()
@@ -305,14 +308,47 @@ class GrowGateAgent:
     def analyze(self, request: ProductInput) -> AnalysisResult:
         plan = self.planner.plan(request)
         evidence = self.data.collect(request)
+        target_region = evidence.get("target_region", "EU")
         markets = self.market.run(request, evidence)
         regulations = self.regulation.run(request, evidence)
         recalls = self.recall.run(request, evidence)
         patents = self.fto.run(request, evidence)
         support_programs = self.support.run(request, evidence, regulations, recalls, patents)
+        regulation_evidence = self.rag.search(
+            request,
+            source_types=["regulation"],
+            query=" ".join(item.title for item in regulations),
+            target_region=target_region,
+            top_k=6,
+        )
+        recall_evidence = self.rag.search(
+            request,
+            source_types=["recall"],
+            query=" ".join(item.hazard for item in recalls),
+            target_region=target_region,
+            top_k=4,
+        )
+        patent_evidence = self.rag.search(
+            request,
+            source_types=["patent"],
+            query=" ".join(item.korean_keyword for item in patents),
+            target_region=target_region,
+            top_k=4,
+        )
+        support_evidence = self.rag.search(
+            request,
+            source_types=["support"],
+            query=" ".join(item.name for item in support_programs),
+            target_region=target_region,
+            top_k=5,
+        )
+        attach_evidence_by_title(regulations, regulation_evidence)
+        attach_evidence_by_title(recalls, recall_evidence)
+        attach_evidence_by_title(patents, patent_evidence)
+        attach_evidence_by_title(support_programs, support_evidence)
         ml_predictions = self.predict.run(
             request,
-            evidence.get("target_region", "EU"),
+            target_region,
             markets,
             regulations,
             recalls,
@@ -348,8 +384,14 @@ class GrowGateAgent:
             guardrails=self.guardrail.run(),
             raw_signals={
                 "agent_plan": plan,
-                "target_region": evidence.get("target_region"),
+                "target_region": target_region,
                 "region_profile": evidence.get("region_profile"),
+                "rag_context": {
+                    "regulation_documents": [item.model_dump() for item in regulation_evidence],
+                    "recall_documents": [item.model_dump() for item in recall_evidence],
+                    "patent_documents": [item.model_dump() for item in patent_evidence],
+                    "support_documents": [item.model_dump() for item in support_evidence],
+                },
                 "public_data_sources": load_public_data_sources()["sources"],
                 "screen_data_map": load_public_data_sources()["screen_data_map"],
             },

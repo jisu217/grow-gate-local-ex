@@ -16,9 +16,24 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .agents import GrowGateAgent
-from .data_connectors import PipelineJob, load_dataset, load_public_data_sources
+from .ai_search import AISearchService
+from .data_connectors import PipelineJob, load_dataset, load_public_data_sources, load_xgboost_data_catalog
+from .product_pipeline import ProductAnalysisStore
 from .public_data_pipeline import PublicDataPipeline, ROOT, run_and_write
-from .schemas import AnalysisResult, GitCommitRequest, GitInitRequest, ProductInput
+from .schemas import (
+    AISearchRequest,
+    AISearchResponse,
+    AnalysisResult,
+    AnalysisRunRecord,
+    AnalysisRunRequest,
+    GitCommitRequest,
+    GitInitRequest,
+    ProductInput,
+    ProductRecord,
+    ProductRegistrationRequest,
+    UpdateImpactReport,
+    UpdateImpactRequest,
+)
 
 
 def _cors_origins() -> list[str]:
@@ -141,6 +156,8 @@ app.add_middleware(
 )
 
 agent = GrowGateAgent()
+product_store = ProductAnalysisStore(agent)
+ai_search_service = AISearchService(product_store, agent.rag, agent.data.connector)
 
 
 @app.middleware("http")
@@ -193,6 +210,12 @@ def pipeline_preview() -> Dict[str, Any]:
 def public_data_sources() -> Dict[str, Any]:
     """Return the screen-by-screen public-data source catalog."""
     return load_public_data_sources()
+
+
+@app.get("/xgboost-data/catalog")
+def xgboost_data_catalog() -> Dict[str, Any]:
+    """Return the workbook-derived data collection catalog for XGBoost features."""
+    return load_xgboost_data_catalog()
 
 
 @app.post("/public-data/collect")
@@ -316,6 +339,51 @@ def git_push(request: Request, branch: str = Query(default="main", pattern=r"^[A
 def analyze(request: ProductInput) -> AnalysisResult:
     """Run the end-to-end AI Agent analysis."""
     return agent.analyze(request)
+
+
+@app.post("/products", response_model=ProductRecord)
+def create_product(request: ProductRegistrationRequest) -> ProductRecord:
+    """Register a product master row and its current document readiness state."""
+    return product_store.register_product(request)
+
+
+@app.get("/products/{product_id}", response_model=ProductRecord)
+def get_product(product_id: str) -> ProductRecord:
+    """Return a registered product master row."""
+    try:
+        return product_store.get_product(product_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Product not found") from exc
+
+
+@app.post("/analysis/run", response_model=AnalysisRunRecord)
+def run_registered_analysis(request: AnalysisRunRequest) -> AnalysisRunRecord:
+    """Run and store an AI Agent analysis for a registered product."""
+    try:
+        return product_store.run_analysis(request.product_id, request.analysis_mode)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Product not found") from exc
+
+
+@app.get("/analysis/{run_id}", response_model=AnalysisRunRecord)
+def get_analysis_run(run_id: str) -> AnalysisRunRecord:
+    """Return a stored analysis run by run_id."""
+    try:
+        return product_store.get_run(run_id)
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail="Analysis run not found") from exc
+
+
+@app.post("/ai-search", response_model=AISearchResponse)
+def ai_search(request: AISearchRequest) -> AISearchResponse:
+    """Search current diagnosis context, RAG evidence, and data catalog sources."""
+    return ai_search_service.search(request)
+
+
+@app.post("/updates/impact", response_model=UpdateImpactReport)
+def update_impact(request: UpdateImpactRequest) -> UpdateImpactReport:
+    """Detect products affected by changed regulation, recall, patent, or support data."""
+    return product_store.impact_report(request)
 
 
 @app.post("/report")

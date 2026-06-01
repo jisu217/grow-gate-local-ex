@@ -783,6 +783,7 @@ const PUBLIC_DATA_SOURCE_FALLBACK = [
   },
 ];
 let lastResult = null;
+let currentSearchScope = "diagnosis";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -1157,6 +1158,13 @@ function collectForm() {
     has_bom: $("#hasBom").checked,
     has_test_report: $("#hasTestReport").checked,
     has_label_draft: $("#hasLabelDraft").checked,
+    documents: {
+      has_bom: $("#hasBom").checked,
+      has_test_report: $("#hasTestReport").checked,
+      has_label_manual: $("#hasLabelDraft").checked,
+      has_msds: false,
+      has_product_spec: true,
+    },
     notes: null,
   };
 }
@@ -1168,14 +1176,27 @@ async function runAnalysis(event) {
   setBusy(true);
   try {
     if (useBackend) {
-      const response = await fetch(`${API_BASE}/analyze`, {
+      const productResponse = await fetch(`${API_BASE}/products`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(request),
       });
-      if (!response.ok) throw new Error(`API ${response.status}`);
-      lastResult = await response.json();
-      showToast("FastAPI AI Agent 분석 완료");
+      if (!productResponse.ok) throw new Error(`PRODUCT API ${productResponse.status}`);
+      const product = await productResponse.json();
+      const runResponse = await fetch(`${API_BASE}/analysis/run`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ product_id: product.product_id, analysis_mode: "full", use_fastapi_backend: true }),
+      });
+      if (!runResponse.ok) throw new Error(`RUN API ${runResponse.status}`);
+      const run = await runResponse.json();
+      lastResult = run.result;
+      lastResult.raw_signals = {
+        ...(lastResult.raw_signals || {}),
+        product_master: product,
+        analysis_run: { run_id: run.run_id, product_id: run.product_id, created_at: run.created_at },
+      };
+      showToast(`FastAPI AI Agent 분석 완료 · ${run.run_id}`);
     } else {
       await wait(240);
       lastResult = analyzeLocal(request);
@@ -1306,6 +1327,7 @@ function renderLists(result) {
       <p>${escapeHtml(item.scope)} · ${escapeHtml(item.matched_reason || "조건 일치")}</p>
       <p><b>실행:</b> ${escapeHtml(item.action)}</p>
       <ul>${(item.typical_evidence || []).slice(0, 4).map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+      ${renderEvidenceBadges(item.evidence_documents)}
     </article>`).join("");
 
   $("#recallList").innerHTML = (result.recalls || []).map((item) => `
@@ -1313,6 +1335,7 @@ function renderLists(result) {
       <h3>${escapeHtml(item.product)} <span class="badge ${riskBadge(item.risk_level)}">${escapeHtml(item.risk_level)}</span></h3>
       <p>${escapeHtml(item.hazard)} · 유사도 ${Math.round((item.similarity || 0) * 100)}%</p>
       <ul>${(item.recommended_tests || []).slice(0, 4).map((x) => `<li>시험: ${escapeHtml(x)}</li>`).join("")}</ul>
+      ${renderEvidenceBadges(item.evidence_documents)}
     </article>`).join("");
 
   const patentHtml = (result.patents || []).slice(0, 2).map((item) => `
@@ -1320,14 +1343,220 @@ function renderLists(result) {
       <h3>${escapeHtml(item.korean_keyword)} <span class="badge ${riskBadge(item.risk_level)}">${escapeHtml(item.risk_level)}</span></h3>
       <p>IPC ${escapeHtml((item.ipc || []).join(", "))} · 출원밀집도 ${escapeHtml(String(item.filings))}</p>
       <ul>${(item.avoidance_hints || []).slice(0, 3).map((x) => `<li>${escapeHtml(x)}</li>`).join("")}</ul>
+      ${renderEvidenceBadges(item.evidence_documents)}
     </article>`).join("");
   const supportHtml = (result.support_programs || []).slice(0, 3).map((item) => `
     <article class="stack-item">
       <h3>${escapeHtml(item.name)} <span class="badge green">${escapeHtml(item.fit_score)}</span></h3>
       <p>${escapeHtml(item.benefit)}</p>
       <p>${escapeHtml(item.priority_rule)}</p>
+      ${renderEvidenceBadges(item.evidence_documents)}
     </article>`).join("");
   $("#patentSupportList").innerHTML = patentHtml + supportHtml;
+}
+
+function renderEvidenceBadges(documents = []) {
+  if (!documents.length) return "";
+  return `
+    <div class="evidence-list">
+      ${documents.slice(0, 2).map((doc) => `
+        <span title="${escapeHtml(doc.chunk_text || "")}">
+          ${escapeHtml(doc.source_type)} · ${escapeHtml(doc.title)} · ${Math.round(Number(doc.confidence || 0) * 100)}%
+        </span>`).join("")}
+    </div>`;
+}
+
+async function runAiSearch(event) {
+  if (event) event.preventDefault();
+  if (!lastResult) {
+    lastResult = analyzeLocal(collectForm());
+    render(lastResult);
+  }
+  const input = $("#aiSearchInput");
+  const status = $("#aiSearchStatus");
+  const query = input.value.trim();
+  if (query.length < 2) {
+    showToast("검색어를 2자 이상 입력해 주세요.");
+    return;
+  }
+  const raw = lastResult.raw_signals || {};
+  const product = raw.product_master || {};
+  const run = raw.analysis_run || {};
+  const payload = {
+    query,
+    scope: currentSearchScope,
+    product_id: product.product_id || null,
+    analysis_run_id: run.run_id || null,
+    filters: {
+      target_market: lastResult.request?.target_market,
+      hs_code: lastResult.request?.hs_code,
+    },
+  };
+  setAiSearchBusy(true);
+  status.textContent = "AI 검색 중...";
+  try {
+    const response = await fetch(`${API_BASE}/ai-search`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload),
+    });
+    if (!response.ok) throw new Error(`AI SEARCH ${response.status}`);
+    const result = await response.json();
+    renderAiSearchResponse(result);
+    status.textContent = `백엔드 검색 완료 · ${result.results.length}개 결과`;
+  } catch (error) {
+    console.warn(error);
+    const result = buildLocalAiSearchResponse(query, currentSearchScope, lastResult);
+    renderAiSearchResponse(result);
+    status.textContent = "백엔드 미연결 · 현재 화면 데이터 기준 로컬 검색";
+  } finally {
+    setAiSearchBusy(false);
+  }
+}
+
+function setAiSearchBusy(isBusy) {
+  const button = $("#aiSearchSubmit");
+  if (!button) return;
+  button.disabled = isBusy;
+  button.textContent = isBusy ? "검색 중..." : "검색";
+}
+
+function buildLocalAiSearchResponse(query, scope, result) {
+  const evidence = [
+    ...(result.regulations || []).map((item) => ({
+      title: item.title,
+      source_type: "regulation",
+      chunk_text: `${item.scope} ${item.action} ${(item.typical_evidence || []).join(" ")}`,
+      confidence: tokenSimilarity(query, `${item.title} ${item.scope} ${item.action}`),
+    })),
+    ...(result.recalls || []).map((item) => ({
+      title: item.product,
+      source_type: "recall",
+      chunk_text: `${item.hazard} ${(item.recommended_tests || []).join(" ")}`,
+      confidence: tokenSimilarity(query, `${item.product} ${item.hazard}`),
+    })),
+    ...(result.support_programs || []).map((item) => ({
+      title: item.name,
+      source_type: "support",
+      chunk_text: `${item.benefit} ${item.priority_rule}`,
+      confidence: tokenSimilarity(query, `${item.name} ${item.benefit}`),
+    })),
+  ].sort((a, b) => b.confidence - a.confidence);
+  const sources = PUBLIC_DATA_SOURCE_FALLBACK
+    .map((source) => ({
+      ...source,
+      score: tokenSimilarity(query, `${source.name} ${source.use_in_product} ${source.connector}`),
+    }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 4);
+  const results = [
+    {
+      title: `${result.request.product_name} 현재 진단 결과`,
+      result_type: "analysis_run",
+      source_type: "local_analysis",
+      summary: `준비도 ${result.readiness_score}/100, 규제 ${(result.regulations || []).length}건, 리콜 ${(result.recalls || []).length}건`,
+      score: 0.76,
+    },
+    ...evidence.slice(0, 5).map((item) => ({
+      title: item.title,
+      result_type: "rag_evidence",
+      source_type: item.source_type,
+      summary: item.chunk_text,
+      score: Math.max(0.18, item.confidence),
+    })),
+    ...sources.slice(0, scope === "diagnosis" ? 2 : 4).map((source) => ({
+      title: source.name,
+      result_type: "data_source",
+      source_type: source.connector,
+      summary: source.use_in_product,
+      score: Math.max(0.2, source.score),
+      source_id: source.source_id,
+      source_url: source.official_url,
+    })),
+  ].sort((a, b) => b.score - a.score).slice(0, 8);
+  return {
+    query,
+    scope,
+    answer: `${result.request.product_name} 현재 화면 데이터에서 근거 ${evidence.length}건과 데이터 출처 ${sources.length}건을 검색했습니다. 백엔드 RAG가 연결되면 등록 제품/run 기준으로 더 정밀하게 검색됩니다.`,
+    results,
+    evidence_documents: evidence.slice(0, 5),
+    data_sources: sources,
+    suggested_actions: [
+      { label: "근거 데이터 섹션 열기", action_type: "open_evidence", payload: { target: "workspace-evidence" } },
+      { label: "데이터 명세 화면 열기", action_type: "open_data_catalog", payload: { href: "data-catalog.html" } },
+    ],
+    guardrails: ["로컬 fallback은 화면에 렌더링된 결과만 검색합니다."],
+  };
+}
+
+function renderAiSearchResponse(response) {
+  $("#aiSearchAnswer").textContent = response.answer || "검색 결과가 없습니다.";
+  $("#aiSearchResults").innerHTML = (response.results || []).slice(0, 6).map((item) => `
+    <div class="search-result-row">
+      <span>${escapeHtml(item.result_type)} · ${escapeHtml(item.source_type)} · ${Math.round(Number(item.score || 0) * 100)}%</span>
+      <strong>${escapeHtml(item.title)}</strong>
+      <p>${escapeHtml(item.summary)}</p>
+    </div>
+  `).join("") || `<p>상위 결과가 없습니다.</p>`;
+  const evidence = [...(response.evidence_documents || []), ...(response.data_sources || []).map((source) => ({
+    title: source.name,
+    source_type: source.connector || source.provider || "data_source",
+    chunk_text: source.use_in_product || source.description || source.target_table || "",
+    confidence: source.score || 0.5,
+  }))].slice(0, 6);
+  $("#aiSearchEvidence").innerHTML = evidence.map((item) => `
+    <div class="search-evidence-row">
+      <span>${escapeHtml(item.source_type)} · ${Math.round(Number(item.confidence || 0) * 100)}%</span>
+      <strong>${escapeHtml(item.title)}</strong>
+      <p>${escapeHtml(item.chunk_text)}</p>
+    </div>
+  `).join("") || `<p>연결된 근거가 없습니다.</p>`;
+  $("#aiSearchActions").innerHTML = (response.suggested_actions || []).map((action) => `
+    <button type="button" data-search-action="${escapeHtml(action.action_type)}" data-action-payload="${escapeHtml(JSON.stringify(action.payload || {}))}">
+      ${escapeHtml(action.label)}
+    </button>
+  `).join("");
+}
+
+function handleAiSearchAction(event) {
+  const button = event.target.closest("[data-search-action]");
+  if (!button) return;
+  const action = button.dataset.searchAction;
+  let payload = {};
+  try {
+    payload = JSON.parse(button.dataset.actionPayload || "{}");
+  } catch {
+    payload = {};
+  }
+  if (action === "open_data_catalog") {
+    window.location.href = payload.href || "data-catalog.html";
+    return;
+  }
+  if (action === "run_analysis") {
+    runAnalysis();
+    return;
+  }
+  const targetId = payload.target || (action === "open_roadmap" ? "workspace-report" : "workspace-evidence");
+  document.getElementById(targetId)?.scrollIntoView({ behavior: "smooth", block: "start" });
+}
+
+function setupAiSearch() {
+  const form = $("#aiSearchForm");
+  if (!form) return;
+  form.addEventListener("submit", runAiSearch);
+  $("#aiSearchActions").addEventListener("click", handleAiSearchAction);
+  $$("[data-search-scope]").forEach((button) => {
+    button.addEventListener("click", () => {
+      currentSearchScope = button.dataset.searchScope || "diagnosis";
+      $$("[data-search-scope]").forEach((item) => item.classList.toggle("active", item === button));
+      const prompts = {
+        diagnosis: "EU 배터리 여권과 리콜 위험 근거를 보여줘",
+        data_catalog: "리콜 위험도 XGBoost feature로 쓸 외부 데이터",
+        global: "30일 내 처리할 인증 업무와 필요한 데이터 출처",
+      };
+      $("#aiSearchInput").value = prompts[currentSearchScope] || prompts.diagnosis;
+    });
+  });
 }
 
 function renderDataSources(result) {
@@ -1655,6 +1884,7 @@ function init() {
   $("#downloadJson").addEventListener("click", downloadJson);
   $("#printReport").addEventListener("click", printReport);
   $("#collectPublicData").addEventListener("click", collectPublicData);
+  setupAiSearch();
   setupWorkspaceNavigation();
   updateBackendState();
   runAnalysis();

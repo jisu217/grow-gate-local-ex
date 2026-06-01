@@ -26,6 +26,8 @@ def main() -> None:
     print(f"Wrote {public_data_path}")
     print(f"Public data sources: {len(public_data_payload['evidence_source'])}")
     print(f"Normalized signals: {len(public_data_payload['normalized_signal'])}")
+    print(f"XGBoost catalog sources: {len(public_data_payload['xgboost_catalog_sources'])}")
+    print(f"External fetch candidates: {len(public_data_payload['external_fetch_candidates'])}")
 
 
 if __name__ == "__main__":

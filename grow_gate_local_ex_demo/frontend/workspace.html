@@ -40,7 +40,8 @@
           <a href="#screen-s07"><span>07</span>FTO·지원</a>
           <a href="#screen-s08"><span>08</span>실행 보드</a>
           <a href="#workspace-report"><span>09</span>리포트</a>
-          <a href="#workspace-evidence"><span>10</span>근거 데이터</a>
+          <a href="#workspace-ai-search"><span>10</span>AI 검색</a>
+          <a href="#workspace-evidence"><span>11</span>근거 데이터</a>
         </nav>
         <div class="sidebar-action">
           <a href="roadmap.html">업무 보드로 이동</a>
@@ -330,6 +331,41 @@
         <div id="reportHighlights" class="report-highlights"></div>
         <div id="guardrails" class="guardrails"></div>
       </article>
+    </section>
+
+    <section id="workspace-ai-search" class="ai-search-workbench">
+      <div class="panel-heading horizontal">
+        <div>
+          <p class="eyebrow">AI CONTEXT SEARCH</p>
+          <h2>진단 근거·데이터 검색</h2>
+        </div>
+        <div class="search-scope-group" role="group" aria-label="검색 범위">
+          <button type="button" class="scope-chip active" data-search-scope="diagnosis">진단</button>
+          <button type="button" class="scope-chip" data-search-scope="data_catalog">데이터</button>
+          <button type="button" class="scope-chip" data-search-scope="global">전체</button>
+        </div>
+      </div>
+      <form id="aiSearchForm" class="ai-search-form">
+        <label for="aiSearchInput">검색어</label>
+        <input id="aiSearchInput" type="search" value="EU 배터리 여권과 리콜 위험 근거를 보여줘" autocomplete="off" />
+        <button id="aiSearchSubmit" type="submit" class="primary small">검색</button>
+      </form>
+      <div id="aiSearchStatus" class="ai-search-status">현재 분석 결과와 RAG 근거를 기준으로 검색합니다.</div>
+      <div class="ai-search-output">
+        <article>
+          <h3>AI 답변</h3>
+          <p id="aiSearchAnswer">검색어를 입력하면 진단 근거와 데이터 출처를 함께 보여줍니다.</p>
+          <div id="aiSearchActions" class="ai-search-actions"></div>
+        </article>
+        <article>
+          <h3>상위 결과</h3>
+          <div id="aiSearchResults" class="ai-search-results"></div>
+        </article>
+        <article>
+          <h3>근거·출처</h3>
+          <div id="aiSearchEvidence" class="ai-search-evidence"></div>
+        </article>
+      </div>
     </section>
 
     <section id="workspace-detail-lists" class="result-layout bottom">

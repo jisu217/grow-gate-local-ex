@@ -1,0 +1,3495 @@
+{
+  "metadata": {
+    "service": "GROW-GATE Local EX",
+    "version": "0.3.0-xgboost-catalog",
+    "updated_at": "2026-05-31",
+    "source_file": "xgboost_data_collection_catalog.xlsx",
+    "total_sources": 41,
+    "public_source_count": 21,
+    "external_source_count": 20,
+    "priority_counts": {
+      "A": 23,
+      "B": 12,
+      "C": 6
+    },
+    "status_counts": {
+      "수집대상 확정": 22,
+      "수집대상 후보": 15,
+      "유료 검토": 4
+    },
+    "note": "xgboost_data_collection_catalog.xlsx를 앱 파이프라인에서 소비할 수 있도록 정규화한 데이터 명세입니다."
+  },
+  "sources": [
+    {
+      "source_id": "P-01",
+      "catalog_id": "P-01",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "trade",
+      "target_table": "trade_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S09"
+      ],
+      "name": "관세청_품목별 국가별 수출입실적(GW)",
+      "provider": "관세청 / 공공데이터포털",
+      "collection_method": "Open API(JSON/XML)",
+      "update_cycle": "월별, 전월 자료 현행화",
+      "join_keys": [
+        "HS2",
+        "4",
+        "6",
+        "10",
+        "국가코드",
+        "기간",
+        "수출입구분"
+      ],
+      "collection_fields": [
+        "수출입 금액",
+        "중량",
+        "국가명",
+        "HS코드",
+        "기간"
+      ],
+      "feature_candidates": [
+        "hs_country_export_growth_3m",
+        "import_demand_ratio",
+        "market_size_usd"
+      ],
+      "model_targets": [
+        "시장성 점수",
+        "90일 파일럿 수출 가능성"
+      ],
+      "derived_variables": [
+        "HS-국가-월 단위 rolling growth",
+        "YoY",
+        "z-score"
+      ],
+      "constraints": "공공데이터포털 활용신청/서비스키 필요",
+      "official_url": "https://www.data.go.kr/data/15100475/openapi.do",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "시장성 점수, 90일 파일럿 수출 가능성",
+      "seed_records": [
+        {
+          "catalog_id": "P-01",
+          "dataset_name": "관세청_품목별 국가별 수출입실적(GW)",
+          "provider": "관세청 / 공공데이터포털",
+          "join_keys": [
+            "HS2",
+            "4",
+            "6",
+            "10",
+            "국가코드",
+            "기간",
+            "수출입구분"
+          ],
+          "feature_candidates": [
+            "hs_country_export_growth_3m",
+            "import_demand_ratio",
+            "market_size_usd"
+          ],
+          "derived_variables": [
+            "HS-국가-월 단위 rolling growth",
+            "YoY",
+            "z-score"
+          ],
+          "model_targets": [
+            "시장성 점수",
+            "90일 파일럿 수출 가능성"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-02",
+      "catalog_id": "P-02",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "trade",
+      "target_table": "trade_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S09"
+      ],
+      "name": "관세청_국가별 수출입실적(GW)",
+      "provider": "관세청 / 공공데이터포털",
+      "collection_method": "Open API(JSON/XML)",
+      "update_cycle": "월별",
+      "join_keys": [
+        "국가코드",
+        "기간",
+        "수출입구분"
+      ],
+      "collection_fields": [
+        "국가별 수출입 금액",
+        "중량"
+      ],
+      "feature_candidates": [
+        "country_export_momentum",
+        "target_country_trade_scale"
+      ],
+      "model_targets": [
+        "시장성 점수"
+      ],
+      "derived_variables": [
+        "국가별 3",
+        "6",
+        "12개월 성장률과 변동성"
+      ],
+      "constraints": "품목 수준 정보는 P-01과 결합 필요",
+      "official_url": "https://www.data.go.kr/data/15101612/openapi.do",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "시장성 점수",
+      "seed_records": [
+        {
+          "catalog_id": "P-02",
+          "dataset_name": "관세청_국가별 수출입실적(GW)",
+          "provider": "관세청 / 공공데이터포털",
+          "join_keys": [
+            "국가코드",
+            "기간",
+            "수출입구분"
+          ],
+          "feature_candidates": [
+            "country_export_momentum",
+            "target_country_trade_scale"
+          ],
+          "derived_variables": [
+            "국가별 3",
+            "6",
+            "12개월 성장률과 변동성"
+          ],
+          "model_targets": [
+            "시장성 점수"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-03",
+      "catalog_id": "P-03",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "regulation",
+      "target_table": "regulation_signal",
+      "screen_ids": [
+        "S02",
+        "S03"
+      ],
+      "name": "관세청_HS부호 단위별 품목명",
+      "provider": "관세청 / 공공데이터포털",
+      "collection_method": "파일(XLSX)",
+      "update_cycle": "수시/개정 시",
+      "join_keys": [
+        "HS2",
+        "4",
+        "6",
+        "10"
+      ],
+      "collection_fields": [
+        "HS부호",
+        "한글",
+        "영문 품명",
+        "분류체계"
+      ],
+      "feature_candidates": [
+        "hs_code_validated",
+        "product_hs_similarity_score"
+      ],
+      "model_targets": [
+        "전체 모델 공통 키"
+      ],
+      "derived_variables": [
+        "제품명→HS 후보 매핑",
+        "HS6",
+        "HS10 표준화"
+      ],
+      "constraints": "최종 HS 분류는 전문가 검수 필요",
+      "official_url": "https://www.data.go.kr/data/15130660/fileData.do",
+      "collection_status": "수집대상 확정",
+      "requires_key": false,
+      "reliability": 91,
+      "use_in_product": "전체 모델 공통 키",
+      "seed_records": [
+        {
+          "catalog_id": "P-03",
+          "dataset_name": "관세청_HS부호 단위별 품목명",
+          "provider": "관세청 / 공공데이터포털",
+          "join_keys": [
+            "HS2",
+            "4",
+            "6",
+            "10"
+          ],
+          "feature_candidates": [
+            "hs_code_validated",
+            "product_hs_similarity_score"
+          ],
+          "derived_variables": [
+            "제품명→HS 후보 매핑",
+            "HS6",
+            "HS10 표준화"
+          ],
+          "model_targets": [
+            "전체 모델 공통 키"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-04",
+      "catalog_id": "P-04",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "regulation",
+      "target_table": "regulation_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S08",
+        "S09"
+      ],
+      "name": "관세청_품목번호별 관세율표",
+      "provider": "관세청 / 공공데이터포털",
+      "collection_method": "파일(XLSX)",
+      "update_cycle": "연간/개정 시",
+      "join_keys": [
+        "HS10",
+        "관세율구분",
+        "적용국가",
+        "적용기간"
+      ],
+      "collection_fields": [
+        "기본세율",
+        "양허",
+        "탄력세율",
+        "단위당세액",
+        "적용일"
+      ],
+      "feature_candidates": [
+        "tariff_rate",
+        "duty_type_count",
+        "tariff_change_flag"
+      ],
+      "model_targets": [
+        "규제 압력",
+        "시험·보완 예비비용"
+      ],
+      "derived_variables": [
+        "HS별 관세율 one-hot",
+        "비용 변수화"
+      ],
+      "constraints": "수입세율 중심이므로 수출국 상대국 세율은 P-05/ITC와 보강",
+      "official_url": "https://www.data.go.kr/data/15051179/fileData.do",
+      "collection_status": "수집대상 확정",
+      "requires_key": false,
+      "reliability": 91,
+      "use_in_product": "규제 압력, 시험·보완 예비비용",
+      "seed_records": [
+        {
+          "catalog_id": "P-04",
+          "dataset_name": "관세청_품목번호별 관세율표",
+          "provider": "관세청 / 공공데이터포털",
+          "join_keys": [
+            "HS10",
+            "관세율구분",
+            "적용국가",
+            "적용기간"
+          ],
+          "feature_candidates": [
+            "tariff_rate",
+            "duty_type_count",
+            "tariff_change_flag"
+          ],
+          "derived_variables": [
+            "HS별 관세율 one-hot",
+            "비용 변수화"
+          ],
+          "model_targets": [
+            "규제 압력",
+            "시험·보완 예비비용"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-05",
+      "catalog_id": "P-05",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "regulation",
+      "target_table": "regulation_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S08",
+        "S09"
+      ],
+      "name": "관세청_국가별 관세율표",
+      "provider": "관세청 / 공공데이터포털",
+      "collection_method": "파일(XLSX)",
+      "update_cycle": "수시",
+      "join_keys": [
+        "국가",
+        "HS",
+        "적용일"
+      ],
+      "collection_fields": [
+        "상대국 수입관세율",
+        "HS부호",
+        "국가"
+      ],
+      "feature_candidates": [
+        "target_import_tariff",
+        "preferential_gap"
+      ],
+      "model_targets": [
+        "규제 압력",
+        "예비비용"
+      ],
+      "derived_variables": [
+        "타깃 국가별 관세 부담 점수"
+      ],
+      "constraints": "참고용 자료로 법적 효력 없음 표시 필요",
+      "official_url": "https://www.data.go.kr/data/15051176/fileData.do",
+      "collection_status": "수집대상 확정",
+      "requires_key": false,
+      "reliability": 91,
+      "use_in_product": "규제 압력, 예비비용",
+      "seed_records": [
+        {
+          "catalog_id": "P-05",
+          "dataset_name": "관세청_국가별 관세율표",
+          "provider": "관세청 / 공공데이터포털",
+          "join_keys": [
+            "국가",
+            "HS",
+            "적용일"
+          ],
+          "feature_candidates": [
+            "target_import_tariff",
+            "preferential_gap"
+          ],
+          "derived_variables": [
+            "타깃 국가별 관세 부담 점수"
+          ],
+          "model_targets": [
+            "규제 압력",
+            "예비비용"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-06",
+      "catalog_id": "P-06",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "cost_logistics",
+      "target_table": "cost_logistics_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S08",
+        "S09"
+      ],
+      "name": "관세청_관세환율정보(GW)",
+      "provider": "관세청 / 공공데이터포털",
+      "collection_method": "Open API(XML)",
+      "update_cycle": "주간",
+      "join_keys": [
+        "국가부호",
+        "통화부호",
+        "적용개시일",
+        "수출입구분"
+      ],
+      "collection_fields": [
+        "과세환율",
+        "통화",
+        "적용기간"
+      ],
+      "feature_candidates": [
+        "customs_fx_rate",
+        "fx_volatility_4w"
+      ],
+      "model_targets": [
+        "예비비용",
+        "시장성 점수"
+      ],
+      "derived_variables": [
+        "주간 환율과 월 평균",
+        "변동성"
+      ],
+      "constraints": "통상 환율과 과세환율 목적 구분 필요",
+      "official_url": "https://www.data.go.kr/data/15101230/openapi.do",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "예비비용, 시장성 점수",
+      "seed_records": [
+        {
+          "catalog_id": "P-06",
+          "dataset_name": "관세청_관세환율정보(GW)",
+          "provider": "관세청 / 공공데이터포털",
+          "join_keys": [
+            "국가부호",
+            "통화부호",
+            "적용개시일",
+            "수출입구분"
+          ],
+          "feature_candidates": [
+            "customs_fx_rate",
+            "fx_volatility_4w"
+          ],
+          "derived_variables": [
+            "주간 환율과 월 평균",
+            "변동성"
+          ],
+          "model_targets": [
+            "예비비용",
+            "시장성 점수"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-07",
+      "catalog_id": "P-07",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "certification",
+      "target_table": "certification_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S08",
+        "S09"
+      ],
+      "name": "대한무역투자진흥공사_해외인증정보",
+      "provider": "KOTRA / 공공데이터포털",
+      "collection_method": "Open API(JSON/XML)",
+      "update_cycle": "수시",
+      "join_keys": [
+        "국가",
+        "인증제도",
+        "품목",
+        "분야"
+      ],
+      "collection_fields": [
+        "인증명",
+        "절차",
+        "대상",
+        "소관기관",
+        "참고 URL"
+      ],
+      "feature_candidates": [
+        "cert_required_flag",
+        "cert_steps_count",
+        "cert_complexity_score"
+      ],
+      "model_targets": [
+        "규제 압력",
+        "인증·시험 리드타임"
+      ],
+      "derived_variables": [
+        "절차 텍스트 길이",
+        "단계 수",
+        "국가-품목 인증 요구 점수"
+      ],
+      "constraints": "인증 실제 소요기간은 내부/시험기관 데이터로 보정",
+      "official_url": "https://www.data.go.kr/data/15134030/openapi.do",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "규제 압력, 인증·시험 리드타임",
+      "seed_records": [
+        {
+          "catalog_id": "P-07",
+          "dataset_name": "대한무역투자진흥공사_해외인증정보",
+          "provider": "KOTRA / 공공데이터포털",
+          "join_keys": [
+            "국가",
+            "인증제도",
+            "품목",
+            "분야"
+          ],
+          "feature_candidates": [
+            "cert_required_flag",
+            "cert_steps_count",
+            "cert_complexity_score"
+          ],
+          "derived_variables": [
+            "절차 텍스트 길이",
+            "단계 수",
+            "국가-품목 인증 요구 점수"
+          ],
+          "model_targets": [
+            "규제 압력",
+            "인증·시험 리드타임"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-08",
+      "catalog_id": "P-08",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "market_intel",
+      "target_table": "market_intel_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S08",
+        "S09"
+      ],
+      "name": "대한무역투자진흥공사_해외시장뉴스",
+      "provider": "KOTRA / 공공데이터포털",
+      "collection_method": "파일/Open API 가능",
+      "update_cycle": "상시/자동 갱신",
+      "join_keys": [
+        "국가",
+        "산업",
+        "날짜",
+        "키워드"
+      ],
+      "collection_fields": [
+        "뉴스 제목",
+        "URL",
+        "국가",
+        "산업",
+        "정책",
+        "시장 동향"
+      ],
+      "feature_candidates": [
+        "kotra_news_count_30d",
+        "policy_keyword_count",
+        "sentiment_proxy"
+      ],
+      "model_targets": [
+        "시장성 점수",
+        "규제 압력"
+      ],
+      "derived_variables": [
+        "국가-산업별 뉴스량",
+        "키워드 카운트",
+        "최신성 가중치"
+      ],
+      "constraints": "URL 데이터는 본문 크롤링 정책 확인 필요",
+      "official_url": "https://www.data.go.kr/data/15083202/fileData.do",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "시장성 점수, 규제 압력",
+      "seed_records": [
+        {
+          "catalog_id": "P-08",
+          "dataset_name": "대한무역투자진흥공사_해외시장뉴스",
+          "provider": "KOTRA / 공공데이터포털",
+          "join_keys": [
+            "국가",
+            "산업",
+            "날짜",
+            "키워드"
+          ],
+          "feature_candidates": [
+            "kotra_news_count_30d",
+            "policy_keyword_count",
+            "sentiment_proxy"
+          ],
+          "derived_variables": [
+            "국가-산업별 뉴스량",
+            "키워드 카운트",
+            "최신성 가중치"
+          ],
+          "model_targets": [
+            "시장성 점수",
+            "규제 압력"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-09",
+      "catalog_id": "P-09",
+      "source_group": "공공데이터",
+      "priority": "B",
+      "connector": "cost_logistics",
+      "target_table": "cost_logistics_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S08",
+        "S09"
+      ],
+      "name": "대한무역투자진흥공사_국가별 물가정보",
+      "provider": "KOTRA / 공공데이터포털",
+      "collection_method": "Open API(JSON/XML)",
+      "update_cycle": "수시",
+      "join_keys": [
+        "국가",
+        "품목",
+        "기준일"
+      ],
+      "collection_fields": [
+        "품목명",
+        "품목금액",
+        "단위",
+        "국가"
+      ],
+      "feature_candidates": [
+        "price_level_index",
+        "target_price_gap"
+      ],
+      "model_targets": [
+        "시장성 점수",
+        "예비비용"
+      ],
+      "derived_variables": [
+        "유사 품목 현지 가격 비교",
+        "가격 경쟁력 점수"
+      ],
+      "constraints": "품목 매칭 품질 관리 필요",
+      "official_url": "https://data.go.kr/data/15122665/openapi.do",
+      "collection_status": "수집대상 후보",
+      "requires_key": true,
+      "reliability": 76,
+      "use_in_product": "시장성 점수, 예비비용",
+      "seed_records": [
+        {
+          "catalog_id": "P-09",
+          "dataset_name": "대한무역투자진흥공사_국가별 물가정보",
+          "provider": "KOTRA / 공공데이터포털",
+          "join_keys": [
+            "국가",
+            "품목",
+            "기준일"
+          ],
+          "feature_candidates": [
+            "price_level_index",
+            "target_price_gap"
+          ],
+          "derived_variables": [
+            "유사 품목 현지 가격 비교",
+            "가격 경쟁력 점수"
+          ],
+          "model_targets": [
+            "시장성 점수",
+            "예비비용"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "P-10",
+      "catalog_id": "P-10",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "support",
+      "target_table": "support_program",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S07",
+        "S08",
+        "S09"
+      ],
+      "name": "지원사업정보 API",
+      "provider": "기업마당(Bizinfo)",
+      "collection_method": "Open API(JSON/XML/RSS)",
+      "update_cycle": "수시/최신 공고",
+      "join_keys": [
+        "공고ID",
+        "기관",
+        "지역",
+        "분야",
+        "신청기간"
+      ],
+      "collection_fields": [
+        "공고명",
+        "지원대상",
+        "지원내용",
+        "지역",
+        "해시태그",
+        "기간"
+      ],
+      "feature_candidates": [
+        "program_eligibility_score",
+        "export_program_match"
+      ],
+      "model_targets": [
+        "지원사업 선정 적합 확률"
+      ],
+      "derived_variables": [
+        "기업 프로필과 공고 조건 매칭",
+        "신청마감 D-day"
+      ],
+      "constraints": "선정 결과 label은 내부 신청/선정 이력 필요",
+      "official_url": "https://www.bizinfo.go.kr/apiDetail.do?id=bizinfoApi",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "지원사업 선정 적합 확률",
+      "seed_records": [
+        {
+          "catalog_id": "P-10",
+          "dataset_name": "지원사업정보 API",
+          "provider": "기업마당(Bizinfo)",
+          "join_keys": [
+            "공고ID",
+            "기관",
+            "지역",
+            "분야",
+            "신청기간"
+          ],
+          "feature_candidates": [
+            "program_eligibility_score",
+            "export_program_match"
+          ],
+          "derived_variables": [
+            "기업 프로필과 공고 조건 매칭",
+            "신청마감 D-day"
+          ],
+          "model_targets": [
+            "지원사업 선정 적합 확률"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-11",
+      "catalog_id": "P-11",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "support",
+      "target_table": "support_program",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S07",
+        "S08",
+        "S09"
+      ],
+      "name": "KOTRA_수출바우처사업 모집공고",
+      "provider": "KOTRA / 공공데이터포털",
+      "collection_method": "파일(CSV) + 자동변환 API",
+      "update_cycle": "공고 시",
+      "join_keys": [
+        "사업명",
+        "기간",
+        "대상",
+        "지원내용"
+      ],
+      "collection_fields": [
+        "모집공고",
+        "대상",
+        "신청기간",
+        "지원 분야"
+      ],
+      "feature_candidates": [
+        "voucher_match_flag",
+        "voucher_window_days"
+      ],
+      "model_targets": [
+        "지원사업 선정 적합 확률"
+      ],
+      "derived_variables": [
+        "자격 요건 텍스트 임베딩",
+        "룰 매칭"
+      ],
+      "constraints": "공고 데이터만으로 선정 가능성 label 부족",
+      "official_url": "https://www.data.go.kr/data/15135590/fileData.do",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "지원사업 선정 적합 확률",
+      "seed_records": [
+        {
+          "catalog_id": "P-11",
+          "dataset_name": "KOTRA_수출바우처사업 모집공고",
+          "provider": "KOTRA / 공공데이터포털",
+          "join_keys": [
+            "사업명",
+            "기간",
+            "대상",
+            "지원내용"
+          ],
+          "feature_candidates": [
+            "voucher_match_flag",
+            "voucher_window_days"
+          ],
+          "derived_variables": [
+            "자격 요건 텍스트 임베딩",
+            "룰 매칭"
+          ],
+          "model_targets": [
+            "지원사업 선정 적합 확률"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-12",
+      "catalog_id": "P-12",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "recall",
+      "target_table": "recall_case",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S06",
+        "S08",
+        "S09"
+      ],
+      "name": "산업통상부 국가기술표준원_제품 안전인증 및 리콜 정보",
+      "provider": "국가기술표준원 / 공공데이터포털",
+      "collection_method": "Open API(JSON/XML)",
+      "update_cycle": "수시",
+      "join_keys": [
+        "제품명",
+        "모델명",
+        "인증번호",
+        "사업자",
+        "공표일"
+      ],
+      "collection_fields": [
+        "제품명",
+        "모델명",
+        "인증기관",
+        "제조수입사",
+        "리콜사유",
+        "조치내용"
+      ],
+      "feature_candidates": [
+        "domestic_recall_count",
+        "recall_reason_risk_score",
+        "kc_cert_flag"
+      ],
+      "model_targets": [
+        "리콜 위험도",
+        "규제 압력"
+      ],
+      "derived_variables": [
+        "제품군-국가-기간별 리콜 빈도",
+        "리콜 사유 분류"
+      ],
+      "constraints": "제품명/모델명 정규화 필요",
+      "official_url": "https://www.data.go.kr/data/15116894/openapi.do",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "리콜 위험도, 규제 압력",
+      "seed_records": [
+        {
+          "catalog_id": "P-12",
+          "dataset_name": "산업통상부 국가기술표준원_제품 안전인증 및 리콜 정보",
+          "provider": "국가기술표준원 / 공공데이터포털",
+          "join_keys": [
+            "제품명",
+            "모델명",
+            "인증번호",
+            "사업자",
+            "공표일"
+          ],
+          "feature_candidates": [
+            "domestic_recall_count",
+            "recall_reason_risk_score",
+            "kc_cert_flag"
+          ],
+          "derived_variables": [
+            "제품군-국가-기간별 리콜 빈도",
+            "리콜 사유 분류"
+          ],
+          "model_targets": [
+            "리콜 위험도",
+            "규제 압력"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-13",
+      "catalog_id": "P-13",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "recall",
+      "target_table": "recall_case",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S06",
+        "S08",
+        "S09"
+      ],
+      "name": "제품안전정보센터 OpenAPI",
+      "provider": "제품안전정보센터(Safety Korea)",
+      "collection_method": "Open API(신청서/인증키)",
+      "update_cycle": "수시",
+      "join_keys": [
+        "인증번호",
+        "제품명",
+        "모델명",
+        "사업자",
+        "리콜일"
+      ],
+      "collection_fields": [
+        "KC인증정보",
+        "국내리콜정보",
+        "국외리콜정보"
+      ],
+      "feature_candidates": [
+        "kc_cert_status",
+        "recall_history_count",
+        "overseas_recall_flag"
+      ],
+      "model_targets": [
+        "리콜 위험도",
+        "인증·시험 리드타임"
+      ],
+      "derived_variables": [
+        "국내",
+        "국외 리콜 통합 리스크 점수"
+      ],
+      "constraints": "이메일 신청 후 인증키 발급 필요",
+      "official_url": "https://www.safetykorea.kr/release/openapi",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "리콜 위험도, 인증·시험 리드타임",
+      "seed_records": [
+        {
+          "catalog_id": "P-13",
+          "dataset_name": "제품안전정보센터 OpenAPI",
+          "provider": "제품안전정보센터(Safety Korea)",
+          "join_keys": [
+            "인증번호",
+            "제품명",
+            "모델명",
+            "사업자",
+            "리콜일"
+          ],
+          "feature_candidates": [
+            "kc_cert_status",
+            "recall_history_count",
+            "overseas_recall_flag"
+          ],
+          "derived_variables": [
+            "국내",
+            "국외 리콜 통합 리스크 점수"
+          ],
+          "model_targets": [
+            "리콜 위험도",
+            "인증·시험 리드타임"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-14",
+      "catalog_id": "P-14",
+      "source_group": "공공데이터",
+      "priority": "B",
+      "connector": "certification",
+      "target_table": "certification_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S08",
+        "S09"
+      ],
+      "name": "한국산업기술시험원_업체별 시험검사 진행 실적",
+      "provider": "KTL / 공공데이터포털",
+      "collection_method": "CSV + 자동변환 API",
+      "update_cycle": "수시/1회성 데이터",
+      "join_keys": [
+        "접수연월",
+        "업체주소",
+        "업체",
+        "시험접수"
+      ],
+      "collection_fields": [
+        "접수건수",
+        "접수수량",
+        "접수연월",
+        "업체기본주소"
+      ],
+      "feature_candidates": [
+        "lab_demand_index",
+        "regional_test_load"
+      ],
+      "model_targets": [
+        "인증·시험 리드타임"
+      ],
+      "derived_variables": [
+        "월별 시험 수요 proxy",
+        "지역별 backlog proxy"
+      ],
+      "constraints": "개별 리드타임 값은 없음. 내부 접수완료일로 보정 필요",
+      "official_url": "https://www.data.go.kr/data/15124638/fileData.do",
+      "collection_status": "수집대상 후보",
+      "requires_key": true,
+      "reliability": 76,
+      "use_in_product": "인증·시험 리드타임",
+      "seed_records": [
+        {
+          "catalog_id": "P-14",
+          "dataset_name": "한국산업기술시험원_업체별 시험검사 진행 실적",
+          "provider": "KTL / 공공데이터포털",
+          "join_keys": [
+            "접수연월",
+            "업체주소",
+            "업체",
+            "시험접수"
+          ],
+          "feature_candidates": [
+            "lab_demand_index",
+            "regional_test_load"
+          ],
+          "derived_variables": [
+            "월별 시험 수요 proxy",
+            "지역별 backlog proxy"
+          ],
+          "model_targets": [
+            "인증·시험 리드타임"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "P-15",
+      "catalog_id": "P-15",
+      "source_group": "공공데이터",
+      "priority": "B",
+      "connector": "certification",
+      "target_table": "certification_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S08",
+        "S09"
+      ],
+      "name": "KOLAS 공인시험기관 검색/인정현황",
+      "provider": "한국인정기구(KOLAS)",
+      "collection_method": "웹/파일 데이터",
+      "update_cycle": "상시/기준일",
+      "join_keys": [
+        "시험분야",
+        "세부분야",
+        "지역",
+        "기관명"
+      ],
+      "collection_fields": [
+        "기관명",
+        "인정분야",
+        "소재지",
+        "연락처",
+        "인정범위"
+      ],
+      "feature_candidates": [
+        "lab_availability_count",
+        "nearby_lab_count"
+      ],
+      "model_targets": [
+        "인증·시험 리드타임"
+      ],
+      "derived_variables": [
+        "품목-시험분야별 가용 시험기관 수"
+      ],
+      "constraints": "웹 수집 시 이용약관 확인, 공공데이터 파일은 집계 통계 중심",
+      "official_url": "https://www.knab.go.kr/usr/inf/srh/InfoTestInsttSearchList.do",
+      "collection_status": "수집대상 후보",
+      "requires_key": false,
+      "reliability": 76,
+      "use_in_product": "인증·시험 리드타임",
+      "seed_records": [
+        {
+          "catalog_id": "P-15",
+          "dataset_name": "KOLAS 공인시험기관 검색/인정현황",
+          "provider": "한국인정기구(KOLAS)",
+          "join_keys": [
+            "시험분야",
+            "세부분야",
+            "지역",
+            "기관명"
+          ],
+          "feature_candidates": [
+            "lab_availability_count",
+            "nearby_lab_count"
+          ],
+          "derived_variables": [
+            "품목-시험분야별 가용 시험기관 수"
+          ],
+          "model_targets": [
+            "인증·시험 리드타임"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "P-16",
+      "catalog_id": "P-16",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "external",
+      "target_table": "external_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S08",
+        "S09"
+      ],
+      "name": "한국무역보험공사_국가별 업종별 위험지수",
+      "provider": "K-SURE / 공공데이터포털",
+      "collection_method": "Open API(JSON)",
+      "update_cycle": "일 단위/월별 보고",
+      "join_keys": [
+        "국가",
+        "업종(KSIC 중분류)",
+        "기준일"
+      ],
+      "collection_fields": [
+        "위험지수",
+        "위험등급(RI1~RI5)",
+        "업종",
+        "국가"
+      ],
+      "feature_candidates": [
+        "country_sector_risk_index",
+        "risk_grade"
+      ],
+      "model_targets": [
+        "시장성 점수",
+        "예비비용"
+      ],
+      "derived_variables": [
+        "국가-업종 리스크 가중치",
+        "리스크 등급 ordinal encoding"
+      ],
+      "constraints": "업종-제품 매핑 필요",
+      "official_url": "https://www.data.go.kr/data/15132755/openapi.do",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "시장성 점수, 예비비용",
+      "seed_records": [
+        {
+          "catalog_id": "P-16",
+          "dataset_name": "한국무역보험공사_국가별 업종별 위험지수",
+          "provider": "K-SURE / 공공데이터포털",
+          "join_keys": [
+            "국가",
+            "업종(KSIC 중분류)",
+            "기준일"
+          ],
+          "feature_candidates": [
+            "country_sector_risk_index",
+            "risk_grade"
+          ],
+          "derived_variables": [
+            "국가-업종 리스크 가중치",
+            "리스크 등급 ordinal encoding"
+          ],
+          "model_targets": [
+            "시장성 점수",
+            "예비비용"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-17",
+      "catalog_id": "P-17",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "external",
+      "target_table": "external_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S08",
+        "S09"
+      ],
+      "name": "한국무역보험공사_국별신용등급",
+      "provider": "K-SURE / 공공데이터포털",
+      "collection_method": "Open API(JSON)",
+      "update_cycle": "수시",
+      "join_keys": [
+        "국가",
+        "평가일"
+      ],
+      "collection_fields": [
+        "국가등급",
+        "등급평가일"
+      ],
+      "feature_candidates": [
+        "country_credit_grade",
+        "credit_grade_age"
+      ],
+      "model_targets": [
+        "시장성 점수",
+        "예비비용"
+      ],
+      "derived_variables": [
+        "국가 리스크 점수",
+        "결제",
+        "보험 필요성 proxy"
+      ],
+      "constraints": "등급 변화 이력 확보 필요",
+      "official_url": "https://www.data.go.kr/data/15140201/openapi.do",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "시장성 점수, 예비비용",
+      "seed_records": [
+        {
+          "catalog_id": "P-17",
+          "dataset_name": "한국무역보험공사_국별신용등급",
+          "provider": "K-SURE / 공공데이터포털",
+          "join_keys": [
+            "국가",
+            "평가일"
+          ],
+          "feature_candidates": [
+            "country_credit_grade",
+            "credit_grade_age"
+          ],
+          "derived_variables": [
+            "국가 리스크 점수",
+            "결제",
+            "보험 필요성 proxy"
+          ],
+          "model_targets": [
+            "시장성 점수",
+            "예비비용"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-18",
+      "catalog_id": "P-18",
+      "source_group": "공공데이터",
+      "priority": "A",
+      "connector": "cost_logistics",
+      "target_table": "cost_logistics_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S08",
+        "S09"
+      ],
+      "name": "한국은행 ECOS Open API",
+      "provider": "한국은행",
+      "collection_method": "Open API",
+      "update_cycle": "상시",
+      "join_keys": [
+        "통계코드",
+        "국가",
+        "통화",
+        "기간"
+      ],
+      "collection_fields": [
+        "환율",
+        "금리",
+        "물가",
+        "국제수지 등 경제통계"
+      ],
+      "feature_candidates": [
+        "fx_rate",
+        "interest_rate",
+        "macro_stability"
+      ],
+      "model_targets": [
+        "시장성 점수",
+        "예비비용"
+      ],
+      "derived_variables": [
+        "월",
+        "주 단위 macro 변수",
+        "환율 변동성"
+      ],
+      "constraints": "API 키 발급 필요",
+      "official_url": "https://ecos.bok.or.kr/api/",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "시장성 점수, 예비비용",
+      "seed_records": [
+        {
+          "catalog_id": "P-18",
+          "dataset_name": "한국은행 ECOS Open API",
+          "provider": "한국은행",
+          "join_keys": [
+            "통계코드",
+            "국가",
+            "통화",
+            "기간"
+          ],
+          "feature_candidates": [
+            "fx_rate",
+            "interest_rate",
+            "macro_stability"
+          ],
+          "derived_variables": [
+            "월",
+            "주 단위 macro 변수",
+            "환율 변동성"
+          ],
+          "model_targets": [
+            "시장성 점수",
+            "예비비용"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "P-19",
+      "catalog_id": "P-19",
+      "source_group": "공공데이터",
+      "priority": "B",
+      "connector": "external",
+      "target_table": "external_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S09"
+      ],
+      "name": "KOSIS 공유서비스 Open API",
+      "provider": "국가통계포털(KOSIS)",
+      "collection_method": "Open API",
+      "update_cycle": "통계별 상이",
+      "join_keys": [
+        "통계표ID",
+        "기간",
+        "국가",
+        "지역",
+        "항목"
+      ],
+      "collection_fields": [
+        "국가승인통계",
+        "국제통계",
+        "산업",
+        "경제 지표"
+      ],
+      "feature_candidates": [
+        "industry_output_index",
+        "export_price_index",
+        "target_macro_proxy"
+      ],
+      "model_targets": [
+        "시장성 점수"
+      ],
+      "derived_variables": [
+        "공식 통계 기반 경기",
+        "수요 보조 변수"
+      ],
+      "constraints": "통계표별 메타데이터 관리 필요",
+      "official_url": "https://kosis.kr/openapi/",
+      "collection_status": "수집대상 후보",
+      "requires_key": true,
+      "reliability": 76,
+      "use_in_product": "시장성 점수",
+      "seed_records": [
+        {
+          "catalog_id": "P-19",
+          "dataset_name": "KOSIS 공유서비스 Open API",
+          "provider": "국가통계포털(KOSIS)",
+          "join_keys": [
+            "통계표ID",
+            "기간",
+            "국가",
+            "지역",
+            "항목"
+          ],
+          "feature_candidates": [
+            "industry_output_index",
+            "export_price_index",
+            "target_macro_proxy"
+          ],
+          "derived_variables": [
+            "공식 통계 기반 경기",
+            "수요 보조 변수"
+          ],
+          "model_targets": [
+            "시장성 점수"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "P-20",
+      "catalog_id": "P-20",
+      "source_group": "공공데이터",
+      "priority": "B",
+      "connector": "cost_logistics",
+      "target_table": "cost_logistics_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S08",
+        "S09"
+      ],
+      "name": "한국수출입은행 환율 정보",
+      "provider": "한국수출입은행 / 공공데이터포털",
+      "collection_method": "Open API(XML)",
+      "update_cycle": "영업일/일별",
+      "join_keys": [
+        "통화",
+        "일자"
+      ],
+      "collection_fields": [
+        "매매기준율",
+        "환가료율 등 환율정보"
+      ],
+      "feature_candidates": [
+        "exim_fx_rate",
+        "fx_change_7d"
+      ],
+      "model_targets": [
+        "예비비용"
+      ],
+      "derived_variables": [
+        "외화 비용 원화 환산",
+        "변동성"
+      ],
+      "constraints": "도메인 변경 이력 반영 필요",
+      "official_url": "https://www.data.go.kr/data/3068846/openapi.do",
+      "collection_status": "수집대상 후보",
+      "requires_key": true,
+      "reliability": 76,
+      "use_in_product": "예비비용",
+      "seed_records": [
+        {
+          "catalog_id": "P-20",
+          "dataset_name": "한국수출입은행 환율 정보",
+          "provider": "한국수출입은행 / 공공데이터포털",
+          "join_keys": [
+            "통화",
+            "일자"
+          ],
+          "feature_candidates": [
+            "exim_fx_rate",
+            "fx_change_7d"
+          ],
+          "derived_variables": [
+            "외화 비용 원화 환산",
+            "변동성"
+          ],
+          "model_targets": [
+            "예비비용"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "P-21",
+      "catalog_id": "P-21",
+      "source_group": "공공/웹",
+      "priority": "C",
+      "connector": "certification",
+      "target_table": "certification_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S08",
+        "S09"
+      ],
+      "name": "KTL 접수/수수료 안내",
+      "provider": "한국산업기술시험원(KTL)",
+      "collection_method": "웹/첨부파일",
+      "update_cycle": "수시",
+      "join_keys": [
+        "분야",
+        "시험종류"
+      ],
+      "collection_fields": [
+        "분야별 수수료 안내",
+        "부가세",
+        "접수 안내"
+      ],
+      "feature_candidates": [
+        "test_fee_proxy",
+        "online_submission_available"
+      ],
+      "model_targets": [
+        "인증·시험 리드타임",
+        "예비비용"
+      ],
+      "derived_variables": [
+        "분야별 수수료 테이블화",
+        "접수 방식 one-hot"
+      ],
+      "constraints": "웹/첨부 구조 변경 가능. 실제 견적은 개별 상담 필요",
+      "official_url": "https://customer.ktl.re.kr/web/contents/K204020000.do",
+      "collection_status": "수집대상 후보",
+      "requires_key": false,
+      "reliability": 62,
+      "use_in_product": "인증·시험 리드타임, 예비비용",
+      "seed_records": [
+        {
+          "catalog_id": "P-21",
+          "dataset_name": "KTL 접수/수수료 안내",
+          "provider": "한국산업기술시험원(KTL)",
+          "join_keys": [
+            "분야",
+            "시험종류"
+          ],
+          "feature_candidates": [
+            "test_fee_proxy",
+            "online_submission_available"
+          ],
+          "derived_variables": [
+            "분야별 수수료 테이블화",
+            "접수 방식 one-hot"
+          ],
+          "model_targets": [
+            "인증·시험 리드타임",
+            "예비비용"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "E-01",
+      "catalog_id": "E-01",
+      "source_group": "외부데이터",
+      "priority": "A",
+      "connector": "trade",
+      "target_table": "trade_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S09"
+      ],
+      "name": "UN Comtrade API",
+      "provider": "United Nations",
+      "collection_method": "API/CSV",
+      "update_cycle": "공식 통계 입수 시 지속 업데이트",
+      "join_keys": [
+        "HS",
+        "reporter",
+        "partner",
+        "flow",
+        "period"
+      ],
+      "collection_fields": [
+        "국가 간 수출입 금액",
+        "중량",
+        "HS 품목",
+        "무역흐름"
+      ],
+      "feature_candidates": [
+        "global_import_demand",
+        "competitor_export_share",
+        "market_growth"
+      ],
+      "model_targets": [
+        "시장성 점수"
+      ],
+      "derived_variables": [
+        "타깃국 수입수요",
+        "경쟁국 점유율",
+        "HS별 성장률"
+      ],
+      "constraints": "Free API key/호출제한 확인 필요",
+      "official_url": "https://comtradeplus.un.org/",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "시장성 점수",
+      "seed_records": [
+        {
+          "catalog_id": "E-01",
+          "dataset_name": "UN Comtrade API",
+          "provider": "United Nations",
+          "join_keys": [
+            "HS",
+            "reporter",
+            "partner",
+            "flow",
+            "period"
+          ],
+          "feature_candidates": [
+            "global_import_demand",
+            "competitor_export_share",
+            "market_growth"
+          ],
+          "derived_variables": [
+            "타깃국 수입수요",
+            "경쟁국 점유율",
+            "HS별 성장률"
+          ],
+          "model_targets": [
+            "시장성 점수"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "E-02",
+      "catalog_id": "E-02",
+      "source_group": "외부데이터",
+      "priority": "A",
+      "connector": "trade",
+      "target_table": "trade_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S08",
+        "S09"
+      ],
+      "name": "World Bank WITS API",
+      "provider": "World Bank",
+      "collection_method": "API",
+      "update_cycle": "연/월, 데이터별 상이",
+      "join_keys": [
+        "국가",
+        "HS",
+        "파트너",
+        "indicator",
+        "year"
+      ],
+      "collection_fields": [
+        "무역·관세·개발 지표",
+        "시장집중도",
+        "성장률"
+      ],
+      "feature_candidates": [
+        "wits_market_concentration",
+        "tariff_ntm_proxy",
+        "import_growth"
+      ],
+      "model_targets": [
+        "시장성 점수",
+        "규제 압력"
+      ],
+      "derived_variables": [
+        "시장침투지수",
+        "HHI",
+        "tariff indicator 파생"
+      ],
+      "constraints": "대량 조회 제한, HS 매핑 필요",
+      "official_url": "https://wits.worldbank.org/witsapiintro.aspx?lang=en",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "시장성 점수, 규제 압력",
+      "seed_records": [
+        {
+          "catalog_id": "E-02",
+          "dataset_name": "World Bank WITS API",
+          "provider": "World Bank",
+          "join_keys": [
+            "국가",
+            "HS",
+            "파트너",
+            "indicator",
+            "year"
+          ],
+          "feature_candidates": [
+            "wits_market_concentration",
+            "tariff_ntm_proxy",
+            "import_growth"
+          ],
+          "derived_variables": [
+            "시장침투지수",
+            "HHI",
+            "tariff indicator 파생"
+          ],
+          "model_targets": [
+            "시장성 점수",
+            "규제 압력"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "E-03",
+      "catalog_id": "E-03",
+      "source_group": "외부데이터",
+      "priority": "A",
+      "connector": "cost_logistics",
+      "target_table": "cost_logistics_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S09"
+      ],
+      "name": "World Bank Indicators API",
+      "provider": "World Bank",
+      "collection_method": "API",
+      "update_cycle": "연/분기/월별 지표별 상이",
+      "join_keys": [
+        "ISO3",
+        "indicator",
+        "year"
+      ],
+      "collection_fields": [
+        "GDP",
+        "수입",
+        "GDP",
+        "환율",
+        "인구",
+        "물류",
+        "경제 지표"
+      ],
+      "feature_candidates": [
+        "gdp_growth",
+        "import_share_gdp",
+        "income_level"
+      ],
+      "model_targets": [
+        "시장성 점수"
+      ],
+      "derived_variables": [
+        "타깃국 거시경제 보정 변수"
+      ],
+      "constraints": "일부 지표 lag 발생",
+      "official_url": "https://datahelpdesk.worldbank.org/knowledgebase/articles/889392-about-the-indicators-api-documentation",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "시장성 점수",
+      "seed_records": [
+        {
+          "catalog_id": "E-03",
+          "dataset_name": "World Bank Indicators API",
+          "provider": "World Bank",
+          "join_keys": [
+            "ISO3",
+            "indicator",
+            "year"
+          ],
+          "feature_candidates": [
+            "gdp_growth",
+            "import_share_gdp",
+            "income_level"
+          ],
+          "derived_variables": [
+            "타깃국 거시경제 보정 변수"
+          ],
+          "model_targets": [
+            "시장성 점수"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "E-04",
+      "catalog_id": "E-04",
+      "source_group": "외부데이터",
+      "priority": "A",
+      "connector": "certification",
+      "target_table": "certification_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S08",
+        "S09"
+      ],
+      "name": "WTO ePing SPS&TBT Platform / WTO Data",
+      "provider": "WTO, ITC, UN",
+      "collection_method": "API/XLSX/웹",
+      "update_cycle": "상시",
+      "join_keys": [
+        "통보국",
+        "문서번호",
+        "HS",
+        "ICS",
+        "날짜",
+        "제품"
+      ],
+      "collection_fields": [
+        "SPS",
+        "TBT 통보문",
+        "특정무역현안",
+        "적용 제품",
+        "시행 예정일"
+      ],
+      "feature_candidates": [
+        "tbt_notification_count",
+        "sps_notification_count",
+        "regulation_recency"
+      ],
+      "model_targets": [
+        "규제 압력",
+        "인증·시험 리드타임"
+      ],
+      "derived_variables": [
+        "국가-제품군별 30",
+        "90",
+        "180일 통보 건수",
+        "시행일 proximity"
+      ],
+      "constraints": "HS/제품 매칭 정확도 관리 필요",
+      "official_url": "https://data.wto.org/dataset/ext_eping",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "규제 압력, 인증·시험 리드타임",
+      "seed_records": [
+        {
+          "catalog_id": "E-04",
+          "dataset_name": "WTO ePing SPS&TBT Platform / WTO Data",
+          "provider": "WTO, ITC, UN",
+          "join_keys": [
+            "통보국",
+            "문서번호",
+            "HS",
+            "ICS",
+            "날짜",
+            "제품"
+          ],
+          "feature_candidates": [
+            "tbt_notification_count",
+            "sps_notification_count",
+            "regulation_recency"
+          ],
+          "derived_variables": [
+            "국가-제품군별 30",
+            "90",
+            "180일 통보 건수",
+            "시행일 proximity"
+          ],
+          "model_targets": [
+            "규제 압력",
+            "인증·시험 리드타임"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "E-05",
+      "catalog_id": "E-05",
+      "source_group": "외부데이터",
+      "priority": "A",
+      "connector": "trade",
+      "target_table": "trade_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S08",
+        "S09"
+      ],
+      "name": "ITC Market Access Map / Global Trade Helpdesk",
+      "provider": "International Trade Centre",
+      "collection_method": "웹/API/다운로드 가능 여부 확인",
+      "update_cycle": "상시",
+      "join_keys": [
+        "수출국",
+        "수입국",
+        "HS",
+        "조치"
+      ],
+      "collection_fields": [
+        "관세",
+        "TRQ",
+        "비관세조치",
+        "규제요건",
+        "잠재 바이어"
+      ],
+      "feature_candidates": [
+        "applied_tariff",
+        "preference_margin",
+        "ntm_count"
+      ],
+      "model_targets": [
+        "규제 압력",
+        "예비비용",
+        "시장성 점수"
+      ],
+      "derived_variables": [
+        "FTA 혜택 격차",
+        "비관세장벽 점수"
+      ],
+      "constraints": "계정/라이선스/자동화 허용 범위 확인 필요",
+      "official_url": "https://www.macmap.org/",
+      "collection_status": "수집대상 후보",
+      "requires_key": true,
+      "reliability": 88,
+      "use_in_product": "규제 압력, 예비비용, 시장성 점수",
+      "seed_records": [
+        {
+          "catalog_id": "E-05",
+          "dataset_name": "ITC Market Access Map / Global Trade Helpdesk",
+          "provider": "International Trade Centre",
+          "join_keys": [
+            "수출국",
+            "수입국",
+            "HS",
+            "조치"
+          ],
+          "feature_candidates": [
+            "applied_tariff",
+            "preference_margin",
+            "ntm_count"
+          ],
+          "derived_variables": [
+            "FTA 혜택 격차",
+            "비관세장벽 점수"
+          ],
+          "model_targets": [
+            "규제 압력",
+            "예비비용",
+            "시장성 점수"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "E-06",
+      "catalog_id": "E-06",
+      "source_group": "외부데이터",
+      "priority": "B",
+      "connector": "cost_logistics",
+      "target_table": "cost_logistics_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S08",
+        "S09"
+      ],
+      "name": "World Bank Logistics Performance Index 2.0",
+      "provider": "World Bank",
+      "collection_method": "데이터셋/API",
+      "update_cycle": "2023-2024 등 주기적",
+      "join_keys": [
+        "국가",
+        "지표",
+        "기간"
+      ],
+      "collection_fields": [
+        "물류 속도",
+        "연결성",
+        "세부 물류 지표"
+      ],
+      "feature_candidates": [
+        "logistics_performance_score",
+        "customs_efficiency"
+      ],
+      "model_targets": [
+        "90일 파일럿 수출 가능성",
+        "예비비용"
+      ],
+      "derived_variables": [
+        "국가별 물류 리스크",
+        "지연 보정"
+      ],
+      "constraints": "연속성이 제한적일 수 있음",
+      "official_url": "https://lpi.worldbank.org/en/home",
+      "collection_status": "수집대상 후보",
+      "requires_key": true,
+      "reliability": 76,
+      "use_in_product": "90일 파일럿 수출 가능성, 예비비용",
+      "seed_records": [
+        {
+          "catalog_id": "E-06",
+          "dataset_name": "World Bank Logistics Performance Index 2.0",
+          "provider": "World Bank",
+          "join_keys": [
+            "국가",
+            "지표",
+            "기간"
+          ],
+          "feature_candidates": [
+            "logistics_performance_score",
+            "customs_efficiency"
+          ],
+          "derived_variables": [
+            "국가별 물류 리스크",
+            "지연 보정"
+          ],
+          "model_targets": [
+            "90일 파일럿 수출 가능성",
+            "예비비용"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "E-07",
+      "catalog_id": "E-07",
+      "source_group": "외부데이터",
+      "priority": "B",
+      "connector": "cost_logistics",
+      "target_table": "cost_logistics_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S08",
+        "S09"
+      ],
+      "name": "IMF PortWatch",
+      "provider": "IMF / University of Oxford",
+      "collection_method": "웹/데이터 다운로드",
+      "update_cycle": "수시/이벤트 기반",
+      "join_keys": [
+        "항만",
+        "국가",
+        "기간",
+        "disruption event"
+      ],
+      "collection_fields": [
+        "항만 교란",
+        "해상무역 영향",
+        "공급망 충격"
+      ],
+      "feature_candidates": [
+        "port_disruption_flag",
+        "route_risk_index"
+      ],
+      "model_targets": [
+        "90일 파일럿 수출 가능성",
+        "예비비용"
+      ],
+      "derived_variables": [
+        "출발",
+        "도착항 연계",
+        "최근 교란 여부"
+      ],
+      "constraints": "항로 매핑 필요",
+      "official_url": "https://portwatch.imf.org/",
+      "collection_status": "수집대상 후보",
+      "requires_key": false,
+      "reliability": 76,
+      "use_in_product": "90일 파일럿 수출 가능성, 예비비용",
+      "seed_records": [
+        {
+          "catalog_id": "E-07",
+          "dataset_name": "IMF PortWatch",
+          "provider": "IMF / University of Oxford",
+          "join_keys": [
+            "항만",
+            "국가",
+            "기간",
+            "disruption event"
+          ],
+          "feature_candidates": [
+            "port_disruption_flag",
+            "route_risk_index"
+          ],
+          "derived_variables": [
+            "출발",
+            "도착항 연계",
+            "최근 교란 여부"
+          ],
+          "model_targets": [
+            "90일 파일럿 수출 가능성",
+            "예비비용"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "E-08",
+      "catalog_id": "E-08",
+      "source_group": "외부데이터",
+      "priority": "A",
+      "connector": "recall",
+      "target_table": "recall_case",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S06",
+        "S08",
+        "S09"
+      ],
+      "name": "EU Safety Gate Alerts",
+      "provider": "European Commission",
+      "collection_method": "웹/다운로드/오픈데이터 미러",
+      "update_cycle": "주간/상시",
+      "join_keys": [
+        "제품 카테고리",
+        "국가",
+        "위험유형",
+        "날짜"
+      ],
+      "collection_fields": [
+        "비식품 위험제품 알림",
+        "조치",
+        "위험유형",
+        "원산국"
+      ],
+      "feature_candidates": [
+        "eu_recall_alert_count",
+        "risk_type_score",
+        "product_category_risk"
+      ],
+      "model_targets": [
+        "리콜 위험도",
+        "규제 압력"
+      ],
+      "derived_variables": [
+        "제품군별 EU 위험 알림 빈도",
+        "위험 심각도"
+      ],
+      "constraints": "식품/의약/의료기기는 제외",
+      "official_url": "https://ec.europa.eu/safety-gate-alerts/",
+      "collection_status": "수집대상 확정",
+      "requires_key": false,
+      "reliability": 91,
+      "use_in_product": "리콜 위험도, 규제 압력",
+      "seed_records": [
+        {
+          "catalog_id": "E-08",
+          "dataset_name": "EU Safety Gate Alerts",
+          "provider": "European Commission",
+          "join_keys": [
+            "제품 카테고리",
+            "국가",
+            "위험유형",
+            "날짜"
+          ],
+          "feature_candidates": [
+            "eu_recall_alert_count",
+            "risk_type_score",
+            "product_category_risk"
+          ],
+          "derived_variables": [
+            "제품군별 EU 위험 알림 빈도",
+            "위험 심각도"
+          ],
+          "model_targets": [
+            "리콜 위험도",
+            "규제 압력"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "E-09",
+      "catalog_id": "E-09",
+      "source_group": "외부데이터",
+      "priority": "A",
+      "connector": "recall",
+      "target_table": "recall_case",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S06",
+        "S08",
+        "S09"
+      ],
+      "name": "CPSC Recalls API",
+      "provider": "U.S. Consumer Product Safety Commission",
+      "collection_method": "REST API(JSON/XML)",
+      "update_cycle": "상시",
+      "join_keys": [
+        "제품명",
+        "카테고리",
+        "recall date",
+        "firm"
+      ],
+      "collection_fields": [
+        "미국 소비재 리콜 정보",
+        "위험",
+        "조치",
+        "제품 설명"
+      ],
+      "feature_candidates": [
+        "us_cpsc_recall_count",
+        "hazard_keyword_score"
+      ],
+      "model_targets": [
+        "리콜 위험도"
+      ],
+      "derived_variables": [
+        "미국 시장 제품군 리콜 빈도",
+        "위험 키워드"
+      ],
+      "constraints": "CPSC 관할 소비재 중심",
+      "official_url": "https://www.cpsc.gov/Recalls/CPSC-Recalls-Application-Program-Interface-API-Information",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "리콜 위험도",
+      "seed_records": [
+        {
+          "catalog_id": "E-09",
+          "dataset_name": "CPSC Recalls API",
+          "provider": "U.S. Consumer Product Safety Commission",
+          "join_keys": [
+            "제품명",
+            "카테고리",
+            "recall date",
+            "firm"
+          ],
+          "feature_candidates": [
+            "us_cpsc_recall_count",
+            "hazard_keyword_score"
+          ],
+          "derived_variables": [
+            "미국 시장 제품군 리콜 빈도",
+            "위험 키워드"
+          ],
+          "model_targets": [
+            "리콜 위험도"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "E-10",
+      "catalog_id": "E-10",
+      "source_group": "외부데이터",
+      "priority": "A",
+      "connector": "recall",
+      "target_table": "recall_case",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S06",
+        "S08",
+        "S09"
+      ],
+      "name": "openFDA Device Recall / Enforcement API",
+      "provider": "U.S. FDA",
+      "collection_method": "REST API/ZIP JSON",
+      "update_cycle": "주간/상시",
+      "join_keys": [
+        "제품코드",
+        "recall number",
+        "firm",
+        "date"
+      ],
+      "collection_fields": [
+        "의료기기 리콜",
+        "원인",
+        "등급",
+        "상태",
+        "회수번호"
+      ],
+      "feature_candidates": [
+        "fda_device_recall_count",
+        "recall_class_risk",
+        "root_cause_score"
+      ],
+      "model_targets": [
+        "리콜 위험도",
+        "규제 압력"
+      ],
+      "derived_variables": [
+        "의료기기 품목코드별 리콜등급 가중치"
+      ],
+      "constraints": "의료기기 대상일 때 우선 적용",
+      "official_url": "https://open.fda.gov/apis/device/recall/",
+      "collection_status": "수집대상 확정",
+      "requires_key": true,
+      "reliability": 91,
+      "use_in_product": "리콜 위험도, 규제 압력",
+      "seed_records": [
+        {
+          "catalog_id": "E-10",
+          "dataset_name": "openFDA Device Recall / Enforcement API",
+          "provider": "U.S. FDA",
+          "join_keys": [
+            "제품코드",
+            "recall number",
+            "firm",
+            "date"
+          ],
+          "feature_candidates": [
+            "fda_device_recall_count",
+            "recall_class_risk",
+            "root_cause_score"
+          ],
+          "derived_variables": [
+            "의료기기 품목코드별 리콜등급 가중치"
+          ],
+          "model_targets": [
+            "리콜 위험도",
+            "규제 압력"
+          ],
+          "collection_status": "수집대상 확정"
+        }
+      ]
+    },
+    {
+      "source_id": "E-11",
+      "catalog_id": "E-11",
+      "source_group": "외부데이터",
+      "priority": "B",
+      "connector": "external",
+      "target_table": "external_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S08",
+        "S09"
+      ],
+      "name": "FDA Import Alerts",
+      "provider": "U.S. FDA",
+      "collection_method": "웹/검색/스크레이핑 검토",
+      "update_cycle": "수시",
+      "join_keys": [
+        "국가",
+        "산업",
+        "import alert number",
+        "publish date"
+      ],
+      "collection_fields": [
+        "수입경보",
+        "DWPE",
+        "산업",
+        "국가",
+        "제품별 위반 이력"
+      ],
+      "feature_candidates": [
+        "fda_import_alert_flag",
+        "dwpe_risk"
+      ],
+      "model_targets": [
+        "규제 압력",
+        "예비비용"
+      ],
+      "derived_variables": [
+        "국가",
+        "제품군 import alert count",
+        "최근성"
+      ],
+      "constraints": "자동 수집 방식은 별도 검증 필요",
+      "official_url": "https://www.fda.gov/industry/actions-enforcement/import-alerts",
+      "collection_status": "수집대상 후보",
+      "requires_key": false,
+      "reliability": 76,
+      "use_in_product": "규제 압력, 예비비용",
+      "seed_records": [
+        {
+          "catalog_id": "E-11",
+          "dataset_name": "FDA Import Alerts",
+          "provider": "U.S. FDA",
+          "join_keys": [
+            "국가",
+            "산업",
+            "import alert number",
+            "publish date"
+          ],
+          "feature_candidates": [
+            "fda_import_alert_flag",
+            "dwpe_risk"
+          ],
+          "derived_variables": [
+            "국가",
+            "제품군 import alert count",
+            "최근성"
+          ],
+          "model_targets": [
+            "규제 압력",
+            "예비비용"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "E-12",
+      "catalog_id": "E-12",
+      "source_group": "외부데이터",
+      "priority": "B",
+      "connector": "market_intel",
+      "target_table": "market_intel_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S05",
+        "S08",
+        "S09"
+      ],
+      "name": "GDELT 2.0 DOC/Event API",
+      "provider": "GDELT Project",
+      "collection_method": "API/BigQuery/파일",
+      "update_cycle": "15분 주기",
+      "join_keys": [
+        "국가",
+        "날짜",
+        "키워드",
+        "이벤트 코드"
+      ],
+      "collection_fields": [
+        "글로벌 뉴스",
+        "이벤트",
+        "톤",
+        "위치",
+        "주제"
+      ],
+      "feature_candidates": [
+        "news_tone_score",
+        "geopolitical_event_count",
+        "disruption_mentions"
+      ],
+      "model_targets": [
+        "시장성 점수",
+        "규제 압력"
+      ],
+      "derived_variables": [
+        "국가-산업 키워드 뉴스량",
+        "톤",
+        "이벤트 집계"
+      ],
+      "constraints": "노이즈 큼. 키워드/언어 필터링 필수",
+      "official_url": "https://www.gdeltproject.org/data.html",
+      "collection_status": "수집대상 후보",
+      "requires_key": true,
+      "reliability": 76,
+      "use_in_product": "시장성 점수, 규제 압력",
+      "seed_records": [
+        {
+          "catalog_id": "E-12",
+          "dataset_name": "GDELT 2.0 DOC/Event API",
+          "provider": "GDELT Project",
+          "join_keys": [
+            "국가",
+            "날짜",
+            "키워드",
+            "이벤트 코드"
+          ],
+          "feature_candidates": [
+            "news_tone_score",
+            "geopolitical_event_count",
+            "disruption_mentions"
+          ],
+          "derived_variables": [
+            "국가-산업 키워드 뉴스량",
+            "톤",
+            "이벤트 집계"
+          ],
+          "model_targets": [
+            "시장성 점수",
+            "규제 압력"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "E-13",
+      "catalog_id": "E-13",
+      "source_group": "외부데이터",
+      "priority": "B",
+      "connector": "market_intel",
+      "target_table": "market_intel_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S09"
+      ],
+      "name": "Google Trends",
+      "provider": "Google",
+      "collection_method": "웹/비공식 pytrends/제3자 API",
+      "update_cycle": "실시간/표본 기반",
+      "join_keys": [
+        "키워드",
+        "국가",
+        "지역",
+        "기간"
+      ],
+      "collection_fields": [
+        "검색 관심도",
+        "관련 검색어",
+        "지역별 관심도"
+      ],
+      "feature_candidates": [
+        "search_interest_90d",
+        "trend_growth",
+        "rising_query_count"
+      ],
+      "model_targets": [
+        "시장성 점수"
+      ],
+      "derived_variables": [
+        "제품 키워드 국가별 검색수요 proxy"
+      ],
+      "constraints": "공식 공개 API가 아니며 표본/정규화 특성 주의",
+      "official_url": "https://support.google.com/trends/answer/4365533",
+      "collection_status": "수집대상 후보",
+      "requires_key": false,
+      "reliability": 76,
+      "use_in_product": "시장성 점수",
+      "seed_records": [
+        {
+          "catalog_id": "E-13",
+          "dataset_name": "Google Trends",
+          "provider": "Google",
+          "join_keys": [
+            "키워드",
+            "국가",
+            "지역",
+            "기간"
+          ],
+          "feature_candidates": [
+            "search_interest_90d",
+            "trend_growth",
+            "rising_query_count"
+          ],
+          "derived_variables": [
+            "제품 키워드 국가별 검색수요 proxy"
+          ],
+          "model_targets": [
+            "시장성 점수"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "E-14",
+      "catalog_id": "E-14",
+      "source_group": "외부데이터",
+      "priority": "C",
+      "connector": "market_intel",
+      "target_table": "market_intel_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S09"
+      ],
+      "name": "Similarweb API",
+      "provider": "Similarweb",
+      "collection_method": "유료 API",
+      "update_cycle": "월/일별 상품별 상이",
+      "join_keys": [
+        "도메인",
+        "국가",
+        "기간"
+      ],
+      "collection_fields": [
+        "웹 트래픽",
+        "참여도",
+        "유입채널",
+        "경쟁사 지표"
+      ],
+      "feature_candidates": [
+        "competitor_traffic_growth",
+        "ecommerce_interest"
+      ],
+      "model_targets": [
+        "시장성 점수"
+      ],
+      "derived_variables": [
+        "타깃국 경쟁",
+        "수요 디지털 proxy"
+      ],
+      "constraints": "유료 구독 필요",
+      "official_url": "https://developers.similarweb.com/",
+      "collection_status": "유료 검토",
+      "requires_key": true,
+      "reliability": 54,
+      "use_in_product": "시장성 점수",
+      "seed_records": [
+        {
+          "catalog_id": "E-14",
+          "dataset_name": "Similarweb API",
+          "provider": "Similarweb",
+          "join_keys": [
+            "도메인",
+            "국가",
+            "기간"
+          ],
+          "feature_candidates": [
+            "competitor_traffic_growth",
+            "ecommerce_interest"
+          ],
+          "derived_variables": [
+            "타깃국 경쟁",
+            "수요 디지털 proxy"
+          ],
+          "model_targets": [
+            "시장성 점수"
+          ],
+          "collection_status": "유료 검토"
+        }
+      ]
+    },
+    {
+      "source_id": "E-15",
+      "catalog_id": "E-15",
+      "source_group": "외부데이터",
+      "priority": "B",
+      "connector": "cost_logistics",
+      "target_table": "cost_logistics_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S08",
+        "S09"
+      ],
+      "name": "Freightos Baltic Index / Baltic Exchange",
+      "provider": "Freightos/Baltic Exchange",
+      "collection_method": "웹/유료 데이터 API",
+      "update_cycle": "일/주별",
+      "join_keys": [
+        "항로",
+        "날짜"
+      ],
+      "collection_fields": [
+        "40ft 컨테이너 운임지수",
+        "항로별 운임"
+      ],
+      "feature_candidates": [
+        "container_rate_index",
+        "freight_volatility"
+      ],
+      "model_targets": [
+        "90일 파일럿 수출 가능성",
+        "예비비용"
+      ],
+      "derived_variables": [
+        "타깃 항로 운임",
+        "변동성",
+        "비용 부담"
+      ],
+      "constraints": "상세 데이터 유료 가능성",
+      "official_url": "https://www.freightos.com/enterprise/terminal/freightos-baltic-index-global-container-pricing-index/",
+      "collection_status": "수집대상 후보",
+      "requires_key": true,
+      "reliability": 76,
+      "use_in_product": "90일 파일럿 수출 가능성, 예비비용",
+      "seed_records": [
+        {
+          "catalog_id": "E-15",
+          "dataset_name": "Freightos Baltic Index / Baltic Exchange",
+          "provider": "Freightos/Baltic Exchange",
+          "join_keys": [
+            "항로",
+            "날짜"
+          ],
+          "feature_candidates": [
+            "container_rate_index",
+            "freight_volatility"
+          ],
+          "derived_variables": [
+            "타깃 항로 운임",
+            "변동성",
+            "비용 부담"
+          ],
+          "model_targets": [
+            "90일 파일럿 수출 가능성",
+            "예비비용"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "E-16",
+      "catalog_id": "E-16",
+      "source_group": "외부데이터",
+      "priority": "C",
+      "connector": "market_intel",
+      "target_table": "market_intel_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S09"
+      ],
+      "name": "Panjiva Supply Chain Intelligence",
+      "provider": "S&P Global / Panjiva",
+      "collection_method": "유료 플랫폼/API/Export",
+      "update_cycle": "상시",
+      "join_keys": [
+        "기업",
+        "HS",
+        "선적일",
+        "출발",
+        "도착",
+        "거래상대"
+      ],
+      "collection_fields": [
+        "선적기록",
+        "buyer-supplier 관계",
+        "기업 프로필"
+      ],
+      "feature_candidates": [
+        "buyer_count",
+        "competitor_shipments",
+        "supplier_network_score"
+      ],
+      "model_targets": [
+        "시장성 점수",
+        "90일 파일럿 가능성"
+      ],
+      "derived_variables": [
+        "타깃 바이어 발굴",
+        "경쟁사 선적 트렌드"
+      ],
+      "constraints": "유료/라이선스 필요",
+      "official_url": "https://panjiva.com/",
+      "collection_status": "유료 검토",
+      "requires_key": true,
+      "reliability": 54,
+      "use_in_product": "시장성 점수, 90일 파일럿 가능성",
+      "seed_records": [
+        {
+          "catalog_id": "E-16",
+          "dataset_name": "Panjiva Supply Chain Intelligence",
+          "provider": "S&P Global / Panjiva",
+          "join_keys": [
+            "기업",
+            "HS",
+            "선적일",
+            "출발",
+            "도착",
+            "거래상대"
+          ],
+          "feature_candidates": [
+            "buyer_count",
+            "competitor_shipments",
+            "supplier_network_score"
+          ],
+          "derived_variables": [
+            "타깃 바이어 발굴",
+            "경쟁사 선적 트렌드"
+          ],
+          "model_targets": [
+            "시장성 점수",
+            "90일 파일럿 가능성"
+          ],
+          "collection_status": "유료 검토"
+        }
+      ]
+    },
+    {
+      "source_id": "E-17",
+      "catalog_id": "E-17",
+      "source_group": "외부데이터",
+      "priority": "C",
+      "connector": "trade",
+      "target_table": "trade_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S09"
+      ],
+      "name": "ImportGenius API",
+      "provider": "ImportGenius",
+      "collection_method": "유료 API",
+      "update_cycle": "미국 일별/기타 국가 주별 등",
+      "join_keys": [
+        "수입자",
+        "수출자",
+        "HS",
+        "B",
+        "L",
+        "선적일"
+      ],
+      "collection_fields": [
+        "수출입 선적기록",
+        "수입자",
+        "수출자",
+        "항구",
+        "제품"
+      ],
+      "feature_candidates": [
+        "real_buyer_activity",
+        "shipment_frequency"
+      ],
+      "model_targets": [
+        "시장성 점수",
+        "90일 파일럿 가능성"
+      ],
+      "derived_variables": [
+        "바이어 실거래 여부",
+        "수입 주기"
+      ],
+      "constraints": "유료/국가별 커버리지 확인 필요",
+      "official_url": "https://www.importgenius.com/trade-api",
+      "collection_status": "유료 검토",
+      "requires_key": true,
+      "reliability": 54,
+      "use_in_product": "시장성 점수, 90일 파일럿 가능성",
+      "seed_records": [
+        {
+          "catalog_id": "E-17",
+          "dataset_name": "ImportGenius API",
+          "provider": "ImportGenius",
+          "join_keys": [
+            "수입자",
+            "수출자",
+            "HS",
+            "B",
+            "L",
+            "선적일"
+          ],
+          "feature_candidates": [
+            "real_buyer_activity",
+            "shipment_frequency"
+          ],
+          "derived_variables": [
+            "바이어 실거래 여부",
+            "수입 주기"
+          ],
+          "model_targets": [
+            "시장성 점수",
+            "90일 파일럿 가능성"
+          ],
+          "collection_status": "유료 검토"
+        }
+      ]
+    },
+    {
+      "source_id": "E-18",
+      "catalog_id": "E-18",
+      "source_group": "외부데이터",
+      "priority": "C",
+      "connector": "support",
+      "target_table": "support_program",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S07",
+        "S08",
+        "S09"
+      ],
+      "name": "Kompass B2B Database/API",
+      "provider": "Kompass",
+      "collection_method": "유료 API/디렉터리",
+      "update_cycle": "일별 업데이트 표기",
+      "join_keys": [
+        "기업명",
+        "국가",
+        "산업",
+        "제품",
+        "연락처"
+      ],
+      "collection_fields": [
+        "해외기업",
+        "바이어",
+        "공급업체 디렉터리",
+        "산업분류"
+      ],
+      "feature_candidates": [
+        "potential_buyer_count",
+        "firmographic_match_score"
+      ],
+      "model_targets": [
+        "시장성 점수",
+        "지원사업 적합도"
+      ],
+      "derived_variables": [
+        "잠재 바이어 수",
+        "산업별 기업 밀도"
+      ],
+      "constraints": "유료/개인정보·영업활용 적법성 확인",
+      "official_url": "https://kompass.co.kr/api-service/",
+      "collection_status": "유료 검토",
+      "requires_key": true,
+      "reliability": 54,
+      "use_in_product": "시장성 점수, 지원사업 적합도",
+      "seed_records": [
+        {
+          "catalog_id": "E-18",
+          "dataset_name": "Kompass B2B Database/API",
+          "provider": "Kompass",
+          "join_keys": [
+            "기업명",
+            "국가",
+            "산업",
+            "제품",
+            "연락처"
+          ],
+          "feature_candidates": [
+            "potential_buyer_count",
+            "firmographic_match_score"
+          ],
+          "derived_variables": [
+            "잠재 바이어 수",
+            "산업별 기업 밀도"
+          ],
+          "model_targets": [
+            "시장성 점수",
+            "지원사업 적합도"
+          ],
+          "collection_status": "유료 검토"
+        }
+      ]
+    },
+    {
+      "source_id": "E-19",
+      "catalog_id": "E-19",
+      "source_group": "외부데이터",
+      "priority": "B",
+      "connector": "recall",
+      "target_table": "recall_case",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S04",
+        "S06",
+        "S08",
+        "S09"
+      ],
+      "name": "Open Supply Hub API",
+      "provider": "Open Supply Hub",
+      "collection_method": "API",
+      "update_cycle": "상시",
+      "join_keys": [
+        "OS ID",
+        "시설명",
+        "위치",
+        "업종",
+        "브랜드"
+      ],
+      "collection_fields": [
+        "전세계 생산시설",
+        "표준 시설 ID",
+        "위치",
+        "contributor"
+      ],
+      "feature_candidates": [
+        "facility_density",
+        "supply_base_risk"
+      ],
+      "model_targets": [
+        "시장성 점수",
+        "리콜 위험도 보조"
+      ],
+      "derived_variables": [
+        "제품군",
+        "국가별 공급망 노출도 proxy"
+      ],
+      "constraints": "섬유/소비재 공급망에 특히 유용",
+      "official_url": "https://opensupplyhub.org/api/docs/",
+      "collection_status": "수집대상 후보",
+      "requires_key": true,
+      "reliability": 76,
+      "use_in_product": "시장성 점수, 리콜 위험도 보조",
+      "seed_records": [
+        {
+          "catalog_id": "E-19",
+          "dataset_name": "Open Supply Hub API",
+          "provider": "Open Supply Hub",
+          "join_keys": [
+            "OS ID",
+            "시설명",
+            "위치",
+            "업종",
+            "브랜드"
+          ],
+          "feature_candidates": [
+            "facility_density",
+            "supply_base_risk"
+          ],
+          "derived_variables": [
+            "제품군",
+            "국가별 공급망 노출도 proxy"
+          ],
+          "model_targets": [
+            "시장성 점수",
+            "리콜 위험도 보조"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    },
+    {
+      "source_id": "E-20",
+      "catalog_id": "E-20",
+      "source_group": "외부데이터",
+      "priority": "C",
+      "connector": "trade",
+      "target_table": "trade_signal",
+      "screen_ids": [
+        "S02",
+        "S03",
+        "S05",
+        "S08",
+        "S09"
+      ],
+      "name": "OECD STRI",
+      "provider": "OECD",
+      "collection_method": "데이터셋/API/다운로드",
+      "update_cycle": "연간",
+      "join_keys": [
+        "국가",
+        "서비스 부문",
+        "연도"
+      ],
+      "collection_fields": [
+        "서비스무역 제한지수",
+        "규제 조치"
+      ],
+      "feature_candidates": [
+        "services_restrictiveness_score"
+      ],
+      "model_targets": [
+        "규제 압력"
+      ],
+      "derived_variables": [
+        "서비스 수출",
+        "디지털 서비스 관련 규제 점수"
+      ],
+      "constraints": "제조품 중심 모델에는 보조 변수",
+      "official_url": "https://www.oecd.org/en/topics/sub-issues/services-trade-restrictiveness-index.html",
+      "collection_status": "수집대상 후보",
+      "requires_key": true,
+      "reliability": 62,
+      "use_in_product": "규제 압력",
+      "seed_records": [
+        {
+          "catalog_id": "E-20",
+          "dataset_name": "OECD STRI",
+          "provider": "OECD",
+          "join_keys": [
+            "국가",
+            "서비스 부문",
+            "연도"
+          ],
+          "feature_candidates": [
+            "services_restrictiveness_score"
+          ],
+          "derived_variables": [
+            "서비스 수출",
+            "디지털 서비스 관련 규제 점수"
+          ],
+          "model_targets": [
+            "규제 압력"
+          ],
+          "collection_status": "수집대상 후보"
+        }
+      ]
+    }
+  ],
+  "feature_mappings": [
+    {
+      "model_target": "90일 파일럿 수출 실행 가능성",
+      "prediction_type": "XGBClassifier",
+      "label_definition": "기준일 이후 90일 내 첫 파일럿 수출/샘플 선적/계약 패키지 완료 여부(0/1)",
+      "input_features": [
+        "HS-국가 수출입 성장률",
+        "글로벌 수입수요",
+        "관세율",
+        "TBT",
+        "SPS 통보",
+        "국가",
+        "업종 위험지수",
+        "운임",
+        "환율 변동성",
+        "리콜 이력"
+      ],
+      "public_sources": [
+        "P-01",
+        "P-02",
+        "P-03",
+        "P-04",
+        "P-05",
+        "P-06",
+        "P-16",
+        "P-17",
+        "P-18"
+      ],
+      "external_sources": [
+        "E-01",
+        "E-02",
+        "E-03",
+        "E-04",
+        "E-06",
+        "E-07",
+        "E-15",
+        "E-16",
+        "E-17"
+      ],
+      "internal_data_need": "기업-제품-국가 후보 리스트, 실제 파일럿 실행/미실행 label, 상담/영업 단계, HS 검수",
+      "leakage_guardrail": "예측 기준일 이후 발생한 수출실적·선정결과·리콜정보는 제외",
+      "priority": "A"
+    },
+    {
+      "model_target": "인증·시험 리드타임 추정",
+      "prediction_type": "XGBRegressor",
+      "label_definition": "상담 접수일 또는 신청일 → 시험/인증 완료일 경과일수",
+      "input_features": [
+        "인증 절차 복잡도",
+        "제품군",
+        "인증 필요 여부",
+        "시험기관 수",
+        "KTL 접수량 proxy",
+        "문서 준비도",
+        "리콜",
+        "위험 제품군"
+      ],
+      "public_sources": [
+        "P-07",
+        "P-12",
+        "P-13",
+        "P-14",
+        "P-15",
+        "P-21"
+      ],
+      "external_sources": [
+        "E-04",
+        "E-08",
+        "E-09",
+        "E-10"
+      ],
+      "internal_data_need": "과거 시험신청 건의 접수일·완료일·보완횟수·시험분야·기관·비용",
+      "leakage_guardrail": "완료일/보완결과 등 결과성 변수는 예측 시점 전에 알려진 값만 사용",
+      "priority": "A"
+    },
+    {
+      "model_target": "지원사업 선정 적합 확률",
+      "prediction_type": "XGBClassifier",
+      "label_definition": "특정 공고에 신청한 기업이 최종 선정되었는지 여부(0/1)",
+      "input_features": [
+        "공고 분야",
+        "지역",
+        "대상과 기업 프로필 매칭",
+        "수출액 구간",
+        "업종",
+        "인증 보유",
+        "시장성",
+        "과거 지원 이력"
+      ],
+      "public_sources": [
+        "P-10",
+        "P-11",
+        "P-16",
+        "P-17"
+      ],
+      "external_sources": [
+        "E-03",
+        "E-12",
+        "E-18"
+      ],
+      "internal_data_need": "기업 기본정보, 과거 신청서, 평가점수/선정 여부, 중복수혜/제외 사유",
+      "leakage_guardrail": "선정 발표일 이후 데이터와 심사위원 코멘트는 학습 시점 제한",
+      "priority": "A"
+    },
+    {
+      "model_target": "시험·보완 예비비용 추정",
+      "prediction_type": "XGBRegressor",
+      "label_definition": "시험·인증·보완·회피설계·컨설팅에 실제 투입된 총 비용 또는 견적금액",
+      "input_features": [
+        "관세",
+        "환율",
+        "수수료 proxy",
+        "제품 위험도",
+        "리콜 사유",
+        "시험기관",
+        "분야",
+        "문서 보완 횟수",
+        "운임",
+        "긴급 비용"
+      ],
+      "public_sources": [
+        "P-04",
+        "P-05",
+        "P-06",
+        "P-12",
+        "P-13",
+        "P-14",
+        "P-18",
+        "P-20",
+        "P-21"
+      ],
+      "external_sources": [
+        "E-08",
+        "E-09",
+        "E-10",
+        "E-11",
+        "E-15"
+      ],
+      "internal_data_need": "실제 견적/청구/정산액, 보완 횟수, 설계 변경 여부, 라벨 보완 비용",
+      "leakage_guardrail": "정산 완료 후 비용을 예측 전 피처로 쓰지 않도록 견적시점 기준으로 스냅샷",
+      "priority": "A"
+    },
+    {
+      "model_target": "통합 Feature Importance",
+      "prediction_type": "모델 공통",
+      "label_definition": "모델별 gain/weight/SHAP 기준 상위 피처 집계",
+      "input_features": [
+        "시장성 점수",
+        "규제 압력",
+        "문서 준비도",
+        "지원사업 적합도",
+        "리콜 위험도"
+      ],
+      "public_sources": [
+        "위 공공데이터 전체"
+      ],
+      "external_sources": [
+        "위 외부데이터 전체"
+      ],
+      "internal_data_need": "문서 체크리스트와 실제 처리/결과 label",
+      "leakage_guardrail": "feature importance 산출은 학습 fold별로 분리",
+      "priority": "B"
+    }
+  ],
+  "collection_plan": [
+    {
+      "stage": "0",
+      "task": "기준키 확정",
+      "artifact": "제품-기업-국가 마스터",
+      "details": "제품명, 모델명, HS6/HS10, 타깃국가, 업종(KSIC), 사업지역을 한 테이블로 고정",
+      "done_when": "중복 제품/HS 후보 검수 완료",
+      "owner_note": "가장 먼저 수행"
+    },
+    {
+      "stage": "1",
+      "task": "원천 수집",
+      "artifact": "raw_* 테이블",
+      "details": "공공데이터/외부데이터별 source_id, collected_at, 원문 payload, checksum 저장",
+      "done_when": "재실행해도 같은 원천 이력 보존",
+      "owner_note": "API key vault 필요"
+    },
+    {
+      "stage": "2",
+      "task": "표준화",
+      "artifact": "stg_* 테이블",
+      "details": "국가 ISO2/ISO3, HS6/HS10, 월 기준일, 통화, 단위, 제품 카테고리 정규화",
+      "done_when": "조인키 결측률/중복률 리포트",
+      "owner_note": "데이터 품질 점수 생성"
+    },
+    {
+      "stage": "3",
+      "task": "피처 생성",
+      "artifact": "feature_store 테이블",
+      "details": "30/90/180일 rolling count, YoY growth, 최신성 decay, 위험도 ordinal, 텍스트 키워드 카운트 생성",
+      "done_when": "예측기준일 이전 데이터만 사용",
+      "owner_note": "누수 방지 핵심"
+    },
+    {
+      "stage": "4",
+      "task": "라벨 생성",
+      "artifact": "label_* 테이블",
+      "details": "90일 실행, 리드타임 days, 선정 여부, 실제 비용 등 모델별 label 정의",
+      "done_when": "라벨 정의서 승인",
+      "owner_note": "내부 데이터 필수"
+    },
+    {
+      "stage": "5",
+      "task": "학습셋 결합",
+      "artifact": "train_export_xgb.parquet",
+      "details": "entity_id + prediction_date 기준으로 피처와 라벨 결합",
+      "done_when": "행 단위 timestamp 검증 통과",
+      "owner_note": "XGBoost 입력"
+    },
+    {
+      "stage": "6",
+      "task": "모델 학습/평가",
+      "artifact": "model registry",
+      "details": "시계열 분리, 국가/품목 holdout, SHAP/feature importance 산출",
+      "done_when": "AUC/MAE/Calibration 기준 충족",
+      "owner_note": "dashboard 연계"
+    },
+    {
+      "stage": "7",
+      "task": "운영 갱신",
+      "artifact": "daily/monthly jobs",
+      "details": "일 단위: 리콜·지원사업·뉴스·위험지수 / 월 단위: 무역통계·거시지표",
+      "done_when": "갱신 실패 알림과 retry",
+      "owner_note": "스케줄러/로그 필요"
+    }
+  ],
+  "internal_labels": [
+    {
+      "label_id": "L-01",
+      "name": "기업/제품 마스터",
+      "reason": "외부·공공 데이터를 조인하는 기준축",
+      "fields": [
+        "기업ID",
+        "사업자번호 hash",
+        "지역",
+        "KSIC",
+        "제품명",
+        "모델명",
+        "HS6",
+        "HS10",
+        "타깃국가"
+      ],
+      "model_targets": [
+        "전체"
+      ],
+      "collection_definition": "CRM/상담DB/신청서에서 기준 테이블 생성",
+      "sensitivity_note": "사업자번호는 해시/권한관리"
+    },
+    {
+      "label_id": "L-02",
+      "name": "파일럿 수출 실행 label",
+      "reason": "90일 파일럿 가능성의 정답값",
+      "fields": [
+        "기준일",
+        "실행여부",
+        "실행일",
+        "금액",
+        "국가",
+        "HS",
+        "선적",
+        "계약 증빙"
+      ],
+      "model_targets": [
+        "90일 파일럿 수출 실행 가능성"
+      ],
+      "collection_definition": "수출신고/계약/샘플선적/CRM 단계 중 하나를 라벨 정책으로 확정",
+      "sensitivity_note": "정의가 흔들리면 모델 성능 왜곡"
+    },
+    {
+      "label_id": "L-03",
+      "name": "시험·인증 처리 이력",
+      "reason": "리드타임과 비용 예측의 핵심 label",
+      "fields": [
+        "상담일",
+        "접수일",
+        "완료일",
+        "시험분야",
+        "기관",
+        "결과",
+        "보완횟수",
+        "비용"
+      ],
+      "model_targets": [
+        "인증·시험 리드타임",
+        "예비비용"
+      ],
+      "collection_definition": "KTL/KTR/내부 상담 이력 또는 프로젝트 관리시스템 연동",
+      "sensitivity_note": "결과일 이후 피처 누수 차단"
+    },
+    {
+      "label_id": "L-04",
+      "name": "문서 준비도 체크리스트",
+      "reason": "화면 중요 피처인 문서 준비도를 산출",
+      "fields": [
+        "필수문서 목록",
+        "제출일",
+        "반려",
+        "보완",
+        "완성률",
+        "번역",
+        "공증 여부"
+      ],
+      "model_targets": [
+        "전체",
+        "특히 리드타임"
+      ],
+      "collection_definition": "문서 업로드 로그/OCR/체크리스트 점수화",
+      "sensitivity_note": "문서 내용 개인정보/영업비밀 마스킹"
+    },
+    {
+      "label_id": "L-05",
+      "name": "지원사업 신청·선정 이력",
+      "reason": "공고 데이터만으로는 선정확률 라벨이 없음",
+      "fields": [
+        "공고ID",
+        "신청일",
+        "신청기업",
+        "평가점수",
+        "선정여부",
+        "탈락사유",
+        "지원금액"
+      ],
+      "model_targets": [
+        "지원사업 선정 적합 확률"
+      ],
+      "collection_definition": "기업마당/수출바우처 공고ID와 내부 신청 이력 조인",
+      "sensitivity_note": "탈락 사유는 범주화/익명화"
+    },
+    {
+      "label_id": "L-06",
+      "name": "실제 비용/정산 이력",
+      "reason": "예비비용 회귀모델의 정답값",
+      "fields": [
+        "견적액",
+        "시험비",
+        "보완비",
+        "컨설팅비",
+        "운임",
+        "관세",
+        "정산일"
+      ],
+      "model_targets": [
+        "시험·보완 예비비용"
+      ],
+      "collection_definition": "회계/정산 시스템에서 프로젝트 단위 수집",
+      "sensitivity_note": "사후 정산일 기준 누수 주의"
+    },
+    {
+      "label_id": "L-07",
+      "name": "사용자 피드백/상담 로그",
+      "reason": "XGBoost 예측값 보정과 active learning",
+      "fields": [
+        "상담유형",
+        "긴급도",
+        "담당자 판단",
+        "실제 결과",
+        "변경 사유"
+      ],
+      "model_targets": [
+        "전체"
+      ],
+      "collection_definition": "상담 UI에서 구조화 입력",
+      "sensitivity_note": "개인 판단 편향 모니터링"
+    }
+  ]
+}
