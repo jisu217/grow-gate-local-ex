@@ -17,8 +17,6 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Tuple
 
-from .data_connectors import load_xgboost_data_catalog
-
 ROOT = Path(__file__).resolve().parents[1]
 SOURCE_PATH = ROOT / "data" / "public_data_sources.json"
 BUILD_DIR = ROOT / "data" / "build"
@@ -64,8 +62,6 @@ class PublicDataPipeline:
         started_at = utc_now()
         fetch_results = [self.fetch_source(source, use_live=use_live) for source in self.catalog["sources"]]
         normalized = self.normalize(fetch_results)
-        xgboost_catalog = load_xgboost_data_catalog()
-        normalized.update(self.normalize_xgboost_catalog(xgboost_catalog))
         payload = {
             "metadata": {
                 "service": "GROW-GATE Local EX",
@@ -77,8 +73,6 @@ class PublicDataPipeline:
             "api_call_log": [self.api_log_row(item) for item in fetch_results],
             "evidence_source": [item.evidence for item in fetch_results],
             "screen_data_map": self.catalog.get("screen_data_map", []),
-            "xgboost_catalog_metadata": xgboost_catalog["metadata"],
-            "session_playbooks": xgboost_catalog.get("session_playbooks", []),
             **normalized,
         }
         return payload
@@ -191,68 +185,6 @@ class PublicDataPipeline:
                     }
                 )
         return tables
-
-    def normalize_xgboost_catalog(self, catalog: Dict[str, Any]) -> Dict[str, List[Dict[str, Any]]]:
-        """Expose workbook-derived data specs as pipeline serving tables."""
-        sources = catalog.get("sources", [])
-        feature_mappings = catalog.get("feature_mappings", [])
-        collection_plan = catalog.get("collection_plan", [])
-        internal_labels = catalog.get("internal_labels", [])
-        return {
-            "xgboost_catalog_sources": [self.catalog_source_row(source) for source in sources],
-            "xgboost_feature_mappings": [self.feature_mapping_row(item) for item in feature_mappings],
-            "xgboost_collection_plan": list(collection_plan),
-            "xgboost_internal_labels": list(internal_labels),
-            "external_fetch_candidates": [
-                self.external_fetch_candidate(source)
-                for source in sources
-                if source.get("catalog_id", "").startswith("E-")
-            ],
-        }
-
-    def catalog_source_row(self, source: Dict[str, Any]) -> Dict[str, Any]:
-        return {
-            "source_id": source["catalog_id"],
-            "source_group": source["source_group"],
-            "priority": source["priority"],
-            "connector": source["connector"],
-            "target_table": source["target_table"],
-            "name": source["name"],
-            "provider": source["provider"],
-            "collection_method": source["collection_method"],
-            "update_cycle": source["update_cycle"],
-            "screen_ids": source["screen_ids"],
-            "model_targets": source["model_targets"],
-            "join_keys": source["join_keys"],
-            "feature_candidates": source["feature_candidates"],
-            "official_url": source["official_url"],
-            "collection_status": source["collection_status"],
-            "reliability": source["reliability"],
-        }
-
-    def feature_mapping_row(self, item: Dict[str, Any]) -> Dict[str, Any]:
-        return {
-            "model_target": item["model_target"],
-            "prediction_type": item["prediction_type"],
-            "label_definition": item["label_definition"],
-            "source_ids": item["public_sources"] + item["external_sources"],
-            "input_features": item["input_features"],
-            "leakage_guardrail": item["leakage_guardrail"],
-            "priority": item["priority"],
-        }
-
-    def external_fetch_candidate(self, source: Dict[str, Any]) -> Dict[str, Any]:
-        return {
-            "source_id": source["catalog_id"],
-            "name": source["name"],
-            "connector": source["connector"],
-            "collection_method": source["collection_method"],
-            "official_url": source["official_url"],
-            "requires_key": source["requires_key"],
-            "update_cycle": source["update_cycle"],
-            "status": source["collection_status"],
-            "live_enabled_by_default": False,
-        }
 
     def normalize_record(self, source: Dict[str, Any], record: Dict[str, Any], index: int) -> Dict[str, Any]:
         source_id = source["source_id"]

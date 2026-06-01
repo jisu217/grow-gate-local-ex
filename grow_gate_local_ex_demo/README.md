@@ -18,15 +18,13 @@ grow_gate_local_ex_demo/
 ├─ backend/
 │  ├─ app.py              # FastAPI 서버
 │  ├─ agents.py           # Planner/Data/Market/Regulation/Recall/FTO/Support/Roadmap Agents
-│  ├─ ai_search.py        # AI 진단/RAG/데이터 카탈로그 문맥 검색
 │  ├─ data_connectors.py  # 공공데이터 커넥터 계층 및 ETL preview
 │  ├─ ml_models.py        # 시장성, 규제 매칭, 리콜 유사도, FTO, 준비도 점수 모델
 │  ├─ schemas.py          # API 입출력 스키마
 │  └─ run_pipeline.py     # RAG 문서화용 데이터 파이프라인 미리보기
 ├─ data/
 │  ├─ sample_datasets.json       # 시연용 샘플 데이터
-│  ├─ public_data_sources.json   # 화면별 공공데이터 소스/테이블 매핑
-│  └─ xgboost_data_collection_catalog.json # 엑셀 기반 XGBoost 수집 명세 41개
+│  └─ public_data_sources.json   # 화면별 공공데이터 소스/테이블 매핑
 ├─ docs/
 │  └─ architecture.md     # 서비스/기술 구조 설명
 ├─ tests/
@@ -84,14 +82,7 @@ API 엔드포인트:
 - `GET /public-data/sources`
 - `GET /public-data/normalized`
 - `POST /public-data/collect`
-- `GET /xgboost-data/catalog`
 - `POST /analyze`
-- `POST /products`
-- `GET /products/{product_id}`
-- `POST /analysis/run`
-- `GET /analysis/{run_id}`
-- `POST /ai-search`
-- `POST /updates/impact`
 - `POST /report`
 
 예시 요청:
@@ -114,54 +105,6 @@ curl -X POST http://127.0.0.1:8000/analyze \
   }'
 ```
 
-제품 등록 후 run_id 기준으로 결과를 저장하는 흐름:
-
-```bash
-curl -X POST http://127.0.0.1:8000/products \
-  -H "Content-Type: application/json" \
-  -d '{
-    "company_name":"경남 배터리테크",
-    "region":"경남",
-    "industry":"전기전자",
-    "product_name":"리튬이온 배터리팩",
-    "hs_code":"850760",
-    "target_market":"Germany / EU",
-    "features":["battery","electronics","industrial"],
-    "certifications":["KC","UN38.3"],
-    "has_bom":true,
-    "has_test_report":true,
-    "has_label_draft":true,
-    "documents":{"has_bom":true,"has_test_report":true,"has_label_manual":true,"has_msds":false}
-  }'
-
-curl -X POST http://127.0.0.1:8000/analysis/run \
-  -H "Content-Type: application/json" \
-  -d '{"product_id":"P202605310001","analysis_mode":"full"}'
-```
-
-규제·리콜·지원사업 데이터 변경 시 영향받는 제품을 찾는 흐름:
-
-```bash
-curl -X POST http://127.0.0.1:8000/updates/impact \
-  -H "Content-Type: application/json" \
-  -d '{"changed_source_types":["regulation","recall"],"country":"EU","hs_code_prefix":"8507","features":["battery"]}'
-```
-
-AI 진단 화면의 검색 패널은 `POST /ai-search`를 호출합니다. 검색 범위는 `diagnosis`, `data_catalog`, `global` 중 하나입니다.
-
-```bash
-curl -X POST http://127.0.0.1:8000/ai-search \
-  -H "Content-Type: application/json" \
-  -d '{
-    "query":"EU 배터리 여권과 리콜 위험 근거를 보여줘",
-    "scope":"diagnosis",
-    "product_id":"P202605310001",
-    "analysis_run_id":"R202605310001"
-  }'
-```
-
-응답은 `answer`, `results`, `evidence_documents`, `data_sources`, `suggested_actions`, `guardrails`를 반환합니다. 화면은 답변만 보여주지 않고 근거 문서, 데이터 출처, 다음 액션을 함께 렌더링합니다.
-
 ## 4. 데이터 파이프라인 미리보기
 
 ```bash
@@ -171,9 +114,9 @@ python -m backend.run_pipeline
 실행하면 두 개의 빌드 파일이 생성됩니다.
 
 - `data/build/rag_documents_preview.json`: 규제·리콜 데이터를 RAG/벡터DB에 넣기 쉬운 문서 형태로 정규화
-- `data/build/public_data_normalized.json`: 화면별 공공데이터 소스에서 수집한 원천 데이터와 엑셀 카탈로그를 `trade_signal`, `country_profile`, `recall_case`, `patent_signal`, `support_program`, `xgboost_catalog_sources`, `xgboost_feature_mappings`, `external_fetch_candidates`, `evidence_source`, `api_call_log` 형태로 정규화
+- `data/build/public_data_normalized.json`: 화면별 공공데이터 소스에서 수집한 원천 데이터를 `trade_signal`, `country_profile`, `recall_case`, `patent_signal`, `support_program`, `evidence_source`, `api_call_log` 형태로 정규화
 
-기본값은 발표 안정성과 보안을 위해 seed 데이터와 엑셀 카탈로그 명세로 실행합니다. 실제 API 호출은 명시적으로 허용한 경우에만 동작합니다. 필요한 키와 live 수집 허용 플래그를 환경 변수로 설정한 뒤 백엔드 API에서 `POST /public-data/collect?use_live=true`를 호출합니다.
+기본값은 발표 안정성과 보안을 위해 seed 데이터로 실행합니다. 실제 API 호출은 명시적으로 허용한 경우에만 동작합니다. 필요한 키와 live 수집 허용 플래그를 환경 변수로 설정한 뒤 백엔드 API에서 `POST /public-data/collect?use_live=true`를 호출합니다.
 
 ```bash
 export GROW_GATE_ENABLE_LIVE_COLLECTION=1
@@ -181,12 +124,6 @@ export DATAGO_SERVICE_KEY="공공데이터포털_일반인증키"
 export KIPRIS_PLUS_KEY="KIPRIS_PLUS_인증키"
 curl -X POST "http://127.0.0.1:8000/public-data/collect?use_live=true"
 ```
-
-데이터 명세 화면은 `GET /xgboost-data/catalog`의 `session_playbooks`를 읽어 공유용 세션 카드를 표시합니다.
-
-- 엑셀 데이터 카탈로그 변경 세션: 엑셀 변경 → JSON/API/프론트 명세 동기화
-- 외부 데이터 수집 세션: E-* 후보 → 안전한 connector 후보와 seed fallback 연결
-- 공공데이터 강화 세션: P-* 후보 → 제품·국가·HS Code 기반 피처 강화
 
 ## 5. 보안 가드
 
@@ -208,11 +145,7 @@ curl -X POST "http://127.0.0.1:8000/public-data/collect?use_live=true"
 
 - `backend/ml_models.py`: XGBoost 예측/추정 레이어. macOS에 `libomp`가 없으면 시연 안정성을 위해 동일 feature contract의 Gradient Boosting fallback을 사용
 - `backend/public_data_pipeline.py`: 공공데이터 API 호출, seed fallback, 화면별 정규화, 수집 로그 생성
-- `backend/data_connectors.py`: 분석 Agent가 사용할 데이터 facade, RAG 문서화 payload, XGBoost 수집 카탈로그 loader 제공
-- `data/xgboost_data_collection_catalog.json`: `xgboost_data_collection_catalog.xlsx`의 41개 공공/외부 데이터 후보, 5개 모델 피처 매핑, 8단계 수집 계획, 7개 내부 라벨 요구사항
-- `backend/rag.py`: 규제·리콜·특허·지원사업 문서를 메타데이터 필터 + 키워드/유사도 기반으로 검색해 Agent 출력 근거로 첨부
-- `backend/ai_search.py`: 제품/run 문맥, RAG evidence, 공공·외부 데이터 카탈로그를 같은 검색 응답 계약으로 통합
-- `backend/product_pipeline.py`: 제품 마스터, 문서 준비도, 분석 run, 업데이트 영향 분석의 serving-store 계약 제공
+- `backend/data_connectors.py`: 분석 Agent가 사용할 데이터 facade와 RAG 문서화 payload 제공
 - `backend/ml_models.py`: 현재 규칙 기반 점수를 학습형 모델, 임베딩 유사도, 랭킹 모델로 교체
 - `backend/agents.py`: ReportAgent와 RegulationAgent에 RAG/LLM 답변 생성 및 출처 표시 추가
 - `frontend/app.js`: 공공데이터 출처, 문서 버전, 전문가 상담 연결, PDF 생성 기능 추가

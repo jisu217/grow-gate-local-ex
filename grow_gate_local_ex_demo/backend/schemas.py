@@ -136,16 +136,6 @@ class GitActionResult(BaseModel):
     hint: Optional[str] = None
 
 
-class EvidenceDocument(BaseModel):
-    doc_id: str
-    source_type: str
-    title: str
-    source_url: Optional[str] = None
-    confidence: float = Field(default=0.0, ge=0, le=1)
-    matched_terms: List[str] = Field(default_factory=list)
-    chunk_text: str = ""
-
-
 class MarketSignal(BaseModel):
     code: str
     name: str
@@ -168,7 +158,6 @@ class RegulationItem(BaseModel):
     typical_evidence: List[str]
     action: str
     matched_reason: str
-    evidence_documents: List[EvidenceDocument] = Field(default_factory=list)
 
 
 class RecallRisk(BaseModel):
@@ -180,7 +169,6 @@ class RecallRisk(BaseModel):
     risk_level: Literal["LOW", "MEDIUM", "HIGH"]
     recommended_tests: List[str]
     design_actions: List[str]
-    evidence_documents: List[EvidenceDocument] = Field(default_factory=list)
 
 
 class PatentRisk(BaseModel):
@@ -192,7 +180,6 @@ class PatentRisk(BaseModel):
     risk: float
     risk_level: Literal["LOW", "MEDIUM", "HIGH"]
     avoidance_hints: List[str]
-    evidence_documents: List[EvidenceDocument] = Field(default_factory=list)
 
 
 class SupportProgram(BaseModel):
@@ -203,7 +190,6 @@ class SupportProgram(BaseModel):
     roadmap_stage: str
     fit_score: int
     reason: str
-    evidence_documents: List[EvidenceDocument] = Field(default_factory=list)
 
 
 class RoadmapItem(BaseModel):
@@ -246,98 +232,3 @@ class AnalysisResult(BaseModel):
     ai_summary: str
     guardrails: List[str]
     raw_signals: Dict[str, Any] = Field(default_factory=dict)
-
-
-class ProductDocumentFlags(BaseModel):
-    has_bom: bool = False
-    has_test_report: bool = False
-    has_label_manual: bool = False
-    has_msds: bool = False
-    has_product_spec: bool = False
-
-
-class ProductRegistrationRequest(ProductInput):
-    documents: Optional[ProductDocumentFlags] = None
-
-
-class ProductRecord(BaseModel):
-    product_id: str
-    input: ProductInput
-    documents: ProductDocumentFlags
-    document_readiness_score: int
-    created_at: str
-    updated_at: str
-
-
-class AnalysisRunRequest(BaseModel):
-    product_id: str = Field(min_length=1, max_length=40)
-    analysis_mode: Literal["full", "quick"] = "full"
-    use_fastapi_backend: bool = True
-
-
-class AnalysisRunRecord(BaseModel):
-    run_id: str
-    product_id: str
-    analysis_mode: Literal["full", "quick"]
-    status: Literal["completed", "failed"]
-    result: AnalysisResult
-    created_at: str
-
-
-class UpdateImpactRequest(BaseModel):
-    changed_source_types: List[str] = Field(default_factory=lambda: ["regulation"], max_length=10)
-    country: Optional[str] = Field(default=None, max_length=80)
-    hs_code_prefix: Optional[str] = Field(default=None, max_length=10, pattern=r"^[0-9]*$")
-    features: List[str] = Field(default_factory=list, max_length=7)
-
-
-class AffectedProduct(BaseModel):
-    product_id: str
-    product_name: str
-    target_market: str
-    matched_reasons: List[str]
-    last_run_id: Optional[str] = None
-
-
-class UpdateImpactReport(BaseModel):
-    event_id: str
-    changed_source_types: List[str]
-    affected_products: List[AffectedProduct]
-    recommended_action: Literal["reanalyze", "monitor"]
-    created_at: str
-
-
-class AISearchRequest(BaseModel):
-    query: str = Field(min_length=2, max_length=240)
-    scope: Literal["diagnosis", "data_catalog", "global"] = "diagnosis"
-    product_id: Optional[str] = Field(default=None, max_length=40)
-    analysis_run_id: Optional[str] = Field(default=None, max_length=40)
-    filters: Dict[str, Any] = Field(default_factory=dict)
-
-
-class AISearchResultItem(BaseModel):
-    title: str
-    result_type: Literal["analysis_run", "product", "rag_evidence", "data_source", "roadmap", "support_program"]
-    source_type: str
-    summary: str
-    score: float = Field(ge=0, le=1)
-    source_id: Optional[str] = None
-    source_url: Optional[str] = None
-    metadata: Dict[str, Any] = Field(default_factory=dict)
-
-
-class AISuggestedAction(BaseModel):
-    label: str
-    action_type: Literal["open_evidence", "run_analysis", "open_data_catalog", "open_roadmap", "review_source"]
-    payload: Dict[str, Any] = Field(default_factory=dict)
-
-
-class AISearchResponse(BaseModel):
-    query: str
-    scope: Literal["diagnosis", "data_catalog", "global"]
-    answer: str
-    results: List[AISearchResultItem]
-    evidence_documents: List[EvidenceDocument] = Field(default_factory=list)
-    data_sources: List[Dict[str, Any]] = Field(default_factory=list)
-    suggested_actions: List[AISuggestedAction] = Field(default_factory=list)
-    guardrails: List[str] = Field(default_factory=list)

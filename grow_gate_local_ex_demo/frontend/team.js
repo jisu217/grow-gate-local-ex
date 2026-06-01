@@ -1,6 +1,4 @@
-const API_BASE = "http://127.0.0.1:8000";
-
-let dataSources = [
+const dataSources = [
   {
     id: "kcs_trade_gw",
     name: "관세청 수출입무역통계 GW",
@@ -417,8 +415,6 @@ let dataSources = [
   }
 ];
 
-let sessionPlaybooks = [];
-
 const missingData = [
   { title: "시험기관 견적·리드타임", impact: "로드맵이 예측이 아니라 실행 일정으로 보입니다.", priority: "High", owner: "인증" },
   { title: "지역기업 인터뷰 3건", impact: "현장 문제 정의와 UX 타당성을 보강합니다.", priority: "High", owner: "기획" },
@@ -543,101 +539,6 @@ function renderDataShapeList(items) {
   `;
 }
 
-async function loadXgboostCatalog() {
-  try {
-    const response = await fetch(`${API_BASE}/xgboost-data/catalog`);
-    if (!response.ok) throw new Error(`catalog API ${response.status}`);
-    const catalog = await response.json();
-    if (!Array.isArray(catalog.sources) || !catalog.sources.length) return;
-    dataSources = catalog.sources.map(mapCatalogSource);
-    sessionPlaybooks = Array.isArray(catalog.session_playbooks) ? catalog.session_playbooks : buildFallbackPlaybooks();
-  } catch (error) {
-    console.warn("Using embedded data catalog fallback", error);
-    sessionPlaybooks = buildFallbackPlaybooks();
-  }
-}
-
-function buildFallbackPlaybooks() {
-  return [
-    {
-      session_id: "excel-catalog-update",
-      title: "엑셀 데이터 카탈로그 변경 세션",
-      owner_role: "데이터 기획/PM",
-      goal: "엑셀 변경 내용을 데이터 명세, API, 화면에 반영",
-      primary_files: ["data/xgboost_data_collection_catalog.json", "backend/data_connectors.py", "frontend/team.js"],
-      expected_outputs: ["카탈로그 최신화", "데이터 명세 화면 반영", "테스트 통과"],
-      acceptance_checks: [".venv312/bin/python -m pytest tests/test_agent.py"],
-      kickoff_prompt: "xgboost_data_collection_catalog.xlsx 변경 내용을 읽어 JSON 카탈로그, API, 데이터 명세 화면을 최신화해 주세요.",
-    },
-    {
-      session_id: "external-data-collection",
-      title: "외부 데이터 수집 세션",
-      owner_role: "데이터 엔지니어",
-      goal: "E-* 외부 데이터 후보를 안전한 수집 후보와 seed fallback으로 연결",
-      primary_files: ["backend/public_data_pipeline.py", "data/xgboost_data_collection_catalog.json"],
-      expected_outputs: ["external_fetch_candidates 정리", "seed fallback 유지", "파이프라인 검증"],
-      acceptance_checks: [".venv312/bin/python -m backend.run_pipeline"],
-      kickoff_prompt: "xgboost 카탈로그의 E-* 후보를 검토해 외부 데이터 수집 파이프라인 후보를 구현해 주세요.",
-    },
-    {
-      session_id: "public-data-enhancement",
-      title: "공공데이터 강화 세션",
-      owner_role: "공공데이터/백엔드 담당",
-      goal: "P-* 공공데이터를 제품·국가·HS Code 기반 분석 피처로 강화",
-      primary_files: ["data/public_data_sources.json", "backend/public_data_pipeline.py"],
-      expected_outputs: ["공공데이터 정규화", "피처 후보 연결", "문서 갱신"],
-      acceptance_checks: [".venv312/bin/python -m pytest"],
-      kickoff_prompt: "P-* 공공데이터 후보를 기준으로 공공데이터 수집/정규화/피처 연결을 강화해 주세요.",
-    },
-  ];
-}
-
-function mapCatalogSource(source) {
-  const featureText = (source.feature_candidates || []).slice(0, 4).join(", ");
-  const targets = source.model_targets || [];
-  return {
-    id: source.source_id,
-    name: source.name,
-    provider: source.provider,
-    category: `${source.source_group} · ${source.connector}`,
-    table: source.target_table,
-    screens: (source.screen_ids || []).join(", "),
-    status: source.collection_status,
-    priority: source.priority,
-    sourceType: source.collection_method,
-    originUrl: source.official_url,
-    docsUrl: source.official_url,
-    endpoint: source.collection_method,
-    auth: source.requires_key ? "API key / serviceKey 필요" : "공개 웹·파일 또는 별도 계약 확인",
-    format: source.collection_method,
-    collection: `${source.update_cycle} 기준으로 수집. 조인키: ${(source.join_keys || []).join(", ") || "소스별 정의"}`,
-    reliability: Number(source.reliability || 70),
-    insight: source.constraints || `${targets.join(", ")} 지표에 연결되는 데이터 후보입니다.`,
-    usage: [
-      `연결 지표: ${targets.join(", ") || "XGBoost 공통 피처"}`,
-      `피처 후보: ${featureText || "카탈로그 정의 피처"}`,
-      `수집 상태: ${source.collection_status}`,
-    ],
-    codeRefs: [
-      "backend/data_connectors.py: xgboost catalog loader",
-      "backend/public_data_pipeline.py: catalog source normalization",
-      "frontend/team.js: data-catalog rendering",
-    ],
-    dataShape: [
-      `catalog_id: ${source.catalog_id}`,
-      `join_keys: ${(source.join_keys || []).slice(0, 4).join(", ") || "-"}`,
-      `features: ${featureText || "-"}`,
-      `derived: ${(source.derived_variables || []).slice(0, 3).join(", ") || "-"}`,
-    ],
-    stats: {
-      records: "catalog row",
-      updateCycle: source.update_cycle,
-      targetTable: source.target_table,
-      screens: (source.screen_ids || []).join(", "),
-    },
-  };
-}
-
 function renderTeamDashboard() {
   renderCatalogMetrics();
   renderDataSources();
@@ -653,9 +554,9 @@ function renderCatalogMetrics() {
   const statusTarget = qs("#catalogStatusSummary");
   if (countTarget) countTarget.textContent = dataSources.length;
   if (statusTarget) {
-    const active = dataSources.filter((source) => source.status === "활용 중" || source.status === "수집대상 확정").length;
-    const high = dataSources.filter((source) => source.priority === "High" || source.priority === "A").length;
-    statusTarget.textContent = `${active}개 수집 확정, ${high}개 A/우선 후보까지 추적`;
+    const active = dataSources.filter((source) => source.status === "활용 중").length;
+    const high = dataSources.filter((source) => source.priority === "High").length;
+    statusTarget.textContent = `${active}개 활용 중, ${high}개 우선 연계 후보까지 추적`;
   }
 }
 
@@ -1091,77 +992,21 @@ function renderGitStep(step) {
 function renderDataCatalogPage() {
   renderCatalogOverview();
   renderCatalogCharts();
-  renderSessionPlaybooks();
   renderCatalogList();
   const initialId = window.location.hash ? window.location.hash.slice(1) : dataSources[0].id;
   selectCatalogSpec(initialId);
 }
 
-function renderSessionPlaybooks() {
-  const target = qs("#sessionPlaybooks");
-  if (!target) return;
-  target.innerHTML = sessionPlaybooks.map((playbook) => `
-    <article class="session-playbook-card">
-      <div>
-        <span>${escapeHtml(playbook.owner_role)} · ${escapeHtml(playbook.session_id)}</span>
-        <h3>${escapeHtml(playbook.title)}</h3>
-        <p>${escapeHtml(playbook.goal)}</p>
-      </div>
-      <dl>
-        <dt>주요 파일</dt>
-        <dd>${(playbook.primary_files || []).slice(0, 3).map((item) => `<code>${escapeHtml(item)}</code>`).join("")}</dd>
-        <dt>완료 기준</dt>
-        <dd>${(playbook.acceptance_checks || []).slice(0, 2).map((item) => `<code>${escapeHtml(item)}</code>`).join("")}</dd>
-      </dl>
-      <button type="button" data-session-copy="${escapeHtml(playbook.session_id)}">프롬프트 복사</button>
-    </article>
-  `).join("");
-  target.querySelectorAll("[data-session-copy]").forEach((button) => {
-    button.addEventListener("click", () => copySessionPrompt(button.dataset.sessionCopy, button));
-  });
-}
-
-async function copySessionPrompt(sessionId, button) {
-  const playbook = sessionPlaybooks.find((item) => item.session_id === sessionId);
-  if (!playbook) return;
-  const prompt = [
-    `# ${playbook.title}`,
-    "",
-    `목표: ${playbook.goal}`,
-    `담당 역할: ${playbook.owner_role}`,
-    "",
-    "주요 파일:",
-    ...(playbook.primary_files || []).map((item) => `- ${item}`),
-    "",
-    "기대 산출물:",
-    ...(playbook.expected_outputs || []).map((item) => `- ${item}`),
-    "",
-    "검증:",
-    ...(playbook.acceptance_checks || []).map((item) => `- ${item}`),
-    "",
-    "시작 프롬프트:",
-    playbook.kickoff_prompt,
-  ].join("\n");
-  try {
-    await navigator.clipboard.writeText(prompt);
-    button.textContent = "복사됨";
-    setTimeout(() => { button.textContent = "프롬프트 복사"; }, 1500);
-  } catch (error) {
-    console.warn(error);
-    window.prompt("세션 프롬프트를 복사하세요.", prompt);
-  }
-}
-
 function renderCatalogOverview() {
   const target = qs("#catalogOverview");
   if (!target) return;
-  const active = dataSources.filter((source) => source.status === "활용 중" || source.status === "수집대상 확정").length;
-  const high = dataSources.filter((source) => source.priority === "High" || source.priority === "A").length;
+  const active = dataSources.filter((source) => source.status === "활용 중").length;
+  const high = dataSources.filter((source) => source.priority === "High").length;
   const api = dataSources.filter((source) => source.sourceType.toLowerCase().includes("api")).length;
   target.innerHTML = `
     <article><span>전체 후보</span><strong>${dataSources.length}</strong><p>수출 준비도 판단에 연결 가능한 데이터 소스</p></article>
-    <article><span>수집 확정</span><strong>${active}</strong><p>엑셀 카탈로그에서 수집대상 확정으로 분류</p></article>
-    <article><span>A/우선</span><strong>${high}</strong><p>XGBoost 입력 우선순위가 높은 출처</p></article>
+    <article><span>활용 중</span><strong>${active}</strong><p>현재 데모 seed 또는 화면 근거에 반영</p></article>
+    <article><span>우선 연계</span><strong>${high}</strong><p>공모전 설득력 상승 폭이 큰 출처</p></article>
     <article><span>API형</span><strong>${api}</strong><p>백엔드 커넥터로 자동화하기 쉬운 출처</p></article>
   `;
 }
@@ -1268,8 +1113,7 @@ function selectCatalogSpec(id) {
   `;
 }
 
-document.addEventListener("DOMContentLoaded", async () => {
-  await loadXgboostCatalog();
+document.addEventListener("DOMContentLoaded", () => {
   const dashboard = document.body.dataset.dashboard;
   if (dashboard === "team") renderTeamDashboard();
   if (dashboard === "data-catalog") renderDataCatalogPage();
