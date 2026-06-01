@@ -11,6 +11,7 @@ grow_gate_local_ex_demo/
 ├─ frontend/
 │  ├─ index.html          # 업무 담당자 홈
 │  ├─ workspace.html      # AI 진단 워크스페이스
+│  ├─ ai-search.html      # 진단/RAG/데이터 출처 통합 AI 검색
 │  ├─ data.html           # 공공데이터 파이프라인 화면
 │  ├─ roadmap.html        # 30·60·90일 실행 로드맵 화면
 │  ├─ styles.css          # Apple-light 업무 UI 스타일
@@ -41,6 +42,7 @@ grow_gate_local_ex_demo/
 
 - `index.html`: 담당자 인사, 최근 진단, 오늘 먼저 할 일, 주요 업무 진입
 - `workspace.html`: 좌측 업무 메뉴 기반 제품 입력, AI/XGBoost 진단, 규제·리콜·FTO·지원사업·리포트
+- `ai-search.html`: 제품 문맥 기반 AI 검색, RAG 근거, XGBoost 데이터 출처, 다음 액션 확인
 - `data.html`: 화면별 공공데이터 출처, 정규화 테이블, 수집 파이프라인
 - `roadmap.html`: 30·60·90일 업무 보드와 예측 기반 운영 메모
 
@@ -147,7 +149,7 @@ curl -X POST http://127.0.0.1:8000/updates/impact \
   -d '{"changed_source_types":["regulation","recall"],"country":"EU","hs_code_prefix":"8507","features":["battery"]}'
 ```
 
-AI 진단 화면의 검색 패널은 `POST /ai-search`를 호출합니다. 검색 범위는 `diagnosis`, `data_catalog`, `global` 중 하나입니다.
+별도 AI 검색 화면(`frontend/ai-search.html`)은 `POST /ai-search`를 호출합니다. 검색 범위는 `diagnosis`, `data_catalog`, `global` 중 하나입니다.
 
 ```bash
 curl -X POST http://127.0.0.1:8000/ai-search \
@@ -156,11 +158,12 @@ curl -X POST http://127.0.0.1:8000/ai-search \
     "query":"EU 배터리 여권과 리콜 위험 근거를 보여줘",
     "scope":"diagnosis",
     "product_id":"P202605310001",
-    "analysis_run_id":"R202605310001"
+    "analysis_run_id":"R202605310001",
+    "product_input":{"product_name":"리튬이온 배터리팩","hs_code":"850760","target_market":"Germany / EU","features":["battery","electronics","industrial"]}
   }'
 ```
 
-응답은 `answer`, `results`, `evidence_documents`, `data_sources`, `suggested_actions`, `guardrails`를 반환합니다. 화면은 답변만 보여주지 않고 근거 문서, 데이터 출처, 다음 액션을 함께 렌더링합니다.
+`product_id`/`analysis_run_id`가 있으면 저장된 진단 문맥을 우선 사용하고, 별도 검색 화면처럼 등록 run이 없는 경우에는 `product_input`으로 전달한 화면 입력값을 검색 문맥으로 사용합니다. 응답은 `answer`, `results`, `evidence_documents`, `data_sources`, `suggested_actions`, `guardrails`를 반환합니다. 화면은 답변만 보여주지 않고 근거 문서, 데이터 출처, 다음 액션을 함께 렌더링합니다.
 
 ## 4. 데이터 파이프라인 미리보기
 
@@ -221,3 +224,13 @@ curl -X POST "http://127.0.0.1:8000/public-data/collect?use_live=true"
 ## 8. 발표 시연 멘트
 
 > 이 서비스는 수출 유망국을 단순 추천하는 서비스가 아니라, 지역 제조기업이 실제로 해외시장에 들어가기 위해 필요한 규제·인증·리콜·특허·지원사업 실행순서를 AI가 30·60·90일 로드맵으로 짜주는 서비스입니다.
+
+## 9. 진행 현황
+
+### 1차 스프린트 (2026-05-31)
+
+- 다중 화면 정적 프론트엔드(홈·워크스페이스·데이터·로드맵) 구성 완료
+- FastAPI 백엔드 및 Planner/Data/Market/Regulation/Recall/FTO/Support/Roadmap Agent 파이프라인 구현
+- 공공데이터 커넥터 계층과 seed 기반 ETL preview, RAG 문서화 파이프라인 구성
+- XGBoost(또는 Gradient Boosting fallback) 기반 예측/추정 레이어 적용
+- 로컬 샘플 데이터 기반 end-to-end 시연 시나리오 동작 확인

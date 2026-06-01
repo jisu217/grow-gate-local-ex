@@ -35,7 +35,7 @@ class AISearchService:
     def search(self, request: AISearchRequest) -> AISearchResponse:
         product = self._resolve_product(request)
         run = self._resolve_run(request)
-        product_input = product.input if product else run.result.request if run else ProductInput()
+        product_input = product.input if product else run.result.request if run else request.product_input or ProductInput()
         target_region = self.connector.fetch_target_market(product_input.target_market).get("region", "EU")
         evidence = self.rag_index.search(
             product_input,

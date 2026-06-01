@@ -312,6 +312,7 @@ class AISearchRequest(BaseModel):
     scope: Literal["diagnosis", "data_catalog", "global"] = "diagnosis"
     product_id: Optional[str] = Field(default=None, max_length=40)
     analysis_run_id: Optional[str] = Field(default=None, max_length=40)
+    product_input: Optional[ProductInput] = None
     filters: Dict[str, Any] = Field(default_factory=dict)
 
 

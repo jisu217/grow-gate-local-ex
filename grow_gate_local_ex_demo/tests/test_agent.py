@@ -147,3 +147,20 @@ def test_ai_search_returns_contextual_evidence_and_actions():
     assert catalog["data_sources"]
     assert any(source["source_id"].startswith("E-") for source in catalog["data_sources"])
     assert any(action["action_type"] == "open_data_catalog" for action in catalog["suggested_actions"])
+
+    standalone_response = client.post(
+        "/ai-search",
+        json={
+            "query": "미국 전자제품 FCC 인증 근거",
+            "scope": "diagnosis",
+            "product_input": {
+                **ProductInput().model_dump(),
+                "target_market": "United States",
+                "features": ["electronics", "digital"],
+            },
+        },
+    )
+    assert standalone_response.status_code == 200
+    standalone = standalone_response.json()
+    assert standalone["results"]
+    assert standalone["query"] == "미국 전자제품 FCC 인증 근거"

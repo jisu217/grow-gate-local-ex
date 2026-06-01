@@ -11,11 +11,12 @@ GROW-GATE Local EX는 지역 제조기업의 제품 단위 해외진출 준비�
 | 화면 | 파일 | 역할 |
 |---|---|---|
 | 홈 | `frontend/index.html` | 담당자 인사, 최근 진단, 오늘 먼저 할 일, 주요 업무 진입 |
-| AI 진단 워크스페이스 | `frontend/workspace.html` | 좌측 업무 메뉴 기반 기업·제품 입력, 데이터 호출, XGBoost 예측, 규제·리콜·FTO·지원사업 분석, AI 문맥 검색, 리포트 출력 |
+| AI 진단 워크스페이스 | `frontend/workspace.html` | 좌측 업무 메뉴 기반 기업·제품 입력, 데이터 호출, XGBoost 예측, 규제·리콜·FTO·지원사업 분석, 리포트 출력 |
+| AI 검색 | `frontend/ai-search.html` | 제품 문맥 기반 진단/RAG/공공·외부 데이터 출처 통합 검색과 다음 액션 제안 |
 | 데이터 파이프라인 | `frontend/data.html` | 화면별 공공데이터 출처, 정규화 테이블, evidence_source 흐름 확인 |
 | 실행 로드맵 | `frontend/roadmap.html` | 30·60·90일 업무 보드, 담당자별 산출물, 예측 기반 운영 메모 |
 
-업무 담당자는 홈에서 “새 수출 진단 시작”, “데이터 보기”, “오늘 할 일 보기” 중 하나를 선택합니다. 분석 업무는 `workspace.html`에서 수행하며, 좌측 업무 메뉴로 입력, 데이터 호출, ML 예측, 시장성, 규제·인증, 리콜, FTO·지원, 실행 보드, 리포트, 근거 데이터 섹션을 빠르게 이동합니다. 데이터 검증과 일정 관리는 별도 화면에서 확인하도록 분리했습니다.
+업무 담당자는 홈에서 “새 수출 진단 시작”, “데이터 보기”, “오늘 할 일 보기” 중 하나를 선택합니다. 분석 업무는 `workspace.html`에서 수행하며, 좌측 업무 메뉴로 입력, 데이터 호출, ML 예측, 시장성, 규제·인증, 리콜, FTO·지원, 실행 보드, 리포트, 근거 데이터 섹션을 빠르게 이동합니다. 진단 근거와 데이터 출처를 질문형으로 탐색하는 작업은 `ai-search.html`에서 별도 수행합니다. 데이터 검증과 일정 관리는 별도 화면에서 확인하도록 분리했습니다.
 
 ## Agent 구성
 
@@ -93,7 +94,7 @@ GROW-GATE Local EX는 지역 제조기업의 제품 단위 해외진출 준비�
    - 저장된 진단 결과를 다시 조회합니다. 향후 PDF, 알림, 이력 비교가 이 ID를 기준으로 연결됩니다.
 
 4. `POST /ai-search`
-   - `query`, `scope`, `product_id`, `analysis_run_id`를 받아 현재 제품/run 문맥에서 진단 결과, RAG evidence, XGBoost 데이터 카탈로그를 검색합니다.
+   - `query`, `scope`, `product_id`, `analysis_run_id`, `product_input`을 받아 현재 제품/run 문맥 또는 별도 검색 화면의 입력값에서 진단 결과, RAG evidence, XGBoost 데이터 카탈로그를 검색합니다.
    - 응답은 `answer`, `results`, `evidence_documents`, `data_sources`, `suggested_actions`, `guardrails`를 포함합니다.
    - `scope=diagnosis`는 현재 AI 진단 근거를 우선하고, `scope=data_catalog`는 외부/공공 데이터 후보를 우선하며, `scope=global`은 두 영역을 함께 검색합니다.
 
@@ -121,7 +122,7 @@ GROW-GATE Local EX는 지역 제조기업의 제품 단위 해외진출 준비�
 
 `regulations`, `recalls`, `patents`, `support_programs`의 각 항목은 `evidence_documents`를 포함합니다. 화면은 이 값을 근거 문서 배지로 표시하고, `raw_signals.rag_context`는 섹션별 RAG 검색 결과 묶음을 보관합니다.
 
-`POST /ai-search`는 진단 화면의 AI 검색 패널이 사용하는 통합 검색 응답입니다.
+`POST /ai-search`는 별도 AI 검색 화면이 사용하는 통합 검색 응답입니다.
 
 - `results`: 분석 run, 제품 마스터, RAG evidence, 데이터 출처, 로드맵, 지원사업을 같은 카드 계약으로 반환
 - `evidence_documents`: 규제·리콜·특허·지원사업 RAG 문서 상위 결과
