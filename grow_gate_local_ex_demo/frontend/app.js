@@ -725,6 +725,57 @@ const DATA = {
 };
 
 const API_BASE = "http://127.0.0.1:8000";
+const TARGET_COMPANY_FALLBACK = {
+  profile: {
+    company_name: "Pmgrow Corporation",
+    korean_name: "주식회사 피엠그로우",
+    company_scale: "SME",
+    region: "경기 의왕",
+    industry: "배터리 서비스 플랫폼 및 배터리팩 솔루션",
+    public_profile_note: "공개 기업정보와 공식 홈페이지 기반의 중소기업 수출 컨설팅 데모 seed입니다.",
+    source_urls: [
+      { title: "Pmgrow official website", url: "https://www.pmgrow.co.kr", source_type: "official_site" },
+      { title: "경기도 일자리재단 기업정보", url: "https://job.gg.go.kr/empmn/desEntDtl.do?bizrno=1208759505", source_type: "public_company_profile" },
+    ],
+    business_context: {
+      core_products: ["배터리팩 솔루션", "배터리 구독", "배터리 진단", "ESS", "데이터 분석"],
+      consulting_goal: "중소기업의 배터리팩·진단 역량을 수출 인증, 제품안전, 바이어 요구사항에 맞춘 실행 패키지로 전환",
+    },
+    sme_constraints: [
+      "전담 해외규제 인력이 부족하므로 시험·인증·통관 업무를 우선순위화",
+      "대기업 법무·인증 조직을 가정하지 않고 시험기관, TP, KOTRA, 지원사업을 연결",
+    ],
+  },
+  rag: {
+    retrieval_strategy: "seed_profile + public_data_pipeline lexical top-k",
+    documents: [
+      { doc_id: "pmgrow-profile-001", title: "피엠그로우 중소기업 컨설팅 프로필", source_type: "target_company_seed", score: 0.93, text: "경기 의왕 소재 중소기업으로 배터리팩 솔루션, 배터리 구독, 진단, ESS, 데이터 분석 역량을 컨설팅 대상으로 설정합니다." },
+      { doc_id: "pmgrow-product-002", title: "수출 후보 제품군", source_type: "target_company_seed", score: 0.89, text: "전기차 배터리팩 진단·ESS 솔루션은 배터리 안전성, 운송, ESS 설치, 데이터 서비스 근거를 함께 확인해야 합니다." },
+      { doc_id: "pmgrow-sme-003", title: "중소기업 실행 제약", source_type: "target_company_seed", score: 0.86, text: "시험기관 상담, 테크노파크, KOTRA, 수출바우처, 제품안전 전문가 검증으로 이어지는 현실적인 로드맵이 필요합니다." },
+    ],
+  },
+  promptPack: {
+    prompt_version: "sme-rag-harness-v1",
+    messages: [
+      { role: "system", content: "중소 제조·기술기업의 수출 준비도를 근거 기반으로 진단하는 GROW-GATE Local EX Agent" },
+      { role: "developer", content: "RAG 문서 ID를 문장 끝에 붙이고, 인증 가능 여부는 보장하지 않습니다." },
+      { role: "assistant_context", content: "상위 RAG 근거와 규제·리콜·지원사업 후보를 함께 사용합니다." },
+    ],
+    output_contract: {
+      must_include: ["evidence_citations", "uncertainty_flags", "30_60_90_day_actions", "sme_support_matches"],
+    },
+  },
+  harness: {
+    overall_score: 88,
+    overall_status: "pass",
+    checks: [
+      { id: "evidence_grounding", label: "RAG 근거 연결", status: "pass", score: 100, evidence: "상위 RAG 문서 ID 포함" },
+      { id: "prompt_injection_guardrail", label: "프롬프트 인젝션 방어", status: "pass", score: 100, evidence: "사용자 메모보다 시스템 정책 우선" },
+      { id: "sme_alignment", label: "중소기업 컨설팅 정렬", status: "pass", score: 100, evidence: "SME 실행 제약 반영" },
+      { id: "source_traceability", label: "출처 추적성", status: "pass", score: 100, evidence: "doc_id와 source_type 표시" },
+    ],
+  },
+};
 const PUBLIC_DATA_SOURCE_FALLBACK = [
   {
     source_id: "kcs_trade_gw",
@@ -783,6 +834,7 @@ const PUBLIC_DATA_SOURCE_FALLBACK = [
   },
 ];
 let lastResult = null;
+let currentSearchScope = "diagnosis";
 
 const $ = (selector) => document.querySelector(selector);
 const $$ = (selector) => Array.from(document.querySelectorAll(selector));
@@ -1134,7 +1186,7 @@ function analyzeLocal(request) {
     guardrails: [
       "본 결과는 공공데이터와 데모 규칙 기반의 1차 진단이며, 최종 인증 가능 여부는 시험기관·관세사·변리사 확인이 필요합니다.",
       "HS Code와 제품 사양이 바뀌면 대상 규제와 지원사업 우선순위가 달라질 수 있습니다.",
-      "실서비스에서는 데이터 호출 시점, 출처 URL, 문서 버전, 불확실성 점수를 함께 표시해야 합니다.",
+      "실서비스에서는 데이터 수집·연계 시점, 출처 URL, 문서 버전, 불확실성 점수를 함께 표시해야 합니다.",
     ],
     raw_signals: { agent_plan: ["market", "regulation", "recall", "patent", "support", "roadmap", "report"], target_region: target.region, region_profile: regionProfile },
   };
@@ -1227,6 +1279,7 @@ function render(result) {
   renderLists(result);
   renderDataSources(result);
   renderAdvancedScreens(result);
+  renderTargetCompanyEnhancement(result);
   renderReportHighlights(result);
   $("#aiSummary").textContent = result.ai_summary;
   $("#guardrails").innerHTML = (result.guardrails || []).map((text) => `<div class="guardrail">${escapeHtml(text)}</div>`).join("");
@@ -1299,6 +1352,78 @@ function renderRoadmap(roadmap) {
     </article>`).join("");
 }
 
+function renderTargetCompanyEnhancement(result) {
+  const profileEl = $("#targetCompanyProfile");
+  const ragEl = $("#targetRagList");
+  const promptEl = $("#promptPackList");
+  const harnessEl = $("#harnessChecks");
+  const scoreEl = $("#targetHarnessScore");
+  if (!profileEl || !ragEl || !promptEl || !harnessEl || !scoreEl) return;
+
+  const raw = result.raw_signals || {};
+  const profile = raw.target_company_profile || TARGET_COMPANY_FALLBACK.profile;
+  const rag = raw.target_company_rag || TARGET_COMPANY_FALLBACK.rag;
+  const promptPack = raw.advanced_prompt_pack || TARGET_COMPANY_FALLBACK.promptPack;
+  const harness = raw.harness_report || TARGET_COMPANY_FALLBACK.harness;
+  const coreProducts = ((profile.business_context || {}).core_products || []).slice(0, 5);
+  const constraints = (profile.sme_constraints || []).slice(0, 3);
+  const sourceUrls = (profile.source_urls || []).slice(0, 3);
+  const harnessScore = Number(harness.overall_score || 0);
+  scoreEl.textContent = `Harness ${harnessScore}`;
+  scoreEl.className = `badge ${harnessScore >= 85 ? "green" : "yellow"}`;
+
+  profileEl.innerHTML = `
+    <div class="target-profile-head">
+      <div>
+        <span>${escapeHtml(profile.company_scale || "SME")} · ${escapeHtml(profile.region || "지역 확인")}</span>
+        <h3>${escapeHtml(profile.korean_name || profile.company_name || "타겟 기업")}</h3>
+        <p>${escapeHtml(profile.industry || "")}</p>
+      </div>
+      <a href="${escapeHtml((sourceUrls[0] || {}).url || "#")}" target="_blank" rel="noreferrer">공개 출처</a>
+    </div>
+    <div class="target-chip-row">
+      ${coreProducts.map((item) => `<span>${escapeHtml(item)}</span>`).join("")}
+    </div>
+    <p class="target-note">${escapeHtml(profile.public_profile_note || "")}</p>
+    <ul>${constraints.map((item) => `<li>${escapeHtml(item)}</li>`).join("")}</ul>
+  `;
+
+  ragEl.innerHTML = (rag.documents || []).slice(0, 5).map((doc) => `
+    <article class="target-rag-row">
+      <div>
+        <span>${escapeHtml(doc.doc_id)} · ${escapeHtml(doc.source_type)} · ${Math.round(Number(doc.score || 0) * 100)}%</span>
+        <h3>${escapeHtml(doc.title)}</h3>
+      </div>
+      <p>${escapeHtml(doc.text || "")}</p>
+    </article>
+  `).join("");
+
+  const promptMessages = (promptPack.messages || []).slice(0, 4);
+  const mustInclude = ((promptPack.output_contract || {}).must_include || []).slice(0, 4);
+  promptEl.innerHTML = `
+    <div class="prompt-contract">
+      <span>${escapeHtml(promptPack.prompt_version || "sme-rag-harness-v1")}</span>
+      ${mustInclude.map((item) => `<b>${escapeHtml(item)}</b>`).join("")}
+    </div>
+    ${promptMessages.map((message) => `
+      <article class="prompt-message">
+        <span>${escapeHtml(message.role)}</span>
+        <p>${escapeHtml(message.content)}</p>
+      </article>
+    `).join("")}
+  `;
+
+  harnessEl.innerHTML = (harness.checks || []).map((check) => `
+    <article class="harness-check ${check.status === "pass" ? "pass" : "review"}">
+      <div>
+        <strong>${escapeHtml(check.label)}</strong>
+        <span>${escapeHtml(check.id)} · ${escapeHtml(check.status)} · ${escapeHtml(check.score)}</span>
+      </div>
+      <p>${escapeHtml(check.evidence)}</p>
+    </article>
+  `).join("");
+}
+
 function renderLists(result) {
   $("#regulationList").innerHTML = (result.regulations || []).slice(0, 5).map((item) => `
     <article class="stack-item">
@@ -1328,6 +1453,211 @@ function renderLists(result) {
       <p>${escapeHtml(item.priority_rule)}</p>
     </article>`).join("");
   $("#patentSupportList").innerHTML = patentHtml + supportHtml;
+}
+
+async function runAiSearch(event) {
+  if (event) event.preventDefault();
+  const input = $("#aiSearchInput");
+  const status = $("#aiSearchStatus");
+  if (!input || !status) return;
+  const query = input.value.trim();
+  if (query.length < 2) {
+    showToast("검색어를 2자 이상 입력해 주세요.");
+    return;
+  }
+  const productInput = collectForm();
+  setAiSearchBusy(true);
+  status.textContent = "AI 검색 중...";
+  try {
+    const response = await fetch(`${API_BASE}/ai-search`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ query, scope: currentSearchScope, product_input: productInput }),
+    });
+    if (!response.ok) throw new Error(`AI SEARCH ${response.status}`);
+    const result = await response.json();
+    renderAiSearchResponse(result);
+    status.textContent = `백엔드 검색 완료 · ${result.results.length}개 결과`;
+  } catch (error) {
+    console.warn(error);
+    const result = buildLocalAiSearchResponse(query, currentSearchScope, analyzeLocal(productInput));
+    renderAiSearchResponse(result);
+    status.textContent = "백엔드 미연결 · 현재 화면 데이터 기준 로컬 검색";
+  } finally {
+    setAiSearchBusy(false);
+  }
+}
+
+function setAiSearchBusy(isBusy) {
+  const button = $("#aiSearchSubmit");
+  if (!button) return;
+  button.disabled = isBusy;
+  button.textContent = isBusy ? "검색 중..." : "검색";
+}
+
+function buildLocalAiSearchResponse(query, scope, result) {
+  const evidence = [
+    ...(result.regulations || []).map((item) => ({
+      title: item.title,
+      source_type: "regulation",
+      chunk_text: `${item.scope} ${item.action} ${(item.typical_evidence || []).join(" ")}`,
+      confidence: Math.max(0.2, tokenSimilarity(query, `${item.title} ${item.scope} ${item.action}`)),
+    })),
+    ...(result.recalls || []).map((item) => ({
+      title: item.product,
+      source_type: "recall",
+      chunk_text: `${item.hazard} ${(item.recommended_tests || []).join(" ")}`,
+      confidence: Math.max(0.2, tokenSimilarity(query, `${item.product} ${item.hazard}`)),
+    })),
+  ].sort((a, b) => b.confidence - a.confidence);
+  const sources = PUBLIC_DATA_SOURCE_FALLBACK
+    .map((source) => ({ ...source, score: Math.max(0.16, tokenSimilarity(query, `${source.name} ${source.use_in_product} ${source.connector}`)) }))
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
+  const results = [
+    {
+      title: `${result.request.product_name} AI 진단 요약`,
+      result_type: "analysis",
+      source_type: "local_analysis",
+      summary: `준비도 ${result.readiness_score}/100, 규제 ${(result.regulations || []).length}건, 리콜 ${(result.recalls || []).length}건`,
+      score: 0.72,
+    },
+    ...evidence.slice(0, 5).map((item) => ({
+      title: item.title,
+      result_type: "rag_evidence",
+      source_type: item.source_type,
+      summary: item.chunk_text,
+      score: item.confidence,
+    })),
+    ...sources.slice(0, scope === "diagnosis" ? 2 : 5).map((source) => ({
+      title: source.name,
+      result_type: "data_source",
+      source_type: source.connector,
+      summary: source.use_in_product,
+      score: source.score,
+      source_id: source.source_id,
+      source_url: source.official_url,
+    })),
+  ].sort((a, b) => b.score - a.score).slice(0, 8);
+  return {
+    query,
+    scope,
+    answer: `${result.request.product_name} 현재 입력값에서 근거 ${evidence.length}건과 데이터 출처 ${sources.length}건을 검색했습니다.`,
+    results,
+    evidence_documents: evidence.slice(0, 5),
+    data_sources: sources,
+    suggested_actions: [
+      { label: "다시 검색", action_type: "run_search", payload: {} },
+      { label: "제품 지식 보강", action_type: "review_source", payload: { href: "product-knowledge.html" } },
+      { label: "데이터 명세 화면 열기", action_type: "open_data_catalog", payload: { href: "data-catalog.html" } },
+    ],
+    guardrails: ["로컬 fallback은 현재 입력값과 내장 seed 데이터만 검색합니다."],
+    quality_signals: {
+      ranking_strategy: "local_context_similarity",
+      detected_intents: scope === "data_catalog" ? ["data"] : ["regulation", "recall"],
+      expanded_terms: [],
+      context_terms: [result.request.product_name, result.request.hs_code, result.request.target_market, ...(result.request.features || [])],
+      diversified: true,
+      recommendation_basis: ["product context", "local evidence confidence"],
+    },
+  };
+}
+
+function renderAiSearchResponse(response) {
+  $("#aiSearchAnswer").textContent = response.answer || "검색 결과가 없습니다.";
+  $("#aiSearchResults").innerHTML = (response.results || []).slice(0, 6).map((item) => `
+    <div class="search-result-row">
+      <span>${escapeHtml(item.result_type)} · ${escapeHtml(item.source_type)} · ${Math.round(Number(item.score || 0) * 100)}%</span>
+      <strong>${escapeHtml(item.title)}</strong>
+      <p>${escapeHtml(item.summary)}</p>
+    </div>
+  `).join("") || `<p>상위 결과가 없습니다.</p>`;
+  const evidence = [...(response.evidence_documents || []), ...(response.data_sources || []).map((source) => ({
+    title: source.name,
+    source_type: source.connector || source.provider || "data_source",
+    chunk_text: source.use_in_product || source.target_table || "",
+    confidence: source.score || 0.5,
+  }))].slice(0, 6);
+  $("#aiSearchEvidence").innerHTML = evidence.map((item) => `
+    <div class="search-evidence-row">
+      <span>${escapeHtml(item.source_type)} · ${Math.round(Number(item.confidence || 0) * 100)}%</span>
+      <strong>${escapeHtml(item.title)}</strong>
+      <p>${escapeHtml(item.chunk_text)}</p>
+    </div>
+  `).join("") || `<p>연결된 근거가 없습니다.</p>`;
+  $("#aiSearchActions").innerHTML = (response.suggested_actions || []).map((action) => `
+    <button type="button" data-search-action="${escapeHtml(action.action_type)}" data-action-payload="${escapeHtml(JSON.stringify(action.payload || {}))}">
+      ${escapeHtml(action.label)}
+    </button>
+  `).join("");
+  renderAiSearchQuality(response.quality_signals || {});
+}
+
+function renderAiSearchQuality(quality) {
+  const container = $("#aiSearchQuality");
+  if (!container) return;
+  const intents = quality.detected_intents || [];
+  const expanded = quality.expanded_terms || [];
+  const basis = quality.recommendation_basis || [];
+  container.innerHTML = `
+    <div class="quality-chip-row">
+      <span>${escapeHtml(quality.ranking_strategy || "hybrid")}</span>
+      <span>${quality.diversified ? "diversified" : "single-rank"}</span>
+    </div>
+    <dl>
+      <dt>의도</dt><dd>${escapeHtml(intents.join(", ") || "기본 검색")}</dd>
+      <dt>확장어</dt><dd>${escapeHtml(expanded.join(", ") || "없음")}</dd>
+      <dt>추천 근거</dt><dd>${escapeHtml(basis.join(", ") || "제품 문맥")}</dd>
+    </dl>
+  `;
+}
+
+function handleAiSearchAction(event) {
+  const button = event.target.closest("[data-search-action]");
+  if (!button) return;
+  const action = button.dataset.searchAction;
+  let payload = {};
+  try {
+    payload = JSON.parse(button.dataset.actionPayload || "{}");
+  } catch {
+    payload = {};
+  }
+  if (action === "open_data_catalog") {
+    window.location.href = payload.href || "data-catalog.html";
+    return;
+  }
+  if (action === "open_roadmap") {
+    window.location.href = payload.href || "roadmap.html";
+    return;
+  }
+  if (action === "review_source") {
+    window.location.href = payload.href || "product-knowledge.html";
+    return;
+  }
+  if (action === "open_evidence") {
+    showToast(payload.source_id ? `상위 근거: ${payload.source_id}` : "상위 근거를 결과 목록에서 확인하세요.");
+    return;
+  }
+  runAiSearch();
+}
+
+function setupAiSearch() {
+  const form = $("#aiSearchForm");
+  if (!form) return;
+  form.addEventListener("submit", runAiSearch);
+  $("#aiSearchActions")?.addEventListener("click", handleAiSearchAction);
+  $$("[data-search-scope]").forEach((button) => {
+    button.addEventListener("click", () => {
+      currentSearchScope = button.dataset.searchScope || "diagnosis";
+      $$("[data-search-scope]").forEach((item) => item.classList.toggle("active", item === button));
+      const prompts = {
+        diagnosis: "EU 배터리 여권과 리콜 위험 근거를 보여줘",
+        data_catalog: "리콜 위험도에 쓸 공공데이터 출처",
+        global: "30일 내 처리할 인증 업무와 필요한 데이터 출처",
+      };
+      $("#aiSearchInput").value = prompts[currentSearchScope] || prompts.diagnosis;
+    });
+  });
 }
 
 function renderDataSources(result) {
@@ -1525,6 +1855,181 @@ async function collectPublicData() {
   }
 }
 
+async function runMlTrainingPipeline() {
+  const button = $("#runMlTrain");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "실행 중";
+  }
+  try {
+    const response = await fetch(`${API_BASE}/ml/train`, { method: "POST" });
+    if (!response.ok) throw new Error(`API ${response.status}`);
+    const payload = await response.json();
+    renderPipelineLatestStatus({
+      latest_run: payload,
+      airflow_ready: true,
+      airflow_ready_tasks: (payload.airflow_dag_hint || {}).tasks || [],
+      storage_mode: "json_fallback_supabase_ready",
+    });
+    await renderPipelineRunHistory();
+    showToast("ML 재학습 파이프라인 실행 완료");
+  } catch (error) {
+    console.warn(error);
+    showToast("ML 파이프라인 실행 실패 · 백엔드 상태를 확인하세요");
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "ML 재학습 실행";
+    }
+  }
+}
+
+async function renderPipelineLatestStatus(initialPayload = null) {
+  const container = $("#pipelineLatestStatus");
+  if (!container) return;
+  try {
+    const payload = initialPayload || await fetchJson("/pipeline/latest-status");
+    const latest = payload.latest_run;
+    if (!latest) {
+      container.innerHTML = `
+        <article><span>최근 실행</span><strong>없음</strong><p>ML 재학습 실행 버튼으로 첫 실행 이력을 생성합니다.</p></article>
+        <article><span>전환 구조</span><strong>Airflow-ready</strong><p>각 단계는 독립 task로 분리되어 DAG 전환이 가능합니다.</p></article>
+        <article><span>저장 방식</span><strong>JSON fallback</strong><p>Supabase/pgvector 이관 전에도 시연이 가능합니다.</p></article>`;
+      return;
+    }
+    container.innerHTML = `
+      <article><span>최근 실행</span><strong>${escapeHtml(latest.status)}</strong><p>${escapeHtml(latest.run_type)} · ${escapeHtml(latest.completed_at)}</p></article>
+      <article><span>Task</span><strong>${escapeHtml((latest.steps || []).length)}</strong><p>${escapeHtml((payload.airflow_ready_tasks || []).join(" → "))}</p></article>
+      <article><span>저장 방식</span><strong>${escapeHtml(payload.storage_mode)}</strong><p>RAG DB와 모델 평가 이력을 같은 계약으로 관리합니다.</p></article>`;
+  } catch (error) {
+    container.innerHTML = `<article><span>백엔드</span><strong>확인 필요</strong><p>FastAPI 서버 연결 후 파이프라인 상태를 불러옵니다.</p></article>`;
+  }
+}
+
+async function renderPipelineRunHistory() {
+  const container = $("#pipelineRunHistory");
+  if (!container) return;
+  try {
+    const payload = await fetchJson("/pipeline/runs");
+    const runs = payload.runs || [];
+    if (!runs.length) {
+      container.innerHTML = `<p class="empty-state">아직 기록된 파이프라인 실행 이력이 없습니다.</p>`;
+      return;
+    }
+    container.innerHTML = runs.slice(-5).reverse().map((run) => `
+      <article class="pipeline-run-card">
+        <div>
+          <span>${escapeHtml(run.run_type)}</span>
+          <h3>${escapeHtml(run.run_id)}</h3>
+          <p>${escapeHtml(run.started_at)} → ${escapeHtml(run.completed_at)}</p>
+        </div>
+        <strong>${escapeHtml(run.status)}</strong>
+        <ul>
+          ${(run.steps || []).map((stepItem) => `<li>${escapeHtml(stepItem.task_id)} · ${escapeHtml(stepItem.status)}</li>`).join("")}
+        </ul>
+      </article>`).join("");
+  } catch (error) {
+    container.innerHTML = `<p class="empty-state">파이프라인 실행 이력을 불러오지 못했습니다.</p>`;
+  }
+}
+
+async function seedDemoDatabase() {
+  const button = $("#seedDemoDb");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "생성 중";
+  }
+  try {
+    const response = await fetch(`${API_BASE}/db/seed`, { method: "POST" });
+    if (!response.ok) throw new Error(`API ${response.status}`);
+    const payload = await response.json();
+    renderDemoDbStatus(payload);
+    showToast("데모 DB 시드 데이터 생성 완료");
+  } catch (error) {
+    console.warn(error);
+    showToast("데모 DB 생성 실패 · FastAPI 서버를 확인하세요");
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "데모 DB 시드 생성";
+    }
+  }
+}
+
+async function renderDemoDbStatus(initialPayload = null) {
+  const container = $("#demoDbStatus");
+  if (!container) return;
+  try {
+    const payload = initialPayload || await fetchJson("/db/status");
+    const counts = payload.counts || {};
+    container.innerHTML = `
+      <article><span>DB 파일</span><strong>SQLite</strong><p class="technical-wrap">${escapeHtml(payload.database_path || "생성 전")}</p></article>
+      <article><span>RAG 저장소</span><strong>${escapeHtml((counts.rag_documents || 0) + (counts.rag_chunks || 0))}</strong><p>문서 ${escapeHtml(counts.rag_documents || 0)}건 · 청크 ${escapeHtml(counts.rag_chunks || 0)}건 · 임베딩 ${escapeHtml(counts.rag_embeddings || 0)}건</p></article>
+      <article><span>실행 이력</span><strong>${escapeHtml((counts.pipeline_runs || 0) + (counts.analysis_reports || 0))}</strong><p>파이프라인 ${escapeHtml(counts.pipeline_runs || 0)}건 · 보고서 ${escapeHtml(counts.analysis_reports || 0)}건 · 검색 ${escapeHtml(counts.search_runs || 0)}건</p></article>`;
+  } catch (error) {
+    container.innerHTML = `
+      <article><span>DB 상태</span><strong>생성 전</strong><p>데모 DB 시드 생성 버튼을 누르면 실제 SQLite 파일과 기본 데이터가 생성됩니다.</p></article>
+      <article><span>저장 대상</span><strong>RAG·ML</strong><p>제품 지식, 공공데이터 청크, 모델 평가, 분석 보고서를 저장합니다.</p></article>
+      <article><span>검수 흐름</span><strong>시뮬레이션</strong><p>AI 분석, AI 검색, 리포트 생성, 품질 체크를 한 번에 실행합니다.</p></article>`;
+  }
+}
+
+async function runDemoSimulation() {
+  const button = $("#runDemoSimulation");
+  if (button) {
+    button.disabled = true;
+    button.textContent = "실행 중";
+  }
+  try {
+    const response = await fetch(`${API_BASE}/simulation/run`, { method: "POST" });
+    if (!response.ok) throw new Error(`API ${response.status}`);
+    const payload = await response.json();
+    renderDemoDbStatus({ database_path: payload.seed?.database_path, counts: payload.db_counts_after });
+    renderDemoSimulationReport(payload);
+    showToast("실사용 시뮬레이션과 보고서 검수 완료");
+  } catch (error) {
+    console.warn(error);
+    showToast("시뮬레이션 실패 · FastAPI 서버 상태를 확인하세요");
+  } finally {
+    if (button) {
+      button.disabled = false;
+      button.textContent = "실사용 시뮬레이션 실행";
+    }
+  }
+}
+
+function renderDemoSimulationReport(payload) {
+  const container = $("#demoSimulationReport");
+  if (!container) return;
+  const review = payload.report_review || {};
+  const checks = review.checks || {};
+  const searchQuality = payload.search?.quality_signals || {};
+  container.innerHTML = `
+    <article class="simulation-summary">
+      <div>
+        <span>REPORT REVIEW</span>
+        <h3>${escapeHtml(review.overall_status || "review")} · ${escapeHtml(review.overall_score || 0)}점</h3>
+        <p>${escapeHtml((review.review_notes || []).join(" "))}</p>
+      </div>
+      <strong>${escapeHtml(payload.analysis?.readiness_score || 0)}/100</strong>
+    </article>
+    <div class="simulation-checks">
+      ${Object.entries(checks).map(([key, value]) => `
+        <span class="${value ? "pass" : "review"}">${escapeHtml(value ? "확인" : "보강")} · ${escapeHtml(key)}</span>`).join("")}
+    </div>
+    <div class="simulation-flow">
+      ${(payload.flow || []).map((step, index) => `<span>${escapeHtml(String(index + 1).padStart(2, "0"))} ${escapeHtml(step)}</span>`).join("")}
+    </div>
+    <pre class="report-preview">${escapeHtml((payload.report_markdown || "").slice(0, 1400))}</pre>
+    <p class="empty-state">검색 품질 전략: ${escapeHtml(searchQuality.ranking_strategy || "확인 필요")} · 다양화 ${escapeHtml(searchQuality.diversified ? "적용" : "미적용")}</p>`;
+}
+
+async function fetchJson(path) {
+  const response = await fetch(`${API_BASE}${path}`);
+  if (!response.ok) throw new Error(`API ${response.status}`);
+  return response.json();
+}
+
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -1649,15 +2154,24 @@ function setupWorkspaceNavigation() {
 }
 
 function init() {
-  $("#analysisForm").addEventListener("submit", runAnalysis);
-  $("#fillSample").addEventListener("click", fillSample);
-  $("#useBackend").addEventListener("change", updateBackendState);
-  $("#downloadJson").addEventListener("click", downloadJson);
-  $("#printReport").addEventListener("click", printReport);
-  $("#collectPublicData").addEventListener("click", collectPublicData);
+  $("#analysisForm")?.addEventListener("submit", runAnalysis);
+  $("#fillSample")?.addEventListener("click", fillSample);
+  $("#useBackend")?.addEventListener("change", updateBackendState);
+  $("#downloadJson")?.addEventListener("click", downloadJson);
+  $("#printReport")?.addEventListener("click", printReport);
+  $("#collectPublicData")?.addEventListener("click", collectPublicData);
+  $("#runMlTrain")?.addEventListener("click", runMlTrainingPipeline);
+  $("#seedDemoDb")?.addEventListener("click", seedDemoDatabase);
+  $("#runDemoSimulation")?.addEventListener("click", runDemoSimulation);
+  setupAiSearch();
   setupWorkspaceNavigation();
-  updateBackendState();
-  runAnalysis();
+  renderPipelineLatestStatus();
+  renderPipelineRunHistory();
+  renderDemoDbStatus();
+  if ($("#analysisForm")) {
+    updateBackendState();
+    if (!$("#aiSearchForm")) runAnalysis();
+  }
 }
 
 document.addEventListener("DOMContentLoaded", init);

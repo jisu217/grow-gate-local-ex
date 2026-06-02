@@ -10,6 +10,7 @@ from __future__ import annotations
 from typing import Any, Dict, List
 
 from .data_connectors import PublicDataConnector, load_public_data_sources
+from .external_llm import ExternalLLMClient
 from .ml_models import (
     build_ml_feature_vector,
     readiness_level,
@@ -21,6 +22,7 @@ from .ml_models import (
     score_support_programs,
     select_regulations,
 )
+from .product_knowledge import ProductKnowledgeStore
 from .schemas import (
     AnalysisResult,
     MarketSignal,
@@ -31,6 +33,7 @@ from .schemas import (
     RoadmapItem,
     SupportProgram,
 )
+from .target_company import TargetCompanyEnhancement
 
 
 class PlannerAgent:
@@ -282,7 +285,7 @@ class GuardrailAgent:
         return [
             "본 결과는 공공데이터와 데모 규칙 기반의 1차 진단이며, 최종 인증 가능 여부는 시험기관·관세사·변리사 확인이 필요합니다.",
             "HS Code와 제품 사양이 바뀌면 대상 규제와 지원사업 우선순위가 달라질 수 있습니다.",
-            "실서비스에서는 데이터 호출 시점, 출처 URL, 문서 버전, 불확실성 점수를 함께 표시해야 합니다.",
+            "실서비스에서는 데이터 수집·연계 시점, 출처 URL, 문서 버전, 불확실성 점수를 함께 표시해야 합니다.",
         ]
 
 
@@ -301,6 +304,9 @@ class GrowGateAgent:
         self.roadmap = RoadmapAgent()
         self.report = ReportAgent()
         self.guardrail = GuardrailAgent()
+        self.target_company = TargetCompanyEnhancement()
+        self.llm = ExternalLLMClient()
+        self.product_knowledge = ProductKnowledgeStore()
 
     def analyze(self, request: ProductInput) -> AnalysisResult:
         plan = self.planner.plan(request)
@@ -332,6 +338,26 @@ class GrowGateAgent:
             request.has_label_draft,
         )
         summary = self.report.summarize(request, score, markets, regulations, recalls, patents, support_programs)
+        target_company_signals = self.target_company.build(request, regulations, recalls, support_programs)
+        product_knowledge_record = self.product_knowledge.find_match(request)
+        if product_knowledge_record:
+            product_knowledge_signal = {"matched": True, "record": product_knowledge_record}
+            product_rag_pack = product_knowledge_record["rag_pack"]
+            ml_feature_enrichment = product_knowledge_record["feature_preview"]
+        else:
+            product_knowledge_signal = {
+                "matched": False,
+                "record": None,
+                "message": "등록된 제품 사전 지식이 없어 입력값과 공공데이터 기반으로 분석했습니다.",
+            }
+            product_rag_pack = {"documents": [], "knowledge_terms": []}
+            ml_feature_enrichment = {
+                "feature_row": {"registered_knowledge_flag": 0},
+                "signals": {},
+                "explanation": "등록된 제품 지식이 없어서 기본 ML feature만 사용했습니다.",
+            }
+        llm_inference = self.llm.generate(target_company_signals["advanced_prompt_pack"], summary)
+        final_summary = llm_inference["summary"]
         return AnalysisResult(
             request=request,
             readiness_score=score,
@@ -344,7 +370,7 @@ class GrowGateAgent:
             support_programs=support_programs,
             roadmap=roadmap,
             ml_predictions=ml_predictions,
-            ai_summary=summary,
+            ai_summary=final_summary,
             guardrails=self.guardrail.run(),
             raw_signals={
                 "agent_plan": plan,
@@ -352,5 +378,10 @@ class GrowGateAgent:
                 "region_profile": evidence.get("region_profile"),
                 "public_data_sources": load_public_data_sources()["sources"],
                 "screen_data_map": load_public_data_sources()["screen_data_map"],
+                **target_company_signals,
+                "product_knowledge": product_knowledge_signal,
+                "product_rag_pack": product_rag_pack,
+                "ml_feature_enrichment": ml_feature_enrichment,
+                "llm_inference": llm_inference,
             },
         )

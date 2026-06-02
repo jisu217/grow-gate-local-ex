@@ -1,380 +1,632 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="ko">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:8000; base-uri 'none'; form-action 'self'; frame-ancestors 'none'" />
-  <title>AI 진단 워크스페이스 · GROW-GATE Local EX</title>
-  <meta name="description" content="지역 제조기업 수출규제·인증 실행 AI 에이전트 시연 화면" />
-  <link rel="stylesheet" href="styles.css" />
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GROW-GATE Local EX · AI 진단</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=IBM+Plex+Sans+KR:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#0f1b3d; --ink:#1a2540; --slate:#5a6781; --slate-2:#8a94ac;
+    --blue:#2f6bff; --blue-soft:#eaf1ff; --blue-line:#d6e3ff;
+    --line:#e7ebf3; --card:#fff; --bg:#f4f6fb;
+    --green:#16a36a; --amber:#e08a00; --red:#e0483a;
+    --shadow:0 1px 2px rgba(15,27,61,.04),0 8px 24px rgba(15,27,61,.06);
+    --radius:18px; --kr:'IBM Plex Sans KR',sans-serif; --en:'Manrope',sans-serif;
+    --idle-fill:#eef1f7;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:var(--kr);background:radial-gradient(900px 500px at 85% -5%,#eef3ff 0%,transparent 60%),var(--bg);color:var(--ink);-webkit-font-smoothing:antialiased;line-height:1.5}
+  .wrap{max-width:1480px;margin:0 auto;padding:20px 26px 56px}
+  .nav{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);display:flex;align-items:center;justify-content:space-between;padding:16px 26px;margin-bottom:22px}
+  .brand{font-family:var(--en);font-weight:800;font-size:18px;color:var(--navy)}
+  .nav-links{display:flex;gap:4px;flex-wrap:wrap;justify-content:flex-end}
+  .nav-links a{font-size:14px;color:var(--slate);text-decoration:none;font-weight:500;padding:8px 16px;border-radius:10px;transition:.15s}
+  .nav-links a:hover{color:var(--ink);background:#f5f7fc}
+  .nav-links a.active{background:var(--blue-soft);color:var(--blue);font-weight:600}
+  .logout-btn{font-family:var(--kr);font-size:13px;font-weight:700;color:var(--slate);background:#fff;border:1px solid var(--line);border-radius:10px;padding:8px 13px;cursor:pointer}
+  .logout-btn:hover{color:var(--blue);border-color:var(--blue-line);background:var(--blue-soft)}
+  .app-hidden{display:none}
+  .login-screen{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:32px;background:radial-gradient(850px 520px at 78% 8%,#eaf1ff 0%,transparent 62%),linear-gradient(180deg,#fbfcff 0%,#f3f6fb 100%)}
+  .login-card{width:min(980px,100%);display:grid;grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr);gap:22px;align-items:stretch}
+  .login-copy,.login-panel{background:#fff;border:1px solid var(--line);border-radius:24px;box-shadow:var(--shadow);padding:34px}
+  .login-copy .brand-kicker{font-family:var(--en);font-size:12px;font-weight:800;letter-spacing:.08em;color:var(--blue);text-transform:uppercase}
+  .login-copy h1{font-size:40px;line-height:1.14;letter-spacing:-.02em;color:var(--navy);margin:14px 0 12px}
+  .login-copy p{font-size:15px;color:var(--slate);line-height:1.7;max-width:520px}
+  .login-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:26px}
+  .login-metric{border:1px solid var(--line);border-radius:14px;background:#fbfcfe;padding:14px}
+  .login-metric b{display:block;font-family:var(--en);font-size:24px;color:var(--blue)}
+  .login-metric span{font-size:11.5px;color:var(--slate)}
+  .login-panel h2{font-size:26px;color:var(--navy);margin-bottom:8px}
+  .login-panel .hint{font-size:13px;color:var(--slate);line-height:1.6;margin-bottom:20px}
+  .login-form{display:grid;gap:14px}
+  .login-form label{display:grid;gap:7px;font-size:13px;font-weight:700;color:var(--ink)}
+  .login-form input{width:100%;border:1.5px solid var(--line);border-radius:12px;padding:13px 14px;font-family:var(--kr);font-size:14px;color:var(--ink);outline:none;background:#fff}
+  .login-form input:focus{border-color:var(--blue);box-shadow:0 0 0 4px rgba(47,107,255,.1)}
+  .login-form button{margin-top:6px;border:0;border-radius:13px;background:var(--blue);color:#fff;font-family:var(--kr);font-size:15px;font-weight:800;padding:14px;cursor:pointer;box-shadow:0 10px 24px rgba(47,107,255,.28)}
+  .login-error{min-height:18px;font-size:12px;color:var(--red);font-weight:700}
+  .login-footnote{font-size:11.5px;color:var(--slate-2);line-height:1.55;margin-top:14px}
+  .hero{margin:4px 4px 22px}
+  .hero .eyebrow{font-size:14px;font-weight:700;color:#6e83b8}
+  .hero h1{font-family:var(--en);font-weight:800;font-size:56px;line-height:1.0;letter-spacing:-.03em;color:var(--navy);margin:12px 0 0}
+  .hero h1 .ex{color:var(--blue)}
+  .hero .t1{font-family:var(--en);font-weight:600;font-size:24px;color:var(--ink);margin-top:16px}
+  .hero .t2{font-size:16px;color:var(--slate);margin-top:8px}
+  .hero .live{display:inline-flex;align-items:center;gap:7px;font-family:var(--en);font-weight:700;font-size:12px;color:var(--green);background:#e9f7f0;border:1px solid #c5ead8;padding:5px 12px;border-radius:999px;margin-top:16px}
+  .hero .blip{width:8px;height:8px;border-radius:50%;background:var(--green);animation:blip 1.8s infinite}
+  @keyframes blip{0%{box-shadow:0 0 0 0 rgba(22,163,106,.45)}70%{box-shadow:0 0 0 8px rgba(22,163,106,0)}100%{box-shadow:0 0 0 0 rgba(22,163,106,0)}}
+  .kpi-row{display:grid;grid-template-columns:repeat(4,1fr);gap:15px;margin-bottom:22px}
+  .kpi{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:22px;position:relative;min-height:182px}
+  .kpi .step{position:absolute;top:18px;right:20px;font-family:var(--en);font-weight:800;font-size:12px;color:var(--blue-line)}
+  .eyebrow{font-family:var(--en);font-size:11px;font-weight:700;letter-spacing:.08em;color:var(--slate-2);text-transform:uppercase;margin-bottom:14px}
+  .big{font-family:var(--en);font-weight:800;letter-spacing:-.02em;line-height:1.05;color:var(--navy)}
+  .sub{font-size:12.5px;color:var(--slate);margin-top:8px}
+  .src-row{display:flex;flex-wrap:wrap;gap:5px;margin-top:14px}
+  .src{font-family:var(--en);font-size:10.5px;font-weight:600;color:var(--slate);background:#f5f7fc;border:1px solid var(--line);padding:4px 8px;border-radius:7px;display:flex;align-items:center;gap:5px}
+  .src::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--green)}
+  .score-head{display:flex;align-items:center;justify-content:space-between}
+  .donut{width:66px;height:66px;flex:none}
+  .score-num{font-size:42px}.score-num span{font-size:17px;color:var(--slate-2);font-weight:700}
+  .pill{font-family:var(--en);font-size:11px;font-weight:600;padding:4px 9px;border-radius:999px;border:1px solid}
+  .pill.req{color:var(--red);border-color:#f6d3cf;background:#fdf1f0}
+  .pill.warn{color:var(--amber);border-color:#f3e2bf;background:#fdf7e9}
+  .pill.cond{color:var(--blue);border-color:var(--blue-line);background:var(--blue-soft)}
+  .rule-pills{display:flex;flex-wrap:wrap;gap:6px;margin-top:14px}
+  .road{display:flex;gap:6px;margin-top:16px}
+  .road .seg{flex:1;text-align:center}
+  .road .seg .d{font-family:var(--en);font-weight:800;font-size:16px;color:var(--navy)}
+  .road .seg .l{font-size:11px;color:var(--slate-2);margin-top:2px}
+  .road .seg .bar{height:4px;border-radius:3px;margin-top:8px;background:var(--blue-line)}
+  .road .seg:nth-child(1) .bar{background:var(--blue)}.road .seg:nth-child(2) .bar{background:#7aa0ff}
+
+  .main{display:grid;grid-template-columns:240px 1fr;gap:16px;align-items:start}
+  .rail{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:var(--shadow);padding:20px 16px;position:sticky;top:20px}
+  .rail .cur{padding:0 6px 14px;border-bottom:1px solid var(--line);margin-bottom:10px}
+  .rail .cur .k{font-size:11px;font-weight:700;color:var(--slate-2)}
+  .rail .cur .co{font-size:18px;font-weight:700;color:var(--navy);margin-top:4px}
+  .rail .cur .pr{font-size:12.5px;color:var(--slate);margin-top:2px}
+  .rail .item{display:flex;align-items:center;gap:12px;padding:9px 10px;border-radius:11px;cursor:pointer;transition:.13s;margin-bottom:2px}
+  .rail .item:hover{background:#f5f7fc}
+  .rail .item.active{background:var(--blue-soft)}
+  .rail .item .no{font-family:var(--en);font-weight:700;font-size:13px;color:var(--slate-2);width:22px;flex:none}
+  .rail .item.active .no{color:var(--blue)}.rail .item.done .no{color:var(--green)}
+  .rail .item .txt{display:flex;flex-direction:column;line-height:1.25}
+  .rail .item .nm{font-size:14px;font-weight:600;color:var(--slate)}
+  .rail .item.active .nm{color:var(--blue)}
+  .rail .item .aux{font-family:var(--en);font-size:9.5px;font-weight:600;letter-spacing:.05em;color:var(--slate-2);text-transform:uppercase;opacity:.7}
+  .rail .item .ck{margin-left:auto;color:var(--green);font-size:13px;opacity:0}
+  .rail .item.done .ck{opacity:1}
+  .rail .board-btn{margin-top:14px;width:100%;background:var(--blue);color:#fff;font-weight:700;font-size:14px;border:none;padding:13px;border-radius:12px;cursor:pointer;box-shadow:0 8px 20px rgba(47,107,255,.3);transition:.18s}
+  .rail .board-btn:hover{transform:translateY(-1px)}
+
+  .stage{background:var(--card);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);padding:28px 30px;min-height:520px;display:none;animation:fade .35s}
+  .stage.show{display:block}
+  @keyframes fade{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  .s-eyebrow{font-family:var(--en);font-size:12px;font-weight:700;letter-spacing:.07em;color:var(--blue);text-transform:uppercase}
+  .s-head{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin:8px 0 22px}
+  .s-head h2{font-size:30px;font-weight:700;color:var(--navy);letter-spacing:-.01em}
+  .s-head p{font-size:14px;color:var(--slate);margin-top:8px;max-width:540px}
+  .s-tag{font-family:var(--en);font-size:12px;font-weight:700;color:var(--blue);background:var(--blue-soft);border:1px solid var(--blue-line);padding:7px 14px;border-radius:999px;white-space:nowrap}
+  .s-btn{font-family:var(--kr);font-size:13px;font-weight:600;color:var(--slate);background:#fff;border:1.5px solid var(--line);padding:9px 16px;border-radius:11px;cursor:pointer;white-space:nowrap}
+  .s-btn:hover{border-color:var(--blue);color:var(--blue)}
+
+  /* connector list (S02) */
+  .conn{display:flex;align-items:center;gap:16px;border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:#fbfcfe;margin-bottom:10px}
+  .conn .no{font-family:var(--en);font-weight:800;font-size:15px;color:var(--blue-line);width:26px}
+  .conn .txt{flex:1}
+  .conn .txt .nm{font-size:15px;font-weight:600;color:var(--ink)}
+  .conn .txt .meta{font-family:var(--en);font-size:12px;color:var(--slate-2);margin-top:3px}
+  .conn .dot{width:10px;height:10px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px #e7f6ee}
+
+  /* pred (S04) */
+  .pred-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:24px}
+  .pred{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fbfcfe}
+  .pred .ph{display:flex;justify-content:space-between;font-family:var(--en);font-size:12px;font-weight:700;color:var(--slate-2)}
+  .pred .pt{font-size:15px;font-weight:600;color:var(--ink);margin-top:8px}
+  .pred .pv{font-family:var(--en);font-weight:800;font-size:34px;color:var(--blue);margin:14px 0 4px}
+  .pred .pv span{font-size:15px;color:var(--slate-2);font-weight:700;margin-left:3px}
+  .pred .pbar{height:6px;border-radius:4px;background:var(--idle-fill);overflow:hidden;margin:8px 0 12px}
+  .pred .pbar i{display:block;height:100%;border-radius:4px;background:linear-gradient(90deg,var(--blue),var(--green))}
+  .pred .pd{font-size:11.5px;color:var(--slate);line-height:1.55}
+  .fi{border:1px solid var(--line);border-radius:14px;padding:20px 22px;background:#fbfcfe}
+  .fi h3{font-family:var(--en);font-size:19px;font-weight:700;color:var(--navy);margin-bottom:16px}
+  .fi .row{display:flex;align-items:center;gap:14px;margin-bottom:11px}
+  .fi .row .lab{width:96px;font-size:13px;font-weight:600;color:var(--ink)}
+  .fi .row .tk{flex:1;height:8px;border-radius:5px;background:var(--idle-fill);overflow:hidden}
+  .fi .row .tk i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--blue),var(--green))}
+  .fi .row .val{font-family:var(--en);font-weight:800;font-size:15px;color:var(--navy);width:30px;text-align:right}
+
+  /* market (S05) */
+  .mkt-grid{display:grid;grid-template-columns:1.2fr 1fr;gap:14px;margin-bottom:14px}
+  .mkt-score{border:1px solid var(--line);border-radius:14px;padding:24px;background:#fbfcfe;display:flex;align-items:center;gap:24px}
+  .mkt-score .num{font-family:var(--en);font-weight:800;font-size:60px;color:var(--blue);line-height:1}
+  .mkt-score .num span{font-size:22px;color:var(--slate-2)}
+  .mkt-score .lab{font-size:14px;color:var(--slate)}
+  .mkt-score .lab b{display:block;color:var(--ink);font-size:16px;margin-bottom:6px}
+  .signals{border:1px solid var(--line);border-radius:14px;padding:20px;background:#fbfcfe}
+  .signals .sig{display:flex;gap:10px;font-size:13.5px;color:var(--ink);padding:9px 0;border-bottom:1px solid var(--line)}
+  .signals .sig:last-child{border:0}
+  .signals .sig::before{content:"●";color:var(--blue);font-size:9px;margin-top:5px}
+  .memo{border:1px solid var(--blue-line);background:var(--blue-soft);border-radius:14px;padding:16px 18px;font-size:13.5px;color:var(--ink)}
+  .memo b{color:var(--blue)}
+  .agent-note{margin-top:10px;font-size:11.5px;color:var(--slate-2);line-height:1.55}
+  .agent-note::before{content:"* ";color:var(--blue);font-weight:800}
+
+  /* matrix (S06) */
+  .mtx{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+  .mc{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fbfcfe}
+  .mc .pr{font-size:11px;font-weight:700;margin-bottom:8px}
+  .mc.urgent .pr{color:var(--red)}.mc.high .pr{color:var(--amber)}.mc.mid .pr{color:var(--slate-2)}
+  .mc .nm{font-size:15px;font-weight:600;color:var(--ink)}
+  .mc .sc{font-family:var(--en);font-weight:800;font-size:32px;color:var(--blue);margin:14px 0 8px}
+  .mc .why{font-size:11.5px;color:var(--slate);line-height:1.55}
+
+  /* recall (S07) */
+  .rec{display:flex;align-items:center;gap:18px;border:1px solid var(--line);border-radius:14px;padding:16px 18px;background:#fbfcfe;margin-bottom:10px}
+  .rec .txt{flex:1}.rec .txt .nm{font-size:15px;font-weight:600;color:var(--ink)}
+  .rec .txt .ca{font-size:12.5px;color:var(--slate);margin-top:3px}
+  .rec .lvl{display:flex;align-items:center;gap:12px;width:230px}
+  .rec .lvl .tk{flex:1;height:7px;border-radius:5px;background:var(--idle-fill);overflow:hidden}
+  .rec .lvl .tk i{display:block;height:100%;border-radius:5px;background:linear-gradient(90deg,var(--blue),var(--green))}
+  .rec .lvl .t{font-family:var(--en);font-size:12px;font-weight:800;color:var(--green);width:46px;text-align:right}
+
+  /* fto+support (S08) */
+  .fs{display:grid;grid-template-columns:repeat(6,1fr);gap:12px}
+  .fcard{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fbfcfe;text-align:left}
+  .fcard .k{font-family:var(--en);font-size:11px;font-weight:700;color:var(--slate-2);letter-spacing:.05em}
+  .fcard .nm{font-size:13.5px;font-weight:600;color:var(--ink);margin-top:6px;min-height:38px}
+  .fcard .badge{display:inline-flex;align-items:center;justify-content:center;width:64px;height:64px;border-radius:50%;background:var(--blue);color:#fff;font-family:var(--en);font-weight:700;font-size:12px;margin-top:12px}
+  .fcard .sc{font-family:var(--en);font-weight:800;font-size:34px;color:var(--green);margin-top:12px}
+  .fcard .day{font-family:var(--en);font-size:12px;color:var(--slate-2)}
+
+  /* board (S09) */
+  .board{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .bcol{border:1px solid var(--line);border-radius:14px;padding:20px;background:#fbfcfe}
+  .bcol .bd{font-family:var(--en);font-weight:800;font-size:20px;color:var(--blue)}
+  .bcol .bt{font-size:15px;font-weight:600;color:var(--navy);margin:4px 0 14px}
+  .bcol .li{font-size:12.5px;color:var(--slate);line-height:1.5;padding:11px 0;border-top:1px solid var(--line)}
+  .bcol .out{font-size:12.5px;font-weight:700;color:var(--green);margin-top:14px;padding-top:14px;border-top:1px solid var(--line);line-height:1.5}
+
+  /* report (S10) */
+  .rep{display:grid;grid-template-columns:1.4fr 1fr;gap:16px}
+  .rep .doc{border:1px solid var(--line);border-radius:14px;padding:24px;background:#fbfcfe}
+  .rep .doc .dh{display:flex;justify-content:space-between;align-items:center;padding-bottom:14px;border-bottom:2px solid var(--navy);margin-bottom:14px}
+  .rep .doc .dh .ti{font-size:17px;font-weight:700;color:var(--navy)}
+  .rep .doc .line{display:flex;justify-content:space-between;font-size:13px;padding:8px 0;border-bottom:1px dashed var(--line)}
+  .rep .doc .line .l{color:var(--slate)}.rep .doc .line .v{font-weight:600;color:var(--ink)}
+  .rep .side .item{border:1px solid var(--line);border-radius:12px;padding:14px 16px;background:#fbfcfe;margin-bottom:10px;display:flex;align-items:center;gap:12px}
+  .rep .side .item .ic{width:34px;height:34px;border-radius:9px;background:var(--blue-soft);display:flex;align-items:center;justify-content:center;font-size:16px}
+  .rep .side .item .nm{font-size:13.5px;font-weight:600;color:var(--ink)}
+  .rep .side .item .st{font-size:11.5px;color:var(--slate-2);margin-top:2px}
+
+  /* sources (S11) */
+  .pipe{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}
+  .pc{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fbfcfe}
+  .pc .nm{font-size:15px;font-weight:600;color:var(--ink)}
+  .pc .ds{font-size:12.5px;color:var(--slate);margin-top:6px;line-height:1.5}
+  .pc .tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:12px}
+  .pc .tg{font-family:var(--en);font-size:11px;font-weight:600;color:var(--slate);background:#eef1f7;padding:4px 9px;border-radius:7px}
+  .pc .tg.b{color:var(--blue);background:var(--blue-soft)}
+
+  /* ok pill (추가) */
+  .pill.ok{color:var(--green);border-color:#bfe6d2;background:#eaf7f0}
+
+  /* S06 규제 표 (정리본) */
+  .reg-head-row,.reg-row{display:grid;grid-template-columns:2.1fr .8fr .9fr 1fr .7fr 1fr;gap:10px;align-items:center}
+  .reg-head-row{font-family:var(--en);font-size:11px;font-weight:700;letter-spacing:.04em;color:var(--slate-2);text-transform:uppercase;padding:0 16px 10px}
+  .reg-row{border:1px solid var(--line);border-radius:13px;padding:14px 16px;background:#fbfcfe;margin-bottom:9px;font-size:13px}
+  .reg-row .reg-name{font-size:14px;font-weight:600;color:var(--ink)}
+  .reg-row .reg-mkt{font-size:11.5px;color:var(--slate-2);margin-top:3px}
+  .reg-row .num{font-family:var(--en);font-size:13px;font-weight:600;color:var(--ink)}
+  .reg-row .num.dim{color:var(--slate-2)}
+
+  /* S07 리콜 클러스터 (정리본) */
+  .recall-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .recall-card{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fbfcfe;position:relative}
+  .recall-card.h{border-color:#f6d3cf;background:#fdf2f1}
+  .recall-badge-pill{font-family:var(--en);font-size:10.5px;font-weight:700;padding:3px 10px;border-radius:999px}
+  .recall-badge-pill.h{color:var(--red);background:#fbe0dd}.recall-badge-pill.m{color:var(--amber);background:#fbeecb}
+  .recall-title{font-size:15px;font-weight:700;color:var(--ink);margin:12px 0 10px}
+  .recall-sim{font-family:var(--en);font-weight:800;font-size:30px;color:var(--blue)}
+  .recall-sim-lbl{font-size:11px;color:var(--slate-2);margin-top:2px}
+  .recall-checks{margin-top:14px;border-top:1px solid var(--line);padding-top:12px}
+  .recall-check{font-size:12px;color:var(--slate);padding:5px 0 5px 18px;position:relative}
+  .recall-check::before{content:"☐";position:absolute;left:0;color:var(--blue)}
+
+  /* S08 patent + support (정리본) */
+  .fto-split{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+  .fto-title{font-family:var(--en);font-size:13px;font-weight:700;color:var(--navy);margin-bottom:12px}
+  .patent-card,.support-card{border:1px solid var(--line);border-radius:13px;padding:14px 16px;background:#fbfcfe;margin-bottom:10px}
+  .patent-badge{font-family:var(--en);font-size:10px;font-weight:700;padding:3px 9px;border-radius:999px}
+  .patent-badge.h{color:var(--red);background:#fbe0dd}.patent-badge.m{color:var(--amber);background:#fbeecb}.patent-badge.l{color:var(--green);background:#e4f5ec}
+  .patent-name{font-size:14px;font-weight:600;color:var(--ink);margin:9px 0 4px}
+  .patent-sub{font-family:var(--en);font-size:11.5px;color:var(--slate-2)}
+  .support-card{display:flex;align-items:center;justify-content:space-between;gap:10px}
+  .support-name{font-size:14px;font-weight:600;color:var(--ink)}
+  .support-org{font-size:11.5px;color:var(--slate-2);margin-top:3px}
+  .deadline-chip{font-family:var(--en);font-size:11px;font-weight:700;color:var(--red);background:#fbe0dd;padding:4px 10px;border-radius:999px;white-space:nowrap}
+  .deadline-chip.g{color:var(--green);background:#e4f5ec}
+
+  /* S05 market 3 (정리본) */
+  .market-grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .mkt-card{border:1px solid var(--line);border-radius:14px;padding:20px;background:#fbfcfe;text-align:center}
+  .mkt-flag{font-size:14px;font-weight:600;color:var(--ink)}
+  .mkt-score-big{font-family:var(--en);font-weight:800;font-size:48px;color:var(--blue);margin-top:10px;line-height:1}
+  .mkt-score-lbl{font-size:11px;color:var(--slate-2);margin-top:2px}
+  .mkt-grade{display:inline-block;font-family:var(--en);font-size:10px;font-weight:700;padding:3px 11px;border-radius:999px;margin-top:10px}
+  .mkt-grade.h{color:var(--green);background:#e4f5ec}.mkt-grade.m{color:var(--amber);background:#fbeecb}
+  .mkt-stats{display:flex;gap:10px;margin-top:16px;border-top:1px solid var(--line);padding-top:14px}
+  .mkt-stat{flex:1}.mkt-stat .v{font-family:var(--en);font-weight:800;font-size:17px;color:var(--navy)}.mkt-stat .l{font-size:10.5px;color:var(--slate-2);margin-top:2px}
+
+  /* S09 exec task (정리본) */
+  .exec-cols{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+  .exec-col{border:1px solid var(--line);border-radius:14px;padding:18px;background:#fbfcfe}
+  .exec-col-head{display:flex;align-items:baseline;gap:8px;margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--line)}
+  .exec-day{font-family:var(--en);font-weight:800;font-size:24px;color:var(--blue)}
+  .exec-day-lbl{font-size:12px;color:var(--slate)}
+  .exec-task{border:1px solid var(--line);border-radius:11px;padding:12px 14px;background:#fff;margin-bottom:9px}
+  .exec-task.urgent{border-color:#f6d3cf;background:#fdf2f1}
+  .etag{font-family:var(--en);font-size:10px;font-weight:700;color:var(--slate-2);letter-spacing:.03em;text-transform:uppercase}
+  .exec-task.urgent .etag{color:var(--red)}
+  .etitle{font-size:13.5px;font-weight:600;color:var(--ink);margin:5px 0 3px}
+  .ewho{font-size:11.5px;color:var(--slate-2)}
+
+  /* report 요약 + guardrail + 점수바 (정리본) */
+  .ai-summary{font-size:14px;color:var(--ink);line-height:1.75}
+  .ai-summary b{color:var(--blue)}
+  .highlight-list{margin-top:16px;display:flex;flex-direction:column;gap:9px}
+  .hl-item{font-size:13px;color:var(--slate);background:#fbfcfe;border:1px solid var(--line);border-radius:11px;padding:11px 14px;line-height:1.55}
+  .hl-item b{color:var(--ink)}
+  .guardrail{margin-top:16px;font-size:12px;color:#8a6d1e;background:#fdf7e9;border:1px solid #f3e2bf;border-radius:11px;padding:13px 15px;line-height:1.6}
+  .sb-list{display:flex;flex-direction:column;gap:14px}
+  .sb-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+  .sb-name{font-size:13.5px;font-weight:600;color:var(--ink)}
+  .sb-val{font-family:var(--en);font-weight:800;font-size:18px;color:var(--navy)}
+  .sb-track{height:8px;border-radius:5px;background:var(--idle-fill);overflow:hidden}
+  .sb-fill{height:100%;border-radius:5px;background:linear-gradient(90deg,var(--blue),var(--green))}
+
+  /* S11 pipeline (정리본) */
+  .pipe-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+  .pipe-card{border:1px solid var(--line);border-radius:13px;padding:16px;background:#fbfcfe}
+  .pipe-source{font-size:13px;font-weight:600;color:var(--ink)}
+  .pipe-count{font-family:var(--en);font-weight:800;font-size:28px;color:var(--blue);margin-top:8px}
+  .pipe-lbl{font-size:11px;color:var(--slate-2)}
+  .status-chip{display:inline-block;font-family:var(--en);font-size:10px;font-weight:700;padding:3px 10px;border-radius:999px;margin-top:12px}
+  .status-chip.ok{color:var(--green);background:#e4f5ec}.status-chip.warn{color:var(--amber);background:#fbeecb}
+
+  .pager{display:flex;justify-content:space-between;align-items:center;margin-top:24px;padding-top:20px;border-top:1px solid var(--line)}
+  .pager button{font-family:var(--kr);font-size:14px;font-weight:600;border-radius:11px;padding:12px 20px;cursor:pointer;transition:.15s;border:1.5px solid var(--line);background:#fff;color:var(--slate)}
+  .pager button:hover:not(:disabled){border-color:var(--blue);color:var(--blue)}
+  .pager button:disabled{opacity:.4;cursor:not-allowed}
+  .pager .next{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 8px 20px rgba(47,107,255,.28)}
+  .pager .next:hover{transform:translateY(-1px);color:#fff}
+
+  /* 한글 줄바꿈 보호: 조사/어절이 좁은 폭에서 한 글자씩 떨어지지 않게 유지 */
+  .korean-copy-safe,
+  .stage p,
+  .memo,
+  .sub,
+  .s-head p,
+  .ai-summary,
+  .field label,
+  .check label,
+  .step-card p {
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    line-break: strict;
+  }
+  .technical-wrap,
+  code,
+  pre,
+  .breakable {
+    word-break: break-word;
+    overflow-wrap: anywhere;
+  }
+
+  @media(max-width:1100px){.login-card{grid-template-columns:1fr}.kpi-row{grid-template-columns:repeat(2,1fr)}.main{grid-template-columns:1fr}.rail{position:static}.pred-grid,.mtx,.fs,.recall-grid,.market-grid3,.exec-cols,.pipe-grid{grid-template-columns:repeat(2,1fr)}.board,.mkt-grid,.rep,.pipe,.fto-split,.reg-head-row,.reg-row{grid-template-columns:1fr}.reg-head-row{display:none}}
+  @media(max-width:620px){.login-screen{padding:18px}.login-copy,.login-panel{padding:24px}.login-copy h1{font-size:30px}.login-metrics{grid-template-columns:1fr}.nav-links{display:none}.hero h1{font-size:36px}}
+</style>
 </head>
-<body class="workspace-page">
-  <div class="app-shell">
-    <nav class="global-nav" aria-label="주요 화면">
-      <a class="brand-mark" href="index.html">GROW-GATE Local EX</a>
-      <div>
-        <a href="index.html">홈</a>
-        <a class="active" href="workspace.html">AI 진단</a>
-        <a href="data.html">데이터 파이프라인</a>
-        <a href="data-catalog.html">데이터 명세</a>
-        <a href="roadmap.html">실행 로드맵</a>
-        <a href="team.html">팀 운영실</a>
-        <a href="code-gate.html">코드 게이트</a>
+<body>
+<section id="loginScreen" class="login-screen" aria-label="로그인">
+  <div class="login-card">
+    <article class="login-copy">
+      <div class="brand-kicker">GROW-GATE Local EX</div>
+      <h1>지역 중소기업 수출 진단을 시작합니다</h1>
+      <p>기업·제품 정보를 입력하면 AI Agent가 공공데이터, 규제·인증, 리콜, 특허, 지원사업 근거를 묶어 실행 가능한 수출 준비도 리포트로 정리합니다.</p>
+      <div class="login-metrics">
+        <div class="login-metric"><b>7</b><span>공공데이터 소스</span></div>
+        <div class="login-metric"><b>11</b><span>진단 단계</span></div>
+        <div class="login-metric"><b>90</b><span>일 실행 로드맵</span></div>
       </div>
-    </nav>
-    <div class="workspace-layout">
-      <aside class="workspace-sidebar" aria-label="AI 진단 업무 메뉴">
-        <div class="workspace-profile">
-          <span>현재 진단</span>
-          <strong>경남 배터리테크</strong>
-          <p>리튬이온 배터리팩 · Germany / EU</p>
-        </div>
-        <nav>
-          <a href="#workspace-overview"><span>00</span>진단 개요</a>
-          <a href="#workspace-input"><span>01</span>제품 입력</a>
-          <a href="#screen-s02"><span>02</span>데이터 호출</a>
-          <a href="#screen-s03"><span>03</span>ML 예측</a>
-          <a href="#workspace-market"><span>04</span>시장성</a>
-          <a href="#screen-s05"><span>05</span>규제·인증</a>
-          <a href="#screen-s06"><span>06</span>리콜 위험</a>
-          <a href="#screen-s07"><span>07</span>FTO·지원</a>
-          <a href="#screen-s08"><span>08</span>실행 보드</a>
-          <a href="#workspace-report"><span>09</span>리포트</a>
-          <a href="#workspace-evidence"><span>10</span>근거 데이터</a>
-        </nav>
-        <div class="sidebar-action">
-          <a href="roadmap.html">업무 보드로 이동</a>
-        </div>
-      </aside>
+    </article>
+    <article class="login-panel">
+      <h2>로그인</h2>
+      <p class="hint">공모전 시연용 계정으로 로그인하면 AI 진단 워크스페이스로 이동합니다.</p>
+      <form id="loginForm" class="login-form">
+        <label>이메일
+          <input id="loginEmail" type="email" value="demo@growgate.local" autocomplete="username" required>
+        </label>
+        <label>비밀번호
+          <input id="loginPassword" type="password" value="growgate" autocomplete="current-password" required>
+        </label>
+        <button type="submit">로그인 후 AI 진단 시작</button>
+        <div id="loginError" class="login-error" aria-live="polite"></div>
+      </form>
+      <p class="login-footnote">시연 계정: demo@growgate.local / growgate. 실제 서비스에서는 기관 SSO, 기업 사용자 권한, 진단 이력 저장을 연결합니다.</p>
+    </article>
+  </div>
+</section>
 
-      <div class="workspace-content">
-    <header id="workspace-overview" class="hero">
-      <section class="hero-title">
-        <p class="eyebrow">산업부 공공데이터 활용 서비스 시연</p>
-        <h1>GROW-GATE <span>Local EX</span></h1>
-        <p class="subtitle">Regulation-to-Market Twin for Regional SMEs</p>
-        <p class="korean-subtitle">AI가 연결하는 통관·규제·인증·리콜·특허·지원사업 원스톱 수출 의사결정 플랫폼</p>
-      </section>
+<div id="appWrap" class="wrap app-hidden">
+  <nav class="nav">
+    <div class="brand">GROW-GATE <span style="color:var(--blue)">Local EX</span></div>
+    <div class="nav-links">
+      <a href="index.html">홈</a>
+      <a href="workspace.html" class="active">AI 진단</a>
+      <a href="ai-search.html">AI 검색</a>
+      <a href="product-knowledge.html">제품 지식 관리</a>
+      <a href="data.html">데이터</a>
+      <a href="data-catalog.html">데이터 명세</a>
+      <a href="roadmap.html">실행 로드맵</a>
+      <a href="team.html">팀 운영실</a>
+      <a href="code-gate.html">코드 게이트</a>
+      <button id="logoutButton" class="logout-btn" type="button">로그아웃</button>
+    </div>
+  </nav>
+  <div class="hero">
+    <div class="eyebrow">산업부 공공데이터 활용 서비스 시연</div>
+    <h1>GROW-GATE <span class="ex">Local EX</span></h1>
+    <div class="t1">Regulation-to-Market Twin for Regional SMEs</div>
+    <div class="t2">AI가 연결하는 통관·규제·인증·리콜·특허·지원사업 원스톱 수출 의사결정 플랫폼</div>
+    <span class="live"><span class="blip"></span>DEMO LIVE</span>
+  </div>
+  <div class="kpi-row">
+    <div class="kpi"><div class="step">01</div><div class="eyebrow">Public Data</div>
+      <div class="big" style="font-size:42px">7<span style="font-size:17px;color:var(--slate-2);font-weight:700"> APIs</span></div><div class="sub">연동 준비 완료</div>
+      <div class="src-row"><span class="src">관세청</span><span class="src">KOTRA</span><span class="src">KTL</span><span class="src">SafetyKorea</span><span class="src">KIPRIS</span><span class="src">기업마당</span><span class="src">EU</span></div></div>
+    <div class="kpi"><div class="step">02</div><div class="eyebrow">Readiness Score</div>
+      <div class="score-head"><div class="big score-num">83<span>/100</span></div>
+        <svg class="donut" viewBox="0 0 36 36"><path d="M18 2.5a15.5 15.5 0 1 1 0 31 15.5 15.5 0 0 1 0-31" fill="none" stroke="#eef1f7" stroke-width="4"/><path d="M18 2.5a15.5 15.5 0 1 1 0 31 15.5 15.5 0 0 1 0-31" fill="none" stroke="var(--blue)" stroke-width="4" stroke-linecap="round" stroke-dasharray="97.4" stroke-dashoffset="16.5" transform="rotate(-90 18 18)"/></svg></div>
+      <div class="sub">제품 단위 수출 준비도</div></div>
+    <div class="kpi"><div class="step">03</div><div class="eyebrow">Regulation Passport</div>
+      <div class="big" style="font-size:42px">6<span style="font-size:17px;color:var(--slate-2);font-weight:700"> Rules</span></div><div class="sub">적용 규제 자동 판정</div>
+      <div class="rule-pills"><span class="pill req">CE/EMC</span><span class="pill req">배터리여권</span><span class="pill warn">GPSR</span><span class="pill cond">CRA</span></div></div>
+    <div class="kpi"><div class="step">04</div><div class="eyebrow">Action Roadmap</div>
+      <div class="big" style="font-size:32px">30·60·90<span style="font-size:15px;color:var(--slate-2);font-weight:700"> Days</span></div><div class="sub">우선 액션 12건 · 문서 초안 3건</div>
+      <div class="road"><div class="seg"><div class="d">30</div><div class="l">기초</div><div class="bar"></div></div><div class="seg"><div class="d">60</div><div class="l">시험</div><div class="bar"></div></div><div class="seg"><div class="d">90</div><div class="l">실행</div><div class="bar"></div></div></div></div>
+  </div>
+  <div class="main">
+    <div class="rail">
+      <div class="cur"><div class="k">현재 진단</div><div class="co">경남 배터리테크</div><div class="pr">리튬이온 배터리팩 · Germany / EU</div></div>
+      <div id="railItems"></div>
+      <button class="board-btn" onclick="go(8)">업무 보드로 이동</button>
+    </div>
+    <div id="stageWrap"></div>
+  </div>
+</div>
 
-      <section class="hero-metrics" aria-label="핵심 지표">
-        <article class="metric-card score-card">
-          <div>
-            <p class="metric-label">READINESS SCORE</p>
-            <strong id="readinessScore">82</strong><span>/100</span>
-            <p>Export Readiness</p>
-          </div>
-          <div id="scoreRing" class="score-ring" aria-hidden="true"></div>
-        </article>
-        <article class="metric-card">
-          <p class="metric-label">REGULATION PASSPORT</p>
-          <strong id="passportMarkets">EU · US · ASEAN</strong>
-          <p id="passportState">Up to date · 6 rules matched</p>
-        </article>
-        <article class="metric-card">
-          <p class="metric-label">SUPPORT PROGRAM</p>
-          <strong id="programCount">5</strong>
-          <p>Programs Matched</p>
-        </article>
-      </section>
-    </header>
+<script>
+const STEPS=[
+  {no:'01',nm:'기업·제품 입력',aux:'Input'},{no:'02',nm:'AI 예비진단',aux:'Agent Brief'},
+  {no:'03',nm:'근거 데이터 연계',aux:'Evidence'},{no:'04',nm:'ML 예측',aux:'Predict'},
+  {no:'05',nm:'시장성',aux:'Market'},{no:'06',nm:'규제·인증',aux:'Regulation'},
+  {no:'07',nm:'리콜 위험',aux:'Recall'},{no:'08',nm:'FTO·지원',aux:'FTO·Support'},
+  {no:'09',nm:'실행 보드',aux:'Roadmap'},{no:'10',nm:'리포트',aux:'Report'},
+  {no:'11',nm:'근거·출처 리포트',aux:'Sources'},
+];
+function stageHTML(i){return ({
+  0:inputView,1:overview,2:connectors,3:predLab,4:market,5:regMatrix,6:recall,7:ftoSupport,8:execBoard,9:report,10:sources
+})[i]();}
 
-    <main id="workspace-input" class="dashboard-grid">
-      <aside class="panel form-panel">
-        <div class="panel-heading">
-          <p class="eyebrow">INPUT</p>
-          <h2>기업·제품 입력</h2>
-        </div>
-        <form id="analysisForm">
-          <label>기업명
-            <input id="companyName" name="company_name" value="경남 배터리테크" />
-          </label>
-          <div class="two-col">
-            <label>지역
-              <select id="region" name="region">
-                <option>경남</option><option>대구</option><option>울산</option><option>충북</option><option>전북</option><option>부산</option>
-              </select>
-            </label>
-            <label>업종
-              <select id="industry" name="industry">
-                <option>전기전자</option><option>배터리부품</option><option>생활용품</option><option>산업재</option><option>IoT기기</option><option>소재부품</option>
-              </select>
-            </label>
-          </div>
-          <label>제품명
-            <input id="productName" name="product_name" value="리튬이온 배터리팩" />
-          </label>
-          <div class="two-col">
-            <label>HS Code
-              <input id="hsCode" name="hs_code" value="850760" maxlength="10" />
-            </label>
-            <label>대상국
-              <select id="targetMarket" name="target_market">
-                <option>Germany / EU</option><option>United States</option><option>Vietnam</option><option>Thailand</option><option>Singapore</option><option>Indonesia</option><option>China</option>
-              </select>
-            </label>
-          </div>
-          <fieldset>
-            <legend>제품 특성</legend>
-            <label class="check"><input type="checkbox" value="battery" checked /> 배터리 탑재</label>
-            <label class="check"><input type="checkbox" value="electronics" checked /> 전기전자</label>
-            <label class="check"><input type="checkbox" value="industrial" checked /> 산업재</label>
-            <label class="check"><input type="checkbox" value="digital" /> 디지털 기능</label>
-            <label class="check"><input type="checkbox" value="iot" /> IoT/무선</label>
-            <label class="check"><input type="checkbox" value="consumer" /> 소비재/B2C</label>
-            <label class="check"><input type="checkbox" value="carbon_material" /> 탄소·소재 규제</label>
-          </fieldset>
-          <fieldset>
-            <legend>준비 자료</legend>
-            <label class="check"><input id="hasBom" type="checkbox" checked /> BOM/소재정보 보유</label>
-            <label class="check"><input id="hasTestReport" type="checkbox" checked /> 시험성적서 보유</label>
-            <label class="check"><input id="hasLabelDraft" type="checkbox" checked /> 라벨·매뉴얼 초안 보유</label>
-          </fieldset>
-          <div class="button-row">
-            <button type="submit" class="primary">AI Agent 분석 실행</button>
-            <button type="button" id="fillSample" class="secondary">샘플값</button>
-          </div>
-          <label class="switch-row">
-            <input id="useBackend" type="checkbox" />
-            <span>FastAPI 백엔드 사용</span>
-            <small id="backendState">OFF · 로컬 JS 분석</small>
-          </label>
-        </form>
-      </aside>
+function sHead(eb,t,p,right){return `<div class="s-eyebrow">${eb}</div><div class="s-head"><div><h2>${t}</h2>${p?`<p>${p}</p>`:''}</div>${right||''}</div>`;}
 
-      <section class="map-panel panel">
-        <div class="panel-heading horizontal">
-          <div>
-            <p class="eyebrow">AI ANALYTICS ENGINE</p>
-            <h2>Regulation-to-Market Twin</h2>
-          </div>
-          <div class="live-badge"><span></span> DEMO LIVE</div>
-        </div>
+function agentNote(){return `<div class="agent-note">이 단계의 데이터 정리와 진단 초안은 AI Agent 기반으로 생성됩니다. 실제 제출 전에는 담당자와 전문가 검토가 필요합니다.</div>`;}
 
-        <div class="map-stage" role="img" aria-label="한국에서 EU, 미국, 동남아로 연결되는 수출 분석 지도">
-          <svg viewBox="0 0 900 430" class="world-map" aria-hidden="true">
-            <defs>
-              <radialGradient id="nodeGlow" cx="50%" cy="50%" r="50%">
-                <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
-                <stop offset="45%" stop-color="#55ccff" stop-opacity="0.9"/>
-                <stop offset="100%" stop-color="#1a7cff" stop-opacity="0"/>
-              </radialGradient>
-            </defs>
-            <path class="continent" d="M80,165 C135,110 220,105 292,130 C360,152 402,130 456,165 C505,196 492,240 428,248 C346,260 300,228 236,244 C170,260 92,230 80,165Z" />
-            <path class="continent" d="M545,125 C625,88 742,105 808,162 C850,199 835,270 760,285 C680,302 640,260 585,275 C535,288 500,235 520,190 C528,172 528,142 545,125Z" />
-            <path class="continent" d="M585,305 C630,288 700,315 735,365 C685,398 615,392 575,360 C555,344 560,318 585,305Z" />
-            <path id="routeEU" class="route route-main" d="M650,205 C525,60 325,42 162,128" />
-            <path id="routeUS" class="route route-main" d="M650,205 C475,170 260,190 108,250" />
-            <path id="routeSEA" class="route route-sea" d="M650,205 C655,260 630,318 610,360" />
-            <path class="route route-sea" d="M650,205 C708,245 740,282 780,320" />
-            <path class="route route-sea" d="M650,205 C690,285 685,340 670,386" />
-            <circle class="node korea" cx="650" cy="205" r="18" />
-            <circle class="node" cx="162" cy="128" r="14" />
-            <circle class="node" cx="108" cy="250" r="14" />
-            <circle class="node small" cx="610" cy="360" r="10" />
-            <circle class="node small" cx="780" cy="320" r="10" />
-            <circle class="node small" cx="670" cy="386" r="10" />
-            <text x="642" y="177" class="map-label">KOREA</text>
-            <text x="135" y="162" class="map-label">GERMANY</text>
-            <text x="70" y="286" class="map-label">US</text>
-            <text x="590" y="348" class="map-label">VIETNAM</text>
-            <text x="760" y="310" class="map-label">THAILAND</text>
-            <text x="650" y="410" class="map-label">ASEAN</text>
-          </svg>
-          <div class="route-chip chip-eu">AIR FREIGHT<br><b>2-3 DAYS</b></div>
-          <div class="route-chip chip-us">OCEAN FREIGHT<br><b>15-22 DAYS</b></div>
-          <div class="route-chip chip-sea">SEA FREIGHT<br><b>5-12 DAYS</b></div>
-        </div>
+function overview(){return sHead('S02 AI AGENT PREVIEW','AI 예비진단','기업·제품 입력값을 바탕으로 수출 준비도, 규제 리스크, 지원사업 우선순위를 먼저 요약합니다.')+`
+  <div class="pred-grid">
+    ${ov('수출 준비도','83','/100','시장성·규제·문서 종합')}
+    ${ov('적용 규제','6','건','CE/EMC·배터리여권 등')}
+    ${ov('지원사업','5','건','최고 적합도 92%')}
+    ${ov('유사 리콜','3','건','최대 유사도 0.86')}
+  </div>
+  <div class="memo"><b>AI 예비진단</b> · 시장성은 충분하므로 인증·제품안전·배터리 규제 준비를 우선 진단합니다. UN38.3 운송시험이 긴급 항목으로 감지되었습니다.</div>
+  ${agentNote()}`;}
+function ov(t,v,u,d){return `<div class="pred"><div class="pt">${t}</div><div class="pv">${v}<span>${u}</span></div><div class="pd">${d}</div></div>`;}
 
-        <div class="data-flow" aria-label="데이터 처리 흐름">
-          <div class="flow-item active">AI Agent</div>
-          <div class="flow-item">무역 데이터</div>
-          <div class="flow-item">규제·관세</div>
-          <div class="flow-item">인증·표준</div>
-          <div class="flow-item">리콜 정보</div>
-          <div class="flow-item">특허·FTO</div>
-          <div class="flow-item">지원사업</div>
-          <div class="flow-item success">수출 가능성 예측</div>
-        </div>
-      </section>
+function inputView(){return sHead('S01 INPUT','기업·제품 입력','먼저 기업과 제품 정보를 확인합니다. 이 입력값이 이후 예비진단, 근거 연결, 규제·인증 판단 기준이 됩니다.')+`
+  <div class="pred-grid" style="grid-template-columns:repeat(2,1fr)">
+    ${kv('기업명','경남 배터리테크')}${kv('지역 / 입주','경남 / 테크노파크')}
+    ${kv('업종','전기전자 · 배터리')}${kv('제품명','리튬이온 배터리팩')}
+    ${kv('HS Code','850760')}${kv('대상국','독일 / EU')}
+  </div>
+  <div class="memo" style="margin-top:14px"><b>제품 특성</b> · 배터리 탑재 · 산업재 · 디지털 기능 일부 → AI Planner가 다음 단계의 예비진단 계획을 생성합니다.</div>
+  ${agentNote()}`;}
+function kv(k,v){return `<div class="pred"><div class="ph"><span>${k}</span></div><div class="pt" style="font-size:20px;margin-top:10px">${v}</div></div>`;}
 
-      <aside class="panel insight-panel">
-        <div class="panel-heading">
-          <p class="eyebrow">RESULT</p>
-          <h2>실행 인사이트</h2>
-        </div>
-        <div id="insightCards" class="insight-cards"></div>
-        <div class="roadmap-mini">
-          <p>30 / 60 / 90 DAY ROADMAP</p>
-          <div class="timeline-dots"><span></span><span></span><span></span></div>
-          <div class="timeline-labels"><b>Certification</b><b>Market Test</b><b>Scale & Export</b></div>
-        </div>
-      </aside>
-    </main>
+function connectors(){return sHead('S03 EVIDENCE DATA LINK','근거 데이터 연계','예비진단에 필요한 무역·국가·인증·리콜·특허·지원사업 근거를 한 번에 연결하고 추적 가능한 evidence ID로 정리합니다.')+`
+  ${conn('01','관세청_수출입무역통계 GW','trade_signal · S02 / S04 / S09')}
+  ${conn('02','대한무역투자진흥공사_글로벌 공급망 인사이트','country_profile · S02 / S04 / S08 / S09')}
+  ${conn('03','국가기술표준원_제품 안전인증 및 리콜 정보','recall_case · S02 / S05 / S06 / S08 / S09')}
+  ${conn('04','특허청 KIPRIS Plus Open API','patent_signal · S02 / S07 / S08 / S09')}
+  ${conn('05','수출바우처·해외규격인증·지역TP 지원사업 공고','support_program · S02 / S07 / S08 / S09')}
+  ${agentNote()}`;}
+function conn(n,nm,meta){return `<div class="conn"><span class="no">${n}</span><span class="txt"><span class="nm">${nm}</span><span class="meta">${meta}</span></span><span class="dot"></span></div>`;}
 
-    <section class="screen-workspace">
-      <div class="screen-topbar">
-        <div>
-          <p class="eyebrow">SCREEN FLOW</p>
-          <h2>기획서 기반 실행 화면</h2>
-        </div>
-        <nav class="screen-tabs" aria-label="화면 이동">
-          <a href="#screen-s02">S02 데이터</a>
-          <a href="#screen-s03">S03 ML 진단</a>
-          <a href="#screen-s05">S05 인증</a>
-          <a href="#screen-s06">S06 리콜</a>
-          <a href="#screen-s07">S07 FTO</a>
-          <a href="#screen-s08">S08 실행</a>
-        </nav>
+function predLab(){return sHead('S04 XGBOOST PREDICTION LAB','예측·추정 모델 진단','',`<span class="s-tag">XGBoost · deterministic demo</span>`)+`
+  <div class="pred-grid">
+    ${pred('XGBClassifier','82%','90일 파일럿 수출 실행 가능성','95.3','%',95,'시장성·규제압력·문서 준비도를 종합해 90일 내 파일럿 수출 패키지 완성 가능성을 추정합니다.')}
+    ${pred('XGBRegressor','78%','인증·시험 리드타임 추정','49','days',55,'긴급 규제 수·배터리 여부·문서 준비도를 기준으로 시험기관 상담부터 보완 완료까지 기간을 추정합니다.')}
+    ${pred('XGBClassifier','80%','지원사업 선정 적합 확률','84.8','%',85,'인증 갭·지역 제조기업 태그·지원사업 매칭 점수로 신청 우선순위를 예측합니다.')}
+    ${pred('XGBRegressor','74%','시험·보완 예비비율 추정','13.6','%',30,'리콜·FTO·규제 위험을 반영해 시험 실패·라벨 보완·회피설계 상담에 필요한 예비비율을 추정합니다.')}
+  </div>
+  <div class="fi"><h3>통합 Feature Importance</h3>${fi('시장성 점수',96)}${fi('규제 압력',88)}${fi('문서 준비도',72)}${fi('지원사업 적합도',60)}${fi('리콜 위험도',48)}</div>`;}
+function pred(h,acc,t,v,u,bar,d){return `<div class="pred"><div class="ph"><span>${h}</span><span>${acc}</span></div><div class="pt">${t}</div><div class="pv">${v}<span>${u}</span></div><div class="pbar"><i style="width:${bar}%"></i></div><div class="pd">${d}</div></div>`;}
+function fi(l,v){return `<div class="row"><div class="lab">${l}</div><div class="tk"><i style="width:${v}%"></i></div><div class="val">${v}</div></div>`;}
+
+function market(){return sHead('S05 MARKET SIGNAL','시장별 진출 기회','시장성 점수는 규제·인증 실행순서를 정하기 위한 첫 번째 신호로 사용합니다.')+`
+  <div class="market-grid3">
+    ${mktCard('🇩🇪 Germany / EU','87','h','HIGH','€8.2B','+18.4%')}
+    ${mktCard('🇺🇸 United States','71','m','MEDIUM','$12.4B','+11.2%')}
+    ${mktCard('🇻🇳 Vietnam','78','h','HIGH','$850M','+32.6%')}
+  </div>
+  <div class="memo" style="margin-top:14px"><b>다음 액션</b> · 독일/EU 유망도 최상. 유통 채널보다 인증·제품안전 서류 준비가 선행되어야 합니다.</div>`;}
+function mktCard(flag,sc,g,grade,size,growth){return `<div class="mkt-card"><div class="mkt-flag">${flag}</div><div class="mkt-score-big">${sc}</div><div class="mkt-score-lbl">/100 Opportunity Score</div><span class="mkt-grade ${g}">${grade}</span><div class="mkt-stats"><div class="mkt-stat"><div class="v">${size}</div><div class="l">시장 규모</div></div><div class="mkt-stat"><div class="v">${growth}</div><div class="l">연 성장률</div></div></div></div>`;}
+
+function regMatrix(){return sHead('S06 REGULATION PASSPORT','규제·인증 우선순위 매트릭스','제품·대상국에 적용되는 규제를 우선순위·기간·예상비용과 함께 정렬합니다.')+`
+  <div class="reg-head-row"><span>규제·인증</span><span>시장</span><span>우선순위</span><span>상태</span><span>기간</span><span>예상비용</span></div>
+  ${regRow('UN38.3 운송시험','배터리 항공·해상 필수',['req','전체'],['req','긴급'],['req','누락위험'],'4주','~300만원')}
+  ${regRow('CE / EMC 적합성','전기전자 EU 필수',['req','EU'],['req','필수'],['warn','대응필요'],'8주','~800만원')}
+  ${regRow('EU 배터리 여권','Battery Regulation 2024',['req','EU'],['req','필수'],['warn','준비중'],'12주','~500만원')}
+  ${regRow('GPSR','일반제품안전규정 2024',['warn','EU'],['warn','주의'],['warn','검토중'],'6주','~200만원')}
+  ${regRow('CRA','사이버복원력법 2026년',['cond','EU'],['cond','조건부'],['cond','2026 적용'],'—','—')}
+  ${regRow('RoHS','유해물질 제한',['ok','EU'],['req','필수'],['ok','준수 완료'],'—','완료')}`;}
+function regRow(nm,mkt,m,pr,st,dur,cost){
+  const dim=(v)=>v==='—'?' dim':'';
+  return `<div class="reg-row"><div><div class="reg-name">${nm}</div><div class="reg-mkt">${mkt}</div></div>
+    <div><span class="pill ${m[0]}" style="font-size:10px">${m[1]}</span></div>
+    <div><span class="pill ${pr[0]}">${pr[1]}</span></div>
+    <div><span class="pill ${st[0]}">${st[1]}</span></div>
+    <div class="num${dim(dur)}">${dur}</div><div class="num${dim(cost)}">${cost}</div></div>`;}
+
+function recall(){return sHead('S07 RECALL COPILOT','위해원인 클러스터와 시험 전 체크','유사 리콜을 설계 보완·시험 항목·FMEA 초안으로 전환합니다.')+`
+  <div class="recall-grid">
+    ${recCard('h','고위험','과열 / 열폭주','0.86',['BMS 온도 임계값 재검토','UN38.3 열 충격 시험 선행','FMEA 열 이벤트 시나리오 추가'])}
+    ${recCard('m','중위험','낙하·충격 내부 단락','0.72',['IEC 62133 낙하 시험 조기 실시','셀 배치 구조 설계 검토','체크리스트 담당자 배정 필요'])}
+    ${recCard('m','중위험','충전회로 오작동','0.68',['충전 IC 공급사 이력 확인','과충전 보호 회로 이중화','필드 데이터 6개월 추적'])}
+  </div>`;}
+function recCard(c,badge,title,sim,checks){return `<div class="recall-card ${c}"><span class="recall-badge-pill ${c}">${badge}</span><div class="recall-title">${title}</div><div class="recall-sim">${sim}</div><div class="recall-sim-lbl">유사도 점수</div><div class="recall-checks">${checks.map(x=>`<div class="recall-check">${x}</div>`).join('')}</div></div>`;}
+
+function ftoSupport(){return sHead('S08 FTO &amp; SUPPORT','특허 위험지도와 지원사업','기술 리스크와 비용 부담을 함께 줄여주는 실행 화면입니다.')+`
+  <div class="fto-split">
+    <div>
+      <div class="fto-title">Patent Risk Map</div>
+      ${patent('h','고위험','배터리 관리 시스템 (BMS)','삼성SDI · KR10-2019-0xxxxxx · 청구항 12개')}
+      ${patent('m','중위험','배터리팩 구조 및 방열 설계','LG에너지솔루션 · KR10-2020-0xxxxxx · 청구항 8개')}
+      ${patent('l','저위험','원통형 셀 배열 방식','Panasonic · EP3xxxxxxx · 청구항 5개')}
+    </div>
+    <div>
+      <div class="fto-title">Support Programs · 5 Matched</div>
+      ${support('해외규격인증획득지원','KOTRA · 최대 5,000만원','D-14','')}
+      ${support('수출바우처','KOTRA · 최대 3,000만원','D-30','')}
+      ${support('으뜸기업 수출지원','경남도 · 최대 1,000만원','상시','g')}
+      ${support('배터리팩 안전인증비 지원','산업부 · 최대 2,000만원','D-60','')}
+    </div>
+  </div>
+  <div class="memo" style="margin-top:14px"><b>AI 제안</b> · BMS·방열 키워드는 회피설계 검토 필요. 마감 임박한 해외규격인증 지원(D-14)을 즉시 신청 준비하세요.</div>`;}
+function patent(c,badge,nm,sub){return `<div class="patent-card"><span class="patent-badge ${c}">${badge}</span><div class="patent-name">${nm}</div><div class="patent-sub">${sub}</div></div>`;}
+function support(nm,org,dday,g){return `<div class="support-card"><div><div class="support-name">${nm}</div><div class="support-org">${org}</div></div><span class="deadline-chip ${g}">${dday}</span></div>`;}
+
+function execBoard(){return sHead('S09 EXECUTION ROADMAP','30·60·90일 실행 보드','',`<span class="s-tag">우선 액션 12건 · 문서 이관 3건</span>`)+`
+  <div class="exec-cols">
+    ${execCol('30','기초 정리',[
+      ['urgent','인증 · 긴급','UN38.3 시험 KTL 의뢰','품질팀 · D-0 착수'],
+      ['urgent','인증 · 긴급','MSDS 최신본 업데이트','품질팀 · D-3 완료'],
+      ['','문서','CE 기술문서(DoC) 초안 작성','인증담당 · D-14 완료'],
+      ['','지원','해외규격인증 지원신청 제출','관리팀 · D-14 마감'],
+    ])}
+    ${execCol('60','샘플·문서',[
+      ['','인증','IEC 62133 시험 완료','품질팀 · D-45 완료 목표'],
+      ['','규제','EU 배터리 여권 초안 작성','인증담당 · D-50 완료'],
+      ['','규제','GPSR 적합성 선언서 검토','법무/인증 · D-55 완료'],
+      ['','영업','독일 바이어 샘플 준비','해외영업팀 · D-60 발송'],
+    ])}
+    ${execCol('90','직접 수출',[
+      ['','인증','CE/EMC 시험성적서 취득','품질팀 · D-75 완료'],
+      ['','영업','독일 바이어 계약 검토','해외영업팀 · D-80'],
+      ['','물류','UN38.3 포장·라벨 확정','물류팀 · D-85 완료'],
+      ['','수출','첫 수출 선적 진행','물류·영업 · D-90'],
+    ])}
+  </div>`;}
+function execCol(day,lbl,tasks){return `<div class="exec-col"><div class="exec-col-head"><div class="exec-day">${day}</div><div class="exec-day-lbl">Days · ${lbl}</div></div>
+  ${tasks.map(t=>`<div class="exec-task ${t[0]}"><div class="etag">${t[1]}</div><div class="etitle">${t[2]}</div><div class="ewho">${t[3]}</div></div>`).join('')}</div>`;}
+
+function report(){return sHead('S10 EXPORT READINESS REPORT','분석 결과 요약 · 항목별 점수','',`<button class="s-btn">PDF 내보내기 ↓</button>`)+`
+  <div class="rep">
+    <div class="doc" style="border:1px solid var(--line)">
+      <p class="ai-summary">경남 배터리테크의 리튬이온 배터리팩(HS 850760)은 독일/EU 시장 진출 기준 종합 준비도 <b>83점 (HIGH)</b>으로 평가됩니다. UN38.3 운송시험 미비가 가장 긴급한 리스크이며, CE/EMC 및 EU 배터리 여권은 병행 준비가 필요합니다. KOTRA 해외규격인증 지원사업 신청 마감(D-14)이 임박해 즉시 착수를 권고합니다.</p>
+      <div class="highlight-list">
+        <div class="hl-item"><b>최우선:</b> UN38.3 시험 즉시 의뢰 → KTL 경남지원센터 연결 추천</div>
+        <div class="hl-item"><b>규제:</b> EU 배터리 여권 초안 착수 → 12주 소요 예상, 지금 시작해야 Q3 수출 가능</div>
+        <div class="hl-item"><b>특허:</b> 삼성SDI BMS 특허 고위험 → FTO 전문가 검토 1~2주 내 착수 권고</div>
+        <div class="hl-item"><b>지원:</b> 5개 매칭 중 KOTRA 수출바우처 + 해외규격인증 동시 신청 가능</div>
       </div>
-
-      <section id="screen-s02" class="screen-panel screen-split">
-        <div>
-          <p class="eyebrow">S02 DATA CONNECTORS</p>
-          <h2>공공데이터 호출 오케스트레이션</h2>
-          <p class="screen-copy">무역, 국가, 인증·리콜, 특허, 지원사업 데이터를 같은 실행 단위로 정규화하고 근거 ID를 연결합니다.</p>
-        </div>
-        <div id="connectorRail" class="connector-rail"></div>
-      </section>
-
-      <section id="screen-s03" class="screen-panel">
-        <div class="panel-heading horizontal">
-          <div>
-            <p class="eyebrow">S03 XGBOOST PREDICTION LAB</p>
-            <h2>예측·추정 모델 진단</h2>
-          </div>
-          <span class="model-chip">XGBoost · deterministic demo training</span>
-        </div>
-        <div id="mlPredictionGrid" class="ml-grid"></div>
-        <div id="importanceChart" class="importance-chart"></div>
-      </section>
-
-      <section id="screen-s05" class="screen-panel">
-        <div class="panel-heading horizontal">
-          <div>
-            <p class="eyebrow">S05 REGULATION PASSPORT</p>
-            <h2>규제·인증 우선순위 매트릭스</h2>
-          </div>
-        </div>
-        <div id="regulationMatrix" class="matrix-grid"></div>
-      </section>
-
-      <section id="screen-s06" class="screen-panel screen-split">
-        <div>
-          <p class="eyebrow">S06 RECALL COPILOT</p>
-          <h2>위해원인 클러스터와 시험 전 체크</h2>
-          <p class="screen-copy">유사 리콜을 설계 보완, 시험 항목, FMEA 초안으로 전환합니다.</p>
-        </div>
-        <div id="recallRiskViz" class="risk-viz"></div>
-      </section>
-
-      <section id="screen-s07" class="screen-panel">
-        <div class="panel-heading horizontal">
-          <div>
-            <p class="eyebrow">S07 FTO & SUPPORT</p>
-            <h2>특허 위험지도와 지원사업 적합도</h2>
-          </div>
-        </div>
-        <div id="ftoSupportViz" class="dual-viz"></div>
-      </section>
-
-      <section id="screen-s08" class="screen-panel">
-        <div class="panel-heading horizontal">
-          <div>
-            <p class="eyebrow">S08 EXECUTION ROADMAP</p>
-            <h2>30·60·90일 실행 보드</h2>
-          </div>
-        </div>
-        <div id="executionBoard" class="execution-board"></div>
-      </section>
-    </section>
-
-    <section id="workspace-market" class="result-layout">
-      <article class="panel wide-panel">
-        <div class="panel-heading horizontal">
-          <div>
-            <p class="eyebrow">MARKET</p>
-            <h2>수출기회 대시보드</h2>
-          </div>
-          <button id="downloadJson" class="secondary small">JSON 다운로드</button>
-        </div>
-        <div id="marketCards" class="market-cards"></div>
-      </article>
-
-      <article class="panel">
-        <div class="panel-heading">
-          <p class="eyebrow">SCORE</p>
-          <h2>준비도 세부 점수</h2>
-        </div>
-        <div id="scoreBreakdown" class="score-breakdown"></div>
-      </article>
-    </section>
-
-    <section id="workspace-report" class="result-layout bottom">
-      <article class="panel wide-panel">
-        <div class="panel-heading horizontal">
-          <div>
-            <p class="eyebrow">ROADMAP</p>
-            <h2>30·60·90일 실행 로드맵</h2>
-          </div>
-          <button id="printReport" class="primary small">보고서 인쇄</button>
-        </div>
-        <div id="roadmap" class="roadmap"></div>
-      </article>
-
-      <article class="panel report-summary-panel">
-        <div class="panel-heading">
-          <p class="eyebrow">AI REPORT</p>
-          <h2>에이전트 요약</h2>
-        </div>
-        <p id="aiSummary" class="ai-summary"></p>
-        <div id="reportHighlights" class="report-highlights"></div>
-        <div id="guardrails" class="guardrails"></div>
-      </article>
-    </section>
-
-    <section id="workspace-detail-lists" class="result-layout bottom">
-      <article class="panel">
-        <div class="panel-heading"><p class="eyebrow">REGULATION</p><h2>규제·인증 패스포트</h2></div>
-        <div id="regulationList" class="stack-list"></div>
-      </article>
-      <article class="panel">
-        <div class="panel-heading"><p class="eyebrow">RECALL</p><h2>리콜 위험 Copilot</h2></div>
-        <div id="recallList" class="stack-list"></div>
-      </article>
-      <article class="panel">
-        <div class="panel-heading"><p class="eyebrow">FTO & SUPPORT</p><h2>특허·지원사업</h2></div>
-        <div id="patentSupportList" class="stack-list"></div>
-      </article>
-    </section>
-
-    <section id="workspace-evidence" class="result-layout bottom">
-      <article class="panel wide-panel">
-        <div class="panel-heading horizontal">
-          <div>
-            <p class="eyebrow">PUBLIC DATA PIPELINE</p>
-            <h2>화면별 공공데이터 출처</h2>
-          </div>
-          <button id="collectPublicData" class="secondary small">파이프라인 실행</button>
-        </div>
-        <div id="dataSourceMap" class="source-grid"></div>
-      </article>
-      <article class="panel">
-        <div class="panel-heading">
-          <p class="eyebrow">COLLECTION STATUS</p>
-          <h2>수집·정규화 상태</h2>
-        </div>
-        <div id="pipelineStatus" class="stack-list"></div>
-      </article>
-    </section>
-
+      <div class="guardrail">⚠ 모든 규제 답변에는 추천·최신성·전문가 확인 여부를 함께 확인하십시오. 본 결과는 공공데이터 기반 AI 분석이며, 최종 판단은 인증 전문가와 함께 하십시오.</div>
+    </div>
+    <div class="side">
+      <div class="sb-list">
+        ${sb('규제·인증 준비도',78)}${sb('시장 접근성',86)}${sb('기술 경쟁력',88)}
+        ${sb('특허 안전성',72)}${sb('리콜 위험도 (역)',68,'amber')}${sb('지원사업 활용도',65)}
       </div>
     </div>
+  </div>`;}
+function sb(nm,v,c){return `<div class="sb-item"><div class="sb-top"><span class="sb-name">${nm}</span><span class="sb-val">${v}<small style="color:var(--slate-2);font-size:11px">/100</small></span></div><div class="sb-track"><div class="sb-fill" style="width:${v}%${c==='amber'?';background:var(--amber)':''}"></div></div></div>`;}
 
-    <footer>
-      <strong>GROW-GATE Local EX</strong> · 이 화면은 공모전 발표 시연용 프로토타입입니다. 데이터는 로컬 샘플이며, 실제 서비스에서는 공공데이터 API와 인증·통상 전문가 검증 절차를 연결합니다.
-    </footer>
+function sources(){return sHead('S11 PUBLIC DATA PIPELINE','화면별 공공데이터 출처 및 수집 상태','',`<button class="s-btn">파이프라인 실행</button>`)+`
+  <div class="pipe-grid">
+    ${pipe('관세청 무역통계','1,240','수집 레코드')}
+    ${pipe('KOTRA 해외시장','84','리포트 건')}
+    ${pipe('KTL Certinfo','312','인증 항목')}
+    ${pipe('SafetyKorea','56','리콜 사례')}
+    ${pipe('KIPRIS 특허','2,810','검색 결과')}
+    ${pipe('기업마당 지원사업','18','매칭 사업')}
+    ${pipe('EU RAPEX','430','EU 리콜 경보')}
+    ${pipeAdd()}
   </div>
+  <div style="font-size:11.5px;color:var(--slate-2);margin-top:16px;line-height:1.6">출처 · 관세청 · KTL Certinfo · SafetyKorea · KOTRA · KIPRIS · 기업마당 · EU RAPEX. 모든 규제 답변에는 추천·최신성·전문가 확인 여부를 함께 확인하십시오.</div>`;}
+function pipe(src,cnt,lbl){return `<div class="pipe-card"><div class="pipe-source">${src}</div><div class="pipe-count">${cnt}</div><div class="pipe-lbl">${lbl}</div><span class="status-chip ok">Connected</span></div>`;}
+function pipeAdd(){return `<div class="pipe-card" style="border-style:dashed;background:#fafbfe"><div class="pipe-source" style="color:var(--slate-2)">+ 커넥터 추가</div><div style="font-size:12px;color:var(--slate-2);margin-top:8px;line-height:1.5">새 공공데이터 소스를 연결합니다</div><span class="status-chip warn">대기중</span></div>`;}
 
-  <script src="app.js"></script>
+let cur=0;
+const wrap=document.getElementById('stageWrap');const railWrap=document.getElementById('railItems');
+const AUTH_KEY='growgate-demo-authenticated';
+const loginScreen=document.getElementById('loginScreen');
+const appWrap=document.getElementById('appWrap');
+const loginForm=document.getElementById('loginForm');
+const loginError=document.getElementById('loginError');
+const logoutButton=document.getElementById('logoutButton');
+
+function showWorkspace(){
+  loginScreen.classList.add('app-hidden');
+  appWrap.classList.remove('app-hidden');
+}
+function showLogin(){
+  appWrap.classList.add('app-hidden');
+  loginScreen.classList.remove('app-hidden');
+  document.getElementById('loginEmail').focus();
+}
+function handleLogin(event){
+  event.preventDefault();
+  const email=document.getElementById('loginEmail').value.trim();
+  const password=document.getElementById('loginPassword').value.trim();
+  if(!email||!password){
+    loginError.textContent='이메일과 비밀번호를 입력해 주세요.';
+    return;
+  }
+  if(email!=='demo@growgate.local'||password!=='growgate'){
+    loginError.textContent='시연 계정은 demo@growgate.local / growgate 입니다.';
+    return;
+  }
+  loginError.textContent='';
+  localStorage.setItem(AUTH_KEY,'true');
+  showWorkspace();
+  go(0);
+}
+function handleLogout(){
+  localStorage.removeItem(AUTH_KEY);
+  showLogin();
+}
+function render(){
+  railWrap.innerHTML=STEPS.map((s,i)=>`<div class="item ${i===cur?'active':''} ${i<cur?'done':''}" onclick="go(${i})"><span class="no">${s.no}</span><span class="txt"><span class="nm">${s.nm}</span><span class="aux">${s.aux}</span></span><span class="ck">✓</span></div>`).join('');
+  wrap.innerHTML=`<div class="stage show">${stageHTML(cur)}<div class="pager"><button onclick="go(${cur-1})" ${cur===0?'disabled':''}>← 이전${cur>0?' · '+STEPS[cur-1].nm:''}</button><button class="next" onclick="go(${cur+1})" ${cur===STEPS.length-1?'disabled':''}>다음${cur<STEPS.length-1?' · '+STEPS[cur+1].nm:''} →</button></div></div>`;
+}
+function go(i){if(i<0||i>=STEPS.length)return;cur=i;render();window.scrollTo({top:document.querySelector('.main').offsetTop-20,behavior:'smooth'});}
+loginForm.addEventListener('submit',handleLogin);
+logoutButton.addEventListener('click',handleLogout);
+render();
+if(localStorage.getItem(AUTH_KEY)==='true'){showWorkspace();}else{showLogin();}
+</script>
 </body>
 </html>

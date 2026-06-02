@@ -232,3 +232,39 @@ class AnalysisResult(BaseModel):
     ai_summary: str
     guardrails: List[str]
     raw_signals: Dict[str, Any] = Field(default_factory=dict)
+
+
+class AISearchRequest(BaseModel):
+    query: str = Field(min_length=2, max_length=240)
+    scope: Literal["diagnosis", "data_catalog", "global"] = "diagnosis"
+    product_input: ProductInput = Field(default_factory=ProductInput)
+    filters: Dict[str, Any] = Field(default_factory=dict)
+
+
+class AISearchResultItem(BaseModel):
+    title: str
+    result_type: Literal["analysis", "rag_evidence", "data_source", "roadmap", "support_program"]
+    source_type: str
+    summary: str
+    score: float = Field(ge=0, le=1)
+    source_id: Optional[str] = None
+    source_url: Optional[str] = None
+    metadata: Dict[str, Any] = Field(default_factory=dict)
+
+
+class AISuggestedAction(BaseModel):
+    label: str
+    action_type: Literal["open_evidence", "run_search", "open_data_catalog", "open_roadmap", "review_source"]
+    payload: Dict[str, Any] = Field(default_factory=dict)
+
+
+class AISearchResponse(BaseModel):
+    query: str
+    scope: Literal["diagnosis", "data_catalog", "global"]
+    answer: str
+    results: List[AISearchResultItem]
+    evidence_documents: List[Dict[str, Any]] = Field(default_factory=list)
+    data_sources: List[Dict[str, Any]] = Field(default_factory=list)
+    suggested_actions: List[AISuggestedAction] = Field(default_factory=list)
+    guardrails: List[str] = Field(default_factory=list)
+    quality_signals: Dict[str, Any] = Field(default_factory=dict)
