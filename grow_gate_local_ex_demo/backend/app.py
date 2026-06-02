@@ -16,9 +16,15 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 
 from .agents import GrowGateAgent
+from .ai_search import AISearchService
 from .data_connectors import PipelineJob, load_dataset, load_public_data_sources
+from .local_demo_db import LocalDemoDatabase
 from .public_data_pipeline import PublicDataPipeline, ROOT, run_and_write
-from .schemas import AnalysisResult, GitCommitRequest, GitInitRequest, ProductInput
+from .operational_pipeline import AIRFLOW_READY_TASKS, PipelineRunStore, run_ml_training_pipeline
+from .product_knowledge import ProductKnowledgeStore
+from .rag_database import rag_schema
+from .schemas import AISearchRequest, AISearchResponse, AnalysisResult, GitCommitRequest, GitInitRequest, ProductInput
+from .target_company import load_target_company_profile
 
 
 def _cors_origins() -> list[str]:
@@ -30,6 +36,8 @@ def _cors_origins() -> list[str]:
         "http://localhost:8000",
         "http://127.0.0.1:8765",
         "http://localhost:8765",
+        "http://127.0.0.1:8766",
+        "http://localhost:8766",
     ]
 
 
@@ -141,6 +149,10 @@ app.add_middleware(
 )
 
 agent = GrowGateAgent()
+ai_search_service = AISearchService(agent)
+product_knowledge_store = ProductKnowledgeStore()
+pipeline_run_store = PipelineRunStore()
+demo_database = LocalDemoDatabase()
 
 
 @app.middleware("http")
@@ -189,6 +201,29 @@ def pipeline_preview() -> Dict[str, Any]:
     }
 
 
+@app.get("/target-company/context")
+def target_company_context() -> Dict[str, Any]:
+    """Return the SME target profile used by the AI Agent RAG harness."""
+    profile = load_target_company_profile()
+    result = agent.analyze(
+        ProductInput(
+            company_name=profile["company_name"],
+            region="경기",
+            industry=profile["industry"],
+            product_name=profile["business_context"]["export_candidate_products"][0],
+            hs_code="850760",
+            target_market=profile["business_context"]["target_markets"][0],
+            features=["battery", "electronics", "industrial"],
+        )
+    )
+    return {
+        "profile": result.raw_signals["target_company_profile"],
+        "rag": result.raw_signals["target_company_rag"],
+        "prompt_pack": result.raw_signals["advanced_prompt_pack"],
+        "harness_report": result.raw_signals["harness_report"],
+    }
+
+
 @app.get("/public-data/sources")
 def public_data_sources() -> Dict[str, Any]:
     """Return the screen-by-screen public-data source catalog."""
@@ -221,6 +256,149 @@ def collect_public_data(use_live: bool = Query(default=False)) -> Dict[str, Any]
 def public_data_normalized() -> Dict[str, Any]:
     """Preview normalized public data without writing a file."""
     return PublicDataPipeline().run(use_live=False)
+
+
+@app.get("/rag/schema")
+def rag_database_schema() -> Dict[str, Any]:
+    """Return the Supabase/pgvector-ready RAG database contract."""
+    return rag_schema()
+
+
+@app.post("/ml/train")
+def ml_train(use_live: bool = Query(default=False)) -> Dict[str, Any]:
+    """Run the Airflow-ready public-data/RAG/ML training pipeline."""
+    if use_live and os.getenv("GROW_GATE_ENABLE_LIVE_COLLECTION") != "1":
+        raise HTTPException(
+            status_code=403,
+            detail="Live ML pipeline collection is disabled. Set GROW_GATE_ENABLE_LIVE_COLLECTION=1 to enable it.",
+        )
+    return run_ml_training_pipeline(pipeline_run_store, use_live=use_live)
+
+
+@app.get("/pipeline/runs")
+def pipeline_runs() -> Dict[str, Any]:
+    """Return recorded pipeline and ML training runs."""
+    runs = pipeline_run_store.list_runs()
+    return {"runs": runs, "total": len(runs)}
+
+
+@app.get("/pipeline/latest-status")
+def pipeline_latest_status() -> Dict[str, Any]:
+    """Return the latest pipeline status and Airflow transition contract."""
+    latest = pipeline_run_store.latest()
+    return {
+        "latest_run": latest,
+        "airflow_ready": True,
+        "airflow_ready_tasks": AIRFLOW_READY_TASKS,
+        "storage_mode": "json_fallback_supabase_ready",
+    }
+
+
+@app.post("/db/seed")
+def seed_demo_database() -> Dict[str, Any]:
+    """Seed the local SQLite demo DB with product, RAG, pipeline, and ML records."""
+    return demo_database.seed()
+
+
+@app.get("/db/status")
+def demo_database_status() -> Dict[str, Any]:
+    """Return local demo DB path and table counts."""
+    return demo_database.status()
+
+
+@app.post("/simulation/run")
+def run_full_demo_simulation() -> Dict[str, Any]:
+    """Run a realistic end-to-end employee workflow and persist the outputs."""
+    seed_result = demo_database.seed()
+    request = ProductInput()
+    analysis = agent.analyze(request)
+    search_result = ai_search_service.search(
+        AISearchRequest(
+            query="EU 배터리 여권 리콜 위험과 다음 추천 액션",
+            scope="global",
+            product_input=request,
+        )
+    )
+    search_payload = search_result.model_dump()
+    report_markdown = build_markdown_report(analysis)
+    report_review = review_analysis_report(analysis, search_payload, report_markdown)
+
+    demo_database.insert_search_run(
+        {
+            "query": search_payload["query"],
+            "ranking_strategy": search_payload["quality_signals"]["ranking_strategy"],
+            "payload": search_payload,
+        }
+    )
+    demo_database.insert_analysis_report(
+        {
+            "company_name": analysis.request.company_name,
+            "product_name": analysis.request.product_name,
+            "readiness_score": analysis.readiness_score,
+            "review_status": report_review["overall_status"],
+            "analysis": analysis.model_dump(),
+            "report_markdown": report_markdown,
+            "report_review": report_review,
+        }
+    )
+
+    return {
+        "status": "success",
+        "flow": [
+            "seed_database",
+            "register_product_knowledge",
+            "run_ai_analysis",
+            "run_ai_search",
+            "build_report",
+            "review_report_quality",
+            "persist_simulation",
+        ],
+        "seed": seed_result,
+        "analysis": analysis.model_dump(),
+        "search": search_payload,
+        "report_markdown": report_markdown,
+        "report_review": report_review,
+        "db_counts_after": demo_database.counts(),
+    }
+
+
+def _product_knowledge_by_id(product_id: str) -> Dict[str, Any]:
+    for item in product_knowledge_store.list_items():
+        if item["product_id"] == product_id:
+            return item
+    raise HTTPException(status_code=404, detail="Product knowledge record not found.")
+
+
+@app.get("/product-knowledge")
+def product_knowledge_index() -> Dict[str, Any]:
+    """Return employee-managed product knowledge for AI Agent/RAG/ML enrichment."""
+    items = product_knowledge_store.list_items()
+    return {"items": items, "total": len(items)}
+
+
+@app.post("/product-knowledge")
+def product_knowledge_upsert(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Create or update product knowledge used as AI Agent and ML prior knowledge."""
+    try:
+        record = product_knowledge_store.upsert(payload)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    agent.product_knowledge = product_knowledge_store
+    return record
+
+
+@app.get("/product-knowledge/{product_id}/features")
+def product_knowledge_features(product_id: str) -> Dict[str, Any]:
+    """Preview how one product knowledge record becomes ML features."""
+    record = _product_knowledge_by_id(product_id)
+    return record["feature_preview"]
+
+
+@app.get("/product-knowledge/{product_id}/rag-pack")
+def product_knowledge_rag_pack(product_id: str) -> Dict[str, Any]:
+    """Preview the RAG-ready documents generated from one product knowledge record."""
+    record = _product_knowledge_by_id(product_id)
+    return record["rag_pack"]
 
 
 @app.get("/git/status")
@@ -318,6 +496,12 @@ def analyze(request: ProductInput) -> AnalysisResult:
     return agent.analyze(request)
 
 
+@app.post("/ai-search", response_model=AISearchResponse)
+def ai_search(request: AISearchRequest) -> AISearchResponse:
+    """Search product diagnosis context, RAG-ready evidence, and public data sources."""
+    return ai_search_service.search(request)
+
+
 @app.post("/report")
 def report(request: ProductInput) -> JSONResponse:
     """Return a printable report payload. The frontend can render this to PDF."""
@@ -353,3 +537,37 @@ def build_markdown_report(result: AnalysisResult) -> str:
     for guardrail in result.guardrails:
         lines.append(f"- {guardrail}")
     return "\n".join(lines)
+
+
+def review_analysis_report(result: AnalysisResult, search_result: Dict[str, Any], report_markdown: str) -> Dict[str, Any]:
+    """Check whether a generated report is grounded enough for a demo handoff."""
+    raw_signals = result.raw_signals or {}
+    product_rag_docs = raw_signals.get("product_rag_pack", {}).get("documents", [])
+    target_rag_docs = raw_signals.get("target_company_rag", {}).get("documents", [])
+    evidence_docs = search_result.get("evidence_documents", [])
+    quality_signals = search_result.get("quality_signals", {})
+    checks = {
+        "has_ai_summary": bool(result.ai_summary and result.ai_summary in report_markdown),
+        "has_rag_evidence": bool(product_rag_docs or target_rag_docs or evidence_docs),
+        "has_roadmap": bool(result.roadmap and "30·60·90일 실행 로드맵" in report_markdown),
+        "has_guardrails": bool(result.guardrails and "유의사항" in report_markdown),
+        "has_search_quality": quality_signals.get("ranking_strategy") == "intent_context_hybrid_mmr",
+        "has_ml_predictions": bool(result.ml_predictions),
+    }
+    passed = sum(1 for value in checks.values() if value)
+    overall_score = round((passed / len(checks)) * 100)
+    review_notes = []
+    if not checks["has_rag_evidence"]:
+        review_notes.append("RAG 근거 문서가 부족합니다. 제품 지식 또는 공공데이터 수집 결과를 보강해야 합니다.")
+    if not checks["has_search_quality"]:
+        review_notes.append("AI 검색 품질 신호가 누락되어 추천 근거 검수가 어렵습니다.")
+    if not checks["has_ml_predictions"]:
+        review_notes.append("ML 예측 결과가 없어 리스크 우선순위 설명력이 낮습니다.")
+    if not review_notes:
+        review_notes.append("보고서가 AI 요약, 근거, 검색 품질, ML 예측, 실행 로드맵을 모두 포함합니다.")
+    return {
+        "overall_status": "pass" if overall_score >= 84 else "review",
+        "overall_score": overall_score,
+        "checks": checks,
+        "review_notes": review_notes,
+    }

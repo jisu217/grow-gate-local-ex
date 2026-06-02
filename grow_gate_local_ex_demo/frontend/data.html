@@ -6,6 +6,7 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' http://127.0.0.1:8000; base-uri 'none'; form-action 'self'; frame-ancestors 'none'" />
   <title>데이터 파이프라인 · GROW-GATE Local EX</title>
   <link rel="stylesheet" href="styles.css" />
+  <script src="app.js" defer></script>
 </head>
 <body class="home-page">
   <div class="app-shell">
@@ -14,6 +15,8 @@
       <div>
         <a href="index.html">홈</a>
         <a href="workspace.html">AI 진단</a>
+        <a href="ai-search.html">AI 검색</a>
+        <a href="product-knowledge.html">제품 지식 관리</a>
         <a class="active" href="data.html">데이터 파이프라인</a>
         <a href="data-catalog.html">데이터 명세</a>
         <a href="roadmap.html">실행 로드맵</a>
@@ -60,6 +63,35 @@
       <article><b>02</b><span>정규화</span><p>화면별 테이블 계약 변환</p></article>
       <article><b>03</b><span>근거 연결</span><p>evidence_source ID 추적</p></article>
       <article><b>04</b><span>AI 분석</span><p>Agent와 XGBoost feature 입력</p></article>
+    </section>
+
+    <section class="pipeline-ops-panel" aria-label="ML 파이프라인 실행">
+      <div class="panel-heading horizontal">
+        <div>
+          <p class="eyebrow">AIRFLOW-READY PIPELINE</p>
+          <h2>ML 재학습 실행과 운영 이력</h2>
+          <p>공공데이터 수집, 정규화, RAG 청크 생성, ML feature 생성, 모델 학습·평가·배포 기록을 한 흐름으로 확인합니다.</p>
+        </div>
+        <button id="runMlTrain" class="primary" type="button">ML 재학습 실행</button>
+      </div>
+      <div id="pipelineLatestStatus" class="pipeline-status-grid"></div>
+      <div id="pipelineRunHistory" class="pipeline-run-history"></div>
+    </section>
+
+    <section class="pipeline-ops-panel" aria-label="데모 DB와 실사용 시뮬레이션">
+      <div class="panel-heading horizontal">
+        <div>
+          <p class="eyebrow">LOCAL DEMO DATABASE</p>
+          <h2>실제 데이터 저장과 분석 보고서 검수</h2>
+          <p>공모전 시연용 SQLite DB에 제품 지식, RAG 청크, 파이프라인 실행, 모델 평가, AI 검색, 분석 보고서를 저장하고 실제 업무 흐름처럼 검수합니다.</p>
+        </div>
+        <div class="button-row">
+          <button id="seedDemoDb" class="secondary" type="button">데모 DB 시드 생성</button>
+          <button id="runDemoSimulation" class="primary" type="button">실사용 시뮬레이션 실행</button>
+        </div>
+      </div>
+      <div id="demoDbStatus" class="pipeline-status-grid"></div>
+      <div id="demoSimulationReport" class="simulation-report"></div>
     </section>
   </div>
 </body>

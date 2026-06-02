@@ -1,0 +1,111 @@
+{
+  "items": [
+    {
+      "product_id": "pk-77be82e65e2f",
+      "company_name": "경남 배터리테크",
+      "product_name": "리튬이온 배터리팩",
+      "hs_code": "850760",
+      "target_market": "Germany / EU",
+      "product_family": "industrial battery pack",
+      "features": [
+        "battery",
+        "electronics",
+        "industrial"
+      ],
+      "certifications": [
+        "KC",
+        "UN38.3",
+        "IEC 62133"
+      ],
+      "materials": [
+        "NCM cell",
+        "BMS",
+        "aluminum case",
+        "cell holder"
+      ],
+      "buyer_requirements": [
+        "EU battery passport",
+        "carbon footprint",
+        "MSDS",
+        "DoC"
+      ],
+      "recall_keywords": [
+        "thermal runaway",
+        "short circuit",
+        "overheating",
+        "drop impact"
+      ],
+      "fto_keywords": [
+        "battery pack cooling",
+        "BMS balancing",
+        "thermal protection"
+      ],
+      "documents": [
+        {
+          "title": "UN38.3 시험성적서",
+          "source_url": "https://example.test/un38",
+          "document_type": "test_report",
+          "summary": "리튬이온 배터리팩 항공·해상 운송 안전 시험 근거",
+          "reliability": "high"
+        },
+        {
+          "title": "BOM 및 소재정보",
+          "source_url": "https://example.test/bom",
+          "document_type": "bom",
+          "summary": "셀, BMS, 케이스, 보호회로 구성 정보",
+          "reliability": "medium"
+        }
+      ],
+      "owner": "품질·인증팀",
+      "status": "active",
+      "notes": "",
+      "created_at": "2026-06-01T15:33:14.411556+00:00",
+      "updated_at": "2026-06-02T13:39:31.719785+00:00",
+      "version": 6
+    }
+  ],
+  "events": [
+    {
+      "event_type": "created",
+      "product_id": "pk-77be82e65e2f",
+      "version": 1,
+      "owner": "품질·인증팀",
+      "created_at": "2026-06-01T15:33:14.411556+00:00"
+    },
+    {
+      "event_type": "updated",
+      "product_id": "pk-77be82e65e2f",
+      "version": 2,
+      "owner": "품질·인증팀",
+      "created_at": "2026-06-01T15:33:23.715399+00:00"
+    },
+    {
+      "event_type": "updated",
+      "product_id": "pk-77be82e65e2f",
+      "version": 3,
+      "owner": "품질·인증팀",
+      "created_at": "2026-06-01T15:36:26.733248+00:00"
+    },
+    {
+      "event_type": "updated",
+      "product_id": "pk-77be82e65e2f",
+      "version": 4,
+      "owner": "품질·인증팀",
+      "created_at": "2026-06-01T15:37:18.495291+00:00"
+    },
+    {
+      "event_type": "updated",
+      "product_id": "pk-77be82e65e2f",
+      "version": 5,
+      "owner": "품질·인증팀",
+      "created_at": "2026-06-01T15:40:32.273030+00:00"
+    },
+    {
+      "event_type": "updated",
+      "product_id": "pk-77be82e65e2f",
+      "version": 6,
+      "owner": "품질·인증팀",
+      "created_at": "2026-06-02T13:39:31.719785+00:00"
+    }
+  ]
+}
