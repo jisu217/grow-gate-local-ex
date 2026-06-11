@@ -1,0 +1,115 @@
+.kpiRow {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 15px;
+  margin-bottom: 18px;
+}
+
+.kpi {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: 20px;
+  position: relative; 
+  min-height: 176px;
+}
+
+.step {
+  position: absolute;
+  top: 16px;
+  right: 18px;
+  font-family: var(--en);
+  font-weight: 800;
+  font-size: 12px;
+  color: var(--blue-line); 
+}
+
+.scoreHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.scoreNum {
+  font-size: 40px;
+}
+.scoreNum span {
+  font-size: 16px;
+  color: var(--slate-2);
+  font-weight: 700;
+}
+
+.bigValue {}
+.unit {
+  font-size: 16px;
+  color: var(--slate-2);
+  font-weight: 700;
+}
+
+.srcRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-top: 12px;
+}
+
+.src {
+  font-family: var(--en);
+  font-size: 10px;
+  font-weight: 600;
+  color: var(--slate);
+  background: #f5f7fc;
+  border: 1px solid var(--line);
+  padding: 3px 7px;
+  border-radius: 7px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.src::before {
+  content: '';
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--green); 
+}
+
+.rulePills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+.road {
+  display: flex;
+  gap: 6px;
+  margin-top: 14px;
+}
+.seg {
+  flex: 1;
+  text-align: center;
+}
+.d {
+  font-family: var(--en);
+  font-weight: 800;
+  font-size: 16px;
+  color: var(--navy);
+}
+.l {
+  font-size: 11px;
+  color: var(--slate-2);
+  margin-top: 2px;
+}
+.bar {
+  height: 4px;
+  border-radius: 3px;
+  margin-top: 7px;
+}
+
+@media (max-width: 1100px) {
+  .kpiRow { grid-template-columns: repeat(2, 1fr); }
+}
+@media (max-width: 760px) {
+  .kpiRow { grid-template-columns: 1fr; }
+}

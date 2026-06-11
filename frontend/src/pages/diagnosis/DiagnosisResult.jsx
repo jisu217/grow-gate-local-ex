@@ -1,0 +1,129 @@
+import { useState, useRef, useEffect } from 'react'
+import { useParams } from 'react-router-dom'
+
+import Sidebar from '../../components/layout/Sidebar.jsx'
+import Topbar  from '../../components/layout/Topbar.jsx'
+import KpiRow  from '../../components/layout/KpiRow.jsx'
+import Pager   from '../../components/ui/Pager.jsx'
+import StatusMessage from '../../components/ui/StatusMessage.jsx'
+
+import S00Overview   from '../../components/diagnosis/S00Overview.jsx'
+import S01Input      from '../../components/diagnosis/S01Input.jsx'
+import S02Connectors from '../../components/diagnosis/S02Connectors.jsx'
+import S03PredLab    from '../../components/diagnosis/S03PredLab.jsx'
+import S04Market     from '../../components/diagnosis/S04Market.jsx'
+import S05RegMatrix  from '../../components/diagnosis/S05RegMatrix.jsx'
+import S06Recall     from '../../components/diagnosis/S06Recall.jsx'
+import S07FtoSupport from '../../components/diagnosis/S07FtoSupport.jsx'
+import S08ExecBoard  from '../../components/diagnosis/S08ExecBoard.jsx'
+import S09Report     from '../../components/diagnosis/S09Report.jsx'
+import S10Sources    from '../../components/diagnosis/S10Sources.jsx'
+
+import { DIAGNOSIS_STEPS } from '../../mock/diagnosisSteps.js'
+import { getDiagnosisResult } from '../../services/diagnosisService.js'
+
+export default function DiagnosisResult() {
+  const { id } = useParams()
+
+  const [result, setResult]       = useState(null)
+  const [pageState, setPageState] = useState('loading')
+  const [currentStep, setCurrentStep] = useState(0)
+  const [isCollapsed, setIsCollapsed] = useState(false)
+
+  const scrollRef = useRef(null)
+
+  useEffect(() => {
+    setPageState('loading')
+    getDiagnosisResult(id)
+      .then((data) => { setResult(data); setPageState('ok') })
+      .catch(() => setPageState('error'))
+  }, [id])
+
+  const go = (i) => {
+    if (i < 0 || i >= DIAGNOSIS_STEPS.length) return
+    setCurrentStep(i)
+    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  // 키보드 방향키 내비게이션
+  useEffect(() => {
+    const handleKey = (e) => {
+      if (e.key === 'ArrowLeft')  go(currentStep - 1)
+      if (e.key === 'ArrowRight') go(currentStep + 1)
+    }
+    window.addEventListener('keydown', handleKey)
+    return () => window.removeEventListener('keydown', handleKey)
+  }, [currentStep])
+
+  // 스텝 → 컴포넌트 매핑
+  const renderStage = (stages) => {
+    const key = currentStep
+    switch (currentStep) {
+      case 0:  return <S00Overview   key={key} data={stages.s00} />
+      case 1:  return <S01Input      key={key} data={stages.s01} />
+      case 2:  return <S02Connectors key={key} data={stages.s02} />
+      case 3:  return <S03PredLab    key={key} predictions={stages.s03.predictions} features={stages.s03.features} />
+      case 4:  return <S04Market     key={key} markets={stages.s04} />
+      case 5:  return <S05RegMatrix  key={key} regulations={stages.s05} />
+      case 6:  return <S06Recall     key={key} recalls={stages.s06} />
+      case 7:  return <S07FtoSupport key={key} patents={stages.s07.patents} supports={stages.s07.supports} />
+      case 8:  return <S08ExecBoard  key={key} execData={stages.s08} />
+      case 9:  return <S09Report     key={key} scoreBars={stages.s09} />
+      case 10: return <S10Sources    key={key} pipes={stages.s10} />
+      default: return null
+    }
+  }
+
+  if (pageState === 'loading') return (
+    <div className="app">
+      <div className="content">
+        <div className="scroll">
+          <StatusMessage type="loading" message="공공데이터와 제품 지식을 분석 중입니다." />
+        </div>
+      </div>
+    </div>
+  )
+
+  if (pageState === 'error') return (
+    <div className="app">
+      <div className="content">
+        <div className="scroll">
+          <StatusMessage type="error" message="진단 결과를 불러오지 못했습니다. 잠시 후 다시 시도해주세요." />
+        </div>
+      </div>
+    </div>
+  )
+
+  return (
+    <div className={`app ${isCollapsed ? 'collapsed' : ''}`}>
+
+      <Sidebar
+        steps={DIAGNOSIS_STEPS}
+        currentStep={currentStep}
+        session={result.session}
+        isCollapsed={isCollapsed}
+        onToggle={() => setIsCollapsed((prev) => !prev)}
+        onStepClick={go}
+        onBoardClick={() => go(8)}
+      />
+
+      <div className="content">
+        <Topbar currentStepName={DIAGNOSIS_STEPS[currentStep].nm} />
+
+        <div className="scroll" ref={scrollRef}>
+          <KpiRow kpiData={result.kpiData} />
+
+          {renderStage(result.stages)}
+
+          <Pager
+            currentStep={currentStep}
+            totalSteps={DIAGNOSIS_STEPS.length}
+            steps={DIAGNOSIS_STEPS}
+            onPrev={() => go(currentStep - 1)}
+            onNext={() => go(currentStep + 1)}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
