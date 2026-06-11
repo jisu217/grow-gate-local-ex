@@ -1,9 +1,0 @@
-.wrap { max-width: 800px; margin: 0 auto; padding: 40px 28px; }
-.back { font-family: var(--kr); font-size: 14px; color: var(--blue); background: none; border: none; cursor: pointer; margin-bottom: 20px; }
-.title { font-family: var(--en); font-size: 26px; font-weight: 800; color: var(--navy); }
-.sub { font-size: 13px; color: var(--slate-2); margin-top: 4px; margin-bottom: 28px; }
-.section { margin-bottom: 28px; }
-.sectionTitle { font-family: var(--en); font-size: 11px; font-weight: 700; letter-spacing: .07em; color: var(--slate-2); text-transform: uppercase; margin-bottom: 12px; }
-.item { display: flex; justify-content: space-between; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 8px; }
-.itemTitle { font-size: 14px; font-weight: 600; color: var(--ink); }
-.itemDate { font-family: var(--en); font-size: 12px; color: var(--slate-2); }
