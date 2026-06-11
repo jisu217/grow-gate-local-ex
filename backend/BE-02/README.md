@@ -24,7 +24,7 @@ export JWT_SECRET=your_jwt_secret_base64_encoded
 BE-02/
 ├── build.gradle
 ├── settings.gradle
-├── .env.example                              ← 환경변수 템플릿 (커밋 OK)
+├── .env.example                             
 └── src/main/java/com/growgate/
     ├── GrowGateApplication.java          (@EnableAsync)
     │
@@ -132,7 +132,7 @@ BE-02/
 | Knowledge Snapshot | productId 기반 진단 시 자동 생성 → JSON(TEXT) 저장, knowledgeSnapshotId 포함 |
 | Audit Log | changedFields + **previousValue** + **newValue** + **reason** 저장 |
 | Audit Tracking | PATCH 요청 시 old/new 비교 → 변경 필드 + 값 함께 저장 |
-| Knowledge Status | 만료/만료임박/검토필요/완료/미완성 자동 계산 |
+| Knowledge Status | 만료, 만료임박, 검토필요, 완료, 미완성 자동 계산 |
 | Diagnosis Result | diagnosisScore + riskItems + actionRoadmap + evidenceSources 반환 |
 | CORS | localhost:3000, 5173, 5174 허용 |
 | 비밀키 | 환경변수 DB_PASSWORD, JWT_SECRET 로 관리 (하드코딩 금지) |
