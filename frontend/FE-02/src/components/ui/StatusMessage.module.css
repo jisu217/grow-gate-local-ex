@@ -1,0 +1,17 @@
+.wrap {
+  border: 1.5px solid;
+  border-radius: 14px;
+  padding: 28px 24px;
+  text-align: center;
+  margin: 24px 0;
+}
+.msg {
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.7;
+}
+
+.empty      { background: var(--bg);        border-color: var(--line);      color: var(--slate-2); }
+.loading    { background: var(--blue-soft); border-color: var(--blue-line); color: var(--blue);    }
+.error      { background: #fff8ec;          border-color: #f5d98c;          color: var(--amber);   }
+.permission { background: #fbe0dd;          border-color: #f5bcb5;          color: var(--red);     }
