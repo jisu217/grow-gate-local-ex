@@ -1,4 +1,6 @@
-### GrowGate Frontend
+# GrowGate Frontend
+
+---
 
 ### Getting Started
 ### 1. 요구 사항
