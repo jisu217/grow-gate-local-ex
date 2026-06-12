@@ -1,0 +1,29 @@
+/* 전체 화면 중앙 정렬 래퍼 */
+.wrap { min-height: 100vh; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 24px; }
+/* 인증 카드 컨테이너 */
+.card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); padding: 40px; width: 100%; max-width: 420px; }
+/* 브랜드 로고 */
+.brand { font-family: var(--en); font-weight: 800; font-size: 18px; color: var(--navy); margin-bottom: 20px; }
+.ex { color: var(--blue); }
+/* 페이지 타이틀 */
+.title { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 20px; }
+/* 부제 */
+.sub { font-size: 14px; color: var(--slate); margin-bottom: 20px; }
+/* 입력 필드 래퍼 */
+.field { margin-bottom: 16px; }
+/* 입력 레이블 */
+.label { font-size: 13px; font-weight: 600; color: var(--ink); display: block; margin-bottom: 6px; }
+/* 텍스트 입력 */
+.input { width: 100%; font-family: var(--kr); font-size: 14px; background: #f9fafc; border: 1.5px solid var(--line); border-radius: 11px; padding: 11px 14px; outline: none; transition: .15s; }
+.input:focus { border-color: var(--blue); background: #fff; }
+/* 제출 버튼 */
+.btn { display: block; width: 100%; margin-top: 24px; background: var(--blue); color: #fff; font-family: var(--kr); font-weight: 700; font-size: 15px; border: none; padding: 14px; border-radius: 12px; cursor: pointer; box-shadow: 0 8px 20px rgba(47,107,255,.3); }
+/* 하단 보조 링크 */
+.links { text-align: center; margin-top: 16px; font-size: 13px; color: var(--slate); }
+.links a { color: var(--blue); text-decoration: none; font-weight: 600; }
+
+/* 회원가입 유형 선택 버튼 그룹 */
+.typeRow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 8px; }
+/* 유형 선택 버튼 */
+.typeBtn { background: var(--card); border: 1.5px solid var(--line); border-radius: 14px; padding: 24px 16px; font-family: var(--kr); font-size: 15px; font-weight: 600; color: var(--ink); cursor: pointer; transition: .15s; }
+.typeBtn:hover { border-color: var(--blue); color: var(--blue); background: var(--blue-soft); }
