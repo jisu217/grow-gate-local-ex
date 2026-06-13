@@ -1,5 +1,6 @@
 package com.growgate.user.service;
 
+// 회원 정보 조회·수정
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;
 import com.growgate.user.dto.UpdateUserRequest;

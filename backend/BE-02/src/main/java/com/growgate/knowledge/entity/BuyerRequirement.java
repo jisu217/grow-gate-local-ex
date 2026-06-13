@@ -1,5 +1,6 @@
 package com.growgate.knowledge.entity;
 
+// 바이어 요구사항 엔티티
 import com.growgate.product.entity.Product;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

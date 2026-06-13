@@ -1,5 +1,6 @@
 package com.growgate.auth.dto;
 
+// 회원가입 응답 DTO
 import lombok.Builder;
 import lombok.Getter;
 

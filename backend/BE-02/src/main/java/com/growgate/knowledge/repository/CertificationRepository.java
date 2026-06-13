@@ -1,5 +1,6 @@
 package com.growgate.knowledge.repository;
 
+// 인증서 DB 조회
 import com.growgate.knowledge.entity.Certification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

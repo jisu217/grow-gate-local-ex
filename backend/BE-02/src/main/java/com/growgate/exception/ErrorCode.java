@@ -1,5 +1,6 @@
 package com.growgate.exception;
 
+// 에러 코드 및 HTTP 상태 정의
 import org.springframework.http.HttpStatus;
 
 public enum ErrorCode {

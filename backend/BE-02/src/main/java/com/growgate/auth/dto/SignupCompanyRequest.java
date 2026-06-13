@@ -1,5 +1,6 @@
 package com.growgate.auth.dto;
 
+// 기업 회원가입 요청 DTO
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;

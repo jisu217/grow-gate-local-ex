@@ -1,5 +1,6 @@
 package com.growgate.exception;
 
+// 비즈니스 로직 예외
 public class BusinessException extends RuntimeException {
 
     private final ErrorCode errorCode;

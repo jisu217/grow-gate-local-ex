@@ -1,5 +1,6 @@
 package com.growgate.exception;
 
+// 전역 예외 핸들러
 import com.growgate.common.dto.ErrorResponse;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;

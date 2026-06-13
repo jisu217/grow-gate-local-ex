@@ -1,5 +1,6 @@
 package com.growgate.knowledge.controller;
 
+// 제품 지식 API 엔드포인트
 import com.growgate.knowledge.dto.CreateKnowledgeRequest;
 import com.growgate.knowledge.dto.CreateKnowledgeResponse;
 import com.growgate.knowledge.dto.DeleteKnowledgeResponse;

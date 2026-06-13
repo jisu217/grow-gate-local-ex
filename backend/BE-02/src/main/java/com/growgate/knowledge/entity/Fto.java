@@ -1,5 +1,6 @@
 package com.growgate.knowledge.entity;
 
+// FTO(특허 자유 실시) 엔티티
 import com.growgate.knowledge.enums.RiskLevel;
 import com.growgate.product.entity.Product;
 import jakarta.persistence.Column;

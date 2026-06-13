@@ -1,5 +1,6 @@
 package com.growgate.diagnosis.entity;
 
+// 진단 실행 엔티티
 import com.growgate.company.entity.Company;
 import com.growgate.diagnosis.enums.DiagnosisStatus;
 import com.growgate.product.entity.Product;

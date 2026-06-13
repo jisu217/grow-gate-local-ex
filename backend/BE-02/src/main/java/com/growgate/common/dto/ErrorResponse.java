@@ -1,5 +1,6 @@
 package com.growgate.common.dto;
 
+// 공통 에러 응답 포맷
 public class ErrorResponse {
 
     private final ErrorDetail error;

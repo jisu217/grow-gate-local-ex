@@ -1,5 +1,6 @@
 package com.growgate.diagnosis.dto;
 
+// 진단 실행 요청 DTO
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;

@@ -1,5 +1,6 @@
 package com.growgate.knowledge.entity;
 
+// 인증서 엔티티
 import com.growgate.product.entity.Product;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

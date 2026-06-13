@@ -1,5 +1,6 @@
 package com.growgate.knowledge.entity;
 
+// 지식 변경 감사 로그 엔티티
 import com.growgate.common.converter.StringListConverter;
 import com.growgate.knowledge.enums.ChangeType;
 import com.growgate.product.entity.Product;

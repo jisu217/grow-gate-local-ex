@@ -1,5 +1,6 @@
 package com.growgate.diagnosis.repository;
 
+// 진단 DB 조회
 import com.growgate.diagnosis.entity.DiagnosisRun;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

@@ -1,5 +1,6 @@
 package com.growgate.knowledge.dto;
 
+// 제품 지식 생성 요청 DTO
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
