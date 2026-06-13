@@ -13,6 +13,7 @@ const SOURCES = [
   ]},
 ]
 
+// 진단 근거 출처 페이지 컴포넌트
 export default function DiagnosisSources() {
 
   const { id } = useParams()

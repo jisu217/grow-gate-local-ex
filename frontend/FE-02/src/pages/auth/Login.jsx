@@ -2,10 +2,13 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import styles from './Auth.module.css'
 
+// 로그인 페이지 컴포넌트
 export default function Login() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
+  // 입력값 변경 처리
   const handleChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
+  // 로그인 제출 처리
   const handleSubmit = () => navigate('/diagnosis')
 
   return (

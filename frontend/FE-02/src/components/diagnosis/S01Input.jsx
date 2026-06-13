@@ -1,3 +1,4 @@
+// S01 제품 입력 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 import MemoBox from '../ui/MemoBox.jsx'
 

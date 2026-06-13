@@ -1,3 +1,4 @@
+// 앱 전체 라우터 진입점
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import AppLayout      from './components/layout/AppLayout.jsx'
 import ProtectedRoute from './components/route/ProtectedRoute.jsx'

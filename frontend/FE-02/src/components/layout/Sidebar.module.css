@@ -1,15 +1,19 @@
+/* 진단 단계 사이드바 스타일 */
+
+/* 사이드바 컨테이너 */
 .sidebar {
   background: var(--card);
   border-right: 1px solid var(--line);
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
   padding: 18px 14px;
-  position: sticky;       
+  position: sticky;
   top: 0;
-  height: 100vh;          
+  height: 100vh;
   overflow-y: auto;
 }
 
+/* 상단 브랜드·토글 영역 */
 .sbTop {
   display: flex;
   align-items: center;
@@ -18,6 +22,7 @@
   padding: 4px 6px 16px;
 }
 
+/* 브랜드 전체 이름 */
 .sbBrand {
   font-family: var(--en);
   font-weight: 800;
@@ -27,8 +32,10 @@
   overflow: hidden;
 }
 
+/* 강조 색 텍스트 */
 .ex { color: var(--blue); }
 
+/* 접혔을 때 짧은 브랜드 */
 .sbBrandMini {
   font-family: var(--en);
   font-weight: 800;
@@ -36,6 +43,7 @@
   color: var(--blue);
 }
 
+/* 접기/펴기 토글 버튼 */
 .sbToggle {
   flex: none;
   width: 30px;
@@ -56,6 +64,7 @@
   color: var(--blue);
 }
 
+/* 현재 세션 정보 카드 */
 .sbCur {
   background: #f7f9fd;
   border: 1px solid var(--line);
@@ -86,11 +95,13 @@
   text-overflow: ellipsis;
 }
 
+/* 접힌 상태 레이아웃 */
 .collapsed {
   padding: 10px 0;
   text-align: center;
 }
 
+/* 섹션 구분 레이블 */
 .sbSection {
   font-family: var(--en);
   font-size: 10px;
@@ -102,6 +113,7 @@
   margin-top: 4px;
 }
 
+/* 단계 내비게이션 항목 */
 .navItem {
   display: flex;
   align-items: center;
@@ -111,11 +123,14 @@
   cursor: pointer;
   transition: 0.13s;
   margin-bottom: 2px;
-  position: relative;    
+  position: relative;
 }
 .navItem:hover { background: #f5f7fc; }
-.active        { background: var(--blue-soft); }
 
+/* 현재 활성 항목 */
+.active { background: var(--blue-soft); }
+
+/* 단계 번호 */
 .no {
   font-family: var(--en);
   font-weight: 700;
@@ -125,23 +140,32 @@
   flex: none;
   text-align: center;
 }
+
+/* 활성 단계 번호 색 */
 .noActive { color: var(--blue); }
+
+/* 완료 단계 번호 색 */
 .noDone   { color: var(--green); }
 
+/* 단계 이름 */
 .nm {
   font-size: 14px;
   font-weight: 600;
   color: var(--slate);
   white-space: nowrap;
 }
+
+/* 활성 단계 이름 색 */
 .nmActive { color: var(--blue); }
 
+/* 완료 체크 표시 */
 .ck {
   margin-left: auto;
   color: var(--green);
   font-size: 12px;
 }
 
+/* 실행 보드 바로가기 버튼 */
 .sbBoard {
   margin-top: 12px;
   width: 100%;
@@ -166,7 +190,7 @@
 .isCollapsed .sbBrandFull { display: none; }
 .isCollapsed .sbBrandMini { display: inline; }
 
-/* 모바일 — 사이드바 자동 접힘 (JS 상태 무관) */
+/* 모바일: 사이드바 자동 접힘 */
 @media (max-width: 760px) {
   .sbBrandFull              { display: none !important; }
   .sbBrandMini              { display: inline !important; }

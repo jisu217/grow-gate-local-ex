@@ -1,3 +1,4 @@
+// S02 공공데이터 연결 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 
 export default function S02Connectors({ data }) {

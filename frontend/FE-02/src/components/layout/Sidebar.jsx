@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import styles from './Sidebar.module.css'
 
+// 진단 단계 사이드바 컴포넌트
 export default function Sidebar({
   steps,
   currentStep,

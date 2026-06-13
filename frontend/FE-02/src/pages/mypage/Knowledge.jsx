@@ -20,6 +20,7 @@ const SOURCE_BASIS = {
   internal: { label: '내부 메모', cls: 'memo' },
 }
 
+// 제품 지식 목록 페이지 컴포넌트
 export default function Knowledge() {
   const navigate = useNavigate()
   const { can } = usePermission()

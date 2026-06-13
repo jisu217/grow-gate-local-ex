@@ -1,4 +1,4 @@
-// 세션 정보
+// 진단 결과 목업 데이터
 export const CURRENT_SESSION = {
   companyName: '경남 배터리테크',
   productName: '리튬이온 배터리팩',

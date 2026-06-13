@@ -1,4 +1,4 @@
-// 역할 계층: owner > admin > editor > viewer — 프론트 UX 숨김 전용
+// 역할별 권한 정의
 export const PERMISSIONS = {
   'knowledge:create':   ['owner', 'admin'],
   'knowledge:edit':     ['owner', 'admin', 'editor'],

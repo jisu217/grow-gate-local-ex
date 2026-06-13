@@ -1,3 +1,4 @@
+// S08 실행 보드 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 
 export default function S08ExecBoard({ execData }) {

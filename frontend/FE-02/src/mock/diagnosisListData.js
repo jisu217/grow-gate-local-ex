@@ -1,3 +1,4 @@
+// 진단 이력 목록 목업 데이터
 export const DIAGNOSIS_LIST = [
   {
     id: 'diag-001',

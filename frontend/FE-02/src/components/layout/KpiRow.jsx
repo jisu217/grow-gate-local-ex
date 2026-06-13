@@ -2,6 +2,7 @@ import DonutChart from '../ui/DonutChart.jsx'
 import Pill from '../ui/Pill.jsx'
 import styles from './KpiRow.module.css'
 
+// KPI 지표 행 컴포넌트
 export default function KpiRow({ kpiData }) {
   return (
 

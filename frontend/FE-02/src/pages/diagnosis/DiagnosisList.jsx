@@ -11,6 +11,7 @@ const STATUS_MAP = {
   failed:  { label: '실패',    cls: styles.failed  },
 }
 
+// 진단 이력 목록 페이지 컴포넌트
 export default function DiagnosisList() {
   const navigate = useNavigate()
   const [list, setList] = useState([])

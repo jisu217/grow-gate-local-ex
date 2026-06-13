@@ -1,3 +1,4 @@
+// S03 ML 예측 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 
 export default function S03PredLab({ predictions, features }) {

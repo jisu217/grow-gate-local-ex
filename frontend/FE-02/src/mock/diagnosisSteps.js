@@ -1,3 +1,4 @@
+// 진단 단계 정의 목업 데이터
 export const DIAGNOSIS_STEPS = [
   { no: '00', nm: '진단 개요',   aux: 'Overview'   },
   { no: '01', nm: '제품 입력',   aux: 'Input'       },

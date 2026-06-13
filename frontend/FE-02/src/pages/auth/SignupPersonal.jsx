@@ -2,9 +2,11 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from './Auth.module.css'
 
+// 개인 회원가입 페이지 컴포넌트
 export default function SignupPersonal() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ name:'', userId:'', password:'' })
+  // 입력값 변경 처리
   const handleChange = (e) => setForm(p => ({...p, [e.target.name]: e.target.value}))
 
   const FIELDS = [

@@ -1,3 +1,4 @@
+// S05 규제 매트릭스 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 import Pill from '../ui/Pill.jsx'
 

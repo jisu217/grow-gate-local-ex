@@ -1,3 +1,4 @@
+/* 인증 페이지 공통 스타일 */
 /* 전체 화면 중앙 정렬 래퍼 */
 .wrap { min-height: 100vh; background: var(--bg); display: flex; align-items: center; justify-content: center; padding: 24px; }
 /* 인증 카드 컨테이너 */

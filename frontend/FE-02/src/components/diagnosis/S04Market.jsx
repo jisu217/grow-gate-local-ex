@@ -1,3 +1,4 @@
+// S04 시장성 분석 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 import MemoBox from '../ui/MemoBox.jsx'
 

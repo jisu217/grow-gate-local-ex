@@ -1,3 +1,4 @@
+// 단계 이동 페이저 컴포넌트
 export default function Pager({ currentStep, totalSteps, steps, onPrev, onNext }) {
   const isFirst = currentStep === 0
   const isLast  = currentStep === totalSteps - 1

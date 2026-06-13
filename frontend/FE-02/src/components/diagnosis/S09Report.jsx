@@ -1,3 +1,4 @@
+// S09 최종 리포트 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 
 export default function S09Report({ scoreBars }) {

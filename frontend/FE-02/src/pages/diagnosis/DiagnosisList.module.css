@@ -1,25 +1,36 @@
+/* 진단 이력 목록 스타일 */
+
+/* 페이지 래퍼 */
 .wrap {
   max-width: 900px;
   margin: 0 auto;
   padding: 40px 28px;
 }
+
+/* 타이틀·버튼 헤더 행 */
 .header {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   margin-bottom: 28px;
 }
+
+/* 페이지 타이틀 */
 .title {
   font-family: var(--en);
   font-size: 28px;
   font-weight: 800;
   color: var(--navy);
 }
+
+/* 부제 */
 .sub {
   font-size: 14px;
   color: var(--slate);
   margin-top: 6px;
 }
+
+/* 새 진단 시작 버튼 */
 .newBtn {
   background: var(--blue);
   color: #fff;
@@ -35,8 +46,10 @@
 }
 .newBtn:hover { transform: translateY(-1px); }
 
+/* 진단 카드 목록 */
 .list { display: flex; flex-direction: column; gap: 12px; }
 
+/* 개별 진단 카드 */
 .card {
   background: var(--card);
   border: 1px solid var(--line);
@@ -50,16 +63,23 @@
 }
 .card:hover { border-color: var(--blue); }
 
+/* 카드 상단 행 */
 .cardTop {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
 }
 
+/* 제품명 */
 .productName { font-size: 16px; font-weight: 700; color: var(--navy); }
+
+/* HS코드·시장·일자 메타 */
 .meta { font-size: 12.5px; color: var(--slate); margin-top: 4px; }
 
+/* 카드 우측 점수·뱃지 영역 */
 .cardRight { display: flex; align-items: center; gap: 14px; }
+
+/* 진단 점수 */
 .score {
   font-family: var(--en);
   font-weight: 800;
@@ -68,6 +88,7 @@
 }
 .score span { font-size: 13px; color: var(--slate-2); }
 
+/* 요약 수치 4단 행 */
 .summaryRow {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -76,6 +97,8 @@
   padding-top: 16px;
   border-top: 1px solid var(--line);
 }
+
+/* 요약 수치 항목 */
 .sumItem {
   padding: 0 16px;
   border-right: 1px solid var(--line);
@@ -83,6 +106,7 @@
 .sumItem:first-child { padding-left: 0; }
 .sumItem:last-child  { border-right: none; }
 
+/* 수치 레이블 */
 .sumLabel {
   font-size: 11px;
   font-weight: 700;
@@ -91,6 +115,8 @@
   letter-spacing: .05em;
   margin-bottom: 5px;
 }
+
+/* 수치 값 */
 .sumVal {
   font-family: var(--en);
   font-size: 26px;
@@ -99,12 +125,16 @@
   letter-spacing: -.02em;
   line-height: 1;
 }
+
+/* 수치 단위 */
 .sumUnit {
   font-size: 13px;
   color: var(--slate-2);
   font-weight: 600;
   margin-left: 2px;
 }
+
+/* 수치 설명 */
 .sumDesc {
   font-size: 11.5px;
   color: var(--slate);
@@ -112,6 +142,7 @@
   line-height: 1.4;
 }
 
+/* 분석 중·실패 상태 텍스트 */
 .summaryPending,
 .summaryFailed {
   margin-top: 14px;
@@ -124,6 +155,7 @@
 .summaryPending { color: var(--amber); }
 .summaryFailed  { color: var(--red); }
 
+/* 상태 뱃지 */
 .badge {
   font-family: var(--en);
   font-size: 11px;
@@ -131,6 +163,10 @@
   padding: 4px 12px;
   border-radius: 999px;
 }
+
+/* 완료 상태 */
 .done    { color: var(--green); background: #e4f5ec; }
+/* 분석 중 상태 */
 .pending { color: var(--amber); background: #fbeecb; }
+/* 실패 상태 */
 .failed  { color: var(--red);   background: #fbe0dd; }
