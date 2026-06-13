@@ -1,21 +1,23 @@
 # GROW-GATE Local EX — Frontend
 
+---
+
 ## Table of Contents
 
-1. [Key Screens](#01-key-screens)
-2. [Tech Stack](#02-tech-stack)
-3. [Getting Started](#03-getting-started)
-4. [Project Structure](#04-project-structure)
-5. [Routing](#05-routing)
-6. [Permission Structure](#06-permission-structure)
-7. [Development Guidelines](#07-development-guidelines)
-8. [Backend Integration Guide](#08-backend-integration-guide)
-9. [Required Backend APIs](#09-required-backend-apis)
+1. [Key Screens](#1-key-screens)
+2. [Tech Stack](#2-tech-stack)
+3. [Getting Started](#3-getting-started)
+4. [Project Structure](#4-project-structure)
+5. [Routing](#5-routing)
+6. [Permission Structure](#6-permission-structure)
+7. [Development Guidelines](#7-development-guidelines)
+8. [Backend Integration Guide](#8-backend-integration-guide)
+9. [Required Backend APIs](#9-required-backend-apis)
 10. [TODO](#10-todo)
 
 ---
 
-## 01. Key Screens
+## 1. Key Screens
 
 | 홈 | AI 진단 결과 |
 | :---: | :---: |
@@ -23,7 +25,7 @@
 
 ---
 
-## 02. Tech Stack
+## 2. Tech Stack
 
 | 항목 | 내용 |
 | :--- | :--- |
@@ -34,7 +36,7 @@
 
 ---
 
-## 03. Getting Started
+## 3. Getting Started
 
 ### 요구 사항
 
@@ -65,7 +67,7 @@ cp .env.example .env
 
 ---
 
-## 04. Project Structure
+## 4. Project Structure
 
 ```
 src/
@@ -102,7 +104,7 @@ src/
 
 ---
 
-## 05. Routing
+## 5. Routing
 
 | 경로 | 페이지 | 접근 조건 |
 | :--- | :--- | :--- |
@@ -123,7 +125,7 @@ src/
 
 ---
 
-## 06. Permission Structure
+## 6. Permission Structure
 
 역할 계층: `owner` > `admin` > `editor` > `viewer`
 
@@ -143,7 +145,7 @@ if (can('knowledge:edit')) { ... }
 
 ---
 
-## 07. Development Guidelines
+## 7. Development Guidelines
 
 ### 스타일
 
@@ -167,7 +169,7 @@ if (can('knowledge:edit')) { ... }
 
 ---
 
-## 08. Backend Integration Guide
+## 8. Backend Integration Guide
 
 현재 `services/`는 `mock/` 데이터를 반환. 연동 시 **`services/` 내부 함수만 교체**하면 컴포넌트 변경 불필요.
 
@@ -197,7 +199,7 @@ export async function getProducts() {
 
 ---
 
-## 09. Required Backend APIs
+## 9. Required Backend APIs
 
 > 현재 모두 mock 대체 상태. 백엔드 연동 시 아래 엔드포인트 구현 필요.
 
@@ -258,3 +260,5 @@ export async function getProducts() {
 - [ ] 에러 경계(ErrorBoundary) 컴포넌트
 - [ ] 접근 토큰 만료 시 자동 재발급 처리
 - [ ] 화면 스크린샷 / 데모 영상 추가
+
+---
