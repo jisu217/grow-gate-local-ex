@@ -258,3 +258,5 @@ export async function getProducts() {
 - [ ] 에러 경계(ErrorBoundary) 컴포넌트
 - [ ] 접근 토큰 만료 시 자동 재발급 처리
 - [ ] 화면 스크린샷 / 데모 영상 추가
+
+---
