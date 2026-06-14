@@ -1,5 +1,6 @@
 package com.growgate.diagnosis.dto;
 
+// 진단 결과 상세 조회 응답 DTO
 import lombok.Builder;
 import lombok.Getter;
 

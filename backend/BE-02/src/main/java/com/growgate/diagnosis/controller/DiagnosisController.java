@@ -1,5 +1,6 @@
 package com.growgate.diagnosis.controller;
 
+// 진단 API 엔드포인트
 import com.growgate.diagnosis.dto.CreateDiagnosisRequest;
 import com.growgate.diagnosis.dto.CreateDiagnosisResponse;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse;

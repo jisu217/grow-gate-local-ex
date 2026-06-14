@@ -1,5 +1,6 @@
 package com.growgate.knowledge.service;
 
+// 제품 지식 CRUD + 감사 로그
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;

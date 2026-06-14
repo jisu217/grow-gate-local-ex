@@ -1,5 +1,6 @@
 package com.growgate.user.entity;
 
+// 회원 엔티티
 import com.growgate.company.entity.Company;
 import com.growgate.user.enums.UserRole;
 import com.growgate.user.enums.UserType;

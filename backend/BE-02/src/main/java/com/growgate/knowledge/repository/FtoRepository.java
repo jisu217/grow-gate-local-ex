@@ -1,5 +1,6 @@
 package com.growgate.knowledge.repository;
 
+// FTO DB 조회
 import com.growgate.knowledge.entity.Fto;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

@@ -1,5 +1,6 @@
 package com.growgate.knowledge.dto;
 
+// 제품 지식 수정 요청 DTO
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 

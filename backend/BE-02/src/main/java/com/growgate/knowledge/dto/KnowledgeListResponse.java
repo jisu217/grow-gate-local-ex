@@ -1,5 +1,6 @@
 package com.growgate.knowledge.dto;
 
+// 제품 지식 목록 조회 응답 DTO
 import lombok.Builder;
 import lombok.Getter;
 

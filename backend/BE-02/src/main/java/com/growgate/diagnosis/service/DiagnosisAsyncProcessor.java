@@ -1,5 +1,6 @@
 package com.growgate.diagnosis.service;
 
+// 비동기 진단 실행 처리 (@Async)
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.diagnosis.entity.DiagnosisRun;
 import com.growgate.diagnosis.enums.DiagnosisStatus;

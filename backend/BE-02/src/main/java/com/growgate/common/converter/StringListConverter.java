@@ -1,5 +1,6 @@
 package com.growgate.common.converter;
 
+// List<String> ↔ JSON 문자열 JPA 변환기
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;

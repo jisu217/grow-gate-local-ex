@@ -1,5 +1,6 @@
 package com.growgate.knowledge.dto;
 
+// 감사 로그 조회 응답 DTO
 import lombok.Builder;
 import lombok.Getter;
 

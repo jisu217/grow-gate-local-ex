@@ -1,5 +1,6 @@
 package com.growgate.config;
 
+// CORS + JWT 필터 보안 설정
 import com.growgate.security.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;

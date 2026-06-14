@@ -1,5 +1,6 @@
 package com.growgate.product.repository;
 
+// 상품 DB 조회
 import com.growgate.product.entity.Product;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;

@@ -1,5 +1,6 @@
 package com.growgate.company.dto;
 
+// 내 회사 정보 조회 응답 DTO
 import lombok.Builder;
 import lombok.Getter;
 

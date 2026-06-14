@@ -1,5 +1,6 @@
 package com.growgate.auth.service;
 
+// 인증 로직 (JWT 발급, 비밀번호 검증)
 import com.growgate.auth.dto.LoginRequest;
 import com.growgate.auth.dto.LoginResponse;
 import com.growgate.auth.dto.SignupCompanyRequest;

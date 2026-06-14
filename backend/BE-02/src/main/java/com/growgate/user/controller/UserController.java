@@ -1,5 +1,6 @@
 package com.growgate.user.controller;
 
+// 내 정보 API 엔드포인트
 import com.growgate.user.dto.UpdateUserRequest;
 import com.growgate.user.dto.UpdateUserResponse;
 import com.growgate.user.dto.UserMeResponse;

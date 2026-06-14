@@ -1,5 +1,6 @@
 package com.growgate.diagnosis.service;
 
+// 진단 생성·조회
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.diagnosis.dto.CreateDiagnosisRequest;

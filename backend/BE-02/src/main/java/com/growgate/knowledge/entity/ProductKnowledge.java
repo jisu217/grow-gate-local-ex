@@ -1,5 +1,6 @@
 package com.growgate.knowledge.entity;
 
+// 제품 지식 통합 엔티티
 import com.growgate.knowledge.enums.TrustGrade;
 import com.growgate.product.entity.Product;
 import com.growgate.user.entity.User;

@@ -1,5 +1,6 @@
 package com.growgate.company.service;
 
+// 회사 정보 조회·수정
 import com.growgate.company.dto.CompanyMeResponse;
 import com.growgate.company.dto.UpdateCompanyRequest;
 import com.growgate.company.dto.UpdateCompanyResponse;

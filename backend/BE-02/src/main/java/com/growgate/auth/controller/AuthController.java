@@ -1,5 +1,6 @@
 package com.growgate.auth.controller;
 
+// 로그인·회원가입 API 엔드포인트
 import com.growgate.auth.dto.LoginRequest;
 import com.growgate.auth.dto.LoginResponse;
 import com.growgate.auth.dto.SignupCompanyRequest;

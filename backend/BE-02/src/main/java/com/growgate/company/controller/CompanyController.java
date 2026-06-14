@@ -1,5 +1,6 @@
 package com.growgate.company.controller;
 
+// 내 회사 정보 API 엔드포인트
 import com.growgate.company.dto.CompanyMeResponse;
 import com.growgate.company.dto.UpdateCompanyRequest;
 import com.growgate.company.dto.UpdateCompanyResponse;

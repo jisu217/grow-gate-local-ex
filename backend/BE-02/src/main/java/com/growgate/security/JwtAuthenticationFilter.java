@@ -1,5 +1,6 @@
 package com.growgate.security;
 
+// 요청마다 JWT 검증하는 필터
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;

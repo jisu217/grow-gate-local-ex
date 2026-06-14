@@ -1,5 +1,6 @@
 package com.growgate.knowledge.entity;
 
+// 지식 출처 엔티티
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;

@@ -1,5 +1,6 @@
 package com.growgate.security;
 
+// Spring Security 사용자 로드
 import com.growgate.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.userdetails.User;

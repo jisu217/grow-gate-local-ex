@@ -1,5 +1,6 @@
 package com.growgate.security;
 
+// JWT 토큰 생성·검증
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;

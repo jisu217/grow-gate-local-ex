@@ -1,5 +1,6 @@
 package com.growgate.product.entity;
 
+// 상품 엔티티
 import com.growgate.user.entity.User;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
