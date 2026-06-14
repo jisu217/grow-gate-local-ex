@@ -1,3 +1,4 @@
+// 제품 지식 목업 데이터
 export const PRODUCTS = [
   {
     id: 'prod-001', name: '리튬이온 배터리팩', category: '전기전자',

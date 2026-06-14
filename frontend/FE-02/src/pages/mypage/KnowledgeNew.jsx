@@ -4,16 +4,19 @@ import styles from './KnowledgeForm.module.css'
 
 const CATEGORIES = ['전기전자', '전자부품', '기계·장비', '화학·소재', '식품·의료', '기타']
 
+// 신규 제품 등록 페이지 컴포넌트
 export default function KnowledgeNew() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ productName: '', category: '', description: '' })
   const [error, setError] = useState('')
 
+  // 입력값 변경 처리
   const handleChange = (e) => {
     setError('')
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
   }
 
+  // 제품 등록 제출 처리
   const handleSubmit = () => {
     if (!form.productName.trim()) {
       setError('제품명은 필수 항목입니다. 입력해주세요.')

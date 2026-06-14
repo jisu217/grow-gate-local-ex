@@ -1,3 +1,4 @@
+// S06 리콜 위험 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 
 export default function S06Recall({ recalls }) {

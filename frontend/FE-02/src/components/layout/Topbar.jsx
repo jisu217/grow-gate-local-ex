@@ -1,3 +1,4 @@
+// 진단 결과 상단 바
 import styles from './Topbar.module.css'
 
 export default function Topbar({ currentStepName }) {

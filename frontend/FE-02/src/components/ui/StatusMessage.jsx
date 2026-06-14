@@ -1,3 +1,4 @@
+// 로딩·에러·빈 상태 메시지 UI
 import styles from './StatusMessage.module.css'
 
 const TYPE_CLASS = {

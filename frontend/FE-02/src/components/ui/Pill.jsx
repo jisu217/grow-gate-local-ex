@@ -1,3 +1,4 @@
+// 상태 뱃지 컴포넌트
 export default function Pill({ type, children, style }) {
   return (
 

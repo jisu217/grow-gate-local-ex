@@ -1,9 +1,12 @@
+/* 진단 결과 상단 바 스타일 */
+
+/* 상단 고정 바 */
 .topbar {
-  position: sticky;       
+  position: sticky;
   top: 0;
-  z-index: 20;            
+  z-index: 20;
   background: rgba(255, 255, 255, 0.85);
-  backdrop-filter: blur(8px); 
+  backdrop-filter: blur(8px);
   border-bottom: 1px solid var(--line);
   display: flex;
   align-items: center;
@@ -11,6 +14,7 @@
   padding: 14px 28px;
 }
 
+/* 현재 단계 경로 텍스트 */
 .crumb {
   font-size: 14px;
   color: var(--slate);
@@ -20,8 +24,9 @@
   font-weight: 600;
 }
 
+/* 검색 입력 영역 */
 .search {
-  margin-left: auto; 
+  margin-left: auto;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -43,6 +48,7 @@
 }
 .search input::placeholder { color: var(--slate-2); }
 
+/* 실시간 데이터 뱃지 */
 .live {
   display: flex;
   align-items: center;
@@ -58,6 +64,7 @@
   white-space: nowrap;
 }
 
+/* 실시간 표시 점 */
 .blip {
   width: 8px;
   height: 8px;
@@ -66,6 +73,7 @@
   animation: blip 1.8s infinite;
 }
 
+/* 모바일: 검색창 숨김 */
 @media (max-width: 760px) {
   .search { display: none; }
 }

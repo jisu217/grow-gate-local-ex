@@ -12,9 +12,11 @@ const FIELDS = [
   { key:'industry',    label:'업종',      placeholder:'업종' },
 ]
 
+// 기업 회원가입 페이지 컴포넌트
 export default function SignupCompany() {
   const navigate = useNavigate()
   const [form, setForm] = useState(Object.fromEntries(FIELDS.map(f => [f.key,''])))
+  // 입력값 변경 처리
   const handleChange = (e) => setForm(p => ({...p, [e.target.name]: e.target.value}))
 
   return (

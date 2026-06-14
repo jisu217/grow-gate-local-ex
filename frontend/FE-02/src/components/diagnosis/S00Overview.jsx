@@ -1,3 +1,4 @@
+// S00 진단 개요 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 import MemoBox from '../ui/MemoBox.jsx'
 

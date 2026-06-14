@@ -1,3 +1,6 @@
+/* 상태 메시지 스타일 */
+
+/* 상태 메시지 컨테이너 */
 .wrap {
   border: 1.5px solid;
   border-radius: 14px;
@@ -5,13 +8,19 @@
   text-align: center;
   margin: 24px 0;
 }
+
+/* 메시지 텍스트 */
 .msg {
   font-size: 14px;
   font-weight: 600;
   line-height: 1.7;
 }
 
+/* 빈 상태 */
 .empty      { background: var(--bg);        border-color: var(--line);      color: var(--slate-2); }
+/* 로딩 상태 */
 .loading    { background: var(--blue-soft); border-color: var(--blue-line); color: var(--blue);    }
+/* 에러 상태 */
 .error      { background: #fff8ec;          border-color: #f5d98c;          color: var(--amber);   }
+/* 권한 없음 상태 */
 .permission { background: #fbe0dd;          border-color: #f5bcb5;          color: var(--red);     }

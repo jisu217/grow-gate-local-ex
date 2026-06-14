@@ -1,10 +1,11 @@
+// 역할 기반 권한 확인 훅
 import { mockAuth } from '../mock/auth.js'
 import { PERMISSIONS } from '../mock/roles.js'
 
-// 연동 시 mockAuth.role → useAuth().role 교체
 export function usePermission() {
   const role = mockAuth.role
 
+  // 특정 액션 권한 확인
   const can = (action) => {
     const allowed = PERMISSIONS[action]
     if (!allowed) return false

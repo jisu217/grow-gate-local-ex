@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom'
 import styles from './Auth.module.css'
 
+// 회원가입 유형 선택 페이지 컴포넌트
 export default function Signup() {
   const navigate = useNavigate()
   return (

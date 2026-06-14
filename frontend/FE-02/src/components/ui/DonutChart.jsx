@@ -1,3 +1,4 @@
+// 도넛 차트 컴포넌트
 export default function DonutChart({ score = 83, size = 62 }) {
   const CIRCUMFERENCE = 97.4
 

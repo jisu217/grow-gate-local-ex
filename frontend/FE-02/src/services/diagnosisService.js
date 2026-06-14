@@ -1,3 +1,4 @@
+// 진단 서비스
 import { DIAGNOSIS_LIST } from '../mock/diagnosisListData.js'
 import {
   CURRENT_SESSION, KPI_DATA,
@@ -7,11 +8,12 @@ import {
   S08_EXEC, S09_SCORE_BARS, S10_PIPES,
 } from '../mock/diagnosisData.js'
 
-// 연동 시 함수 내부를 fetch로 교체
+// 진단 이력 목록 조회
 export async function getDiagnosisList() {
   return DIAGNOSIS_LIST
 }
 
+// 진단 결과 상세 조회
 export async function getDiagnosisResult(id) {
   return {
     session: CURRENT_SESSION,
@@ -32,6 +34,7 @@ export async function getDiagnosisResult(id) {
   }
 }
 
+// 새 진단 실행
 export async function runDiagnosis(payload) {
   return { id: `diag-${Date.now()}`, status: 'pending', ...payload }
 }

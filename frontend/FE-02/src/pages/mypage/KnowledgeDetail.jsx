@@ -13,6 +13,7 @@ const CERT_SOURCE = {
 
 const ALL_TABS = ['기본 정보', '인증서', 'FTO', '바이어 요구사항', '변경 이력']
 
+// 제품 지식 상세 페이지 컴포넌트
 export default function KnowledgeDetail() {
   const { productId } = useParams()
   const navigate = useNavigate()

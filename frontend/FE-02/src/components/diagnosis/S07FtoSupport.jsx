@@ -1,3 +1,4 @@
+// S07 FTO·지원사업 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 import MemoBox from '../ui/MemoBox.jsx'
 

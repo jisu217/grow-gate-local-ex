@@ -1,6 +1,12 @@
+/* 신규 진단 입력 스타일 */
+
+/* 페이지 전체 래퍼 */
 .wrap { min-height: 100vh; background: var(--bg); padding: 32px 24px; }
+
+/* 사이드 레일 + 폼 2단 레이아웃 */
 .layout { display: grid; grid-template-columns: 220px 1fr; gap: 24px; max-width: 960px; margin: 0 auto; }
 
+/* 진단 단계 레일 */
 .rail {
   background: var(--card);
   border: 1px solid var(--line);
@@ -11,18 +17,31 @@
   top: 20px;
   align-self: start;
 }
+
+/* 레일 섹션 타이틀 */
 .railTitle { font-size: 11px; font-weight: 700; color: var(--slate-2); text-transform: uppercase; letter-spacing: .07em; padding: 0 8px 12px; }
+
+/* 단계 항목 */
 .railItem { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 10px; margin-bottom: 2px; cursor: default; }
 .railItem.active { background: var(--blue-soft); }
 .railItem.done { opacity: .7; }
+
+/* 단계 번호 */
 .railNo { font-family: var(--en); font-weight: 700; font-size: 12px; color: var(--slate-2); width: 22px; }
 .active .railNo { color: var(--blue); }
 .done .railNo { color: var(--green); }
+
+/* 단계 이름 */
 .railNm { font-size: 13px; font-weight: 600; color: var(--slate); }
 .active .railNm { color: var(--blue); }
+
+/* 완료 체크 */
 .railCk { margin-left: auto; color: var(--green); font-size: 12px; }
 
+/* 폼 영역 */
 .formArea {}
+
+/* 폼 카드 */
 .formCard {
   background: var(--card);
   border: 1px solid var(--line);
@@ -30,13 +49,26 @@
   box-shadow: var(--shadow);
   padding: 32px 36px;
 }
+
+/* 폼 섹션 레이블 */
 .formEyebrow { font-family: var(--en); font-size: 12px; font-weight: 700; letter-spacing: .07em; color: var(--blue); text-transform: uppercase; }
+
+/* 폼 타이틀 */
 .formTitle { font-size: 26px; font-weight: 700; color: var(--navy); margin: 8px 0 4px; }
+
+/* 폼 설명 */
 .formDesc { font-size: 14px; color: var(--slate); margin-bottom: 24px; }
 
+/* 입력 필드 목록 */
 .fields { display: flex; flex-direction: column; gap: 18px; }
+
+/* 개별 필드 */
 .field {}
+
+/* 필드 레이블 */
 .label { font-size: 13px; font-weight: 600; color: var(--ink); display: block; margin-bottom: 7px; }
+
+/* 텍스트 입력·텍스트에어리어 */
 .input, .textarea {
   width: 100%;
   font-family: var(--kr);
@@ -51,10 +83,17 @@
   resize: none;
 }
 .input:focus, .textarea:focus { border-color: var(--blue); background: #fff; }
+
+/* 유효성 오류 상태 입력 */
 .inputError { border-color: #e53e3e !important; background: #fff5f5 !important; }
+
+/* 필드 오류 메시지 */
 .fieldError { display: block; font-size: 12px; color: #e53e3e; margin-top: 5px; }
 
+/* 제품 지식 불러오기 행 */
 .knowledgeBtn { margin-top: 20px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+
+/* 외곽선 버튼 */
 .outlineBtn {
   font-family: var(--kr);
   font-size: 13px;
@@ -69,8 +108,11 @@
   white-space: nowrap;
 }
 .outlineBtn:hover { border-color: var(--blue); color: var(--blue); }
+
+/* 지식 불러오기 힌트 텍스트 */
 .knowledgeHint { font-size: 12px; color: var(--slate-2); }
 
+/* 진단 시작 제출 버튼 */
 .submitBtn {
   display: block;
   width: 100%;
@@ -89,4 +131,5 @@
 }
 .submitBtn:hover { transform: translateY(-1px); }
 
+/* 반응형: 1단 레이아웃 */
 @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } .rail { position: static; } }

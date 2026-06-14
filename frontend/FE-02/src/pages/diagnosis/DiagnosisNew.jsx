@@ -9,6 +9,7 @@ const STEPS = [
   '리포트 생성', '완료',
 ]
 
+// 신규 진단 입력 페이지 컴포넌트
 export default function DiagnosisNew() {
   const navigate = useNavigate()
 
@@ -22,11 +23,13 @@ export default function DiagnosisNew() {
   const [activeStep] = useState(0)
   const [errors, setErrors] = useState({})
 
+  // 입력값 변경 처리
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
     if (errors[e.target.name]) setErrors((prev) => ({ ...prev, [e.target.name]: '' }))
   }
 
+  // 진단 시작 제출 처리
   const handleSubmit = () => {
     const next = {}
     if (!formData.hsCode.trim())       next.hsCode = 'HS Code를 입력해주세요.'

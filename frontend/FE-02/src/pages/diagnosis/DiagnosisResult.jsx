@@ -22,6 +22,7 @@ import S10Sources    from '../../components/diagnosis/S10Sources.jsx'
 import { DIAGNOSIS_STEPS } from '../../mock/diagnosisSteps.js'
 import { getDiagnosisResult } from '../../services/diagnosisService.js'
 
+// 진단 결과 뷰어 페이지 컴포넌트
 export default function DiagnosisResult() {
   const { id } = useParams()
 
@@ -39,6 +40,7 @@ export default function DiagnosisResult() {
       .catch(() => setPageState('error'))
   }, [id])
 
+  // 단계 이동
   const go = (i) => {
     if (i < 0 || i >= DIAGNOSIS_STEPS.length) return
     setCurrentStep(i)

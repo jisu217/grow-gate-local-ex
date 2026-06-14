@@ -1,14 +1,16 @@
 import { Link } from 'react-router-dom'
 import styles from './Mypage.module.css'
 
+// TODO: /auth/me API 연동 후 교체
 const USER = {
   name: '홍길동',
-  email: 'hong@batterytech.co.kr',
+  email: 'demo@example.com',
   type: 'company',
   companyName: '경남 배터리테크',
   industry: '전기전자 · 배터리',
 }
 
+// 마이페이지 컴포넌트
 export default function Mypage() {
   return (
     <div className={styles.wrap}>

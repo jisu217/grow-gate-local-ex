@@ -1,3 +1,4 @@
+// S10 데이터 출처 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 
 export default function S10Sources({ pipes }) {

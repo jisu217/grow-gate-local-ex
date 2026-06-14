@@ -1,4 +1,4 @@
-// 임시 인증 상태 — 연동 시 AuthContext/useAuth로 교체
+// 임시 인증 상태 목업
 export const mockAuth = {
   isLoggedIn: true,
   accountType: 'company', // 'personal' | 'company'

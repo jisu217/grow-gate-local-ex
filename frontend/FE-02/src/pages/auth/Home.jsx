@@ -31,7 +31,7 @@ const STATS = [
   { v: '90', u: '일', l: '실행 로드맵 자동 생성' },
 ]
 
-// SVG 네트워크 맵
+// 수출 네트워크 SVG 맵 컴포넌트
 function HeroMap() {
   return (
     <svg className={styles.heromap} viewBox="0 0 720 560" xmlns="http://www.w3.org/2000/svg">
@@ -62,6 +62,7 @@ function HeroMap() {
   )
 }
 
+// 랜딩 홈 페이지 컴포넌트
 export default function Home() {
   const navigate = useNavigate()
 

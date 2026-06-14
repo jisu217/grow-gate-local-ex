@@ -12,6 +12,7 @@ const INITIAL = {
 
 const CATEGORIES = ['전기전자', '전자부품', '기계·장비', '화학·소재', '식품·의료', '기타']
 
+// 제품 지식 수정 페이지 컴포넌트
 export default function KnowledgeEdit() {
   const { productId } = useParams()
   const navigate = useNavigate()
@@ -33,9 +34,11 @@ export default function KnowledgeEdit() {
     )
   }
 
+  // 입력값 변경 처리
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
 
+  // 수정 저장 처리
   const handleSave = () => {
 
     navigate(`/mypage/knowledge/${productId}`)

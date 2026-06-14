@@ -1,3 +1,4 @@
+// 진단 스테이지 공통 레이아웃 컴포넌트
 export default function DiagnosisStage({ eyebrow, title, description, right, children }) {
   return (
 
