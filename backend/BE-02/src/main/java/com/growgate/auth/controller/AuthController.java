@@ -3,8 +3,7 @@ package com.growgate.auth.controller;
 // 로그인·회원가입 API 엔드포인트
 import com.growgate.auth.dto.LoginRequest;
 import com.growgate.auth.dto.LoginResponse;
-import com.growgate.auth.dto.SignupCompanyRequest;
-import com.growgate.auth.dto.SignupPersonalRequest;
+import com.growgate.auth.dto.SignupRequest;
 import com.growgate.auth.dto.SignupResponse;
 import com.growgate.auth.service.AuthService;
 import jakarta.validation.Valid;
@@ -35,13 +34,8 @@ public class AuthController {
         return ResponseEntity.ok(Map.of("message", "로그아웃 되었습니다."));
     }
 
-    @PostMapping("/signup/personal")
-    public ResponseEntity<SignupResponse> signupPersonal(@Valid @RequestBody SignupPersonalRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.signupPersonal(request));
-    }
-
-    @PostMapping("/signup/company")
-    public ResponseEntity<SignupResponse> signupCompany(@Valid @RequestBody SignupCompanyRequest request) {
-        return ResponseEntity.status(HttpStatus.CREATED).body(authService.signupCompany(request));
+    @PostMapping("/signup")
+    public ResponseEntity<SignupResponse> signup(@Valid @RequestBody SignupRequest request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.signup(request));
     }
 }

@@ -18,7 +18,7 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -26,7 +26,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/mypage/knowledge")
+@RequestMapping("/api/products")
 @RequiredArgsConstructor
 public class KnowledgeController {
 
@@ -46,14 +46,14 @@ public class KnowledgeController {
                 .body(knowledgeService.create(userDetails.getUsername(), request));
     }
 
-    @GetMapping("/{productId}")
+    @GetMapping("/{productId}/knowledge")
     public ResponseEntity<KnowledgeDetailResponse> getDetail(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String productId) {
         return ResponseEntity.ok(knowledgeService.getDetail(userDetails.getUsername(), productId));
     }
 
-    @PatchMapping("/{productId}")
+    @PutMapping("/{productId}/knowledge")
     public ResponseEntity<UpdateKnowledgeResponse> update(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String productId,
@@ -68,7 +68,7 @@ public class KnowledgeController {
         return ResponseEntity.ok(knowledgeService.delete(userDetails.getUsername(), productId));
     }
 
-    @GetMapping("/{productId}/logs")
+    @GetMapping("/{productId}/audit-logs")
     public ResponseEntity<KnowledgeLogsResponse> getLogs(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String productId) {
