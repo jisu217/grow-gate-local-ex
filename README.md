@@ -23,7 +23,7 @@ GROW-GATE Local EX는 이 질문을 공공데이터 기반 실행 보드로 바�
 ## What It Does
 
 | 영역 | 기능 |
-|---|---|
+| :--- | :--- |
 | AI 진단 | 기업·제품·HS Code·대상국을 입력하면 수출 준비도와 실행 우선순위를 계산 |
 | 공공데이터 파이프라인 | 관세청, KOTRA, Safety Korea, KIPRIS, 지원사업 데이터를 화면별 근거로 추적 |
 | 실행 로드맵 | 30·60·90일 단위로 담당자, 산출물, 시험·인증 태스크를 정리 |
@@ -33,7 +33,7 @@ GROW-GATE Local EX는 이 질문을 공공데이터 기반 실행 보드로 바�
 ## Public Data Coverage
 
 | Source | Target Table | Used For |
-|---|---|---|
+| :--- | :--- | :--- |
 | 관세청 수출입무역통계 GW | `trade_signal` | HS Code·대상국 기반 시장성 점수 |
 | KOTRA 글로벌 공급망 인사이트 | `country_profile` | 공급망 이슈, 바이어 요구, 국가별 로드맵 메모 |
 | Safety Korea 제품 안전인증 및 리콜 정보 | `recall_case` | 유사 리콜 위험, 시험 전 체크리스트, FMEA 초안 |

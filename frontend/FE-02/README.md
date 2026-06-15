@@ -20,7 +20,7 @@
 ## 1. Key Screens
 
 | 홈 | AI 진단 결과 |
-| :---: | :---: |
+| :--- | :--- |
 | ![홈 화면](docs/screenshot-home.png) | ![진단 결과 화면](docs/screenshot-diagnosis.png) |
 
 ---
@@ -130,7 +130,7 @@ src/
 역할 계층: `owner` > `admin` > `editor` > `viewer`
 
 | 액션 | owner | admin | editor | viewer |
-| :--- | :---: | :---: | :---: | :---: |
+| :--- | :--- | :--- | :--- | :--- |
 | `knowledge:create` | ✓ | ✓ | | |
 | `knowledge:edit` | ✓ | ✓ | ✓ | |
 | `knowledge:view` | ✓ | ✓ | ✓ | ✓ |

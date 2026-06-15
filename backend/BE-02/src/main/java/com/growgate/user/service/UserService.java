@@ -1,8 +1,9 @@
 package com.growgate.user.service;
 
-// 회원 정보 조회·수정
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;
+import com.growgate.membership.entity.Membership;
+import com.growgate.membership.repository.MembershipRepository;
 import com.growgate.user.dto.UpdateUserRequest;
 import com.growgate.user.dto.UpdateUserResponse;
 import com.growgate.user.dto.UserMeResponse;
@@ -22,13 +23,15 @@ public class UserService {
     private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     private final UserRepository userRepository;
+    private final MembershipRepository membershipRepository;
 
     @Transactional(readOnly = true)
     public UserMeResponse getMe(String userId) {
         User user = findUser(userId);
-        String role = user.getRole() != null ? user.getRole().name() : null;
-        String companyId = user.getCompany() != null ? user.getCompany().getId() : null;
-        String companyName = user.getCompany() != null ? user.getCompany().getName() : null;
+        Membership membership = membershipRepository.findFirstByUserId(userId).orElse(null);
+        String role = membership != null ? membership.getRole().name() : null;
+        String companyId = membership != null ? membership.getCompany().getId() : null;
+        String companyName = membership != null ? membership.getCompany().getName() : null;
 
         return UserMeResponse.builder()
                 .userId(user.getId())
