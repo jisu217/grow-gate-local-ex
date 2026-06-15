@@ -3,16 +3,16 @@ export const PRODUCTS = [
   {
     id: 'prod-001', name: '리튬이온 배터리팩', category: '전기전자',
     grade: 'A', expiringCerts: 1, updatedAt: '2025-05-28',
-    knowledge_status: 'expiring',
-    source_basis: 'official',
-    missing_fields: ['MSDS 최신본'],
+    knowledgeStatus: 'expiring',
+    sourceBasis: 'official',
+    missingFields: ['MSDS 최신본'],
   },
   {
     id: 'prod-002', name: '스마트 센서 모듈', category: '전자부품',
     grade: 'B+', expiringCerts: 0, updatedAt: '2025-04-10',
-    knowledge_status: 'needs-check',
-    source_basis: 'internal',
-    missing_fields: ['CE 인증서', 'RoHS 적합선언'],
+    knowledgeStatus: 'needs-check',
+    sourceBasis: 'internal',
+    missingFields: ['CE 인증서', 'RoHS 적합선언'],
   },
 ]
 
@@ -23,14 +23,14 @@ export const PRODUCT_DETAILS = {
     category: '전기전자',
     description: 'UN38.3 인증 추진 중인 리튬이온 배터리팩. 독일/EU 수출 목표.',
     grade: 'A',
-    knowledge_status: 'expiring',
-    source_basis: 'official',
-    missing_fields: ['MSDS 최신본', 'CE DoC 초안'],
+    knowledgeStatus: 'expiring',
+    sourceBasis: 'official',
+    missingFields: ['MSDS 최신본', 'CE DoC 초안'],
     updatedAt: '2025-05-28',
     certs: [
-      { name: 'UN38.3', expiryDate: '2025-09-30', renewalCycle: '3년', status: '임박', source_type: 'official' },
-      { name: 'CE/EMC', expiryDate: '2026-03-15', renewalCycle: '5년', status: '정상', source_type: 'official' },
-      { name: 'RoHS',   expiryDate: '2027-01-10', renewalCycle: '5년', status: '정상', source_type: 'internal' },
+      { name: 'UN38.3', expiryDate: '2025-09-30', renewalCycle: '3년', status: '임박', sourceType: 'official' },
+      { name: 'CE/EMC', expiryDate: '2026-03-15', renewalCycle: '5년', status: '정상', sourceType: 'official' },
+      { name: 'RoHS',   expiryDate: '2027-01-10', renewalCycle: '5년', status: '정상', sourceType: 'internal' },
     ],
     fto: [
       { target: 'EU', status: '검토 중', note: 'BMS 관련 삼성SDI 특허 위험 감지' },

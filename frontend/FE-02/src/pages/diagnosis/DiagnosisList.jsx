@@ -63,8 +63,8 @@ export default function DiagnosisList() {
                     </div>
                   </div>
                   <div className={styles.cardRight}>
-                    {diag.diagnosis_score !== null && (
-                      <div className={styles.score}>{diag.diagnosis_score}<span>/100</span></div>
+                    {diag.diagnosisScore !== null && (
+                      <div className={styles.score}>{diag.diagnosisScore}<span>/100</span></div>
                     )}
                     <span className={`${styles.badge} ${status.cls}`}>{status.label}</span>
                   </div>
