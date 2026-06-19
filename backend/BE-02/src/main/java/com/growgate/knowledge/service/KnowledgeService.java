@@ -1,19 +1,14 @@
 package com.growgate.knowledge.service;
 
-// 제품 지식 CRUD + 감사 로그
+// 제품 지식 조회/수정 + 감사 로그
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;
-import com.growgate.knowledge.dto.CreateKnowledgeRequest;
-import com.growgate.knowledge.dto.CreateKnowledgeResponse;
-import com.growgate.knowledge.dto.DeleteKnowledgeResponse;
 import com.growgate.knowledge.dto.KnowledgeDetailResponse;
 import com.growgate.knowledge.dto.KnowledgeDetailResponse.BuyerRequirementData;
 import com.growgate.knowledge.dto.KnowledgeDetailResponse.CertificationData;
 import com.growgate.knowledge.dto.KnowledgeDetailResponse.FtoData;
 import com.growgate.knowledge.dto.KnowledgeDetailResponse.KnowledgeData;
-import com.growgate.knowledge.dto.KnowledgeListResponse;
-import com.growgate.knowledge.dto.KnowledgeListResponse.ProductSummary;
 import com.growgate.knowledge.dto.KnowledgeLogsResponse;
 import com.growgate.knowledge.dto.KnowledgeLogsResponse.LogEntry;
 import com.growgate.knowledge.dto.UpdateKnowledgeRequest;
@@ -71,92 +66,6 @@ public class KnowledgeService {
     private final UserRepository userRepository;
     private final MembershipRepository membershipRepository;
     private final ObjectMapper objectMapper;
-
-    @Transactional(readOnly = true)
-    public KnowledgeListResponse getList(String userId) {
-        User user = findUser(userId);
-        List<Product> products = findProductsByUser(user);
-
-        List<ProductSummary> summaries = products.stream().map(product -> {
-            ProductKnowledge knowledge = knowledgeRepository.findByProductId(product.getId()).orElse(null);
-            List<Certification> certs = certificationRepository.findByProductId(product.getId());
-            List<Fto> ftoList = ftoRepository.findByProductId(product.getId());
-            List<BuyerRequirement> buyers = buyerRequirementRepository.findByProductId(product.getId());
-
-            LocalDate today = LocalDate.now();
-
-            boolean hasExpired = certs.stream()
-                    .anyMatch(c -> c.getExpiresAt() != null && c.getExpiresAt().isBefore(today));
-
-            int expiringCertCount = (int) certs.stream()
-                    .filter(c -> c.getExpiresAt() != null &&
-                            ChronoUnit.DAYS.between(today, c.getExpiresAt()) <= EXPIRY_WARNING_DAYS &&
-                            !c.getExpiresAt().isBefore(today))
-                    .count();
-
-            int missingFieldCount = 0;
-            if (ftoList.isEmpty()) missingFieldCount++;
-            if (buyers.isEmpty()) missingFieldCount++;
-
-            String trustGrade = (knowledge != null && knowledge.getTrustGrade() != null)
-                    ? knowledge.getTrustGrade().name() : null;
-
-            String knowledgeStatus = computeKnowledgeStatus(
-                    hasExpired, expiringCertCount, missingFieldCount, knowledge, certs);
-
-            return ProductSummary.builder()
-                    .productId(product.getId())
-                    .name(product.getName())
-                    .category(product.getCategory())
-                    .trustGrade(trustGrade)
-                    .knowledgeStatus(knowledgeStatus)
-                    .expiringCertCount(expiringCertCount)
-                    .missingFieldCount(missingFieldCount)
-                    .updatedAt(product.getUpdatedAt().format(ISO_FMT))
-                    .build();
-        }).collect(Collectors.toList());
-
-        return KnowledgeListResponse.builder().products(summaries).build();
-    }
-
-    public CreateKnowledgeResponse create(String userId, CreateKnowledgeRequest request) {
-        User user = findUser(userId);
-        requireRole(resolveRole(userId), "create");
-
-        Product product = Product.builder()
-                .owner(user)
-                .name(request.getName())
-                .category(request.getCategory())
-                .description(request.getDescription())
-                .build();
-        productRepository.save(product);
-
-        ProductKnowledge knowledge = ProductKnowledge.builder()
-                .product(product)
-                .createdBy(user)
-                .updatedBy(user)
-                .build();
-        knowledgeRepository.save(knowledge);
-
-        AuditLog log = AuditLog.builder()
-                .product(product)
-                .changedBy(user)
-                .changeType(ChangeType.create)
-                .changedFields(List.of("name", "category", "description"))
-                .previousValue(null)
-                .newValue(toJson(Map.of("name", request.getName(),
-                        "category", request.getCategory() != null ? request.getCategory() : "",
-                        "description", request.getDescription() != null ? request.getDescription() : "")))
-                .reason("신규 제품 지식 등록")
-                .build();
-        auditLogRepository.save(log);
-
-        return CreateKnowledgeResponse.builder()
-                .productId(product.getId())
-                .name(product.getName())
-                .createdAt(product.getCreatedAt().format(ISO_FMT))
-                .build();
-    }
 
     @Transactional(readOnly = true)
     public KnowledgeDetailResponse getDetail(String userId, String productId) {
@@ -295,29 +204,6 @@ public class KnowledgeService {
                 .build();
     }
 
-    public DeleteKnowledgeResponse delete(String userId, String productId) {
-        User user = findUser(userId);
-        requireRole(resolveRole(userId), "delete");
-        Product product = findProductByUser(user, productId);
-
-        AuditLog log = AuditLog.builder()
-                .product(product)
-                .changedBy(user)
-                .changeType(ChangeType.delete)
-                .changedFields(List.of())
-                .reason("제품 삭제")
-                .build();
-        auditLogRepository.save(log);
-
-        certificationRepository.deleteAll(certificationRepository.findByProductId(productId));
-        ftoRepository.deleteAll(ftoRepository.findByProductId(productId));
-        buyerRequirementRepository.deleteAll(buyerRequirementRepository.findByProductId(productId));
-        knowledgeRepository.findByProductId(productId).ifPresent(knowledgeRepository::delete);
-        productRepository.delete(product);
-
-        return new DeleteKnowledgeResponse("제품이 삭제되었습니다.", productId);
-    }
-
     @Transactional(readOnly = true)
     public KnowledgeLogsResponse getLogs(String userId, String productId) {
         User user = findUser(userId);
@@ -359,12 +245,6 @@ public class KnowledgeService {
             throw new BusinessException(ErrorCode.FORBIDDEN, "역할이 없는 계정입니다.");
         }
         switch (action) {
-            case "create":
-            case "delete":
-                if (role != UserRole.owner && role != UserRole.admin) {
-                    throw new BusinessException(ErrorCode.FORBIDDEN, "이 작업을 수행할 권한이 없습니다.");
-                }
-                break;
             case "edit":
                 if (role == UserRole.viewer) {
                     throw new BusinessException(ErrorCode.FORBIDDEN, "이 회사 제품 지식을 수정할 권한이 없습니다.");
@@ -378,24 +258,6 @@ public class KnowledgeService {
             default:
                 break;
         }
-    }
-
-    private String computeKnowledgeStatus(boolean hasExpired, int expiringCertCount,
-                                           int missingFieldCount, ProductKnowledge knowledge,
-                                           List<Certification> certs) {
-        if (hasExpired) return "expired";
-        if (expiringCertCount > 0) return "expiring_soon";
-        if (missingFieldCount > 0) return "needs_review";
-        if (knowledge != null && knowledge.getTrustGrade() != null && !certs.isEmpty()) return "valid";
-        return "incomplete";
-    }
-
-    private List<Product> findProductsByUser(User user) {
-        Company company = resolveCompany(user.getId());
-        if (company != null) {
-            return productRepository.findByOwner_Company_IdOrderByUpdatedAtDesc(company.getId());
-        }
-        return productRepository.findByOwnerIdOrderByUpdatedAtDesc(user.getId());
     }
 
     private Product findProductByUser(User user, String productId) {
