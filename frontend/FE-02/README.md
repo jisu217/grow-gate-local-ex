@@ -181,7 +181,7 @@ export async function getProducts() {
 
 // 연동 후
 export async function getProducts() {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/products`)
+  const res = await fetch(`${import.meta.env.VITE_API_URL}/api/products`)
   return res.json()
 }
 ```
@@ -203,32 +203,38 @@ export async function getProducts() {
 
 > 현재 모두 mock 대체 상태. 백엔드 연동 시 아래 엔드포인트 구현 필요.
 
+> 아래 경로는 백엔드(`backend/BE-02`) 실제 구현 기준. `services/`는 아직 mock 데이터 반환 중 — 연동 시 `VITE_API_URL` 베이스에 `/api` 프리픽스 포함 필요.
+
 ### 인증
 
 | 메서드 | 경로 | 설명 | 서비스 파일 |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/auth/login` | 이메일·비밀번호 로그인, JWT 발급 | — (미구현) |
-| `POST` | `/auth/signup/personal` | 개인 계정 회원가입 | — (미구현) |
-| `POST` | `/auth/signup/company` | 기업 계정 회원가입 | — (미구현) |
-| `GET` | `/auth/me` | 현재 로그인 사용자 정보 조회 | — (미구현) |
+| `POST` | `/api/auth/login` | 이메일·비밀번호 로그인, JWT 발급 | — (미구현) |
+| `POST` | `/api/auth/signup` | 회원가입 (개인/기업 공통, userType으로 구분) | — (미구현) |
+| `POST` | `/api/auth/logout` | 로그아웃 | — (미구현) |
+| `GET` | `/api/users/me` | 현재 로그인 사용자 정보 조회 | — (미구현) |
 
 ### 제품 지식
 
 | 메서드 | 경로 | 설명 | 서비스 함수 |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/products` | 제품 목록 조회 | `getProducts()` |
-| `GET` | `/products/:id` | 제품 상세·지식 조회 | `getProductKnowledge(id)` |
-| `POST` | `/products` | 신규 제품 생성 | `createProduct(payload)` |
-| `PUT` | `/products/:id` | 제품 지식 수정 | `saveProductKnowledge(id, payload)` |
+| `GET` | `/api/products` | 제품 목록 조회 | `getProducts()` |
+| `GET` | `/api/products/{productId}/knowledge` | 제품 상세·지식 조회 (인증서·FTO·바이어요구사항·출처 포함) | `getProductKnowledge(id)` |
+| `POST` | `/api/products` | 신규 제품 생성 | `createProduct(payload)` |
+| `PUT` | `/api/products/{productId}/knowledge` | 제품 정보·지식 수정 | `saveProductKnowledge(id, payload)` |
+| `DELETE` | `/api/products/{productId}` | 제품 삭제 | — (미구현) |
+| `GET` | `/api/products/{productId}/audit-logs` | 감사 로그 조회 | — (미구현) |
+
+인증서/FTO/바이어요구사항/지식출처 등록·수정·삭제 엔드포인트(`/api/products/{productId}/certifications` 등)는 백엔드 구현 완료, KnowledgeEdit 화면은 제품 기본 정보만 다뤄 대응 서비스 함수 미구현. 자세한 경로는 `backend/BE-02/README.md` 4번 섹션 참고.
 
 ### 진단
 
 | 메서드 | 경로 | 설명 | 서비스 함수 |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/diagnoses` | 진단 이력 목록 조회 | `getDiagnosisList()` |
-| `GET` | `/diagnoses/:id` | 진단 결과 상세 조회 | `getDiagnosisResult(id)` |
-| `POST` | `/diagnoses` | 새 진단 실행 요청 | `runDiagnosis(payload)` |
-| `GET` | `/diagnoses/:id/sources` | 진단 출처 데이터 조회 | — (미구현) |
+| `GET` | `/api/diagnosis` | 진단 이력 목록 조회 | `getDiagnosisList()` |
+| `GET` | `/api/diagnosis/{diagnosisId}` | 진단 결과 상세 조회 | `getDiagnosisResult(id)` |
+| `POST` | `/api/diagnosis` | 새 진단 실행 요청 | `runDiagnosis(payload)` |
+| `GET` | `/api/diagnosis/{diagnosisId}/sources` | 진단 출처 데이터 조회 | — (미구현) |
 
 ---
 

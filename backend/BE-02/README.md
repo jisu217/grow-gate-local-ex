@@ -109,15 +109,18 @@ BE-02/
         │
         ├── product/
         │   ├── entity/Product.java                 # 상품 엔티티
-        │   └── repository/ProductRepository.java   # 상품 DB 조회
+        │   ├── repository/ProductRepository.java   # 상품 DB 조회
+        │   ├── service/ProductService.java         # 제품 목록·생성·삭제
+        │   ├── controller/ProductController.java   # 제품 API 엔드포인트 (/api/products)
+        │   └── dto/                                # List·Create·Delete Request·Response
         │
         ├── knowledge/
         │   ├── entity/                             # ProductKnowledge, Certification, Fto, BuyerRequirement, AuditLog, KnowledgeSource
         │   ├── enums/                              # TrustGrade, RiskLevel, ChangeType
         │   ├── repository/                         # 각 엔티티별 Repository
-        │   ├── service/KnowledgeService.java       # 제품 지식 CRUD + 감사 로그
-        │   ├── controller/KnowledgeController.java # 제품 지식 API 엔드포인트
-        │   └── dto/                                # Create·Update·Detail·List·Logs Request·Response
+        │   ├── service/KnowledgeService.java       # 제품 지식·인증서·FTO·바이어요구사항·출처 CRUD + 감사 로그
+        │   ├── controller/KnowledgeController.java # 제품 지식 하위 리소스 API 엔드포인트
+        │   └── dto/                                # Knowledge/Certification/Fto/BuyerRequirement/Source Request·Response, Logs
         │
         ├── diagnosis/
         │   ├── entity/DiagnosisRun.java            # 진단 실행 엔티티
@@ -163,25 +166,46 @@ BE-02/
 | `GET` | `/api/companies/me` | 내 회사 정보 조회 | ✓ |
 | `PATCH` | `/api/companies/me` | 내 회사 정보 수정 | ✓ |
 
+### 제품
+
+| 메서드 | 경로 | 설명 | 필요 역할 |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/api/products` | 제품 목록 조회 | 전체 |
+| `POST` | `/api/products` | 제품 생성 | owner, admin |
+| `DELETE` | `/api/products/{productId}` | 제품 삭제 | owner, admin |
+
 ### 제품 지식
 
 | 메서드 | 경로 | 설명 | 필요 역할 |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/mypage/knowledge` | 제품 목록 조회 | 전체 |
-| `POST` | `/api/mypage/knowledge` | 제품 생성 | owner, admin |
-| `GET` | `/api/mypage/knowledge/:productId` | 제품 상세 조회 | 전체 |
-| `PATCH` | `/api/mypage/knowledge/:productId` | 제품 지식 수정 | owner, admin, editor |
-| `DELETE` | `/api/mypage/knowledge/:productId` | 제품 삭제 | owner, admin |
-| `GET` | `/api/mypage/knowledge/:productId/logs` | 감사 로그 조회 | owner, admin |
+| `GET` | `/api/products/{productId}/knowledge` | 제품 상세·지식 조회 (인증서·FTO·바이어요구사항·출처 포함) | 전체 |
+| `PUT` | `/api/products/{productId}/knowledge` | 제품 정보·지식 수정 | owner, admin, editor |
+| `GET` | `/api/products/{productId}/audit-logs` | 감사 로그 조회 | owner, admin |
+
+### 인증서 / FTO / 바이어 요구사항 / 지식 출처
+
+| 메서드 | 경로 | 설명 | 필요 역할 |
+| :--- | :--- | :--- | :--- |
+| `POST` | `/api/products/{productId}/certifications` | 인증서 등록 | owner, admin, editor |
+| `PUT` | `/api/products/{productId}/certifications/{certificationId}` | 인증서 수정 | owner, admin, editor |
+| `DELETE` | `/api/products/{productId}/certifications/{certificationId}` | 인증서 삭제 | owner, admin, editor |
+| `POST` | `/api/products/{productId}/fto` | FTO 항목 등록 | owner, admin, editor |
+| `PUT` | `/api/products/{productId}/fto/{ftoId}` | FTO 항목 수정 | owner, admin, editor |
+| `DELETE` | `/api/products/{productId}/fto/{ftoId}` | FTO 항목 삭제 | owner, admin, editor |
+| `POST` | `/api/products/{productId}/buyer-requirements` | 바이어 요구사항 등록 | owner, admin, editor |
+| `PUT` | `/api/products/{productId}/buyer-requirements/{buyerRequirementId}` | 바이어 요구사항 수정 | owner, admin, editor |
+| `DELETE` | `/api/products/{productId}/buyer-requirements/{buyerRequirementId}` | 바이어 요구사항 삭제 | owner, admin, editor |
+| `POST` | `/api/products/{productId}/knowledge/sources` | 지식 출처 등록 | owner, admin, editor |
+| `DELETE` | `/api/products/{productId}/knowledge/sources/{sourceId}` | 지식 출처 삭제 | owner, admin, editor |
 
 ### 진단
 
 | 메서드 | 경로 | 설명 | 필요 역할 |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/diagnosis` | 진단 이력 목록 조회 | 전체 |
-| `POST` | `/api/diagnosis` | 새 진단 실행 | owner, admin, editor |
-| `GET` | `/api/diagnosis/:id` | 진단 결과 상세 조회 | 전체 |
-| `GET` | `/api/diagnosis/:id/sources` | 진단 출처 데이터 조회 | 전체 |
+| `POST` | `/api/diagnosis` | 새 진단 실행 (같은 회사 소유 제품이면 누가 등록했든 가능) | owner, admin, editor |
+| `GET` | `/api/diagnosis/{diagnosisId}` | 진단 결과 상세 조회 | 전체 |
+| `GET` | `/api/diagnosis/{diagnosisId}/sources` | 진단 출처 데이터 조회 | 전체 |
 
 ---
 
