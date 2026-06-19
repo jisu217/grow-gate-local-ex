@@ -5,23 +5,23 @@ export const CURRENT_SESSION = {
   targetMarket: 'DE/EU',
 
   // 제품 지식 연결
-  product_id:            'prod-001',
-  company_id:            'comp-001',
-  knowledge_snapshot_id: 'snap-prod-001-20250528',  // 진단 시점 제품 지식 버전
-  trust_grade:           'A',
-  missing_fields:        ['MSDS 최신본', 'CE DoC 초안'],
-  evidence_sources:      ['관세청', 'KOTRA', 'KTL', 'SafetyKorea', 'KIPRIS', '기업마당', 'EU RAPEX'],
-  updated_at:            '2025-05-28',
+  productId:            'prod-001',
+  companyId:            'comp-001',
+  knowledgeSnapshotId:  'snap-prod-001-20250528',  // 진단 시점 제품 지식 버전
+  trustGrade:           'A',
+  missingFields:        ['MSDS 최신본', 'CE DoC 초안'],
+  evidenceSources:      ['관세청', 'KOTRA', 'KTL', 'SafetyKorea', 'KIPRIS', '기업마당', 'EU RAPEX'],
+  updatedAt:            '2025-05-28',
 
   // 진단 결과 요약
-  diagnosis_score: 83,
-  risk_items: [
+  diagnosisScore: 83,
+  riskItems: [
     { level: 'high',   label: '과열·열폭주 리콜 유사도 0.86' },
     { level: 'high',   label: 'BMS 특허 침해 위험 (삼성SDI)' },
     { level: 'medium', label: '낙하·충격 단락 유사도 0.72' },
     { level: 'medium', label: 'CE/EMC 인증 대응 필요' },
   ],
-  action_roadmap: { d30: 4, d60: 4, d90: 4 },
+  actionRoadmap: { d30: 4, d60: 4, d90: 4 },
 }
 
 // KPI 카드
@@ -198,11 +198,11 @@ export const S09_SCORE_BARS = [
 
 // S10 파이프라인
 export const S10_PIPES = [
-  { source: '관세청 무역통계',    count: '1,240', label: '수집 레코드', source_type: 'public_api' },
-  { source: 'KOTRA 해외시장',     count: '84',    label: '리포트 건',   source_type: 'public_api' },
-  { source: 'KTL Certinfo',       count: '312',   label: '인증 항목',   source_type: 'public_api' },
-  { source: 'SafetyKorea',        count: '56',    label: '리콜 사례',   source_type: 'public_api' },
-  { source: 'KIPRIS 특허',        count: '2,810', label: '검색 결과',   source_type: 'public_api' },
-  { source: '기업마당 지원사업',  count: '18',    label: '매칭 사업',   source_type: 'public_api' },
-  { source: 'EU RAPEX',           count: '430',   label: 'EU 리콜 경보', source_type: 'public_api' },
+  { source: '관세청 무역통계',    count: '1,240', label: '수집 레코드', sourceType: 'public_api' },
+  { source: 'KOTRA 해외시장',     count: '84',    label: '리포트 건',   sourceType: 'public_api' },
+  { source: 'KTL Certinfo',       count: '312',   label: '인증 항목',   sourceType: 'public_api' },
+  { source: 'SafetyKorea',        count: '56',    label: '리콜 사례',   sourceType: 'public_api' },
+  { source: 'KIPRIS 특허',        count: '2,810', label: '검색 결과',   sourceType: 'public_api' },
+  { source: '기업마당 지원사업',  count: '18',    label: '매칭 사업',   sourceType: 'public_api' },
+  { source: 'EU RAPEX',           count: '430',   label: 'EU 리콜 경보', sourceType: 'public_api' },
 ]

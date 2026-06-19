@@ -30,6 +30,9 @@ import com.growgate.knowledge.repository.BuyerRequirementRepository;
 import com.growgate.knowledge.repository.CertificationRepository;
 import com.growgate.knowledge.repository.FtoRepository;
 import com.growgate.knowledge.repository.ProductKnowledgeRepository;
+import com.growgate.company.entity.Company;
+import com.growgate.membership.entity.Membership;
+import com.growgate.membership.repository.MembershipRepository;
 import com.growgate.product.entity.Product;
 import com.growgate.product.repository.ProductRepository;
 import com.growgate.user.entity.User;
@@ -66,6 +69,7 @@ public class KnowledgeService {
     private final BuyerRequirementRepository buyerRequirementRepository;
     private final AuditLogRepository auditLogRepository;
     private final UserRepository userRepository;
+    private final MembershipRepository membershipRepository;
     private final ObjectMapper objectMapper;
 
     @Transactional(readOnly = true)
@@ -117,7 +121,7 @@ public class KnowledgeService {
 
     public CreateKnowledgeResponse create(String userId, CreateKnowledgeRequest request) {
         User user = findUser(userId);
-        requireRole(user, "create");
+        requireRole(resolveRole(userId), "create");
 
         Product product = Product.builder()
                 .owner(user)
@@ -217,7 +221,7 @@ public class KnowledgeService {
 
     public UpdateKnowledgeResponse update(String userId, String productId, UpdateKnowledgeRequest request) {
         User user = findUser(userId);
-        requireRole(user, "edit");
+        requireRole(resolveRole(userId), "edit");
         Product product = findProductByUser(user, productId);
         ProductKnowledge knowledge = knowledgeRepository.findByProductId(productId).orElse(null);
 
@@ -293,7 +297,7 @@ public class KnowledgeService {
 
     public DeleteKnowledgeResponse delete(String userId, String productId) {
         User user = findUser(userId);
-        requireRole(user, "delete");
+        requireRole(resolveRole(userId), "delete");
         Product product = findProductByUser(user, productId);
 
         AuditLog log = AuditLog.builder()
@@ -317,7 +321,7 @@ public class KnowledgeService {
     @Transactional(readOnly = true)
     public KnowledgeLogsResponse getLogs(String userId, String productId) {
         User user = findUser(userId);
-        requireRole(user, "audit");
+        requireRole(resolveRole(userId), "audit");
         findProductByUser(user, productId);
         List<AuditLog> logs = auditLogRepository.findByProductIdOrderByChangedAtDesc(productId);
 
@@ -338,8 +342,19 @@ public class KnowledgeService {
                 .build();
     }
 
-    private void requireRole(User user, String action) {
-        UserRole role = user.getRole();
+    private UserRole resolveRole(String userId) {
+        return membershipRepository.findFirstByUserId(userId)
+                .map(Membership::getRole)
+                .orElse(UserRole.admin);
+    }
+
+    private Company resolveCompany(String userId) {
+        return membershipRepository.findFirstByUserId(userId)
+                .map(Membership::getCompany)
+                .orElse(null);
+    }
+
+    private void requireRole(UserRole role, String action) {
         if (role == null) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "역할이 없는 계정입니다.");
         }
@@ -376,15 +391,17 @@ public class KnowledgeService {
     }
 
     private List<Product> findProductsByUser(User user) {
-        if (user.getCompany() != null) {
-            return productRepository.findByOwner_Company_IdOrderByUpdatedAtDesc(user.getCompany().getId());
+        Company company = resolveCompany(user.getId());
+        if (company != null) {
+            return productRepository.findByOwner_Company_IdOrderByUpdatedAtDesc(company.getId());
         }
         return productRepository.findByOwnerIdOrderByUpdatedAtDesc(user.getId());
     }
 
     private Product findProductByUser(User user, String productId) {
-        if (user.getCompany() != null) {
-            return productRepository.findByIdAndOwner_Company_Id(productId, user.getCompany().getId())
+        Company company = resolveCompany(user.getId());
+        if (company != null) {
+            return productRepository.findByIdAndOwner_Company_Id(productId, company.getId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "등록된 제품을 찾을 수 없습니다."));
         }
         return productRepository.findByIdAndOwnerId(productId, user.getId())

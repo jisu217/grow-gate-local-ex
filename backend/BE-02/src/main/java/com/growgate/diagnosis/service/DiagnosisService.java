@@ -18,9 +18,12 @@ import com.growgate.diagnosis.dto.DiagnosisSourcesResponse.SourceEntry;
 import com.growgate.diagnosis.entity.DiagnosisRun;
 import com.growgate.diagnosis.enums.DiagnosisStatus;
 import com.growgate.diagnosis.repository.DiagnosisRepository;
+import com.growgate.company.entity.Company;
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;
 import com.growgate.knowledge.entity.Certification;
+import com.growgate.membership.entity.Membership;
+import com.growgate.membership.repository.MembershipRepository;
 import com.growgate.knowledge.entity.ProductKnowledge;
 import com.growgate.knowledge.repository.BuyerRequirementRepository;
 import com.growgate.knowledge.repository.CertificationRepository;
@@ -57,6 +60,7 @@ public class DiagnosisService {
 
     private final DiagnosisRepository diagnosisRepository;
     private final UserRepository userRepository;
+    private final MembershipRepository membershipRepository;
     private final ProductRepository productRepository;
     private final ProductKnowledgeRepository knowledgeRepository;
     private final CertificationRepository certificationRepository;
@@ -70,8 +74,9 @@ public class DiagnosisService {
         User user = findUser(userId);
         List<DiagnosisRun> runs;
 
-        if (user.getCompany() != null) {
-            runs = diagnosisRepository.findByCompanyIdOrderByCreatedAtDesc(user.getCompany().getId());
+        Company company = resolveCompany(userId);
+        if (company != null) {
+            runs = diagnosisRepository.findByCompanyIdOrderByCreatedAtDesc(company.getId());
         } else {
             runs = diagnosisRepository.findByUserIdOrderByCreatedAtDesc(userId);
         }
@@ -115,7 +120,7 @@ public class DiagnosisService {
 
         DiagnosisRun run = DiagnosisRun.builder()
                 .user(user)
-                .company(user.getCompany())
+                .company(resolveCompany(userId))
                 .product(product)
                 .inputData(inputDataJson)
                 .knowledgeSnapshot(knowledgeSnapshotJson)
@@ -227,16 +232,29 @@ public class DiagnosisService {
                 .build();
     }
 
+    private UserRole resolveRole(String userId) {
+        return membershipRepository.findFirstByUserId(userId)
+                .map(Membership::getRole)
+                .orElse(UserRole.admin);
+    }
+
+    private Company resolveCompany(String userId) {
+        return membershipRepository.findFirstByUserId(userId)
+                .map(Membership::getCompany)
+                .orElse(null);
+    }
+
     private void requireDiagnosisPermission(User user) {
-        UserRole role = user.getRole();
+        UserRole role = resolveRole(user.getId());
         if (role == UserRole.viewer) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "진단을 실행할 권한이 없습니다.");
         }
     }
 
     private DiagnosisRun findDiagnosisRun(User user, String diagnosisId) {
-        if (user.getCompany() != null) {
-            return diagnosisRepository.findByIdAndCompanyId(diagnosisId, user.getCompany().getId())
+        Company company = resolveCompany(user.getId());
+        if (company != null) {
+            return diagnosisRepository.findByIdAndCompanyId(diagnosisId, company.getId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "진단 결과를 찾을 수 없습니다."));
         }
         return diagnosisRepository.findByIdAndUserId(diagnosisId, user.getId())

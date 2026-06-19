@@ -1,17 +1,11 @@
 package com.growgate.user.entity;
 
-// 회원 엔티티
-import com.growgate.company.entity.Company;
-import com.growgate.user.enums.UserRole;
 import com.growgate.user.enums.UserType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
 import jakarta.persistence.PrePersist;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.Table;
@@ -48,14 +42,6 @@ public class User {
     @Column(name = "user_type", nullable = false, length = 20)
     private UserType userType;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "role", length = 20)
-    private UserRole role;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "company_id")
-    private Company company;
-
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
@@ -76,11 +62,6 @@ public class User {
 
     public void updateName(String name) {
         this.name = name;
-        this.updatedAt = LocalDateTime.now();
-    }
-
-    public void updateRole(UserRole role) {
-        this.role = role;
         this.updatedAt = LocalDateTime.now();
     }
 }

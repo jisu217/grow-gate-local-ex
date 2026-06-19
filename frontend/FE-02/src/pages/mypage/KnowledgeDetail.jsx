@@ -89,21 +89,21 @@ export default function KnowledgeDetail() {
               <span className={`pill ${product.grade === 'A' ? 'ok' : product.grade === 'B+' ? 'cond' : 'warn'}`}>
                 신뢰도 {product.grade}
               </span>
-              {product.knowledge_status === 'expiring' && <span className="pill warn">만료 임박</span>}
-              {product.knowledge_status === 'valid'    && <span className="pill ok">유효</span>}
-              {product.knowledge_status === 'expired'  && <span className="pill req">만료</span>}
-              {product.knowledge_status === 'needs-check' && <span className="pill warn">검증 필요</span>}
-              {CERT_SOURCE[product.source_basis] && (
-                <span className={`pill ${CERT_SOURCE[product.source_basis].cls}`}>
-                  {CERT_SOURCE[product.source_basis].label}
+              {product.knowledgeStatus === 'expiring' && <span className="pill warn">만료 임박</span>}
+              {product.knowledgeStatus === 'valid'    && <span className="pill ok">유효</span>}
+              {product.knowledgeStatus === 'expired'  && <span className="pill req">만료</span>}
+              {product.knowledgeStatus === 'needs-check' && <span className="pill warn">검증 필요</span>}
+              {CERT_SOURCE[product.sourceBasis] && (
+                <span className={`pill ${CERT_SOURCE[product.sourceBasis].cls}`}>
+                  {CERT_SOURCE[product.sourceBasis].label}
                 </span>
               )}
             </div>
 
-            {product.missing_fields?.length > 0 && (
+            {product.missingFields?.length > 0 && (
               <div className={styles.missingList}>
                 <div className={styles.missingTitle}>누락 항목 — AI 진단 정확도에 영향</div>
-                {product.missing_fields.map((f) => (
+                {product.missingFields.map((f) => (
                   <div key={f} className={styles.missingItem}>{f}</div>
                 ))}
               </div>
@@ -122,12 +122,12 @@ export default function KnowledgeDetail() {
                 <div>
                   <div className={styles.certName}>
                     {cert.name}
-                    {CERT_SOURCE[cert.source_type] && (
+                    {CERT_SOURCE[cert.sourceType] && (
                       <span
-                        className={`pill ${CERT_SOURCE[cert.source_type].cls}`}
+                        className={`pill ${CERT_SOURCE[cert.sourceType].cls}`}
                         style={{ marginLeft: 8, fontSize: 10 }}
                       >
-                        {CERT_SOURCE[cert.source_type].label}
+                        {CERT_SOURCE[cert.sourceType].label}
                       </span>
                     )}
                   </div>

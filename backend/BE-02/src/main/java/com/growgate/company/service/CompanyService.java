@@ -1,13 +1,13 @@
 package com.growgate.company.service;
 
-// 회사 정보 조회·수정
 import com.growgate.company.dto.CompanyMeResponse;
 import com.growgate.company.dto.UpdateCompanyRequest;
 import com.growgate.company.dto.UpdateCompanyResponse;
 import com.growgate.company.entity.Company;
-import com.growgate.company.repository.CompanyRepository;
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;
+import com.growgate.membership.entity.Membership;
+import com.growgate.membership.repository.MembershipRepository;
 import com.growgate.user.entity.User;
 import com.growgate.user.enums.UserType;
 import com.growgate.user.repository.UserRepository;
@@ -25,12 +25,11 @@ public class CompanyService {
     private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     private final UserRepository userRepository;
-    private final CompanyRepository companyRepository;
+    private final MembershipRepository membershipRepository;
 
     @Transactional(readOnly = true)
     public CompanyMeResponse getMyCompany(String userId) {
-        User user = getCompanyUser(userId);
-        Company company = user.getCompany();
+        Company company = getCompany(userId);
         return CompanyMeResponse.builder()
                 .companyId(company.getId())
                 .name(company.getName())
@@ -41,8 +40,7 @@ public class CompanyService {
     }
 
     public UpdateCompanyResponse updateMyCompany(String userId, UpdateCompanyRequest request) {
-        User user = getCompanyUser(userId);
-        Company company = user.getCompany();
+        Company company = getCompany(userId);
         company.updateIndustry(request.getIndustry());
         return UpdateCompanyResponse.builder()
                 .companyId(company.getId())
@@ -51,12 +49,14 @@ public class CompanyService {
                 .build();
     }
 
-    private User getCompanyUser(String userId) {
+    private Company getCompany(String userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "사용자를 찾을 수 없습니다."));
-        if (user.getUserType() != UserType.company || user.getCompany() == null) {
+        if (user.getUserType() != UserType.company) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "기업 계정만 접근할 수 있습니다.");
         }
-        return user;
+        return membershipRepository.findFirstByUserId(userId)
+                .map(Membership::getCompany)
+                .orElseThrow(() -> new BusinessException(ErrorCode.FORBIDDEN, "기업 계정만 접근할 수 있습니다."));
     }
 }

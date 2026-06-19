@@ -63,21 +63,21 @@ export default function Knowledge() {
 
               <div className={styles.infoRow}>
                 <span className={styles.grade}>신뢰도 {p.grade}</span>
-                {QUALITY_STATUS[p.knowledge_status] && (
-                  <span className={`pill ${QUALITY_STATUS[p.knowledge_status].cls}`}>
-                    {QUALITY_STATUS[p.knowledge_status].label}
+                {QUALITY_STATUS[p.knowledgeStatus] && (
+                  <span className={`pill ${QUALITY_STATUS[p.knowledgeStatus].cls}`}>
+                    {QUALITY_STATUS[p.knowledgeStatus].label}
                   </span>
                 )}
-                {SOURCE_BASIS[p.source_basis] && (
-                  <span className={`pill ${SOURCE_BASIS[p.source_basis].cls}`}>
-                    {SOURCE_BASIS[p.source_basis].label}
+                {SOURCE_BASIS[p.sourceBasis] && (
+                  <span className={`pill ${SOURCE_BASIS[p.sourceBasis].cls}`}>
+                    {SOURCE_BASIS[p.sourceBasis].label}
                   </span>
                 )}
               </div>
 
-              {p.missing_fields?.length > 0 && (
+              {p.missingFields?.length > 0 && (
                 <div className={styles.missingHint}>
-                  누락 {p.missing_fields.length}건 · AI 진단 정확도에 영향
+                  누락 {p.missingFields.length}건 · AI 진단 정확도에 영향
                 </div>
               )}
 
