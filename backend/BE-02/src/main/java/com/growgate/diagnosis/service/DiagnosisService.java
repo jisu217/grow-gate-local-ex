@@ -111,8 +111,7 @@ public class DiagnosisService {
         String knowledgeSnapshotJson = null;
 
         if (request.getProductId() != null) {
-            product = productRepository.findByIdAndOwnerId(request.getProductId(), userId)
-                    .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "등록된 제품을 찾을 수 없습니다."));
+            product = findProductByUser(user, request.getProductId());
             knowledgeSnapshotJson = buildKnowledgeSnapshot(request.getProductId());
         } else {
             inputDataJson = serializeInputData(request.getInputData());
@@ -249,6 +248,16 @@ public class DiagnosisService {
         if (role == UserRole.viewer) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "진단을 실행할 권한이 없습니다.");
         }
+    }
+
+    private Product findProductByUser(User user, String productId) {
+        Company company = resolveCompany(user.getId());
+        if (company != null) {
+            return productRepository.findByIdAndOwner_Company_Id(productId, company.getId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "등록된 제품을 찾을 수 없습니다."));
+        }
+        return productRepository.findByIdAndOwnerId(productId, user.getId())
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "등록된 제품을 찾을 수 없습니다."));
     }
 
     private DiagnosisRun findDiagnosisRun(User user, String diagnosisId) {
