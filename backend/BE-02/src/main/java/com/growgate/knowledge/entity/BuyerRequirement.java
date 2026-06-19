@@ -51,4 +51,10 @@ public class BuyerRequirement {
         if (this.id == null) this.id = UUID.randomUUID().toString();
         this.createdAt = LocalDateTime.now();
     }
+
+    public void update(String buyerName, String country, String requirements) {
+        if (buyerName != null) this.buyerName = buyerName;
+        if (country != null) this.country = country;
+        if (requirements != null) this.requirements = requirements;
+    }
 }

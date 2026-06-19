@@ -18,6 +18,7 @@ public class KnowledgeDetailResponse {
     private List<CertificationData> certifications;
     private List<FtoData> fto;
     private List<BuyerRequirementData> buyerRequirements;
+    private List<KnowledgeSourceData> knowledgeSources;
     private String updatedAt;
 
     @Getter
@@ -26,6 +27,15 @@ public class KnowledgeDetailResponse {
         private String trustGrade;
         private String sourceType;
         private String notes;
+    }
+
+    @Getter
+    @Builder
+    public static class KnowledgeSourceData {
+        private String id;
+        private String url;
+        private String documentName;
+        private String retrievedAt;
     }
 
     @Getter

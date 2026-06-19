@@ -55,4 +55,11 @@ public class Certification {
         if (this.id == null) this.id = UUID.randomUUID().toString();
         this.createdAt = LocalDateTime.now();
     }
+
+    public void update(String name, LocalDate issuedAt, LocalDate expiresAt, Integer renewalCycle) {
+        if (name != null) this.name = name;
+        if (issuedAt != null) this.issuedAt = issuedAt;
+        if (expiresAt != null) this.expiresAt = expiresAt;
+        if (renewalCycle != null) this.renewalCycle = renewalCycle;
+    }
 }
