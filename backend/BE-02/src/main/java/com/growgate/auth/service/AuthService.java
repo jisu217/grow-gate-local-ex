@@ -2,8 +2,7 @@ package com.growgate.auth.service;
 
 import com.growgate.auth.dto.LoginRequest;
 import com.growgate.auth.dto.LoginResponse;
-import com.growgate.auth.dto.SignupCompanyRequest;
-import com.growgate.auth.dto.SignupPersonalRequest;
+import com.growgate.auth.dto.SignupRequest;
 import com.growgate.auth.dto.SignupResponse;
 import com.growgate.company.entity.Company;
 import com.growgate.company.repository.CompanyRepository;
@@ -50,11 +49,18 @@ public class AuthService {
         return new LoginResponse(accessToken, user.getId(), user.getUserType().name(), role, companyId);
     }
 
-    public SignupResponse signupPersonal(SignupPersonalRequest request) {
+    public SignupResponse signup(SignupRequest request) {
         if (userRepository.existsByEmail(request.getEmail())) {
             throw new BusinessException(ErrorCode.CONFLICT, "이미 사용 중인 이메일입니다.");
         }
 
+        if ("company".equals(request.getType())) {
+            return signupCompany(request);
+        }
+        return signupPersonal(request);
+    }
+
+    private SignupResponse signupPersonal(SignupRequest request) {
         User user = User.builder()
                 .email(request.getEmail())
                 .passwordHash(passwordEncoder.encode(request.getPassword()))
@@ -72,11 +78,7 @@ public class AuthService {
                 .build();
     }
 
-    public SignupResponse signupCompany(SignupCompanyRequest request) {
-        if (userRepository.existsByEmail(request.getEmail())) {
-            throw new BusinessException(ErrorCode.CONFLICT, "이미 사용 중인 이메일입니다.");
-        }
-
+    private SignupResponse signupCompany(SignupRequest request) {
         if (companyRepository.findByBusinessNumber(request.getBusinessNumber()).isPresent()) {
             throw new BusinessException(ErrorCode.CONFLICT, "이미 등록된 사업자번호입니다.");
         }

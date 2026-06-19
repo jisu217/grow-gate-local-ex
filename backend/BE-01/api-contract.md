@@ -70,14 +70,30 @@
 
 ---
 
-### [3] POST /api/auth/signup/personal 개인 회원가입
+### [3] POST /api/auth/signup 회원가입
 
-**Request**
+> `type` 값에 따라 개인/기업 가입 구분. 기업 가입 시 `companyName`, `businessNumber`, `industry` 필수
+
+**Request — 개인**
 ```json
 {
+  "type": "personal",
   "email": "user@example.com",
   "password": "password1234",
   "name": "홍길동"
+}
+```
+
+**Request — 기업**
+```json
+{
+  "type": "company",
+  "email": "corp@example.com",
+  "password": "password1234",
+  "name": "담당자명",
+  "companyName": "㈜예시기업",
+  "businessNumber": "123-45-67890",
+  "industry": "전자부품"
 }
 ```
 
@@ -95,37 +111,7 @@
 ```json
 // 409 - 이메일 중복
 { "error": { "code": "CONFLICT", "message": "이미 사용 중인 이메일입니다." } }
-```
 
----
-
-### [4] POST /api/auth/signup/company 기업 회원가입
-
-**Request**
-```json
-{
-  "email": "corp@example.com",
-  "password": "password1234",
-  "name": "담당자명",
-  "companyName": "㈜예시기업",
-  "businessNumber": "123-45-67890",
-  "industry": "전자부품"
-}
-```
-
-**Response** `201 Created`
-```json
-{
-  "userId": "uuid-5678",
-  "email": "corp@example.com",
-  "name": "담당자명",
-  "userType": "company",
-  "companyId": "uuid-company-001"
-}
-```
-
-**에러**
-```json
 // 409 - 사업자번호 중복
 { "error": { "code": "CONFLICT", "message": "이미 등록된 사업자번호입니다." } }
 ```
@@ -353,7 +339,7 @@
 
 ## 4. 마이페이지 — 제품 지식 관리
 
-### [22] GET /api/mypage/knowledge 등록 제품 목록 조회
+### [22] GET /api/products 등록 제품 목록 조회
 
 > **사용 화면**: `/mypage/knowledge` 제품 목록 카드, `/diagnosis/new` "저장된 제품 지식 불러오기" 모달 양쪽에서 이 API를 공통으로 사용함.
 > (모달에서는 `productId`, `name`, `trustGrade`, `missingFieldCount`만 표시)
@@ -384,7 +370,7 @@
 
 ---
 
-### [23] POST /api/mypage/knowledge 신규 제품 등록
+### [23] POST /api/products 신규 제품 등록
 
 **Request**
 ```json
@@ -406,7 +392,7 @@
 
 ---
 
-### [24] GET /api/mypage/knowledge/:productId 제품 상세 조회
+### [24] GET /api/products/{productId}/knowledge 제품 지식 상세 조회
 
 **Response** `200 OK`
 ```json
@@ -453,7 +439,7 @@
 
 ---
 
-### [25] PATCH /api/mypage/knowledge/:productId 제품 정보 수정
+### [25] PUT /api/products/{productId}/knowledge 제품 지식 수정
 
 > 수정 저장 시 백엔드에서 Audit Log(`audit_logs` 테이블)를 자동으로 기록함
 
@@ -478,7 +464,7 @@
 
 ---
 
-### [26] DELETE /api/mypage/knowledge/:productId 제품 삭제
+### [26] DELETE /api/products/{productId} 제품 삭제
 
 **Response** `200 OK`
 ```json
@@ -496,7 +482,7 @@
 
 ---
 
-### [27] GET /api/mypage/knowledge/:productId/logs 제품 수정 이력 조회
+### [27] GET /api/products/{productId}/audit-logs 제품 수정 이력 조회
 
 **Response** `200 OK`
 ```json
