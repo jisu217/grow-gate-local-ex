@@ -82,39 +82,30 @@ export async function getProductKnowledge(productId) {
   }
 }
 
-// 제품 지식 저장
+// 제품 지식 저장 (쓰기 작업 — 조회와 달리 실패 시 mock 대체 없이 에러 그대로 전파)
+// 사유: mock 성공으로 둔갑 시 사용자는 저장 완료로 착각하나 실제로는 입력 유실 위험
 export async function saveProductKnowledge(productId, payload) {
-  try {
-    const body = {
-      name: payload.productName ?? payload.name,
-      category: payload.category,
-      description: payload.description,
-      knowledge: payload.knowledge,
-      reason: payload.reason,
-    }
-    const res = await apiFetch(`/products/${productId}/knowledge`, {
-      method: 'PUT',
-      body: JSON.stringify(body),
-    })
-    return { ...PRODUCT_DETAILS[productId], ...payload, id: res.productId, updatedAt: res.updatedAt }
-  } catch (err) {
-    console.warn('[productService] saveProductKnowledge API 실패, mock으로 대체합니다.', err)
-    return { ...PRODUCT_DETAILS[productId], ...payload, updatedAt: new Date().toISOString().slice(0, 10) }
+  const body = {
+    name: payload.productName ?? payload.name,
+    category: payload.category,
+    description: payload.description,
+    knowledge: payload.knowledge,
+    reason: payload.reason,
   }
+  const res = await apiFetch(`/products/${productId}/knowledge`, {
+    method: 'PUT',
+    body: JSON.stringify(body),
+  })
+  return { ...PRODUCT_DETAILS[productId], ...payload, id: res.productId, updatedAt: res.updatedAt }
 }
 
-// 신규 제품 생성
+// 신규 제품 생성 (쓰기 작업 — saveProductKnowledge와 동일하게 실패 시 에러 그대로 전파)
 export async function createProduct(payload) {
-  try {
-    const body = {
-      name: payload.productName ?? payload.name,
-      category: payload.category,
-      description: payload.description,
-    }
-    const res = await apiFetch('/products', { method: 'POST', body: JSON.stringify(body) })
-    return { ...payload, id: res.productId, createdAt: res.createdAt }
-  } catch (err) {
-    console.warn('[productService] createProduct API 실패, mock으로 대체합니다.', err)
-    return { id: `prod-${Date.now()}`, ...payload }
+  const body = {
+    name: payload.productName ?? payload.name,
+    category: payload.category,
+    description: payload.description,
   }
+  const res = await apiFetch('/products', { method: 'POST', body: JSON.stringify(body) })
+  return { ...payload, id: res.productId, createdAt: res.createdAt }
 }
