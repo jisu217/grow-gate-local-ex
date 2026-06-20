@@ -179,12 +179,19 @@ export async function getProducts() {
   return PRODUCTS
 }
 
-// 연동 후
+// 연동 후 (실 API 호출 → 실패 시 mock fallback)
 export async function getProducts() {
-  const res = await fetch(`${import.meta.env.VITE_API_URL}/products`)
-  return res.json()
+  try {
+    const res = await apiFetch('/products')
+    return res.products.map(mapProductSummary)
+  } catch (err) {
+    console.warn('[productService] getProducts API 실패, mock으로 대체합니다.', err)
+    return PRODUCTS
+  }
 }
 ```
+
+> 공통 fetch 헬퍼는 `services/apiClient.js`(`${VITE_API_URL}/api` 베이스) 참고.
 
 **연동 후 삭제 대상**
 
@@ -214,21 +221,28 @@ export async function getProducts() {
 
 ### 제품 지식
 
+> 연동 완료 (`apiFetch` 베이스: `${VITE_API_URL}/api`). 실패 시 mock fallback.
+
 | 메서드 | 경로 | 설명 | 서비스 함수 |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/products` | 제품 목록 조회 | `getProducts()` |
-| `GET` | `/products/:id` | 제품 상세·지식 조회 | `getProductKnowledge(id)` |
-| `POST` | `/products` | 신규 제품 생성 | `createProduct(payload)` |
-| `PUT` | `/products/:id` | 제품 지식 수정 | `saveProductKnowledge(id, payload)` |
+| `GET` | `/api/products` | 제품 목록 조회 | `getProducts()` |
+| `GET` | `/api/products/:id/knowledge` | 제품 상세·지식 조회 | `getProductKnowledge(id)` |
+| `POST` | `/api/products` | 신규 제품 생성 | `createProduct(payload)` |
+| `PUT` | `/api/products/:id/knowledge` | 제품 지식 수정 | `saveProductKnowledge(id, payload)` |
+| `GET` | `/api/products/:id/audit-logs` | 변경 이력 조회 | — (미연동, `KnowledgeDetail` 변경 이력 탭은 현재 빈 배열) |
 
 ### 진단
 
+> 연동 완료 (`apiFetch` 베이스: `${VITE_API_URL}/api`). 실패 시 mock fallback.
+> S02~S10(커넥터·시장·규제·리콜·특허·실행보드·파이프라인)은 백엔드에 데이터 모델이
+> 없어 mock 데이터를 그대로 사용 중 — 별도 백엔드 작업(공공데이터 연동·예측 모델) 필요.
+
 | 메서드 | 경로 | 설명 | 서비스 함수 |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/diagnoses` | 진단 이력 목록 조회 | `getDiagnosisList()` |
-| `GET` | `/diagnoses/:id` | 진단 결과 상세 조회 | `getDiagnosisResult(id)` |
-| `POST` | `/diagnoses` | 새 진단 실행 요청 | `runDiagnosis(payload)` |
-| `GET` | `/diagnoses/:id/sources` | 진단 출처 데이터 조회 | — (미구현) |
+| `GET` | `/api/diagnosis` | 진단 이력 목록 조회 | `getDiagnosisList()` |
+| `GET` | `/api/diagnosis/:id` | 진단 결과 상세 조회 | `getDiagnosisResult(id)` |
+| `POST` | `/api/diagnosis` | 새 진단 실행 요청 | `runDiagnosis(payload)` |
+| `GET` | `/api/diagnosis/:id/sources` | 진단 출처 데이터 조회 | — (미구현) |
 
 ---
 
