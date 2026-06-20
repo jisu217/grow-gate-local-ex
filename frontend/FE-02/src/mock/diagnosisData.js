@@ -14,7 +14,14 @@ export const CURRENT_SESSION = {
   updatedAt:            '2025-05-28',
 
   // 진단 결과 요약
-  diagnosisScore: 83,
+  diagnosisScore: {
+    overall: 83,
+    market: 91,
+    regulation: 75,
+    recall: 88,
+    fto: 75,
+    support: 79,
+  },
   riskItems: [
     { level: 'high',   label: '과열·열폭주 리콜 유사도 0.86' },
     { level: 'high',   label: 'BMS 특허 침해 위험 (삼성SDI)' },
