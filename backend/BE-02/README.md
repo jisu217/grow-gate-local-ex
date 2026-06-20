@@ -146,8 +146,7 @@ BE-02/
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/auth/login` | 이메일·비밀번호 로그인, JWT 발급 | |
 | `POST` | `/api/auth/logout` | 로그아웃 | |
-| `POST` | `/api/auth/signup/personal` | 개인 계정 회원가입 | |
-| `POST` | `/api/auth/signup/company` | 기업 계정 회원가입 | |
+| `POST` | `/api/auth/signup` | 회원가입 (`type`: personal/company로 구분) | |
 
 ### 사용자
 
@@ -167,12 +166,12 @@ BE-02/
 
 | 메서드 | 경로 | 설명 | 필요 역할 |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/mypage/knowledge` | 제품 목록 조회 | 전체 |
-| `POST` | `/api/mypage/knowledge` | 제품 생성 | owner, admin |
-| `GET` | `/api/mypage/knowledge/:productId` | 제품 상세 조회 | 전체 |
-| `PATCH` | `/api/mypage/knowledge/:productId` | 제품 지식 수정 | owner, admin, editor |
-| `DELETE` | `/api/mypage/knowledge/:productId` | 제품 삭제 | owner, admin |
-| `GET` | `/api/mypage/knowledge/:productId/logs` | 감사 로그 조회 | owner, admin |
+| `GET` | `/api/products` | 제품 목록 조회 | 전체 |
+| `POST` | `/api/products` | 제품 생성 | owner, admin |
+| `GET` | `/api/products/:productId/knowledge` | 제품 상세 조회 | 전체 |
+| `PUT` | `/api/products/:productId/knowledge` | 제품 지식 수정 | owner, admin, editor |
+| `DELETE` | `/api/products/:productId` | 제품 삭제 | owner, admin |
+| `GET` | `/api/products/:productId/audit-logs` | 감사 로그 조회 | owner, admin |
 
 ### 진단
 

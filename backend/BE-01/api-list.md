@@ -10,8 +10,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | 1 | POST | /api/auth/login | 로그인 | 불필요 |
 | 2 | POST | /api/auth/logout | 로그아웃 | 필요 |
-| 3 | POST | /api/auth/signup/personal | 개인 회원가입 | 불필요 |
-| 4 | POST | /api/auth/signup/company | 기업 회원가입 | 불필요 |
+| 3 | POST | /api/auth/signup | 회원가입 (`type`: personal/company로 구분) | 불필요 |
 
 ---
 
@@ -71,9 +70,9 @@
 
 | # | 메서드 | 엔드포인트 | 설명 | 인증 |
 | :--- | :--- | :--- | :--- | :--- |
-| 22 | GET | /api/mypage/knowledge | 등록 제품 목록 조회 (`/diagnosis/new` 불러오기 모달에서도 공통 사용) | 필요 |
-| 23 | POST | /api/mypage/knowledge | 신규 제품 등록 | 필요 |
-| 24 | GET | /api/mypage/knowledge/:productId | 제품 상세 조회 | 필요 |
-| 25 | PATCH | /api/mypage/knowledge/:productId | 제품 정보 수정 (저장 시 Audit Log 자동 기록) | 필요 |
-| 26 | DELETE | /api/mypage/knowledge/:productId | 제품 삭제 | 필요 |
-| 27 | GET | /api/mypage/knowledge/:productId/logs | 제품 수정 이력 조회 | 필요 |
+| 22 | GET | /api/products | 등록 제품 목록 조회 (`/diagnosis/new` 불러오기 모달에서도 공통 사용) | 필요 |
+| 23 | POST | /api/products | 신규 제품 등록 | 필요 |
+| 24 | GET | /api/products/:productId/knowledge | 제품 상세 조회 | 필요 |
+| 25 | PUT | /api/products/:productId/knowledge | 제품 정보 수정 (저장 시 Audit Log 자동 기록) | 필요 |
+| 26 | DELETE | /api/products/:productId | 제품 삭제 | 필요 |
+| 27 | GET | /api/products/:productId/audit-logs | 제품 수정 이력 조회 | 필요 |

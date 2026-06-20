@@ -117,7 +117,7 @@
 
 ### 8. Audit Logs (제품 지식 수정 이력)
 
-> `PATCH /api/mypage/knowledge/:productId` 호출 시 백엔드 자동 기록
+> `PUT /api/products/:productId/knowledge` 호출 시 백엔드 자동 기록
 
 | 컬럼명 | 타입 | 제약조건 | 설명 |
 | :--- | :--- | :--- | :--- |
