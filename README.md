@@ -12,8 +12,8 @@
 
 | Type | Path | Stack | Description |
 | :--- | :--- | :--- | :--- |
-| React FE | `frontend/FE-02/` | React 18 + Vite | 상세: [frontend/FE-02/README.md](frontend/FE-02/README.md) |
-| Spring Boot BE | `backend/BE-02/` | Spring Boot 3.4 + MySQL | 상세: [backend/BE-02/README.md](backend/BE-02/README.md) |
+| React FE | `frontend/FE-02/` | React 18 + Vite | [frontend/FE-02/README.md](frontend/FE-02/README.md) |
+| Spring Boot BE | `backend/BE-02/` | Spring Boot 3.4 + MySQL | [backend/BE-02/README.md](backend/BE-02/README.md) |
 
 ## Timeline
 
