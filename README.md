@@ -8,6 +8,22 @@
 ![Public Data](https://img.shields.io/badge/Public%20Data-KCS%20%7C%20KOTRA%20%7C%20KATS%20%7C%20KIPRIS-blue)
 ![Status](https://img.shields.io/badge/Prototype-demo-green)
 
+## New App (FE-02 / BE-02)
+
+| Type | Path | Stack | Description |
+| :--- | :--- | :--- | :--- |
+| React FE | `frontend/FE-02/` | React 18 + Vite | 상세: [frontend/FE-02/README.md](frontend/FE-02/README.md) |
+| Spring Boot BE | `backend/BE-02/` | Spring Boot 3.4 + MySQL | 상세: [backend/BE-02/README.md](backend/BE-02/README.md) |
+
+## Timeline
+
+| Date | Type | Description |
+| :--- | :--- | :--- |
+| 26.05.18 | 온라인 미팅 |  |
+| 26.05.31 | 1차 스프린트 |  |
+| 26.06.04 | 2차 스프린트 |  |
+| 26.06.20 | 3차 스프린트 |  |
+
 ## Why
 
 지역 제조기업은 제품을 해외에 팔기 전에 시장성보다 더 현실적인 질문에 막힙니다.
