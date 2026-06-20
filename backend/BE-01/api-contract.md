@@ -4,6 +4,7 @@
 > 1. 모든 요청/응답 형식: `application/json`  
 > 2. 인증이 필요한 API는 요청 헤더에 `Authorization: Bearer {accessToken}` 포함  
 > 3. 에러 응답 형식은 아래 공통 형식을 따름
+> 4. 필드 네이밍: camelCase 고정
 
 **공통 에러 응답 형식**
 ```json
@@ -267,12 +268,19 @@
 {
   "id": "uuid-diag-001",
   "productId": "uuid-prod-001",
+  "companyId": "uuid-company-001",
+  "knowledgeSnapshotId": "uuid-snapshot-001",
   "productName": "스마트 온도계",
   "targetCountry": "미국",
   "status": "done",
   "result": {
-    "readinessScore": 72,
-    "summary": "전반적인 수출 준비도는 양호하나 FTO 리스크 보완 필요"
+    "diagnosisScore": 72,
+    "summary": "전반적인 수출 준비도는 양호하나 FTO 리스크 보완 필요",
+    "riskItems": [
+      { "level": "high", "label": "FTO 리스크 미해결" }
+    ],
+    "actionRoadmap": { "d30": 2, "d60": 1, "d90": 3 },
+    "evidenceSources": ["uuid-source-001", "uuid-source-002"]
   },
   "knowledgeSnapshot": {
     "trustGrade": "medium",
@@ -290,6 +298,16 @@
   "createdAt": "2026-06-05T10:00:00Z"
 }
 ```
+
+> **`result` 필드 설명**
+>
+> | 필드 | 타입 | 설명 |
+> | :--- | :--- | :--- |
+> | `diagnosisScore` | number | 진단 점수 (0~100) |
+> | `summary` | string | 진단 결과 요약 |
+> | `riskItems` | array | 리스크 항목 목록. 각 항목은 `level`(`"high"` \| `"medium"` \| `"low"`), `label`로 구성 |
+> | `actionRoadmap` | object | 30·60·90일 실행 항목 수. `d30`, `d60`, `d90` 필드로 구성 |
+> | `evidenceSources` | array | 진단 근거 출처 ID 목록. `/api/diagnosis/:id/sources`로 상세 조회 가능 |
 
 > **`knowledgeSnapshot` 필드 설명**
 >
