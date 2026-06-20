@@ -8,12 +8,18 @@
 ![Public Data](https://img.shields.io/badge/Public%20Data-KCS%20%7C%20KOTRA%20%7C%20KATS%20%7C%20KIPRIS-blue)
 ![Status](https://img.shields.io/badge/Prototype-demo-green)
 
-## New App (FE-02 / BE-02)
+---
+
+## Main App (FE-02 / BE-02)
 
 | Type | Path | Stack | Description |
 | :--- | :--- | :--- | :--- |
 | React FE | `frontend/FE-02/` | React 18 + Vite | [frontend/FE-02/README.md](frontend/FE-02/README.md) |
 | Spring Boot BE | `backend/BE-02/` | Spring Boot 3.4 + MySQL | [backend/BE-02/README.md](backend/BE-02/README.md) |
+
+| 홈 | AI 진단 결과 |
+| :--- | :--- |
+| ![홈 화면](docs/screenshot-home.png) | ![진단 결과 화면](docs/screenshot-diagnosis.png) |
 
 ## Timeline
 
