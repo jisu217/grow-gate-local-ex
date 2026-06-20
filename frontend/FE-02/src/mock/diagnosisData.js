@@ -8,7 +8,7 @@ export const CURRENT_SESSION = {
   productId:            'prod-001',
   companyId:            'comp-001',
   knowledgeSnapshotId:  'snap-prod-001-20250528',  // 진단 시점 제품 지식 버전
-  trustGrade:           'A',
+  trustGrade:           'high',
   missingFields:        ['MSDS 최신본', 'CE DoC 초안'],
   evidenceSources:      ['관세청', 'KOTRA', 'KTL', 'SafetyKorea', 'KIPRIS', '기업마당', 'EU RAPEX'],
   updatedAt:            '2025-05-28',
