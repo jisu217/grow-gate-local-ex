@@ -19,6 +19,9 @@
 .input:focus { border-color: var(--blue); background: #fff; }
 /* 제출 버튼 */
 .btn { display: block; width: 100%; margin-top: 24px; background: var(--blue); color: #fff; font-family: var(--kr); font-weight: 700; font-size: 15px; border: none; padding: 14px; border-radius: 12px; cursor: pointer; box-shadow: 0 8px 20px rgba(47,107,255,.3); }
+/* 에러 메시지 */
+.error { margin-top: 14px; font-size: 13px; color: #e2504a; background: #fdecea; border: 1px solid #f5c6c2; border-radius: 10px; padding: 10px 12px; }
+.btn:disabled { opacity: .6; cursor: wait; }
 /* 하단 보조 링크 */
 .links { text-align: center; margin-top: 16px; font-size: 13px; color: var(--slate); }
 .links a { color: var(--blue); text-decoration: none; font-weight: 600; }

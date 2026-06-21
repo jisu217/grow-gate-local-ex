@@ -1,12 +1,26 @@
 // 백엔드 API 공통 fetch 헬퍼
-const API_BASE = `${import.meta.env.VITE_API_URL ?? 'http://localhost:8080'}/api`
+// 로컬 개발: Vite 프록시(/api → http://localhost:8080) 사용 → 포트/CORS 영향 없음
+// 배포 등으로 VITE_API_URL이 지정되면 그 주소로 직접 호출
+const API_BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api'
 
-// 진단/제품 API는 인증 필요(@AuthenticationPrincipal)하나, FE에 아직 로그인·JWT 저장
-// 미연동(README TODO 참고)으로 Authorization 헤더는 로그인 연동 시 추가 예정.
+// 저장된 로그인 토큰 꺼내기
+export function getToken() {
+  return localStorage.getItem('accessToken')
+}
+
 export async function apiFetch(path, options = {}) {
+  // auth: false 면 토큰을 안 붙임 (로그인·회원가입 같은 공개 API용)
+  const { auth = true, headers, ...rest } = options
+  const token = getToken()
   const res = await fetch(`${API_BASE}${path}`, {
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-    ...options,
+    ...rest,
+    headers: {
+      'Content-Type': 'application/json',
+      ...(auth && token ? { Authorization: `Bearer ${token}` } : {}),
+      ...headers,
+    },
   })
   if (!res.ok) {
     throw new Error(`API ${res.status} ${res.statusText}: ${path}`)

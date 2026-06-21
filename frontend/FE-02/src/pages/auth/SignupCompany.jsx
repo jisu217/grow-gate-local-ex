@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from './Auth.module.css'
+import { signup } from '../../services/authService.js'
 
 // 입력 필드
 const FIELDS = [
@@ -16,8 +17,29 @@ const FIELDS = [
 export default function SignupCompany() {
   const navigate = useNavigate()
   const [form, setForm] = useState(Object.fromEntries(FIELDS.map(f => [f.key,''])))
+  const [error, setError] = useState('')
   // 입력값 변경 처리
   const handleChange = (e) => setForm(p => ({...p, [e.target.name]: e.target.value}))
+
+  // 가입 완료 — 실제 백엔드 호출 (필드명이 백엔드와 일치해 매핑 불필요)
+  const handleSubmit = async () => {
+    setError('')
+    try {
+      await signup({
+        type: 'company',
+        email: form.email,
+        password: form.password,
+        name: form.name,
+        companyName: form.companyName,
+        businessNumber: form.businessNumber,
+        industry: form.industry,
+      })
+      alert('회원가입 완료! 로그인해주세요.')
+      navigate('/login')
+    } catch (e) {
+      setError('회원가입 실패: ' + e.message)
+    }
+  }
 
   return (
     <div className={styles.wrap}>
@@ -30,7 +52,8 @@ export default function SignupCompany() {
             <input id={`signup-company-${f.key}`} className={styles.input} name={f.key} type={f.type||'text'} value={form[f.key]} onChange={handleChange} placeholder={f.placeholder} />
           </div>
         ))}
-        <button className={styles.btn} onClick={() => navigate('/login')}>가입 완료</button>
+        {error && <div className={styles.error}>{error}</div>}
+        <button className={styles.btn} onClick={handleSubmit}>가입 완료</button>
       </div>
     </div>
   )
