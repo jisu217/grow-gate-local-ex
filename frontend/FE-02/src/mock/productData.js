@@ -35,7 +35,11 @@ export const PRODUCT_DETAILS = {
     fto: [
       { target: 'EU', status: '검토 중', note: 'BMS 관련 삼성SDI 특허 위험 감지' },
     ],
-    buyerRequirements: ['IEC 62133 시험 성적서', 'CE DoC(적합성 선언서)', 'MSDS 최신본'],
+    buyerRequirements: [
+      { id: 'breq-001', buyerName: '바이어 A', country: '독일', requirements: 'IEC 62133 시험 성적서' },
+      { id: 'breq-002', buyerName: '바이어 A', country: '독일', requirements: 'CE DoC(적합성 선언서)' },
+      { id: 'breq-003', buyerName: '바이어 B', country: 'EU', requirements: 'MSDS 최신본' },
+    ],
     auditLog: [
       {
         date: '2025-05-28', by: '홍길동',

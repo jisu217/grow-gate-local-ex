@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom'
 import styles from './KnowledgeDetail.module.css'
 import { usePermission } from '../../hooks/usePermission.js'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
-import { getProductKnowledge } from '../../services/productService.js'
+import { getProductKnowledge, getProductAuditLogs } from '../../services/productService.js'
 import { toGradeLabel, toGradeClass } from '../../utils/trustGrade.js'
 
 // 인증 출처 유형 맵
@@ -24,15 +24,25 @@ export default function KnowledgeDetail() {
   const [pageState, setPageState] = useState('loading')
   const [activeTab, setActiveTab] = useState(0)
 
+  // audit:view 권한 없으면 변경 이력 탭 제외
+  const canViewAudit = can('audit:view')
+  const tabs = canViewAudit ? ALL_TABS : ALL_TABS.filter((t) => t !== '변경 이력')
+
   useEffect(() => {
     setPageState('loading')
     getProductKnowledge(productId)
-      .then((data) => { setProduct(data); setPageState('ok') })
+      .then((data) => {
+        setProduct(data)
+        setPageState('ok')
+        // 변경 이력은 별도 엔드포인트라 본문 로딩과 분리해 채움 (권한 없으면 호출 생략)
+        if (canViewAudit) {
+          getProductAuditLogs(productId).then((auditLog) => {
+            setProduct((prev) => (prev ? { ...prev, auditLog } : prev))
+          })
+        }
+      })
       .catch(() => setPageState('error'))
-  }, [productId])
-
-  // audit:view 권한 없으면 변경 이력 탭 제외
-  const tabs = can('audit:view') ? ALL_TABS : ALL_TABS.filter((t) => t !== '변경 이력')
+  }, [productId, canViewAudit])
 
   if (pageState === 'loading') return (
     <div className={styles.wrap}>
@@ -163,7 +173,10 @@ export default function KnowledgeDetail() {
             <div className={styles.sectionTitle}>바이어 요구사항</div>
             <ul className={styles.reqList}>
               {product.buyerRequirements.map((req) => (
-                <li key={req} className={styles.reqItem}>{req}</li>
+                <li key={req.id} className={styles.reqItem}>
+                  <strong>{req.buyerName}</strong>
+                  {req.country ? ` · ${req.country}` : ''} — {req.requirements}
+                </li>
               ))}
             </ul>
           </div>
