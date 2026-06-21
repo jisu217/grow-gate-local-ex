@@ -1,0 +1,154 @@
+{
+  "metadata": {
+    "service": "GROW-GATE Local EX",
+    "version": "0.2.0-public-data",
+    "updated_at": "2026-05-19",
+    "note": "화면별 공공데이터 수집 후보와 정규화 계약입니다. API 키가 없거나 외부망이 막힌 환경에서는 seed_records를 사용해 같은 스키마로 시연합니다."
+  },
+  "sources": [
+    {
+      "source_id": "kcs_trade_gw",
+      "screen_ids": ["S02", "S04", "S09"],
+      "connector": "trade",
+      "name": "관세청_수출입무역통계 GW",
+      "provider": "Korea Customs Service",
+      "official_url": "https://www.data.go.kr/en/data/15102108/openapi.do",
+      "requires_key": true,
+      "env_key": "DATAGO_SERVICE_KEY",
+      "update_cycle": "monthly",
+      "target_table": "trade_signal",
+      "use_in_product": "HS Code와 대상국 기준 수출입 추세, 관세/시장성 신호 산출",
+      "request_hint": {
+        "hs_code": "850760",
+        "country": "DE",
+        "period": "recent_12_months"
+      },
+      "seed_records": [
+        {
+          "country_code": "DE",
+          "hs_code": "850760",
+          "import_growth_yoy": 14.7,
+          "tariff": 0.0,
+          "logistics_days": "2-3 air / 28-35 sea",
+          "opportunity_score": 91,
+          "reason": "EU 전기전자·산업용 배터리 수요와 한-EU 교역 환경을 반영한 데모 기준값"
+        }
+      ]
+    },
+    {
+      "source_id": "kotra_supply_chain",
+      "screen_ids": ["S02", "S04", "S08", "S09"],
+      "connector": "country",
+      "name": "대한무역투자진흥공사_글로벌 공급망 인사이트",
+      "provider": "KOTRA",
+      "official_url": "https://www.data.go.kr/data/15122648/openapi.do",
+      "requires_key": true,
+      "env_key": "DATAGO_SERVICE_KEY",
+      "update_cycle": "ad-hoc",
+      "target_table": "country_profile",
+      "use_in_product": "대상국 공급망 이슈, 정책대응, 산업전망을 시장성 근거와 로드맵 메모에 반영",
+      "request_hint": {
+        "keyword": "lithium battery Germany EU"
+      },
+      "seed_records": [
+        {
+          "country_code": "DE",
+          "region": "EU",
+          "market_note": "EU 배터리 규제, 공급망 투명성, 탄소·재활용 데이터 요구가 증가",
+          "regulatory_pressure": 0.92,
+          "buyer_note": "B2B 바이어는 CE, UN38.3, IEC 62133, 공급망 문서 패키지를 선호"
+        }
+      ]
+    },
+    {
+      "source_id": "safety_korea_cert_recall",
+      "screen_ids": ["S02", "S05", "S06", "S08", "S09"],
+      "connector": "cert_recall",
+      "name": "산업통상부 국가기술표준원_제품 안전인증 및 리콜 정보",
+      "provider": "KATS Safety Korea",
+      "official_url": "https://www.data.go.kr/data/15116894/openapi.do",
+      "api_home": "https://www.safetykorea.kr/release/openapi",
+      "requires_key": false,
+      "update_cycle": "near-real-time",
+      "target_table": "recall_case",
+      "use_in_product": "제품명/카테고리 기반 국내외 리콜 사례와 KC 인증 정보를 리콜 위험 Copilot에 반영",
+      "request_hint": {
+        "keyword": "배터리팩",
+        "product_category": "전기용품"
+      },
+      "seed_records": [
+        {
+          "product": "전동공구 배터리팩",
+          "category": "battery",
+          "hazard": "낙하 충격 후 내부 단락 및 충전 중 온도상승 위험",
+          "severity": 0.88,
+          "recommended_tests": ["낙하 시험", "진동 시험", "충격 시험", "충방전 내구 시험"]
+        }
+      ]
+    },
+    {
+      "source_id": "kipris_plus_patent",
+      "screen_ids": ["S02", "S07", "S08", "S09"],
+      "connector": "patent",
+      "name": "특허청 KIPRIS Plus Open API",
+      "provider": "KIPRIS Plus",
+      "official_url": "https://plus.kipris.or.kr/eng/main/contents.do?menuNo=300024",
+      "requires_key": true,
+      "env_key": "KIPRIS_PLUS_KEY",
+      "update_cycle": "daily",
+      "target_table": "patent_signal",
+      "use_in_product": "보호회로, 열관리, BMS, 팩 하우징 키워드의 출원 밀집도와 FTO 1차 위험지도 산출",
+      "request_hint": {
+        "keywords": ["lithium battery pack", "battery management system", "thermal protection"]
+      },
+      "seed_records": [
+        {
+          "keyword": "battery management system",
+          "korean_keyword": "배터리 관리 시스템",
+          "ipc": ["H02J", "H01M"],
+          "filings": 9630,
+          "recent_growth": 0.22,
+          "risk": 0.81
+        }
+      ]
+    },
+    {
+      "source_id": "export_voucher_support",
+      "screen_ids": ["S02", "S07", "S08", "S09"],
+      "connector": "support",
+      "name": "수출바우처·해외규격인증·지역TP 지원사업 공고",
+      "provider": "MOTIE/MSS/KOTRA/Regional TP",
+      "official_url": "https://www.exportvoucher.com/",
+      "requires_key": false,
+      "update_cycle": "weekly",
+      "target_table": "support_program",
+      "use_in_product": "기업 지역, 인증 갭, 시험 필요도, FTO 위험을 지원사업 신청 우선순위로 변환",
+      "request_hint": {
+        "region": "경남",
+        "tags": ["export", "certification", "testing", "regional_sme"]
+      },
+      "seed_records": [
+        {
+          "name": "해외규격인증획득지원사업",
+          "agency": "중소벤처기업부/유관기관",
+          "region": "전국",
+          "benefit": "해외 인증 시험·컨설팅 비용 일부 지원",
+          "deadline": "공고별 상이",
+          "fit_tags": ["certification", "CE", "IEC", "SME"]
+        }
+      ]
+    }
+  ],
+  "screen_data_map": [
+    {"screen_id": "S00", "screen_name": "시작/데모 케이스 선택", "tables": ["demo_case", "company_profile"], "sources": []},
+    {"screen_id": "S01", "screen_name": "기업·제품 입력", "tables": ["company", "product", "product_feature", "uploaded_document"], "sources": []},
+    {"screen_id": "S02", "screen_name": "데이터 호출/Agent 진행", "tables": ["api_call_log", "normalized_signal", "evidence_source"], "sources": ["kcs_trade_gw", "kotra_supply_chain", "safety_korea_cert_recall", "kipris_plus_patent", "export_voucher_support"]},
+    {"screen_id": "S03", "screen_name": "AI 통합 진단 홈", "tables": ["analysis_run", "score_breakdown", "risk_summary"], "sources": ["kcs_trade_gw", "safety_korea_cert_recall", "kipris_plus_patent", "export_voucher_support"]},
+    {"screen_id": "S04", "screen_name": "수출기회 대시보드", "tables": ["trade_signal", "country_profile", "tariff_profile"], "sources": ["kcs_trade_gw", "kotra_supply_chain"]},
+    {"screen_id": "S05", "screen_name": "규제·인증 패스포트", "tables": ["regulation_rule", "certification_requirement", "evidence_source"], "sources": ["safety_korea_cert_recall"]},
+    {"screen_id": "S06", "screen_name": "리콜 위험 Copilot", "tables": ["recall_case", "recall_match", "test_checklist", "fmea_draft"], "sources": ["safety_korea_cert_recall"]},
+    {"screen_id": "S07", "screen_name": "특허/FTO 위험지도 + 지원사업 매칭", "tables": ["patent_signal", "fto_risk", "support_program", "support_match"], "sources": ["kipris_plus_patent", "export_voucher_support"]},
+    {"screen_id": "S08", "screen_name": "30·60·90일 실행 로드맵 + 문서 초안", "tables": ["roadmap_task", "document_draft", "owner_assignment"], "sources": ["safety_korea_cert_recall", "kipris_plus_patent", "export_voucher_support"]},
+    {"screen_id": "S09", "screen_name": "리포트 출력", "tables": ["report", "report_section", "report_export_log"], "sources": ["kcs_trade_gw", "kotra_supply_chain", "safety_korea_cert_recall", "kipris_plus_patent", "export_voucher_support"]}
+  ]
+}
