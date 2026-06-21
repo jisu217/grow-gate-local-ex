@@ -1,12 +1,12 @@
-package com.growgate.knowledge.dto;
+package com.growgate.product.dto;
 
-// 제품 지식 삭제 응답 DTO
+// 제품 삭제 응답 DTO
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 @Getter
 @AllArgsConstructor
-public class DeleteKnowledgeResponse {
+public class DeleteProductResponse {
 
     private String message;
     private String productId;

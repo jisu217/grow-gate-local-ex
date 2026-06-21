@@ -59,4 +59,11 @@ public class Fto {
         if (this.id == null) this.id = UUID.randomUUID().toString();
         this.createdAt = LocalDateTime.now();
     }
+
+    public void update(String targetCountry, RiskLevel riskLevel, String summary, LocalDate expiresAt) {
+        if (targetCountry != null) this.targetCountry = targetCountry;
+        if (riskLevel != null) this.riskLevel = riskLevel;
+        if (summary != null) this.summary = summary;
+        if (expiresAt != null) this.expiresAt = expiresAt;
+    }
 }

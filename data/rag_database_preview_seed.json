@@ -1,0 +1,453 @@
+{
+  "schema": {
+    "storage_mode": "json_fallback_supabase_ready",
+    "recommended_provider": "Supabase Free Postgres",
+    "vector_extension": "pgvector",
+    "embedding_dimension": 384,
+    "tables": [
+      {
+        "name": "rag_documents",
+        "purpose": "공공데이터, 제품 지식, 기업 공개정보 원문 단위 저장",
+        "key_fields": [
+          "document_id",
+          "source_id",
+          "title",
+          "source_url",
+          "retrieved_at"
+        ]
+      },
+      {
+        "name": "rag_chunks",
+        "purpose": "검색 가능한 문단·근거 단위 청크 저장",
+        "key_fields": [
+          "chunk_id",
+          "document_id",
+          "chunk_text",
+          "metadata",
+          "token_count"
+        ]
+      },
+      {
+        "name": "rag_embeddings",
+        "purpose": "pgvector embedding 저장 및 유사도 검색",
+        "key_fields": [
+          "embedding_id",
+          "chunk_id",
+          "embedding vector(384)",
+          "model_name"
+        ]
+      },
+      {
+        "name": "data_sources",
+        "purpose": "공식 출처, 갱신 주기, 신뢰도, 화면 연결 기준 관리",
+        "key_fields": [
+          "source_id",
+          "provider",
+          "official_url",
+          "update_cycle",
+          "confidence"
+        ]
+      },
+      {
+        "name": "retrieval_runs",
+        "purpose": "질의별 검색 결과, 점수, 사용된 chunk 기록",
+        "key_fields": [
+          "retrieval_run_id",
+          "query",
+          "top_k",
+          "created_at"
+        ]
+      },
+      {
+        "name": "agent_outputs",
+        "purpose": "AI Agent 답변, fallback 여부, prompt version, citations 기록",
+        "key_fields": [
+          "agent_output_id",
+          "provider",
+          "used_fallback",
+          "citations",
+          "created_at"
+        ]
+      },
+      {
+        "name": "eval_cases",
+        "purpose": "RAG/프롬프트 harness 평가 케이스와 결과 관리",
+        "key_fields": [
+          "eval_case_id",
+          "scenario",
+          "expected_citations",
+          "status"
+        ]
+      }
+    ],
+    "migration_notes": [
+      "enable extension vector;",
+      "rag_embeddings.embedding은 vector(384)로 생성",
+      "공모전 데모는 JSON fallback을 유지하고 Supabase 연결 시 동일 테이블명으로 이관"
+    ]
+  },
+  "run_id": "seed-public-data-rag-ml-v1",
+  "tables": {
+    "rag_documents": [
+      {
+        "document_id": "doc-78512c569fee91",
+        "source_id": "kcs_trade_gw",
+        "title": "trade_signal 근거 1",
+        "source_url": "https://www.data.go.kr/en/data/15102108/openapi.do",
+        "retrieved_at": "2026-06-02T13:39:31+00:00",
+        "document_type": "trade_signal",
+        "content": "{\"source_id\": \"kcs_trade_gw\", \"evidence_id\": \"kcs_trade_gw\", \"retrieved_at\": \"2026-06-02T13:39:31+00:00\", \"signal_id\": \"TS-001\", \"product_id\": \"demo-battery-pack\", \"country_code\": \"DE\", \"hs_code\": \"850760\", \"import_growth_yoy\": 14.7, \"tariff\": 0.0, \"logistics_days\": \"2-3 air / 28-35 sea\", \"opportunity_score\": 91, \"reason\": \"EU 전기전자·산업용 배터리 수요와 한-EU 교역 환경을 반영한 데모 기준값\"}",
+        "metadata": {
+          "screen_ids": [
+            "S02",
+            "S04",
+            "S09"
+          ],
+          "run_id": "seed-public-data-rag-ml-v1"
+        }
+      },
+      {
+        "document_id": "doc-c65505f69fd7df",
+        "source_id": "kotra_supply_chain",
+        "title": "country_profile 근거 2",
+        "source_url": "https://www.data.go.kr/data/15122648/openapi.do",
+        "retrieved_at": "2026-06-02T13:39:31+00:00",
+        "document_type": "country_profile",
+        "content": "{\"source_id\": \"kotra_supply_chain\", \"evidence_id\": \"kotra_supply_chain\", \"retrieved_at\": \"2026-06-02T13:39:31+00:00\", \"country_code\": \"DE\", \"region\": \"EU\", \"market_note\": \"EU 배터리 규제, 공급망 투명성, 탄소·재활용 데이터 요구가 증가\", \"regulatory_pressure\": 0.92, \"buyer_note\": \"B2B 바이어는 CE, UN38.3, IEC 62133, 공급망 문서 패키지를 선호\"}",
+        "metadata": {
+          "screen_ids": [
+            "S02",
+            "S04",
+            "S08",
+            "S09"
+          ],
+          "run_id": "seed-public-data-rag-ml-v1"
+        }
+      },
+      {
+        "document_id": "doc-9233bcc3ac8b0d",
+        "source_id": "safety_korea_cert_recall",
+        "title": "recall_case 근거 3",
+        "source_url": "https://www.data.go.kr/data/15116894/openapi.do",
+        "retrieved_at": "2026-06-02T13:39:31+00:00",
+        "document_type": "recall_case",
+        "content": "{\"source_id\": \"safety_korea_cert_recall\", \"evidence_id\": \"safety_korea_cert_recall\", \"retrieved_at\": \"2026-06-02T13:39:31+00:00\", \"recall_id\": \"RC-001\", \"product_category\": \"battery\", \"hazard\": \"낙하 충격 후 내부 단락 및 충전 중 온도상승 위험\", \"keywords\": [\"battery\", \"pack\"], \"severity\": 0.88, \"source_url\": \"https://www.safetykorea.kr/release/openapi\", \"recall_date\": \"\", \"product\": \"전동공구 배터리팩\", \"category\": \"battery\", \"recommended_tests\": [\"낙하 시험\", \"진동 시험\", \"충격 시험\", \"충방전 내구 시험\"]}",
+        "metadata": {
+          "screen_ids": [
+            "S02",
+            "S05",
+            "S06",
+            "S08",
+            "S09"
+          ],
+          "run_id": "seed-public-data-rag-ml-v1"
+        }
+      },
+      {
+        "document_id": "doc-44397a80b7f3cd",
+        "source_id": "kipris_plus_patent",
+        "title": "patent_signal 근거 4",
+        "source_url": "https://plus.kipris.or.kr/eng/main/contents.do?menuNo=300024",
+        "retrieved_at": "2026-06-02T13:39:31+00:00",
+        "document_type": "patent_signal",
+        "content": "{\"source_id\": \"kipris_plus_patent\", \"evidence_id\": \"kipris_plus_patent\", \"retrieved_at\": \"2026-06-02T13:39:31+00:00\", \"patent_signal_id\": \"PS-001\", \"keyword\": \"battery management system\", \"ipc\": [\"H02J\", \"H01M\"], \"filings\": 9630, \"recent_growth\": 0.22, \"jurisdiction\": \"KR/WO\", \"korean_keyword\": \"배터리 관리 시스템\", \"risk\": 0.81}",
+        "metadata": {
+          "screen_ids": [
+            "S02",
+            "S07",
+            "S08",
+            "S09"
+          ],
+          "run_id": "seed-public-data-rag-ml-v1"
+        }
+      },
+      {
+        "document_id": "doc-5fb8817db1d799",
+        "source_id": "export_voucher_support",
+        "title": "support_program 근거 5",
+        "source_url": "https://www.exportvoucher.com/",
+        "retrieved_at": "2026-06-02T13:39:31+00:00",
+        "document_type": "support_program",
+        "content": "{\"source_id\": \"export_voucher_support\", \"evidence_id\": \"export_voucher_support\", \"retrieved_at\": \"2026-06-02T13:39:31+00:00\", \"program_id\": \"SP-001\", \"name\": \"해외규격인증획득지원사업\", \"agency\": \"중소벤처기업부/유관기관\", \"region\": \"전국\", \"eligibility\": \"중소 제조기업\", \"benefit\": \"해외 인증 시험·컨설팅 비용 일부 지원\", \"deadline\": \"공고별 상이\", \"source_url\": \"https://www.exportvoucher.com/\", \"fit_tags\": [\"certification\", \"CE\", \"IEC\", \"SME\"]}",
+        "metadata": {
+          "screen_ids": [
+            "S02",
+            "S07",
+            "S08",
+            "S09"
+          ],
+          "run_id": "seed-public-data-rag-ml-v1"
+        }
+      }
+    ],
+    "rag_chunks": [
+      {
+        "chunk_id": "chunk-e23ba9e63dffaa",
+        "document_id": "doc-78512c569fee91",
+        "chunk_index": 1,
+        "chunk_text": "{\"source_id\": \"kcs_trade_gw\", \"evidence_id\": \"kcs_trade_gw\", \"retrieved_at\": \"2026-06-02T13:39:31+00:00\", \"signal_id\": \"TS-001\", \"product_id\": \"demo-battery-pack\", \"country_code\": \"DE\", \"hs_code\": \"850760\", \"import_growth_yoy\": 14.7, \"tariff\": 0.0, \"logistics_days\": \"2-3 air / 28-35 sea\", \"opportunity_score\": 91, \"reason\": \"EU 전기전자·산업용 배터리 수요와 한-EU 교역 환경을 반영한 데모 기준값\"}",
+        "token_count": 37,
+        "metadata": {
+          "screen_ids": [
+            "S02",
+            "S04",
+            "S09"
+          ],
+          "run_id": "seed-public-data-rag-ml-v1"
+        }
+      },
+      {
+        "chunk_id": "chunk-f11a35bda05f62",
+        "document_id": "doc-c65505f69fd7df",
+        "chunk_index": 1,
+        "chunk_text": "{\"source_id\": \"kotra_supply_chain\", \"evidence_id\": \"kotra_supply_chain\", \"retrieved_at\": \"2026-06-02T13:39:31+00:00\", \"country_code\": \"DE\", \"region\": \"EU\", \"market_note\": \"EU 배터리 규제, 공급망 투명성, 탄소·재활용 데이터 요구가 증가\", \"regulatory_pressure\": 0.92, \"buyer_note\": \"B2B 바이어는 CE, UN38.3, IEC 62133, 공급망 문서 패키지를 선호\"}",
+        "token_count": 33,
+        "metadata": {
+          "screen_ids": [
+            "S02",
+            "S04",
+            "S08",
+            "S09"
+          ],
+          "run_id": "seed-public-data-rag-ml-v1"
+        }
+      },
+      {
+        "chunk_id": "chunk-668a1dc770bdc7",
+        "document_id": "doc-9233bcc3ac8b0d",
+        "chunk_index": 1,
+        "chunk_text": "{\"source_id\": \"safety_korea_cert_recall\", \"evidence_id\": \"safety_korea_cert_recall\", \"retrieved_at\": \"2026-06-02T13:39:31+00:00\", \"recall_id\": \"RC-001\", \"product_category\": \"battery\", \"hazard\": \"낙하 충격 후 내부 단락 및 충전 중 온도상승 위험\", \"keywords\": [\"battery\", \"pack\"], \"severity\": 0.88, \"source_url\": \"https://www.safetykorea.kr/release/openapi\", \"recall_date\": \"\", \"product\": \"전동공구 배터리팩\", \"category\": \"battery\", \"recommended_tests\": [\"낙하 시험\", \"진동 시험\", \"충격 시험\", \"충방전 내구 시험\"]}",
+        "token_count": 45,
+        "metadata": {
+          "screen_ids": [
+            "S02",
+            "S05",
+            "S06",
+            "S08",
+            "S09"
+          ],
+          "run_id": "seed-public-data-rag-ml-v1"
+        }
+      },
+      {
+        "chunk_id": "chunk-5d46c5d1c122ce",
+        "document_id": "doc-44397a80b7f3cd",
+        "chunk_index": 1,
+        "chunk_text": "{\"source_id\": \"kipris_plus_patent\", \"evidence_id\": \"kipris_plus_patent\", \"retrieved_at\": \"2026-06-02T13:39:31+00:00\", \"patent_signal_id\": \"PS-001\", \"keyword\": \"battery management system\", \"ipc\": [\"H02J\", \"H01M\"], \"filings\": 9630, \"recent_growth\": 0.22, \"jurisdiction\": \"KR/WO\", \"korean_keyword\": \"배터리 관리 시스템\", \"risk\": 0.81}",
+        "token_count": 27,
+        "metadata": {
+          "screen_ids": [
+            "S02",
+            "S07",
+            "S08",
+            "S09"
+          ],
+          "run_id": "seed-public-data-rag-ml-v1"
+        }
+      },
+      {
+        "chunk_id": "chunk-e7b56e802d6838",
+        "document_id": "doc-5fb8817db1d799",
+        "chunk_index": 1,
+        "chunk_text": "{\"source_id\": \"export_voucher_support\", \"evidence_id\": \"export_voucher_support\", \"retrieved_at\": \"2026-06-02T13:39:31+00:00\", \"program_id\": \"SP-001\", \"name\": \"해외규격인증획득지원사업\", \"agency\": \"중소벤처기업부/유관기관\", \"region\": \"전국\", \"eligibility\": \"중소 제조기업\", \"benefit\": \"해외 인증 시험·컨설팅 비용 일부 지원\", \"deadline\": \"공고별 상이\", \"source_url\": \"https://www.exportvoucher.com/\", \"fit_tags\": [\"certification\", \"CE\", \"IEC\", \"SME\"]}",
+        "token_count": 34,
+        "metadata": {
+          "screen_ids": [
+            "S02",
+            "S07",
+            "S08",
+            "S09"
+          ],
+          "run_id": "seed-public-data-rag-ml-v1"
+        }
+      }
+    ],
+    "rag_embeddings": [
+      {
+        "embedding_id": "emb-087a58a5177f7b",
+        "chunk_id": "chunk-e23ba9e63dffaa",
+        "model_name": "demo-hash-embedding-384",
+        "embedding_preview": [
+          -0.2,
+          0.9529,
+          -0.851,
+          0.6627,
+          0.898,
+          0.0118,
+          -0.6235,
+          0.1059,
+          -0.9843,
+          0.7725,
+          0.9922,
+          0.2941
+        ]
+      },
+      {
+        "embedding_id": "emb-06d01669c3f066",
+        "chunk_id": "chunk-f11a35bda05f62",
+        "model_name": "demo-hash-embedding-384",
+        "embedding_preview": [
+          -0.1765,
+          0.5451,
+          -0.4039,
+          -0.851,
+          0.5137,
+          0.7569,
+          -0.3176,
+          -0.5216,
+          -0.2706,
+          0.5686,
+          0.8196,
+          0.302
+        ]
+      },
+      {
+        "embedding_id": "emb-a1ad6352ca267d",
+        "chunk_id": "chunk-668a1dc770bdc7",
+        "model_name": "demo-hash-embedding-384",
+        "embedding_preview": [
+          -0.2706,
+          0.5137,
+          0.3098,
+          -0.1373,
+          0.6078,
+          0.2,
+          -0.7333,
+          0.1843,
+          -0.0275,
+          -0.2157,
+          -0.3176,
+          0.5059
+        ]
+      },
+      {
+        "embedding_id": "emb-f131072cee7988",
+        "chunk_id": "chunk-5d46c5d1c122ce",
+        "model_name": "demo-hash-embedding-384",
+        "embedding_preview": [
+          -0.0196,
+          -0.6235,
+          -0.3882,
+          0.9294,
+          0.2078,
+          0.5294,
+          -0.8902,
+          0.9216,
+          0.1059,
+          0.9922,
+          0.098,
+          0.0431
+        ]
+      },
+      {
+        "embedding_id": "emb-4f95604cdd4691",
+        "chunk_id": "chunk-e7b56e802d6838",
+        "model_name": "demo-hash-embedding-384",
+        "embedding_preview": [
+          -0.3255,
+          -0.8196,
+          0.1137,
+          0.9608,
+          -0.4745,
+          0.4275,
+          -0.8745,
+          0.1843,
+          -0.9451,
+          -0.4902,
+          0.0196,
+          -0.0431
+        ]
+      }
+    ],
+    "data_sources": [
+      {
+        "evidence_id": "kcs_trade_gw",
+        "source_type": "trade",
+        "source_name": "관세청_수출입무역통계 GW",
+        "provider": "Korea Customs Service",
+        "title": "HS Code와 대상국 기준 수출입 추세, 관세/시장성 신호 산출",
+        "url": "https://www.data.go.kr/en/data/15102108/openapi.do",
+        "version": "monthly",
+        "retrieved_at": "2026-06-02T13:39:31+00:00",
+        "confidence": 0.72,
+        "screen_ids": [
+          "S02",
+          "S04",
+          "S09"
+        ]
+      },
+      {
+        "evidence_id": "kotra_supply_chain",
+        "source_type": "country",
+        "source_name": "대한무역투자진흥공사_글로벌 공급망 인사이트",
+        "provider": "KOTRA",
+        "title": "대상국 공급망 이슈, 정책대응, 산업전망을 시장성 근거와 로드맵 메모에 반영",
+        "url": "https://www.data.go.kr/data/15122648/openapi.do",
+        "version": "ad-hoc",
+        "retrieved_at": "2026-06-02T13:39:31+00:00",
+        "confidence": 0.72,
+        "screen_ids": [
+          "S02",
+          "S04",
+          "S08",
+          "S09"
+        ]
+      },
+      {
+        "evidence_id": "safety_korea_cert_recall",
+        "source_type": "cert_recall",
+        "source_name": "산업통상부 국가기술표준원_제품 안전인증 및 리콜 정보",
+        "provider": "KATS Safety Korea",
+        "title": "제품명/카테고리 기반 국내외 리콜 사례와 KC 인증 정보를 리콜 위험 Copilot에 반영",
+        "url": "https://www.data.go.kr/data/15116894/openapi.do",
+        "version": "near-real-time",
+        "retrieved_at": "2026-06-02T13:39:31+00:00",
+        "confidence": 0.72,
+        "screen_ids": [
+          "S02",
+          "S05",
+          "S06",
+          "S08",
+          "S09"
+        ]
+      },
+      {
+        "evidence_id": "kipris_plus_patent",
+        "source_type": "patent",
+        "source_name": "특허청 KIPRIS Plus Open API",
+        "provider": "KIPRIS Plus",
+        "title": "보호회로, 열관리, BMS, 팩 하우징 키워드의 출원 밀집도와 FTO 1차 위험지도 산출",
+        "url": "https://plus.kipris.or.kr/eng/main/contents.do?menuNo=300024",
+        "version": "daily",
+        "retrieved_at": "2026-06-02T13:39:31+00:00",
+        "confidence": 0.72,
+        "screen_ids": [
+          "S02",
+          "S07",
+          "S08",
+          "S09"
+        ]
+      },
+      {
+        "evidence_id": "export_voucher_support",
+        "source_type": "support",
+        "source_name": "수출바우처·해외규격인증·지역TP 지원사업 공고",
+        "provider": "MOTIE/MSS/KOTRA/Regional TP",
+        "title": "기업 지역, 인증 갭, 시험 필요도, FTO 위험을 지원사업 신청 우선순위로 변환",
+        "url": "https://www.exportvoucher.com/",
+        "version": "weekly",
+        "retrieved_at": "2026-06-02T13:39:31+00:00",
+        "confidence": 0.72,
+        "screen_ids": [
+          "S02",
+          "S07",
+          "S08",
+          "S09"
+        ]
+      }
+    ],
+    "retrieval_runs": [],
+    "agent_outputs": [],
+    "eval_cases": []
+  }
+}

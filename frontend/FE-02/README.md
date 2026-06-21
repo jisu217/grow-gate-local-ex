@@ -209,15 +209,19 @@ export async function getProducts() {
 ## 9. Required Backend APIs
 
 > 현재 모두 mock 대체 상태. 백엔드 연동 시 아래 엔드포인트 구현 필요.
+> 아래 경로는 백엔드(`backend/BE-02`) 실제 구현 기준. `services/apiClient.js`는 `${VITE_API_URL}/api`를 베이스로 사용.
 
-### 인증
+### 인증·사용자
 
 | 메서드 | 경로 | 설명 | 서비스 파일 |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/auth/login` | 이메일·비밀번호 로그인, JWT 발급 | — (미구현) |
-| `POST` | `/auth/signup/personal` | 개인 계정 회원가입 | — (미구현) |
-| `POST` | `/auth/signup/company` | 기업 계정 회원가입 | — (미구현) |
-| `GET` | `/auth/me` | 현재 로그인 사용자 정보 조회 | — (미구현) |
+| `POST` | `/api/auth/login` | 이메일·비밀번호 로그인, JWT 발급 | — (미구현) |
+| `POST` | `/api/auth/signup` | 회원가입 (개인/기업 구분은 요청 바디로 전달) | — (미구현) |
+| `POST` | `/api/auth/logout` | 로그아웃 | — (미구현) |
+| `GET` | `/api/users/me` | 현재 로그인 사용자 정보 조회 | — (미구현) |
+| `PATCH` | `/api/users/me` | 사용자 정보 수정 | — (미구현) |
+| `GET` | `/api/companies/me` | 소속 기업 정보 조회 (기업 계정) | — (미구현) |
+| `PATCH` | `/api/companies/me` | 소속 기업 정보 수정 (기업 계정) | — (미구현) |
 
 ### 제품 지식
 
@@ -226,10 +230,13 @@ export async function getProducts() {
 | 메서드 | 경로 | 설명 | 서비스 함수 |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/products` | 제품 목록 조회 | `getProducts()` |
-| `GET` | `/api/products/:id/knowledge` | 제품 상세·지식 조회 | `getProductKnowledge(id)` |
 | `POST` | `/api/products` | 신규 제품 생성 | `createProduct(payload)` |
-| `PUT` | `/api/products/:id/knowledge` | 제품 지식 수정 | `saveProductKnowledge(id, payload)` |
-| `GET` | `/api/products/:id/audit-logs` | 변경 이력 조회 | — (미연동, `KnowledgeDetail` 변경 이력 탭은 현재 빈 배열) |
+| `GET` | `/api/products/:productId/knowledge` | 제품 상세·지식 조회 (인증서·FTO·바이어요구사항·출처 포함) | `getProductKnowledge(id)` |
+| `PUT` | `/api/products/:productId/knowledge` | 제품 정보·지식 수정 | `saveProductKnowledge(id, payload)` |
+| `DELETE` | `/api/products/:productId` | 제품 삭제 | — (미구현) |
+| `GET` | `/api/products/:productId/audit-logs` | 변경 이력 조회 | — (미연동, `KnowledgeDetail` 변경 이력 탭은 현재 빈 배열) |
+
+인증서/FTO/바이어요구사항/지식출처 등록·수정·삭제 엔드포인트(`/api/products/{productId}/certifications` 등)는 백엔드 구현 완료, KnowledgeEdit 화면은 제품 기본 정보만 다뤄 대응 서비스 함수 미구현. 자세한 경로는 `backend/BE-02/README.md` 4번 섹션 참고.
 
 ### 진단
 
@@ -240,9 +247,11 @@ export async function getProducts() {
 | 메서드 | 경로 | 설명 | 서비스 함수 |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/diagnosis` | 진단 이력 목록 조회 | `getDiagnosisList()` |
-| `GET` | `/api/diagnosis/:id` | 진단 결과 상세 조회 | `getDiagnosisResult(id)` |
 | `POST` | `/api/diagnosis` | 새 진단 실행 요청 | `runDiagnosis(payload)` |
+| `GET` | `/api/diagnosis/:id` | 진단 결과 상세 조회 | `getDiagnosisResult(id)` |
 | `GET` | `/api/diagnosis/:id/sources` | 진단 출처 데이터 조회 | — (미구현) |
+
+> 화면 라우트(`/mypage/knowledge`, `/diagnosis` 등)는 [§5 Routing](#5-routing)의 UI 경로로 위 표의 `/api/...` 경로와는 별개. 화면 라우트는 유지, 실제 백엔드 호출만 `/api` 경로로 연결.
 
 ---
 

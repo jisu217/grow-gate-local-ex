@@ -41,17 +41,17 @@ public class DiagnosisController {
                 .body(diagnosisService.create(userDetails.getUsername(), request));
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{diagnosisId}")
     public ResponseEntity<DiagnosisDetailResponse> getDetail(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String id) {
-        return ResponseEntity.ok(diagnosisService.getDetail(userDetails.getUsername(), id));
+            @PathVariable String diagnosisId) {
+        return ResponseEntity.ok(diagnosisService.getDetail(userDetails.getUsername(), diagnosisId));
     }
 
-    @GetMapping("/{id}/sources")
+    @GetMapping("/{diagnosisId}/sources")
     public ResponseEntity<DiagnosisSourcesResponse> getSources(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String id) {
-        return ResponseEntity.ok(diagnosisService.getSources(userDetails.getUsername(), id));
+            @PathVariable String diagnosisId) {
+        return ResponseEntity.ok(diagnosisService.getSources(userDetails.getUsername(), diagnosisId));
     }
 }

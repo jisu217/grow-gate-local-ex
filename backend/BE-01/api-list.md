@@ -10,7 +10,7 @@
 | :--- | :--- | :--- | :--- | :--- |
 | 1 | POST | /api/auth/login | 로그인 | 불필요 |
 | 2 | POST | /api/auth/logout | 로그아웃 | 필요 |
-| 3 | POST | /api/auth/signup | 회원가입 (`type` 필드로 개인/기업 구분) | 불필요 |
+| 3 | POST | /api/auth/signup | 회원가입 (`type`: personal/company로 구분) | 불필요 |
 
 ---
 
@@ -76,3 +76,11 @@
 | 25 | PUT | /api/products/:productId/knowledge | 제품 지식 수정 (저장 시 Audit Log 자동 기록) | 필요 |
 | 26 | DELETE | /api/products/:productId | 제품 삭제 | 필요 |
 | 27 | GET | /api/products/:productId/audit-logs | 제품 수정 이력 조회 | 필요 |
+
+---
+
+### 5. 헬스체크
+
+| # | 메서드 | 엔드포인트 | 설명 | 인증 |
+| :--- | :--- | :--- | :--- | :--- |
+| 28 | GET | /health | 서버 상태 확인 (배포·연결 체크용) | 불필요 |

@@ -1,6 +1,6 @@
-package com.growgate.knowledge.dto;
+package com.growgate.product.dto;
 
-// 제품 지식 목록 조회 응답 DTO
+// 제품 목록 조회 응답 DTO
 import lombok.Builder;
 import lombok.Getter;
 
@@ -8,7 +8,7 @@ import java.util.List;
 
 @Getter
 @Builder
-public class KnowledgeListResponse {
+public class ProductListResponse {
 
     private List<ProductSummary> products;
 

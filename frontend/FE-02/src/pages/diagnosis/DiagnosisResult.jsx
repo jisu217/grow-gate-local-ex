@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useSearchParams } from 'react-router-dom'
 
 import Sidebar from '../../components/layout/Sidebar.jsx'
 import Topbar  from '../../components/layout/Topbar.jsx'
@@ -25,10 +25,15 @@ import { getDiagnosisResult } from '../../services/diagnosisService.js'
 // 진단 결과 뷰어 페이지 컴포넌트
 export default function DiagnosisResult() {
   const { id } = useParams()
+  const [searchParams] = useSearchParams()
+
+  // ?step=N 으로 진입하면 해당 단계부터 시작 (예: 마이페이지 "오늘 할 일" → 08 실행 보드)
+  const stepParam = parseInt(searchParams.get('step'), 10)
+  const initialStep = (stepParam >= 0 && stepParam < DIAGNOSIS_STEPS.length) ? stepParam : 0
 
   const [result, setResult]       = useState(null)
   const [pageState, setPageState] = useState('loading')
-  const [currentStep, setCurrentStep] = useState(0)
+  const [currentStep, setCurrentStep] = useState(initialStep)
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   const scrollRef = useRef(null)

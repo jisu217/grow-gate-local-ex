@@ -1,0 +1,339 @@
+{
+  "metadata": {
+    "service": "GROW-GATE Local EX",
+    "version": "0.1.0-demo",
+    "description": "시연용 로컬 데이터셋입니다. 실제 서비스에서는 산업부·무역·해외시장·시험인증·제품안전·특허·지원사업 공공데이터 API로 대체합니다.",
+    "last_updated": "2026-05-15"
+  },
+  "markets": [
+    {
+      "code": "DE",
+      "name": "Germany / EU",
+      "region": "EU",
+      "main_port": "Hamburg",
+      "import_growth_yoy": 14.7,
+      "tariff_mfn": 0.0,
+      "logistics_days_air": "2-3",
+      "logistics_days_sea": "28-35",
+      "route_label": "EU Customs & SPC Check",
+      "demand_tags": ["battery", "electronics", "industrial", "safety"],
+      "regulation_pressure": 0.92,
+      "market_opportunity": 0.91
+    },
+    {
+      "code": "US",
+      "name": "United States",
+      "region": "North America",
+      "main_port": "Los Angeles",
+      "import_growth_yoy": 11.3,
+      "tariff_mfn": 2.7,
+      "logistics_days_air": "2-4",
+      "logistics_days_sea": "15-22",
+      "route_label": "US CBP Clearance",
+      "demand_tags": ["battery", "electronics", "consumer", "industrial"],
+      "regulation_pressure": 0.78,
+      "market_opportunity": 0.88
+    },
+    {
+      "code": "VN",
+      "name": "Vietnam",
+      "region": "ASEAN",
+      "main_port": "Ho Chi Minh",
+      "import_growth_yoy": 9.1,
+      "tariff_mfn": 3.2,
+      "logistics_days_air": "1-2",
+      "logistics_days_sea": "5-7",
+      "route_label": "ASEAN Customs & BTB Check",
+      "demand_tags": ["electronics", "industrial", "component"],
+      "regulation_pressure": 0.55,
+      "market_opportunity": 0.79
+    },
+    {
+      "code": "TH",
+      "name": "Thailand",
+      "region": "ASEAN",
+      "main_port": "Laem Chabang",
+      "import_growth_yoy": 7.4,
+      "tariff_mfn": 3.5,
+      "logistics_days_air": "2-3",
+      "logistics_days_sea": "6-8",
+      "route_label": "ASEAN Customs",
+      "demand_tags": ["battery", "consumer", "industrial"],
+      "regulation_pressure": 0.52,
+      "market_opportunity": 0.72
+    },
+    {
+      "code": "SG",
+      "name": "Singapore",
+      "region": "ASEAN",
+      "main_port": "Singapore",
+      "import_growth_yoy": 6.8,
+      "tariff_mfn": 0.0,
+      "logistics_days_air": "2-3",
+      "logistics_days_sea": "7-10",
+      "route_label": "ASEAN Hub",
+      "demand_tags": ["electronics", "digital", "component"],
+      "regulation_pressure": 0.58,
+      "market_opportunity": 0.74
+    },
+    {
+      "code": "ID",
+      "name": "Indonesia",
+      "region": "ASEAN",
+      "main_port": "Tanjung Priok",
+      "import_growth_yoy": 8.6,
+      "tariff_mfn": 4.0,
+      "logistics_days_air": "2-4",
+      "logistics_days_sea": "8-12",
+      "route_label": "ASEAN Import Check",
+      "demand_tags": ["consumer", "industrial", "battery"],
+      "regulation_pressure": 0.50,
+      "market_opportunity": 0.71
+    },
+    {
+      "code": "CN",
+      "name": "China",
+      "region": "East Asia",
+      "main_port": "Shanghai",
+      "import_growth_yoy": 5.2,
+      "tariff_mfn": 4.5,
+      "logistics_days_air": "1-2",
+      "logistics_days_sea": "3-5",
+      "route_label": "CCC / China Customs",
+      "demand_tags": ["electronics", "battery", "industrial"],
+      "regulation_pressure": 0.72,
+      "market_opportunity": 0.68
+    }
+  ],
+  "regulations": [
+    {
+      "id": "CE-LVD-EMC",
+      "title": "CE / LVD / EMC 적합성 검토",
+      "scope": "EU 전기전자 제품",
+      "triggers": {"regions": ["EU"], "features": ["electronics", "digital"], "hs_prefixes": ["84", "85", "90"]},
+      "priority": "high",
+      "typical_evidence": ["제품 사양서", "회로도", "시험성적서", "DoC", "사용설명서"],
+      "action": "대상 지침을 분류하고 시험기관 견적·일정을 먼저 확보합니다."
+    },
+    {
+      "id": "UN38.3",
+      "title": "UN38.3 리튬전지 운송시험",
+      "scope": "리튬이온 셀·팩·장착 제품 국제 운송",
+      "triggers": {"regions": ["EU", "North America", "ASEAN", "East Asia"], "features": ["battery"], "hs_prefixes": ["8507"]},
+      "priority": "critical",
+      "typical_evidence": ["셀/팩 정보", "UN38.3 시험성적서", "MSDS", "운송 라벨", "포장 사양"],
+      "action": "항공·해상 운송 전 UN38.3, MSDS, 포장·라벨 자료를 확정합니다."
+    },
+    {
+      "id": "IEC62133",
+      "title": "IEC 62133 배터리 안전시험",
+      "scope": "휴대기기용 리튬이온 배터리 안전",
+      "triggers": {"regions": ["EU", "North America", "ASEAN"], "features": ["battery"], "hs_prefixes": ["8507"]},
+      "priority": "high",
+      "typical_evidence": ["셀 인증서", "팩 회로 보호 설계", "BMS 사양", "충방전 시험 데이터"],
+      "action": "셀 인증서와 팩 보호회로 자료를 수집하고 갭 시험 항목을 산정합니다."
+    },
+    {
+      "id": "EU-BATTERY-PASSPORT",
+      "title": "EU 배터리 여권 준비도",
+      "scope": "배터리팩, ESS, 전기차·산업용 배터리 등",
+      "triggers": {"regions": ["EU"], "features": ["battery"], "hs_prefixes": ["8507"]},
+      "priority": "high",
+      "typical_evidence": ["배터리 모델·용량", "셀 공급망", "재활용 원료", "탄소발자국", "QR 식별체계"],
+      "action": "여권 데이터 항목을 공급망 단위로 나누고 누락 데이터를 표준 필드로 관리합니다."
+    },
+    {
+      "id": "GPSR",
+      "title": "EU 일반제품안전규정(GPSR) 체크",
+      "scope": "EU 소비재·온라인 판매 제품",
+      "triggers": {"regions": ["EU"], "features": ["consumer", "ecommerce"], "hs_prefixes": ["84", "85", "95"]},
+      "priority": "medium",
+      "typical_evidence": ["EU 책임 경제운영자", "위험성 평가", "사용자 경고문", "추적성 정보", "라벨"],
+      "action": "책임자·추적성·위험성 평가·라벨 표시 항목을 상품페이지와 함께 점검합니다."
+    },
+    {
+      "id": "CBAM",
+      "title": "CBAM 탄소국경조정 대상 여부",
+      "scope": "철강·알루미늄·시멘트·비료·수소·전력 등 일부 품목",
+      "triggers": {"regions": ["EU"], "features": ["carbon_material"], "hs_prefixes": ["72", "73", "76", "25", "28", "31"]},
+      "priority": "medium",
+      "typical_evidence": ["HS Code", "원산지", "내재배출량", "공정정보", "공급사 데이터"],
+      "action": "CBAM 해당 HS 여부를 먼저 검토하고 공급사 배출량 자료를 수집합니다."
+    },
+    {
+      "id": "CRA",
+      "title": "EU 사이버보안 규제(CRA) 준비도",
+      "scope": "디지털 요소가 있는 하드웨어·소프트웨어 제품",
+      "triggers": {"regions": ["EU"], "features": ["digital", "iot", "software"], "hs_prefixes": ["84", "85"]},
+      "priority": "medium",
+      "typical_evidence": ["SBOM", "취약점 대응 정책", "보안 업데이트 기간", "사고 보고 프로세스"],
+      "action": "SBOM, 취약점 모니터링, 보안 업데이트 정책을 인증 준비 문서에 포함합니다."
+    },
+    {
+      "id": "UL-FCC",
+      "title": "미국 UL / FCC 후보 검토",
+      "scope": "미국 전기전자·무선 제품",
+      "triggers": {"regions": ["North America"], "features": ["electronics", "digital", "iot"], "hs_prefixes": ["84", "85", "90"]},
+      "priority": "high",
+      "typical_evidence": ["전기안전 시험성적서", "무선 모듈 정보", "사용설명서", "제품 라벨"],
+      "action": "UL 안전성 여부와 FCC 무선·전자파 요건을 제품 기능별로 분리해 검토합니다."
+    },
+    {
+      "id": "ASEAN-SAFETY",
+      "title": "ASEAN 전기안전·통관 적합성 체크",
+      "scope": "동남아 전기전자·소비재 수출",
+      "triggers": {"regions": ["ASEAN"], "features": ["electronics", "consumer"], "hs_prefixes": ["84", "85"]},
+      "priority": "medium",
+      "typical_evidence": ["인보이스", "원산지증명", "시험성적서", "라벨", "현지 수입자 정보"],
+      "action": "국가별 수입자 등록·라벨·통관 서류 요건을 먼저 확인합니다."
+    }
+  ],
+  "recalls": [
+    {
+      "id": "R-001",
+      "product": "리튬이온 보조배터리",
+      "category": "battery",
+      "keywords": ["리튬", "배터리", "충전", "과열", "화재", "pack", "cell"],
+      "hazard": "과충전 보호회로 미흡에 따른 과열·발화 위험",
+      "severity": 0.92,
+      "recommended_tests": ["과충전 시험", "단락 시험", "온도상승 시험", "BMS 보호회로 검증"],
+      "design_actions": ["셀 공급사 인증서 검증", "PCM/BMS 이중 보호", "충전 전류 제한값 문서화"]
+    },
+    {
+      "id": "R-002",
+      "product": "전동공구 배터리팩",
+      "category": "battery",
+      "keywords": ["전동공구", "배터리팩", "충격", "낙하", "과열", "charger"],
+      "hazard": "낙하 충격 후 내부 단락 및 충전 중 온도상승 위험",
+      "severity": 0.88,
+      "recommended_tests": ["낙하 시험", "진동 시험", "충격 시험", "충방전 내구 시험"],
+      "design_actions": ["셀 홀더 강화", "절연 시트 추가", "충격 후 보호회로 동작 확인"]
+    },
+    {
+      "id": "R-003",
+      "product": "휴대용 전자기기 충전기",
+      "category": "electronics",
+      "keywords": ["충전기", "어댑터", "절연", "감전", "과열", "전자파"],
+      "hazard": "절연거리 부족 및 부품 정격 미달에 따른 감전·화재 위험",
+      "severity": 0.74,
+      "recommended_tests": ["절연내력 시험", "누설전류 시험", "온도상승 시험", "EMC 시험"],
+      "design_actions": ["절연거리 재검토", "퓨즈·서미스터 정격 확인", "인쇄회로 패턴 간격 확대"]
+    },
+    {
+      "id": "R-004",
+      "product": "IoT 센서 장치",
+      "category": "iot",
+      "keywords": ["iot", "센서", "무선", "펌웨어", "취약점", "업데이트"],
+      "hazard": "기본 비밀번호·취약 펌웨어로 인한 원격 침해 가능성",
+      "severity": 0.67,
+      "recommended_tests": ["기본계정 점검", "펌웨어 무결성 검증", "통신 암호화 시험"],
+      "design_actions": ["초기 비밀번호 정책", "서명된 업데이트", "취약점 접수·패치 프로세스"]
+    },
+    {
+      "id": "R-005",
+      "product": "생활용품 플라스틱 부품",
+      "category": "consumer",
+      "keywords": ["플라스틱", "생활용품", "파손", "날카로운", "어린이"],
+      "hazard": "파손 시 날카로운 모서리 발생 및 삼킴 위험",
+      "severity": 0.54,
+      "recommended_tests": ["인장 시험", "낙하 시험", "모서리 안전성", "소형부품 시험"],
+      "design_actions": ["모서리 라운딩", "재질 취성 개선", "경고문·연령 표시"]
+    }
+  ],
+  "patents": [
+    {
+      "keyword": "lithium battery pack",
+      "korean_keyword": "리튬 배터리팩",
+      "ipc": ["H01M", "B60L"],
+      "filings": 12840,
+      "recent_growth": 0.19,
+      "risk": 0.78,
+      "avoidance_hints": ["BMS 알고리즘 청구항 회피 검토", "셀 밸런싱 구조 차별화", "방열 구조 선행문헌 조사"]
+    },
+    {
+      "keyword": "battery management system",
+      "korean_keyword": "배터리 관리 시스템",
+      "ipc": ["H02J", "H01M"],
+      "filings": 9630,
+      "recent_growth": 0.22,
+      "risk": 0.81,
+      "avoidance_hints": ["충전 제어 로직 비교", "SOC 추정 알고리즘 검토", "펌웨어 업데이트 방식 차별화"]
+    },
+    {
+      "keyword": "portable power station",
+      "korean_keyword": "휴대용 전원장치",
+      "ipc": ["H02J", "H01M"],
+      "filings": 3210,
+      "recent_growth": 0.28,
+      "risk": 0.64,
+      "avoidance_hints": ["인버터·배터리 결합 구조 검토", "열관리 구조 비교", "사용자 인터페이스 디자인권 확인"]
+    },
+    {
+      "keyword": "industrial sensor gateway",
+      "korean_keyword": "산업용 센서 게이트웨이",
+      "ipc": ["G05B", "H04L"],
+      "filings": 4200,
+      "recent_growth": 0.17,
+      "risk": 0.59,
+      "avoidance_hints": ["통신 프로토콜 특허 확인", "데이터 수집·전송 구조 회피", "보안 업데이트 청구항 검토"]
+    }
+  ],
+  "support_programs": [
+    {
+      "id": "P-001",
+      "name": "수출바우처 맞춤형 해외진출 지원",
+      "fit_tags": ["export", "marketing", "certification", "regional_sme"],
+      "benefit": "해외마케팅, 인증, 컨설팅, 디자인 등 패키지 지원",
+      "priority_rule": "수출 초기·성장 단계 기업 우선 검토",
+      "roadmap_stage": "30days"
+    },
+    {
+      "id": "P-002",
+      "name": "해외규격인증획득지원사업",
+      "fit_tags": ["certification", "CE", "UL", "IEC", "SME"],
+      "benefit": "해외 인증 시험·컨설팅 비용 일부 지원",
+      "priority_rule": "인증 미보유 또는 신규 국가 진출 기업에 적합",
+      "roadmap_stage": "30days"
+    },
+    {
+      "id": "P-003",
+      "name": "KOTRA 해외시장조사·지사화 연계",
+      "fit_tags": ["market", "buyer", "export"],
+      "benefit": "해외시장 조사, 바이어 발굴, 현지 네트워크 연계",
+      "priority_rule": "대상국과 품목이 확정된 기업에 적합",
+      "roadmap_stage": "60days"
+    },
+    {
+      "id": "P-004",
+      "name": "테크노파크 제품고도화·시험분석 지원",
+      "fit_tags": ["regional_sme", "testing", "prototype", "quality"],
+      "benefit": "시제품 개선, 시험분석, 전문가 컨설팅 지원",
+      "priority_rule": "지역 주력산업·산단 입주기업에 적합",
+      "roadmap_stage": "30days"
+    },
+    {
+      "id": "P-005",
+      "name": "중소기업 기술보호·특허 전략 컨설팅",
+      "fit_tags": ["patent", "FTO", "technology"],
+      "benefit": "선행기술 조사, 회피설계, 권리화 전략 상담",
+      "priority_rule": "기술 기반 제조기업·해외 FTO 위험이 있는 기업에 적합",
+      "roadmap_stage": "60days"
+    },
+    {
+      "id": "P-006",
+      "name": "스마트공장·품질혁신 연계 지원",
+      "fit_tags": ["quality", "traceability", "manufacturing"],
+      "benefit": "품질 데이터 수집, 추적성, 공정 개선 지원",
+      "priority_rule": "리콜 위험·품질 데이터 보완이 필요한 제조기업에 적합",
+      "roadmap_stage": "90days"
+    }
+  ],
+  "regions": [
+    {"name": "경남", "industry_focus": ["기계", "전기전자", "항공", "조선", "배터리부품"], "weight": 1.06},
+    {"name": "대구", "industry_focus": ["로봇", "전기차부품", "섬유", "의료기기"], "weight": 1.03},
+    {"name": "울산", "industry_focus": ["자동차", "화학", "에너지", "배터리"], "weight": 1.05},
+    {"name": "충북", "industry_focus": ["이차전지", "바이오", "반도체", "화장품"], "weight": 1.04},
+    {"name": "전북", "industry_focus": ["농기계", "상용차", "탄소소재", "식품"], "weight": 1.02},
+    {"name": "부산", "industry_focus": ["물류", "기계부품", "해양", "소비재"], "weight": 1.04}
+  ]
+}
