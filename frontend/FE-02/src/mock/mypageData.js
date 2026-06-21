@@ -19,7 +19,7 @@ export const MYPAGE_MEMBERS = [
 // 실제로는 GET /api/products + GET /api/diagnosis/:id + GET /api/reports 조합으로 채워짐
 export const MYPAGE_PRODUCTS = [
   {
-    id: 'prod_001', name: '리튬배터리 팩', country: '독일', hs: '850760', score: 83,
+    id: 'prod_001', runId: 'diag-001', name: '리튬배터리 팩', country: '독일', hs: '850760', score: 83,
     chips: ['규제 위험 2건', '인증 필요 3건', 'FTO 위험 낮음'],
     todo: [
       { task: 'CE 인증 견적 요청', due: '30' },
@@ -33,7 +33,7 @@ export const MYPAGE_PRODUCTS = [
     ],
   },
   {
-    id: 'prod_002', name: 'BMS 모듈', country: '미국', hs: '853710', score: 67,
+    id: 'prod_002', runId: 'diag-002', name: 'BMS 모듈', country: '미국', hs: '853710', score: 67,
     chips: ['규제 위험 4건', '인증 필요 2건', 'FTO 위험 보통'],
     todo: [
       { task: 'UL 인증 요건 확인', due: '30' },
@@ -46,7 +46,7 @@ export const MYPAGE_PRODUCTS = [
     ],
   },
   {
-    id: 'prod_003', name: '휴대용 충전기', country: 'ASEAN', hs: '850440', score: 45,
+    id: 'prod_003', runId: 'diag-003', name: '휴대용 충전기', country: 'ASEAN', hs: '850440', score: 45,
     chips: ['규제 위험 5건', '인증 필요 4건', 'FTO 위험 높음'],
     todo: [
       { task: '제품 지식 추가 입력', due: '30' },

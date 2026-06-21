@@ -8,12 +8,13 @@ export async function getMypageOverview() {
 
 // 제품 목록 (제품별 진단/지식/리포트 요약 포함)
 export async function getMypageProducts() {
-  return MYPAGE_PRODUCTS
+  return [...MYPAGE_PRODUCTS]
 }
 
 // 신규 제품 등록 — POST /api/products 대응
+// mock 단계에선 공유 배열(MYPAGE_PRODUCTS)에 직접 추가해 마이페이지·새 진단 화면이 같은 목록을 공유
 export async function createMypageProduct({ name, hs, country }) {
-  return {
+  const created = {
     id: `prod_${Date.now()}`,
     name, hs, country,
     score: null, chips: [],
@@ -21,6 +22,8 @@ export async function createMypageProduct({ name, hs, country }) {
     kn: 0, miss: '미입력 (정보를 채워주세요)',
     reports: [],
   }
+  MYPAGE_PRODUCTS.push(created)
+  return created
 }
 
 // 제품 정보 수정 — PATCH /api/products/{id} 대응

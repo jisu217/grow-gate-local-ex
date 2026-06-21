@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import styles from './Mypage.module.css'
 import {
   getMypageOverview,
@@ -13,6 +13,7 @@ const COUNTRIES = ['독일', '미국', '일본', 'ASEAN', '중국', 'EU']
 
 // 마이페이지 — 수출 준비 상태 대시보드
 export default function Mypage() {
+  const navigate = useNavigate()
   const [overview, setOverview] = useState({ company: null, members: [] })
   const [products, setProducts] = useState([])
   const [selectedId, setSelectedId] = useState('')
@@ -136,8 +137,12 @@ export default function Mypage() {
         {current && (
           <>
             <div className={`${styles.row} ${styles.hero}`}>
-              <div className={`${styles.card} ${styles.score}`}>
-                <div className={styles.ctitle}>최근 AI 진단 결과</div>
+              <div
+                className={`${styles.card} ${styles.score} ${current.runId ? styles.clickable : ''}`}
+                onClick={() => current.runId && navigate(`/diagnosis/${current.runId}`)}
+                role={current.runId ? 'button' : undefined}
+              >
+                <div className={styles.ctitle}>최근 AI 진단 결과 {current.runId && <span className={styles.goHint}>· 클릭하면 진단 결과로 →</span>}</div>
                 <div className={styles.big}>
                   {current.score != null ? current.score : '—'}<span className={styles.u}>/100</span>
                 </div>
@@ -149,10 +154,14 @@ export default function Mypage() {
               </div>
 
               <div className={`${styles.card} ${styles.todo}`}>
-                <div className={styles.ctitle}>오늘 할 일</div>
+                <div className={styles.ctitle}>오늘 할 일 {current.runId && <span className={styles.goHint}>· 30·60·90일 보드로 →</span>}</div>
                 <div className={styles.list}>
                   {current.todo.map((t, i) => (
-                    <div key={i} className={styles.item}>
+                    <div
+                      key={i}
+                      className={`${styles.item} ${current.runId ? styles.clickableItem : ''}`}
+                      onClick={() => current.runId && navigate(`/diagnosis/${current.runId}?step=8`)}
+                    >
                       <span className={styles.box} />
                       <span>{t.task}</span>
                       <span className={`${styles.tag} ${styles[`t${t.due}`]}`}>{t.due}일</span>
@@ -163,8 +172,12 @@ export default function Mypage() {
             </div>
 
             <div className={`${styles.row} ${styles.two}`}>
-              <div className={`${styles.card} ${styles.kn}`}>
-                <div className={styles.ctitle}>제품 지식 등록 현황</div>
+              <div
+                className={`${styles.card} ${styles.kn} ${styles.clickable}`}
+                onClick={() => navigate('/mypage/knowledge')}
+                role="button"
+              >
+                <div className={styles.ctitle}>제품 지식 등록 현황 <span className={styles.goHint}>· 지식 입력하러 가기 →</span></div>
                 <div className={styles.pct}>{current.kn}%</div>
                 <div className={styles.bar}>
                   <div className={styles.fill} style={{ width: `${current.kn}%` }} />
@@ -295,6 +308,14 @@ export default function Mypage() {
               {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
+          {editingId && (
+            <button
+              className={styles.knLink}
+              onClick={() => { closeModal(); navigate('/mypage/knowledge') }}
+            >
+              📦 제품 지식(인증서·FTO·바이어 요구사항)은 여기서 관리 →
+            </button>
+          )}
           <div className={styles.foot}>
             <button className={styles.cancel} onClick={closeModal}>취소</button>
             <button className={styles.save} onClick={saveProduct}>{editingId ? '저장' : '추가'}</button>
