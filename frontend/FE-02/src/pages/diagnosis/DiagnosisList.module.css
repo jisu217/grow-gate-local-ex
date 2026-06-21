@@ -7,6 +7,23 @@
   padding: 40px 28px;
 }
 
+/* 홈과 동일한 전체폭 상단 헤더 */
+.topbar {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 26px 32px 0;
+}
+/* 홈으로 가는 로고 (홈 화면과 동일 크기/스타일) */
+.brand {
+  font-family: var(--en);
+  font-weight: 800;
+  font-size: 28px;
+  color: #0b1530;
+  letter-spacing: -.01em;
+  text-decoration: none;
+}
+.ex { color: var(--blue); }
+
 /* 타이틀·버튼 헤더 행 */
 .header {
   display: flex;

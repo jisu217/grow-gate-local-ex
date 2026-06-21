@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import styles from './Auth.module.css'
 import { signup } from '../../services/authService.js'
 
@@ -47,7 +47,7 @@ export default function SignupCompany() {
   return (
     <div className={styles.wrap}>
       <div className={styles.card}>
-        <div className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></div>
+        <Link to="/" className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></Link>
         <h2 className={styles.title}>기업 회원가입</h2>
         {FIELDS.map(f => (
           <div key={f.key} className={styles.field}>

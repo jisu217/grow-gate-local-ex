@@ -52,6 +52,7 @@
   font-size: 28px;
   color: #0b1530;
   letter-spacing: -.01em;
+  text-decoration: none;
 }
 .ex { color: var(--blue); }
 
@@ -73,6 +74,20 @@
 }
 .navLinks a:hover { color: var(--ink); background: #eef2fb; }
 .active { color: var(--ink) !important; font-weight: 600 !important; }
+/* 로그아웃 버튼 (링크처럼 보이게) */
+.navLogout {
+  font-family: inherit;
+  font-size: 18px;
+  color: var(--slate);
+  font-weight: 500;
+  padding: 9px 16px;
+  border-radius: 10px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: .15s;
+}
+.navLogout:hover { color: var(--ink); background: #eef2fb; }
 
 
 /* 히어로 섹션 */

@@ -17,7 +17,7 @@ export default function Login() {
     setSubmitting(true)
     try {
       await login(form.email, form.password)
-      navigate('/diagnosis')
+      navigate('/mypage')
     } catch {
       setError('이메일 또는 비밀번호가 올바르지 않습니다.')
     } finally {
@@ -28,7 +28,7 @@ export default function Login() {
   return (
     <div className={styles.wrap}>
       <div className={styles.card}>
-        <div className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></div>
+        <Link to="/" className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></Link>
         <h2 className={styles.title}>로그인</h2>
         <div className={styles.field}>
           <label className={styles.label} htmlFor="login-email">아이디</label>

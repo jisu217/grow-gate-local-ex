@@ -1,5 +1,6 @@
 import { useNavigate, Link } from 'react-router-dom'
 import styles from './Home.module.css'
+import { getAuthUser, logout } from '../../services/authService.js'
 
 // 파트너 목록
 const PARTNERS = ['관세청', 'KOTRA', 'KTL', 'SafetyKorea', 'KIPRIS', '기업마당', 'EU']
@@ -65,6 +66,14 @@ function HeroMap() {
 // 랜딩 홈 페이지 컴포넌트
 export default function Home() {
   const navigate = useNavigate()
+  const user = getAuthUser() // 로그인 정보 (없으면 null)
+
+  // 로그아웃 → 홈 새로고침 효과(상태 갱신)
+  const handleLogout = async () => {
+    await logout()
+    navigate('/', { replace: true })
+    window.location.reload()
+  }
 
   return (
     <>
@@ -80,12 +89,14 @@ export default function Home() {
 
         {/* 내비게이션 */}
         <nav className={styles.nav}>
-          <div className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></div>
+          <Link to="/" className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></Link>
           <div className={styles.navLinks}>
             <Link to="/" className={styles.active}>홈</Link>
             <Link to="/diagnosis">AI 진단 이력</Link>
             <Link to="/mypage">마이페이지</Link>
-            <Link to="/login">로그인</Link>
+            {user
+              ? <button className={styles.navLogout} onClick={handleLogout}>로그아웃</button>
+              : <Link to="/login">로그인</Link>}
           </div>
         </nav>
 
