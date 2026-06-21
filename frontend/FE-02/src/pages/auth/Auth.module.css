@@ -23,6 +23,9 @@
 .links { text-align: center; margin-top: 16px; font-size: 13px; color: var(--slate); }
 .links a { color: var(--blue); text-decoration: none; font-weight: 600; }
 
+/* 에러 메시지 */
+.error { color: #e5484d; font-size: 13px; margin-top: -8px; margin-bottom: 8px; }
+
 /* 회원가입 유형 선택 버튼 그룹 */
 .typeRow { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-top: 8px; }
 /* 유형 선택 버튼 */

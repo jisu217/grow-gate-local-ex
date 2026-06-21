@@ -1,11 +1,14 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from './Auth.module.css'
+import { signup } from '../../services/authService.js'
 
 // 개인 회원가입 페이지 컴포넌트
 export default function SignupPersonal() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ name:'', email:'', password:'' })
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   // 입력값 변경 처리
   const handleChange = (e) => setForm(p => ({...p, [e.target.name]: e.target.value}))
 
@@ -14,6 +17,20 @@ export default function SignupPersonal() {
     { key:'email',    label:'이메일', placeholder:'이메일',   type:'email' },
     { key:'password', label:'비밀번호', placeholder:'비밀번호', type:'password' },
   ]
+
+  // 가입 제출 처리
+  const handleSubmit = async () => {
+    setError('')
+    setSubmitting(true)
+    try {
+      await signup({ type: 'personal', email: form.email, password: form.password, name: form.name })
+      navigate('/login')
+    } catch {
+      setError('회원가입에 실패했습니다. 입력 정보를 확인해주세요.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <div className={styles.wrap}>
@@ -26,7 +43,8 @@ export default function SignupPersonal() {
             <input id={`signup-personal-${f.key}`} className={styles.input} name={f.key} type={f.type} value={form[f.key]} onChange={handleChange} placeholder={f.placeholder} />
           </div>
         ))}
-        <button className={styles.btn} onClick={() => navigate('/login')}>가입 완료</button>
+        {error && <p className={styles.error}>{error}</p>}
+        <button className={styles.btn} onClick={handleSubmit} disabled={submitting}>가입 완료</button>
       </div>
     </div>
   )

@@ -72,8 +72,8 @@
 | :--- | :--- | :--- | :--- | :--- |
 | 22 | GET | /api/products | 등록 제품 목록 조회 (`/diagnosis/new` 불러오기 모달에서도 공통 사용) | 필요 |
 | 23 | POST | /api/products | 신규 제품 등록 | 필요 |
-| 24 | GET | /api/products/:productId/knowledge | 제품 상세 조회 | 필요 |
-| 25 | PUT | /api/products/:productId/knowledge | 제품 정보 수정 (저장 시 Audit Log 자동 기록) | 필요 |
+| 24 | GET | /api/products/:productId/knowledge | 제품 지식 상세 조회 | 필요 |
+| 25 | PUT | /api/products/:productId/knowledge | 제품 지식 수정 (저장 시 Audit Log 자동 기록) | 필요 |
 | 26 | DELETE | /api/products/:productId | 제품 삭제 | 필요 |
 | 27 | GET | /api/products/:productId/audit-logs | 제품 수정 이력 조회 | 필요 |
 
