@@ -1,15 +1,29 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import styles from './Auth.module.css'
+import { login } from '../../services/authService.js'
 
 // 로그인 페이지 컴포넌트
 export default function Login() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ email: '', password: '' })
+  const [error, setError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
   // 입력값 변경 처리
   const handleChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
   // 로그인 제출 처리
-  const handleSubmit = () => navigate('/diagnosis')
+  const handleSubmit = async () => {
+    setError('')
+    setSubmitting(true)
+    try {
+      await login(form.email, form.password)
+      navigate('/diagnosis')
+    } catch {
+      setError('이메일 또는 비밀번호가 올바르지 않습니다.')
+    } finally {
+      setSubmitting(false)
+    }
+  }
 
   return (
     <div className={styles.wrap}>
@@ -24,7 +38,8 @@ export default function Login() {
           <label className={styles.label} htmlFor="login-password">비밀번호</label>
           <input id="login-password" className={styles.input} name="password" type="password" value={form.password} onChange={handleChange} placeholder="비밀번호" />
         </div>
-        <button className={styles.btn} onClick={handleSubmit}>로그인</button>
+        {error && <p className={styles.error}>{error}</p>}
+        <button className={styles.btn} onClick={handleSubmit} disabled={submitting}>로그인</button>
         <div className={styles.links}>
           계정이 없으신가요? <Link to="/signup">회원가입</Link> 하기
         </div>

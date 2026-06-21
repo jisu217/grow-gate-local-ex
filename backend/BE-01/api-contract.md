@@ -46,9 +46,18 @@
 {
   "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
   "userId": "uuid-1234",
-  "userType": "personal"
+  "userType": "personal",
+  "role": "owner",
+  "companyId": "uuid-company-001"
 }
 ```
+
+> **추가 필드 설명**
+>
+> | 필드 | 타입 | 설명 |
+> | :--- | :--- | :--- |
+> | `role` | `"owner"` \| `"admin"` \| `"editor"` \| `"viewer"` \| `null` | 소속 회사 내 역할. 개인 계정이거나 소속 회사가 없으면 `null` |
+> | `companyId` | string \| `null` | 소속 회사 ID. 개인 계정이면 `null` |
 
 **에러**
 ```json
@@ -98,13 +107,24 @@
 }
 ```
 
-**Response** `201 Created`
+**Response** `201 Created` _(개인 가입 — `companyId` 없음)_
 ```json
 {
   "userId": "uuid-1234",
   "email": "user@example.com",
   "name": "홍길동",
   "userType": "personal"
+}
+```
+
+**Response** `201 Created` _(기업 가입 — `companyId` 포함, 가입자가 해당 회사의 `owner`로 등록됨)_
+```json
+{
+  "userId": "uuid-1234",
+  "email": "corp@example.com",
+  "name": "담당자명",
+  "userType": "company",
+  "companyId": "uuid-company-001"
 }
 ```
 
@@ -274,7 +294,14 @@
   "targetCountry": "미국",
   "status": "done",
   "result": {
-    "diagnosisScore": 72,
+    "diagnosisScore": {
+      "overall": 72,
+      "market": 80,
+      "regulation": 65,
+      "recall": 88,
+      "fto": 60,
+      "support": 70
+    },
     "summary": "전반적인 수출 준비도는 양호하나 FTO 리스크 보완 필요",
     "riskItems": [
       { "level": "high", "label": "FTO 리스크 미해결" }
@@ -303,7 +330,7 @@
 >
 > | 필드 | 타입 | 설명 |
 > | :--- | :--- | :--- |
-> | `diagnosisScore` | number | 진단 점수 (0~100) |
+> | `diagnosisScore` | object | 항목별 진단 점수 (각 0~100). `overall`(종합), `market`(시장), `regulation`(규제·인증), `recall`(리콜 위험), `fto`(특허 FTO), `support`(지원사업 매칭) 필드로 구성 |
 > | `summary` | string | 진단 결과 요약 |
 > | `riskItems` | array | 리스크 항목 목록. 각 항목은 `level`(`"high"` \| `"medium"` \| `"low"`), `label`로 구성 |
 > | `actionRoadmap` | object | 30·60·90일 실행 항목 수. `d30`, `d60`, `d90` 필드로 구성 |
@@ -371,6 +398,7 @@
       "name": "스마트 온도계",
       "category": "전자기기",
       "trustGrade": "high",
+      "knowledgeStatus": "valid",
       "expiringCertCount": 1,
       "missingFieldCount": 0,
       "updatedAt": "2026-06-06T08:00:00Z"
@@ -383,6 +411,7 @@
 >
 > | 필드 | 타입 | 설명 |
 > | :--- | :--- | :--- |
+> | `knowledgeStatus` | `"valid"` \| `"expiring_soon"` \| `"expired"` \| `"needs_review"` \| `"incomplete"` | 제품 지식 종합 상태. 마이페이지 카드 상태 배지 표시에 사용 |
 > | `expiringCertCount` | number | 만료 90일 이내 인증서 수. 마이페이지 카드에서 "만료 임박 N건" 배지로 표시 |
 > | `missingFieldCount` | number | 누락된 필드 수 (`fto`, `buyerRequirements` 등). 0이면 배지 미표시 |
 
@@ -468,9 +497,12 @@
   "knowledge": {
     "trustGrade": "medium",
     "notes": "추가 검토 필요"
-  }
+  },
+  "reason": "FDA 등록 갱신에 따른 신뢰도 등급 조정"
 }
 ```
+
+> `reason`(수정 사유)은 Audit Log에 함께 기록됨. 생략 가능.
 
 **Response** `200 OK`
 ```json
@@ -512,6 +544,9 @@
       "changedBy": "홍길동",
       "changeType": "update",
       "changedFields": ["trustGrade", "notes"],
+      "previousValue": "high",
+      "newValue": "medium",
+      "reason": "FDA 등록 갱신에 따른 신뢰도 등급 조정",
       "changedAt": "2026-06-06T08:00:00Z"
     }
   ]
@@ -522,3 +557,11 @@
 > - `create` : 제품 최초 등록
 > - `update` : 필드 수정
 > - `delete` : 제품 삭제
+
+> **추가 필드 설명**
+>
+> | 필드 | 타입 | 설명 |
+> | :--- | :--- | :--- |
+> | `previousValue` | string \| `null` | 수정 전 값 |
+> | `newValue` | string \| `null` | 수정 후 값 |
+> | `reason` | string \| `null` | 수정 사유 ([25] 요청의 `reason`) |
