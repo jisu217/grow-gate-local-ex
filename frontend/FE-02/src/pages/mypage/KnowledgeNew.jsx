@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from './KnowledgeForm.module.css'
+import { createProduct } from '../../services/productService.js'
 
 const CATEGORIES = ['전기전자', '전자부품', '기계·장비', '화학·소재', '식품·의료', '기타']
 
@@ -9,6 +10,7 @@ export default function KnowledgeNew() {
   const navigate = useNavigate()
   const [form, setForm] = useState({ productName: '', category: '', description: '' })
   const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
 
   // 입력값 변경 처리
   const handleChange = (e) => {
@@ -17,12 +19,20 @@ export default function KnowledgeNew() {
   }
 
   // 제품 등록 제출 처리
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     if (!form.productName.trim()) {
       setError('제품명은 필수 항목입니다. 입력해주세요.')
       return
     }
-    navigate('/mypage/knowledge/prod-003')
+    setSaving(true)
+    setError('')
+    try {
+      const created = await createProduct(form)
+      navigate(`/mypage/knowledge/${created.id}`)
+    } catch {
+      setError('제품 등록에 실패했습니다. 잠시 후 다시 시도해주세요.')
+      setSaving(false)
+    }
   }
 
   return (
@@ -77,8 +87,8 @@ export default function KnowledgeNew() {
           />
         </div>
 
-        <button className={styles.submitBtn} onClick={handleSubmit}>
-          제품 등록 완료
+        <button className={styles.submitBtn} onClick={handleSubmit} disabled={saving}>
+          {saving ? '등록 중…' : '제품 등록 완료'}
         </button>
       </div>
     </div>
