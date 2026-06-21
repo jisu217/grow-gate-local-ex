@@ -39,8 +39,9 @@ export async function getProducts() {
 }
 
 // 제품 상세 매핑
-// 백엔드 상세 응답에 없는 knowledgeStatus·sourceType(인증서 단위)·변경 이력은
-// 각각 undefined/[] 처리. 변경 이력은 별도 /audit-logs 엔드포인트 연동 필요(미연동).
+// 백엔드 상세 응답에 없는 knowledgeStatus·sourceType(인증서 단위)은 undefined 처리.
+// 변경 이력(auditLog)은 이 응답에 포함되지 않아 기본값 []이며,
+// audit:view 권한이 있는 화면에서 getProductAuditLogs()로 별도 조회해 채워야 함.
 function mapProductDetail(p) {
   return {
     id: p.productId,
@@ -53,6 +54,7 @@ function mapProductDetail(p) {
     missingFields: [],
     updatedAt: p.updatedAt,
     certs: (p.certifications ?? []).map((c) => ({
+      id: c.id,
       name: c.name,
       expiryDate: c.expiresAt,
       renewalCycle: c.renewalCycle,
@@ -60,11 +62,17 @@ function mapProductDetail(p) {
       sourceType: undefined,
     })),
     fto: (p.fto ?? []).map((f) => ({
+      id: f.id,
       target: f.targetCountry,
       status: f.riskLevel,
       note: f.summary,
     })),
-    buyerRequirements: (p.buyerRequirements ?? []).map((b) => b.requirements),
+    buyerRequirements: (p.buyerRequirements ?? []).map((b) => ({
+      id: b.id,
+      buyerName: b.buyerName,
+      country: b.country,
+      requirements: b.requirements,
+    })),
     auditLog: [],
   }
 }
@@ -108,4 +116,81 @@ export async function createProduct(payload) {
   }
   const res = await apiFetch('/products', { method: 'POST', body: JSON.stringify(body) })
   return { ...payload, id: res.productId, createdAt: res.createdAt }
+}
+
+// 제품 삭제
+export async function deleteProduct(productId) {
+  return apiFetch(`/products/${productId}`, { method: 'DELETE' })
+}
+
+// 변경 이력(Audit Log) 조회 — audit:view 권한 없는 계정은 백엔드가 403을 반환하므로 빈 배열로 대체
+export async function getProductAuditLogs(productId) {
+  try {
+    const res = await apiFetch(`/products/${productId}/audit-logs`)
+    return (res.logs ?? []).map((log) => ({
+      date: log.changedAt,
+      by: log.changedBy,
+      field: (log.changedFields ?? []).join(', '),
+      oldValue: log.previousValue,
+      newValue: log.newValue,
+      reason: log.reason,
+    }))
+  } catch (err) {
+    console.warn('[productService] getProductAuditLogs API 실패, 빈 배열로 대체합니다.', err)
+    return []
+  }
+}
+
+// 인증서 추가/수정/삭제 (쓰기 작업 — 실패 시 에러 그대로 전파)
+export async function addCertification(productId, payload) {
+  return apiFetch(`/products/${productId}/certifications`, { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export async function updateCertification(productId, certificationId, payload) {
+  return apiFetch(`/products/${productId}/certifications/${certificationId}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function deleteCertification(productId, certificationId) {
+  return apiFetch(`/products/${productId}/certifications/${certificationId}`, { method: 'DELETE' })
+}
+
+// FTO 추가/수정/삭제 (쓰기 작업 — 실패 시 에러 그대로 전파)
+export async function addFto(productId, payload) {
+  return apiFetch(`/products/${productId}/fto`, { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export async function updateFto(productId, ftoId, payload) {
+  return apiFetch(`/products/${productId}/fto/${ftoId}`, { method: 'PUT', body: JSON.stringify(payload) })
+}
+
+export async function deleteFto(productId, ftoId) {
+  return apiFetch(`/products/${productId}/fto/${ftoId}`, { method: 'DELETE' })
+}
+
+// 바이어 요구사항 추가/수정/삭제 (쓰기 작업 — 실패 시 에러 그대로 전파)
+export async function addBuyerRequirement(productId, payload) {
+  return apiFetch(`/products/${productId}/buyer-requirements`, { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export async function updateBuyerRequirement(productId, buyerRequirementId, payload) {
+  return apiFetch(`/products/${productId}/buyer-requirements/${buyerRequirementId}`, {
+    method: 'PUT',
+    body: JSON.stringify(payload),
+  })
+}
+
+export async function deleteBuyerRequirement(productId, buyerRequirementId) {
+  return apiFetch(`/products/${productId}/buyer-requirements/${buyerRequirementId}`, { method: 'DELETE' })
+}
+
+// 지식 출처 추가/삭제 (쓰기 작업 — 실패 시 에러 그대로 전파)
+export async function addKnowledgeSource(productId, payload) {
+  return apiFetch(`/products/${productId}/knowledge/sources`, { method: 'POST', body: JSON.stringify(payload) })
+}
+
+export async function deleteKnowledgeSource(productId, sourceId) {
+  return apiFetch(`/products/${productId}/knowledge/sources/${sourceId}`, { method: 'DELETE' })
 }
