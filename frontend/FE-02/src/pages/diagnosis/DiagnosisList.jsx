@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
 import styles from './DiagnosisList.module.css'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
 import { getDiagnosisList } from '../../services/diagnosisService.js'
@@ -24,7 +24,12 @@ export default function DiagnosisList() {
   }, [])
 
   return (
-    <div className={styles.wrap}>
+    <>
+      <header className={styles.topbar}>
+        <Link to="/" className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></Link>
+      </header>
+
+      <div className={styles.wrap}>
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>AI 진단 이력</h1>
@@ -92,6 +97,7 @@ export default function DiagnosisList() {
           })}
         </div>
       )}
-    </div>
+      </div>
+    </>
   )
 }

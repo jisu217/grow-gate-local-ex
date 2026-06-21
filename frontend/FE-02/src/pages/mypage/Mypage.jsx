@@ -8,12 +8,20 @@ import {
   updateMypageProduct,
   rerunDiagnosis,
 } from '../../services/mypageService.js'
+import { getAuthUser, logout } from '../../services/authService.js'
 
 const COUNTRIES = ['독일', '미국', '일본', 'ASEAN', '중국', 'EU']
 
 // 마이페이지 — 수출 준비 상태 대시보드
 export default function Mypage() {
   const navigate = useNavigate()
+  const user = getAuthUser() // 로그인 정보 (없으면 null)
+
+  // 로그아웃 → 홈으로
+  const handleLogout = async () => {
+    await logout()
+    navigate('/')
+  }
   const [overview, setOverview] = useState({ company: null, members: [] })
   const [products, setProducts] = useState([])
   const [selectedId, setSelectedId] = useState('')
@@ -100,14 +108,16 @@ export default function Mypage() {
       <div className={styles.page}>
         {/* NAV */}
         <nav className={styles.nav}>
-          <div className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></div>
+          <Link to="/" className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></Link>
           <div className={styles.navLinks}>
             <Link to="/">홈</Link>
             <Link to="/diagnosis">AI 진단</Link>
             <Link to="/mypage" className={styles.active}>마이페이지</Link>
           </div>
           <div className={styles.navCta}>
-            <Link className={styles.login} to="/login">로그인</Link>
+            {user
+              ? <button className={styles.login} onClick={handleLogout}>로그아웃</button>
+              : <Link className={styles.login} to="/login">로그인</Link>}
             <Link className={styles.signup} to="/diagnosis/new">진단 시작</Link>
           </div>
         </nav>

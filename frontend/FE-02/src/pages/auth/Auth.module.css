@@ -4,7 +4,7 @@
 /* 인증 카드 컨테이너 */
 .card { background: var(--card); border: 1px solid var(--line); border-radius: 20px; box-shadow: var(--shadow); padding: 40px; width: 100%; max-width: 420px; }
 /* 브랜드 로고 */
-.brand { font-family: var(--en); font-weight: 800; font-size: 18px; color: var(--navy); margin-bottom: 20px; }
+.brand { display: inline-block; font-family: var(--en); font-weight: 800; font-size: 18px; color: var(--navy); margin-bottom: 20px; text-decoration: none; }
 .ex { color: var(--blue); }
 /* 페이지 타이틀 */
 .title { font-size: 22px; font-weight: 700; color: var(--navy); margin-bottom: 20px; }
