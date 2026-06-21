@@ -139,6 +139,7 @@ BE-02/
 ## 4. API Endpoints
 
 모든 인증 필요 API는 요청 헤더에 `Authorization: Bearer {token}` 포함 필요.
+응답 필드 네이밍: camelCase 고정
 
 ### 헬스체크
 

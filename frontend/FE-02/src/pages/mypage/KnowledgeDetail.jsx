@@ -4,6 +4,7 @@ import styles from './KnowledgeDetail.module.css'
 import { usePermission } from '../../hooks/usePermission.js'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
 import { getProductKnowledge } from '../../services/productService.js'
+import { toGradeLabel, toGradeClass } from '../../utils/trustGrade.js'
 
 // 인증 출처 유형 맵
 const CERT_SOURCE = {
@@ -64,7 +65,7 @@ export default function KnowledgeDetail() {
 
       <div className={styles.titleRow}>
         <h1 className={styles.title}>{product.name}</h1>
-        <span className={styles.grade}>신뢰도 {product.grade}</span>
+        <span className={styles.grade}>신뢰도 {toGradeLabel(product.trustGrade)}</span>
       </div>
       <div className={styles.meta}>{product.category} · 최근 수정 {product.updatedAt}</div>
 
@@ -86,8 +87,8 @@ export default function KnowledgeDetail() {
           <div className={styles.card}>
             <div className={styles.sectionTitle}>제품 지식 품질</div>
             <div className={styles.qualityPanel}>
-              <span className={`pill ${product.grade === 'A' ? 'ok' : product.grade === 'B+' ? 'cond' : 'warn'}`}>
-                신뢰도 {product.grade}
+              <span className={`pill ${toGradeClass(product.trustGrade)}`}>
+                신뢰도 {toGradeLabel(product.trustGrade)}
               </span>
               {product.knowledgeStatus === 'expiring' && <span className="pill warn">만료 임박</span>}
               {product.knowledgeStatus === 'valid'    && <span className="pill ok">유효</span>}

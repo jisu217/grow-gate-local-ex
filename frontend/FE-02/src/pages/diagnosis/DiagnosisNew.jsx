@@ -1,13 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from './DiagnosisNew.module.css'
-
-const STEPS = [
-  '제품·기업 입력', '대상국 선택', '공공데이터 수집',
-  'ML 예측 실행', '시장성 분석', '규제·인증 분석',
-  '리콜 위험 분석', 'FTO·지원 분석', '실행 보드 생성',
-  '리포트 생성', '완료',
-]
+import { getMypageProducts, createMypageProduct } from '../../services/mypageService.js'
 
 // 신규 진단 입력 페이지 컴포넌트
 export default function DiagnosisNew() {
@@ -20,8 +14,20 @@ export default function DiagnosisNew() {
     description: '',
   })
 
-  const [activeStep] = useState(0)
   const [errors, setErrors] = useState({})
+
+  // 저장된 제품 불러오기 모달
+  const [pickerOpen, setPickerOpen] = useState(false)
+  const [savedProducts, setSavedProducts] = useState([])
+  const [selectedId, setSelectedId] = useState(null)
+
+  // 직접 입력한 제품을 마이페이지에도 저장할지 (기본 켜짐)
+  const [saveToMypage, setSaveToMypage] = useState(true)
+
+  // 마이페이지에 저장한 제품 목록 로드
+  useEffect(() => {
+    getMypageProducts().then(setSavedProducts)
+  }, [])
 
   // 입력값 변경 처리
   const handleChange = (e) => {
@@ -29,33 +35,42 @@ export default function DiagnosisNew() {
     if (errors[e.target.name]) setErrors((prev) => ({ ...prev, [e.target.name]: '' }))
   }
 
+  // 저장된 제품 선택 → 입력값 자동 채움
+  const pickProduct = (p) => {
+    setFormData({
+      productName: p.name,
+      hsCode: p.hs,
+      targetCountry: p.country,
+      description: '',
+    })
+    setSelectedId(p.id)
+    setErrors({})
+    setPickerOpen(false)
+  }
+
   // 진단 시작 제출 처리
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const next = {}
     if (!formData.hsCode.trim())       next.hsCode = 'HS Code를 입력해주세요.'
     if (!formData.targetCountry.trim()) next.targetCountry = '대상 국가를 입력해주세요.'
     if (Object.keys(next).length) { setErrors(next); return }
+
+    // 직접 입력한 신규 제품이고 "내 제품으로 저장"이 켜져 있으면 마이페이지에 추가
+    // (저장된 제품을 불러온 경우 selectedId가 있으므로 중복 저장하지 않음)
+    if (saveToMypage && !selectedId && formData.productName.trim()) {
+      await createMypageProduct({
+        name: formData.productName.trim(),
+        hs: formData.hsCode.trim(),
+        country: formData.targetCountry.trim(),
+      })
+    }
+
     navigate('/diagnosis/diag-001')
   }
 
   return (
     <div className={styles.wrap}>
       <div className={styles.layout}>
-
-        <aside className={styles.rail}>
-          <div className={styles.railTitle}>진단 단계</div>
-          {STEPS.map((step, i) => (
-            <div
-              key={step}
-              className={`${styles.railItem} ${i === activeStep ? styles.active : ''} ${i < activeStep ? styles.done : ''}`}
-            >
-              <span className={styles.railNo}>{String(i + 1).padStart(2, '0')}</span>
-              <span className={styles.railNm}>{step}</span>
-
-              {i < activeStep && <span className={styles.railCk}>✓</span>}
-            </div>
-          ))}
-        </aside>
 
         <div className={styles.formArea}>
           <div className={styles.formCard}>
@@ -116,13 +131,26 @@ export default function DiagnosisNew() {
             </div>
 
             <div className={styles.knowledgeBtn}>
-              <button className={styles.outlineBtn}>
+              <button className={styles.outlineBtn} onClick={() => setPickerOpen(true)}>
                 📂 저장된 제품 지식 불러오기
               </button>
               <span className={styles.knowledgeHint}>
-                마이페이지에 등록된 제품 지식을 선택하면 입력값이 자동으로 채워집니다.
+                {selectedId
+                  ? '✓ 저장된 제품을 불러왔습니다. 필요하면 입력값을 수정하세요.'
+                  : '마이페이지에 등록된 제품 지식을 선택하면 입력값이 자동으로 채워집니다.'}
               </span>
             </div>
+
+            {!selectedId && (
+              <label className={styles.saveCheck}>
+                <input
+                  type="checkbox"
+                  checked={saveToMypage}
+                  onChange={(e) => setSaveToMypage(e.target.checked)}
+                />
+                <span>이 제품을 <b>내 제품(마이페이지)</b>에도 저장</span>
+              </label>
+            )}
 
             <button className={styles.submitBtn} onClick={handleSubmit}>
               AI 진단 시작 →
@@ -130,6 +158,35 @@ export default function DiagnosisNew() {
           </div>
         </div>
       </div>
+
+      {/* 저장된 제품 불러오기 모달 */}
+      {pickerOpen && (
+        <div className={styles.modal} onClick={(e) => { if (e.target === e.currentTarget) setPickerOpen(false) }}>
+          <div className={styles.sheet}>
+            <h3 className={styles.sheetTitle}>저장된 제품 불러오기</h3>
+            <p className={styles.sheetDesc}>마이페이지에 등록한 제품을 선택하면 입력값이 자동으로 채워집니다.</p>
+
+            <div className={styles.pickList}>
+              {savedProducts.length === 0 && (
+                <div className={styles.pickEmpty}>저장된 제품이 없습니다. 마이페이지에서 먼저 제품을 등록하세요.</div>
+              )}
+              {savedProducts.map((p) => (
+                <button key={p.id} className={styles.pickItem} onClick={() => pickProduct(p)}>
+                  <div>
+                    <div className={styles.pickName}>{p.name}</div>
+                    <div className={styles.pickMeta}>HS {p.hs} · {p.country} 수출</div>
+                  </div>
+                  <span className={styles.pickGo}>선택 →</span>
+                </button>
+              ))}
+            </div>
+
+            <div className={styles.sheetFoot}>
+              <button className={styles.sheetCancel} onClick={() => setPickerOpen(false)}>닫기</button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }

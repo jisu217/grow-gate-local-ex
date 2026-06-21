@@ -4,7 +4,7 @@
 .wrap { min-height: 100vh; background: var(--bg); padding: 32px 24px; }
 
 /* 사이드 레일 + 폼 2단 레이아웃 */
-.layout { display: grid; grid-template-columns: 220px 1fr; gap: 24px; max-width: 960px; margin: 0 auto; }
+.layout { max-width: 680px; margin: 0 auto; }
 
 /* 진단 단계 레일 */
 .rail {
@@ -112,6 +112,11 @@
 /* 지식 불러오기 힌트 텍스트 */
 .knowledgeHint { font-size: 12px; color: var(--slate-2); }
 
+/* 내 제품으로 저장 체크박스 */
+.saveCheck { display: flex; align-items: center; gap: 8px; margin-top: 18px; font-size: 13.5px; color: var(--slate); cursor: pointer; user-select: none; }
+.saveCheck input { width: 16px; height: 16px; cursor: pointer; accent-color: var(--blue); }
+.saveCheck b { color: var(--navy); font-weight: 700; }
+
 /* 진단 시작 제출 버튼 */
 .submitBtn {
   display: block;
@@ -130,6 +135,22 @@
   transition: .18s;
 }
 .submitBtn:hover { transform: translateY(-1px); }
+
+/* 저장된 제품 불러오기 모달 */
+.modal { position: fixed; inset: 0; z-index: 50; background: rgba(11,21,48,.5); backdrop-filter: blur(3px); display: flex; align-items: center; justify-content: center; padding: 20px; }
+.sheet { background: #fff; border-radius: 22px; width: 100%; max-width: 480px; padding: 28px 28px 22px; box-shadow: 0 30px 70px rgba(15,27,61,.3); }
+.sheetTitle { font-size: 20px; font-weight: 800; color: var(--navy); }
+.sheetDesc { font-size: 13.5px; color: var(--slate); margin-top: 6px; margin-bottom: 18px; }
+.pickList { display: flex; flex-direction: column; gap: 10px; max-height: 360px; overflow-y: auto; }
+.pickEmpty { font-size: 13.5px; color: var(--slate-2); padding: 20px; text-align: center; }
+.pickItem { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; text-align: left; font-family: var(--kr); padding: 14px 16px; border: 1px solid var(--line); border-radius: 13px; background: #fff; cursor: pointer; transition: .15s; }
+.pickItem:hover { border-color: var(--blue); background: #f4f8ff; }
+.pickName { font-size: 15px; font-weight: 700; color: var(--navy); }
+.pickMeta { font-size: 12.5px; color: var(--slate); margin-top: 3px; }
+.pickGo { font-size: 13px; font-weight: 600; color: var(--blue); flex-shrink: 0; }
+.sheetFoot { display: flex; justify-content: flex-end; margin-top: 20px; }
+.sheetCancel { font-family: var(--kr); font-weight: 700; font-size: 14px; padding: 11px 20px; border-radius: 12px; border: none; background: #eef0f4; color: var(--slate); cursor: pointer; transition: .15s; }
+.sheetCancel:hover { background: #e3e6ee; }
 
 /* 반응형: 1단 레이아웃 */
 @media (max-width: 720px) { .layout { grid-template-columns: 1fr; } .rail { position: static; } }

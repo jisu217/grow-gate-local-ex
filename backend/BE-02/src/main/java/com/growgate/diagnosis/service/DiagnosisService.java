@@ -8,6 +8,7 @@ import com.growgate.diagnosis.dto.CreateDiagnosisResponse;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse.ActionRoadmap;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse.CertSnapshot;
+import com.growgate.diagnosis.dto.DiagnosisDetailResponse.DiagnosisScore;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse.KnowledgeSnapshot;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse.ResultData;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse.RiskItem;
@@ -150,10 +151,7 @@ public class DiagnosisService {
                 Map<String, Object> resultMap = objectMapper.readValue(run.getResult(),
                         new TypeReference<Map<String, Object>>() {});
 
-                int score = resultMap.containsKey("diagnosisScore")
-                        ? ((Number) resultMap.get("diagnosisScore")).intValue()
-                        : resultMap.containsKey("readinessScore")
-                        ? ((Number) resultMap.get("readinessScore")).intValue() : 0;
+                DiagnosisScore score = parseDiagnosisScore(resultMap);
                 String summary = (String) resultMap.getOrDefault("summary", "");
 
                 List<RiskItem> riskItems = parseRiskItems(resultMap);
@@ -362,6 +360,21 @@ public class DiagnosisService {
             }
         }
         return items;
+    }
+
+    @SuppressWarnings("unchecked")
+    private DiagnosisScore parseDiagnosisScore(Map<String, Object> resultMap) {
+        Object obj = resultMap.get("diagnosisScore");
+        if (!(obj instanceof Map)) return DiagnosisScore.builder().build();
+        Map<String, Object> m = (Map<String, Object>) obj;
+        return DiagnosisScore.builder()
+                .overall(m.containsKey("overall") ? ((Number) m.get("overall")).intValue() : 0)
+                .market(m.containsKey("market") ? ((Number) m.get("market")).intValue() : 0)
+                .regulation(m.containsKey("regulation") ? ((Number) m.get("regulation")).intValue() : 0)
+                .recall(m.containsKey("recall") ? ((Number) m.get("recall")).intValue() : 0)
+                .fto(m.containsKey("fto") ? ((Number) m.get("fto")).intValue() : 0)
+                .support(m.containsKey("support") ? ((Number) m.get("support")).intValue() : 0)
+                .build();
     }
 
     @SuppressWarnings("unchecked")
