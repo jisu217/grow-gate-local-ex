@@ -15,6 +15,7 @@ import DiagnosisResult  from './pages/diagnosis/DiagnosisResult.jsx'
 import DiagnosisSources from './pages/diagnosis/DiagnosisSources.jsx'
 
 import Mypage          from './pages/mypage/Mypage.jsx'
+import DiagnosisDetail from './pages/mypage/DiagnosisDetail.jsx'
 import Knowledge       from './pages/mypage/Knowledge.jsx'
 import KnowledgeNew    from './pages/mypage/KnowledgeNew.jsx'
 import KnowledgeDetail from './pages/mypage/KnowledgeDetail.jsx'
@@ -43,6 +44,7 @@ export default function App() {
             <Route path="/diagnosis/:id/sources"  element={<DiagnosisSources />} />
 
             <Route path="/mypage"                        element={<Mypage />} />
+            <Route path="/mypage/diagnosis/:productId"   element={<DiagnosisDetail />} />
             <Route path="/mypage/knowledge"              element={<Knowledge />} />
             <Route path="/mypage/knowledge/:productId"   element={<KnowledgeDetail />} />
 

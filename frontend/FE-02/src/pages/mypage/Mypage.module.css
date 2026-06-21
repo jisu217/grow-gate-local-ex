@@ -146,7 +146,7 @@
 .add { font-family: var(--kr); font-weight: 700; font-size: 13.5px; color: var(--blue); background: #eaf1ff; border: 1px solid #d6e3ff; padding: 9px 16px; border-radius: 11px; cursor: pointer; transition: .15s; display: inline-flex; align-items: center; gap: 6px; }
 .add:hover { background: #dde9ff; transform: translateY(-1px); }
 .plist { display: flex; flex-direction: column; gap: 10px; }
-.prow { display: flex; align-items: center; gap: 16px; padding: 15px 18px; border: 1px solid var(--line); border-radius: 14px; transition: .15s; }
+.prow { display: flex; align-items: center; gap: 16px; padding: 15px 18px; border: 1px solid var(--line); border-radius: 14px; transition: .15s; cursor: pointer; }
 .prow:hover { border-color: #d6e3ff; background: #f9fbff; }
 .prow.cur { border-color: var(--blue); background: #f4f8ff; box-shadow: 0 0 0 1px var(--blue) inset; }
 .pn { font-size: 15px; font-weight: 700; color: var(--navy); }
@@ -161,6 +161,8 @@
 .ab:hover { border-color: #c4cee2; color: var(--ink); }
 .abPrimary { background: var(--blue); color: #fff; border-color: var(--blue); }
 .abPrimary:hover { background: #2559e0; }
+.abDanger { color: #e2504a; }
+.abDanger:hover { border-color: #e2504a; color: #e2504a; background: #fdecea; }
 
 /* modal */
 .modal { position: fixed; inset: 0; z-index: 50; background: rgba(11,21,48,.5); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; padding: 20px; }
