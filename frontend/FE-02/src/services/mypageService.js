@@ -13,10 +13,10 @@ export async function getMypageProducts() {
 
 // 신규 제품 등록 — POST /api/products 대응
 // mock 단계에선 공유 배열(MYPAGE_PRODUCTS)에 직접 추가해 마이페이지·새 진단 화면이 같은 목록을 공유
-export async function createMypageProduct({ name, hs, country }) {
+export async function createMypageProduct({ name, hs, country, description = '' }) {
   const created = {
     id: `prod_${Date.now()}`,
-    name, hs, country,
+    name, hs, country, description,
     score: null, chips: [],
     todo: [{ task: '제품 지식 입력하기', due: '30' }],
     kn: 0, miss: '미입력 (정보를 채워주세요)',

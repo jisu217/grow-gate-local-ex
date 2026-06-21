@@ -20,6 +20,7 @@ export const MYPAGE_MEMBERS = [
 export const MYPAGE_PRODUCTS = [
   {
     id: 'prod_001', runId: 'diag-001', name: '리튬배터리 팩', country: '독일', hs: '850760', score: 83,
+    description: '전동공구, 산업용 장비, 이동형 전원장치 등에 사용되는 충전식 리튬이온 전원 모듈',
     chips: ['규제 위험 2건', '인증 필요 3건', 'FTO 위험 낮음'],
     todo: [
       { task: 'CE 인증 견적 요청', due: '30' },
@@ -34,6 +35,7 @@ export const MYPAGE_PRODUCTS = [
   },
   {
     id: 'prod_002', runId: 'diag-002', name: 'BMS 모듈', country: '미국', hs: '853710', score: 67,
+    description: '배터리 상태 감시 및 보호회로 제어를 위한 전자 제어 모듈',
     chips: ['규제 위험 4건', '인증 필요 2건', 'FTO 위험 보통'],
     todo: [
       { task: 'UL 인증 요건 확인', due: '30' },
@@ -47,6 +49,7 @@ export const MYPAGE_PRODUCTS = [
   },
   {
     id: 'prod_003', runId: 'diag-003', name: '휴대용 충전기', country: 'ASEAN', hs: '850440', score: 45,
+    description: 'USB-C 기반 소형 전원공급장치 및 휴대용 충전 어댑터',
     chips: ['규제 위험 5건', '인증 필요 4건', 'FTO 위험 높음'],
     todo: [
       { task: '제품 지식 추가 입력', due: '30' },

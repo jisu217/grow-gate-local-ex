@@ -1,7 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from './DiagnosisNew.module.css'
 import { getMypageProducts, createMypageProduct } from '../../services/mypageService.js'
+
+const PICKER_PAGE_SIZE = 5
+const PICKER_PAGE_WINDOW = 5
+
+function normalizeSearchValue(value) {
+  return String(value ?? '').toLowerCase().replace(/\s+/g, '')
+}
 
 // 신규 진단 입력 페이지 컴포넌트
 export default function DiagnosisNew() {
@@ -20,6 +27,8 @@ export default function DiagnosisNew() {
   const [pickerOpen, setPickerOpen] = useState(false)
   const [savedProducts, setSavedProducts] = useState([])
   const [selectedId, setSelectedId] = useState(null)
+  const [pickerKeyword, setPickerKeyword] = useState('')
+  const [pickerPage, setPickerPage] = useState(1)
 
   // 직접 입력한 제품을 마이페이지에도 저장할지 (기본 켜짐)
   const [saveToMypage, setSaveToMypage] = useState(true)
@@ -28,6 +37,34 @@ export default function DiagnosisNew() {
   useEffect(() => {
     getMypageProducts().then(setSavedProducts)
   }, [])
+
+  const filteredProducts = useMemo(() => {
+    const keyword = normalizeSearchValue(pickerKeyword)
+    if (!keyword) return savedProducts
+
+    return savedProducts.filter((product) => {
+      const haystack = normalizeSearchValue([
+        product.name,
+        product.hs,
+        product.country,
+        product.description,
+      ].join(' '))
+      return haystack.includes(keyword)
+    })
+  }, [pickerKeyword, savedProducts])
+
+  const pickerTotalPages = Math.max(1, Math.ceil(filteredProducts.length / PICKER_PAGE_SIZE))
+  const safePickerPage = Math.min(pickerPage, pickerTotalPages)
+  const pickerStart = (safePickerPage - 1) * PICKER_PAGE_SIZE
+  const pagedProducts = filteredProducts.slice(pickerStart, pickerStart + PICKER_PAGE_SIZE)
+  const shouldShowPagination = filteredProducts.length > PICKER_PAGE_SIZE
+  const visiblePickerPages = useMemo(() => {
+    if (!shouldShowPagination) return []
+
+    const windowStart = Math.floor((safePickerPage - 1) / PICKER_PAGE_WINDOW) * PICKER_PAGE_WINDOW + 1
+    const windowEnd = Math.min(windowStart + PICKER_PAGE_WINDOW - 1, pickerTotalPages)
+    return Array.from({ length: windowEnd - windowStart + 1 }, (_, index) => windowStart + index)
+  }, [safePickerPage, pickerTotalPages, shouldShowPagination])
 
   // 입력값 변경 처리
   const handleChange = (e) => {
@@ -41,11 +78,22 @@ export default function DiagnosisNew() {
       productName: p.name,
       hsCode: p.hs,
       targetCountry: p.country,
-      description: '',
+      description: p.description ?? '',
     })
     setSelectedId(p.id)
     setErrors({})
     setPickerOpen(false)
+  }
+
+  const openPicker = () => {
+    setPickerKeyword('')
+    setPickerPage(1)
+    setPickerOpen(true)
+  }
+
+  const handlePickerSearch = (e) => {
+    setPickerKeyword(e.target.value)
+    setPickerPage(1)
   }
 
   // 진단 시작 제출 처리
@@ -62,6 +110,7 @@ export default function DiagnosisNew() {
         name: formData.productName.trim(),
         hs: formData.hsCode.trim(),
         country: formData.targetCountry.trim(),
+        description: formData.description.trim(),
       })
     }
 
@@ -131,7 +180,7 @@ export default function DiagnosisNew() {
             </div>
 
             <div className={styles.knowledgeBtn}>
-              <button className={styles.outlineBtn} onClick={() => setPickerOpen(true)}>
+              <button className={styles.outlineBtn} onClick={openPicker}>
                 📂 저장된 제품 지식 불러오기
               </button>
               <span className={styles.knowledgeHint}>
@@ -166,20 +215,82 @@ export default function DiagnosisNew() {
             <h3 className={styles.sheetTitle}>저장된 제품 불러오기</h3>
             <p className={styles.sheetDesc}>마이페이지에 등록한 제품을 선택하면 입력값이 자동으로 채워집니다.</p>
 
+            <div className={styles.pickSearch}>
+              <span className={styles.pickSearchIcon} aria-hidden="true">⌕</span>
+              <input
+                className={styles.pickSearchInput}
+                type="search"
+                value={pickerKeyword}
+                onChange={handlePickerSearch}
+                placeholder="제품명, HS Code, 대상국 키워드로 검색"
+                aria-label="저장된 제품 검색"
+              />
+              {pickerKeyword && (
+                <button className={styles.pickSearchClear} onClick={() => { setPickerKeyword(''); setPickerPage(1) }}>
+                  초기화
+                </button>
+              )}
+            </div>
+
+            <div className={styles.pickMetaRow}>
+              <span>총 <b>{filteredProducts.length}</b>개 제품 · 5개씩 보기</span>
+              <span className={styles.pickExamples}>제품명 · HS Code · 대상국 · 설명 검색</span>
+            </div>
+
             <div className={styles.pickList}>
               {savedProducts.length === 0 && (
                 <div className={styles.pickEmpty}>저장된 제품이 없습니다. 마이페이지에서 먼저 제품을 등록하세요.</div>
               )}
-              {savedProducts.map((p) => (
+              {savedProducts.length > 0 && filteredProducts.length === 0 && (
+                <div className={styles.pickEmpty}>
+                  검색 결과가 없습니다. 제품명, HS Code, 대상국 또는 설명 키워드를 다시 입력해 주세요.
+                </div>
+              )}
+              {pagedProducts.map((p) => (
                 <button key={p.id} className={styles.pickItem} onClick={() => pickProduct(p)}>
                   <div>
                     <div className={styles.pickName}>{p.name}</div>
                     <div className={styles.pickMeta}>HS {p.hs} · {p.country} 수출</div>
+                    {p.description && <div className={styles.pickDescription}>{p.description}</div>}
                   </div>
                   <span className={styles.pickGo}>선택 →</span>
                 </button>
               ))}
             </div>
+
+            {shouldShowPagination && (
+              <div className={styles.pickPaginationRow}>
+                <span className={styles.pickPageHelp}>
+                  {safePickerPage}/{pickerTotalPages}페이지 · 제품 {pickerStart + 1}-{Math.min(pickerStart + PICKER_PAGE_SIZE, filteredProducts.length)}번째 표시
+                </span>
+                <div className={styles.pickPager} aria-label="저장된 제품 페이지 이동">
+                  <button
+                    className={styles.pickPageButton}
+                    disabled={safePickerPage === 1}
+                    onClick={() => setPickerPage((page) => Math.max(1, page - 1))}
+                  >
+                    이전
+                  </button>
+                  {visiblePickerPages.map((page) => (
+                    <button
+                      key={page}
+                      className={`${styles.pickPageButton} ${page === safePickerPage ? styles.activePage : ''}`}
+                      onClick={() => setPickerPage(page)}
+                      aria-current={page === safePickerPage ? 'page' : undefined}
+                    >
+                      {page}
+                    </button>
+                  ))}
+                  <button
+                    className={styles.pickPageButton}
+                    disabled={safePickerPage === pickerTotalPages}
+                    onClick={() => setPickerPage((page) => Math.min(pickerTotalPages, page + 1))}
+                  >
+                    다음
+                  </button>
+                </div>
+              </div>
+            )}
 
             <div className={styles.sheetFoot}>
               <button className={styles.sheetCancel} onClick={() => setPickerOpen(false)}>닫기</button>
