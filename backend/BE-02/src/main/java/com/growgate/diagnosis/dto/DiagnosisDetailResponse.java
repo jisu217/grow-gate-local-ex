@@ -24,11 +24,22 @@ public class DiagnosisDetailResponse {
     @Getter
     @Builder
     public static class ResultData {
-        private int diagnosisScore;
+        private DiagnosisScore diagnosisScore;
         private String summary;
         private List<RiskItem> riskItems;
         private ActionRoadmap actionRoadmap;
         private List<String> evidenceSources;
+    }
+
+    @Getter
+    @Builder
+    public static class DiagnosisScore {
+        private int overall;
+        private int market;
+        private int regulation;
+        private int recall;
+        private int fto;
+        private int support;
     }
 
     @Getter

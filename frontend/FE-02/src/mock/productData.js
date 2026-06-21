@@ -2,14 +2,14 @@
 export const PRODUCTS = [
   {
     id: 'prod-001', name: '리튬이온 배터리팩', category: '전기전자',
-    grade: 'A', expiringCerts: 1, updatedAt: '2025-05-28',
+    trustGrade: 'high', expiringCerts: 1, updatedAt: '2025-05-28',
     knowledgeStatus: 'expiring',
     sourceBasis: 'official',
     missingFields: ['MSDS 최신본'],
   },
   {
     id: 'prod-002', name: '스마트 센서 모듈', category: '전자부품',
-    grade: 'B+', expiringCerts: 0, updatedAt: '2025-04-10',
+    trustGrade: 'medium', expiringCerts: 0, updatedAt: '2025-04-10',
     knowledgeStatus: 'needs-check',
     sourceBasis: 'internal',
     missingFields: ['CE 인증서', 'RoHS 적합선언'],
@@ -22,7 +22,7 @@ export const PRODUCT_DETAILS = {
     name: '리튬이온 배터리팩',
     category: '전기전자',
     description: 'UN38.3 인증 추진 중인 리튬이온 배터리팩. 독일/EU 수출 목표.',
-    grade: 'A',
+    trustGrade: 'high',
     knowledgeStatus: 'expiring',
     sourceBasis: 'official',
     missingFields: ['MSDS 최신본', 'CE DoC 초안'],
