@@ -210,14 +210,17 @@ export async function getProducts() {
 
 > 현재 모두 mock 대체 상태. 백엔드 연동 시 아래 엔드포인트 구현 필요.
 
-### 인증
+### 인증·사용자
 
 | 메서드 | 경로 | 설명 | 서비스 파일 |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/auth/login` | 이메일·비밀번호 로그인, JWT 발급 | — (미구현) |
-| `POST` | `/auth/signup/personal` | 개인 계정 회원가입 | — (미구현) |
-| `POST` | `/auth/signup/company` | 기업 계정 회원가입 | — (미구현) |
-| `GET` | `/auth/me` | 현재 로그인 사용자 정보 조회 | — (미구현) |
+| `POST` | `/api/auth/login` | 이메일·비밀번호 로그인, JWT 발급 | — (미구현) |
+| `POST` | `/api/auth/signup` | 회원가입 (개인/기업 구분은 요청 바디로 전달) | — (미구현) |
+| `POST` | `/api/auth/logout` | 로그아웃 | — (미구현) |
+| `GET` | `/api/users/me` | 현재 로그인 사용자 정보 조회 | — (미구현) |
+| `PATCH` | `/api/users/me` | 사용자 정보 수정 | — (미구현) |
+| `GET` | `/api/companies/me` | 소속 기업 정보 조회 (기업 계정) | — (미구현) |
+| `PATCH` | `/api/companies/me` | 소속 기업 정보 수정 (기업 계정) | — (미구현) |
 
 ### 제품 지식
 
@@ -226,10 +229,11 @@ export async function getProducts() {
 | 메서드 | 경로 | 설명 | 서비스 함수 |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/products` | 제품 목록 조회 | `getProducts()` |
-| `GET` | `/api/products/:id/knowledge` | 제품 상세·지식 조회 | `getProductKnowledge(id)` |
 | `POST` | `/api/products` | 신규 제품 생성 | `createProduct(payload)` |
-| `PUT` | `/api/products/:id/knowledge` | 제품 지식 수정 | `saveProductKnowledge(id, payload)` |
-| `GET` | `/api/products/:id/audit-logs` | 변경 이력 조회 | — (미연동, `KnowledgeDetail` 변경 이력 탭은 현재 빈 배열) |
+| `GET` | `/api/products/:productId/knowledge` | 제품 상세·지식 조회 | `getProductKnowledge(id)` |
+| `PUT` | `/api/products/:productId/knowledge` | 제품 지식 수정 | `saveProductKnowledge(id, payload)` |
+| `DELETE` | `/api/products/:productId` | 제품 삭제 | — (미구현) |
+| `GET` | `/api/products/:productId/audit-logs` | 변경 이력 조회 | — (미연동, `KnowledgeDetail` 변경 이력 탭은 현재 빈 배열) |
 
 ### 진단
 
@@ -240,9 +244,11 @@ export async function getProducts() {
 | 메서드 | 경로 | 설명 | 서비스 함수 |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/diagnosis` | 진단 이력 목록 조회 | `getDiagnosisList()` |
-| `GET` | `/api/diagnosis/:id` | 진단 결과 상세 조회 | `getDiagnosisResult(id)` |
 | `POST` | `/api/diagnosis` | 새 진단 실행 요청 | `runDiagnosis(payload)` |
+| `GET` | `/api/diagnosis/:id` | 진단 결과 상세 조회 | `getDiagnosisResult(id)` |
 | `GET` | `/api/diagnosis/:id/sources` | 진단 출처 데이터 조회 | — (미구현) |
+
+> 화면 라우트(`/mypage/knowledge`, `/diagnosis` 등)는 [§5 Routing](#5-routing)의 UI 경로로 위 표의 `/api/...` 경로와는 별개. 화면 라우트는 유지, 실제 백엔드 호출만 `/api` 경로로 연결.
 
 ---
 

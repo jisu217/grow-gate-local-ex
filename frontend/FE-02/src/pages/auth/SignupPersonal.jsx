@@ -5,14 +5,14 @@ import styles from './Auth.module.css'
 // 개인 회원가입 페이지 컴포넌트
 export default function SignupPersonal() {
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name:'', userId:'', password:'' })
+  const [form, setForm] = useState({ name:'', email:'', password:'' })
   // 입력값 변경 처리
   const handleChange = (e) => setForm(p => ({...p, [e.target.name]: e.target.value}))
 
   const FIELDS = [
-    { key:'name',     label:'이름',   placeholder:'이름',              type:'text' },
-    { key:'userId',   label:'아이디', placeholder:'아이디 또는 이메일', type:'text' },
-    { key:'password', label:'비밀번호', placeholder:'비밀번호',         type:'password' },
+    { key:'name',     label:'이름',   placeholder:'이름',     type:'text' },
+    { key:'email',    label:'이메일', placeholder:'이메일',   type:'email' },
+    { key:'password', label:'비밀번호', placeholder:'비밀번호', type:'password' },
   ]
 
   return (
