@@ -15,7 +15,7 @@ public interface ProductRepository extends JpaRepository<Product, String> {
 
     Optional<Product> findByIdAndOwnerId(String id, String ownerId);
 
-    List<Product> findByOwner_Company_IdOrderByUpdatedAtDesc(String companyId);
+    List<Product> findByCompany_IdOrderByUpdatedAtDesc(String companyId);
 
-    Optional<Product> findByIdAndOwner_Company_Id(String id, String companyId);
+    Optional<Product> findByIdAndCompany_Id(String id, String companyId);
 }
