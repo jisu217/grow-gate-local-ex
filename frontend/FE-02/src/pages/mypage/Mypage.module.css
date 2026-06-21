@@ -66,6 +66,14 @@
 .card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 24px 26px; box-shadow: 0 1px 2px rgba(15,27,61,.04), 0 10px 30px rgba(15,27,61,.06); }
 .ctitle { font-size: 13px; font-weight: 600; color: var(--mute); display: flex; align-items: center; gap: 7px; }
 
+/* 클릭 가능한 카드 */
+.clickable { cursor: pointer; transition: transform .15s, box-shadow .15s; }
+.clickable:hover { transform: translateY(-2px); box-shadow: 0 6px 14px rgba(15,27,61,.08), 0 18px 44px rgba(15,27,61,.12); }
+
+/* 카드 제목 옆 이동 힌트 */
+.goHint { font-size: 11px; font-weight: 500; color: var(--dim); }
+.score .goHint { color: rgba(255,255,255,.75); }
+
 /* grids */
 .row { display: grid; gap: 16px; }
 .hero { grid-template-columns: 1.5fr 1fr; margin-bottom: 16px; }
@@ -83,7 +91,9 @@
 
 /* todo */
 .todo .list { margin-top: 14px; display: flex; flex-direction: column; gap: 11px; }
-.item { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--ink); }
+.item { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--ink); padding: 4px 6px; margin: 0 -6px; border-radius: 8px; }
+.clickableItem { cursor: pointer; transition: background .15s; }
+.clickableItem:hover { background: #f1f5ff; }
 .box { width: 17px; height: 17px; border: 1.6px solid #c4cee2; border-radius: 5px; flex-shrink: 0; margin-top: 1px; }
 .tag { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 6px; margin-left: auto; flex-shrink: 0; }
 .t30 { background: #eaf1ff; color: var(--blue); }
@@ -162,6 +172,8 @@
 .field label { display: block; font-size: 13px; font-weight: 600; color: var(--mute); margin-bottom: 7px; }
 .field input, .field select { width: 100%; font-family: var(--kr); font-size: 14.5px; color: var(--ink); padding: 12px 14px; border: 1px solid var(--line); border-radius: 11px; outline: none; transition: .15s; background: #fff; }
 .field input:focus, .field select:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(47,107,255,.12); }
+.knLink { width: 100%; margin-top: 4px; font-family: var(--kr); font-size: 13px; font-weight: 600; color: var(--blue); background: #f4f8ff; border: 1px solid #d6e3ff; border-radius: 11px; padding: 12px 14px; text-align: left; cursor: pointer; transition: .15s; }
+.knLink:hover { background: #e8f0ff; }
 .foot { display: flex; gap: 10px; justify-content: flex-end; margin-top: 24px; }
 .foot button { font-family: var(--kr); font-weight: 700; font-size: 14px; padding: 12px 22px; border-radius: 12px; cursor: pointer; border: none; transition: .15s; }
 .cancel { background: #eef0f4; color: var(--mute); }
