@@ -1,12 +1,12 @@
-package com.growgate.knowledge.dto;
+package com.growgate.product.dto;
 
-// 제품 지식 생성 응답 DTO
+// 제품 생성 응답 DTO
 import lombok.Builder;
 import lombok.Getter;
 
 @Getter
 @Builder
-public class CreateKnowledgeResponse {
+public class CreateProductResponse {
 
     private String productId;
     private String name;

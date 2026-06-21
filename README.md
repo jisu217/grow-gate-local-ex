@@ -243,7 +243,7 @@ This is a local prototype. The code includes guardrails for demo safety:
 
 ---
 
-## 13. License 
+## 13. License
 
 See [LICENSE](LICENSE).
 

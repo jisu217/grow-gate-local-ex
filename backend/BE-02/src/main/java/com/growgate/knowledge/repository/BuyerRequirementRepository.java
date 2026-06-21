@@ -6,9 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface BuyerRequirementRepository extends JpaRepository<BuyerRequirement, String> {
 
     List<BuyerRequirement> findByProductId(String productId);
+
+    Optional<BuyerRequirement> findByIdAndProductId(String id, String productId);
 }

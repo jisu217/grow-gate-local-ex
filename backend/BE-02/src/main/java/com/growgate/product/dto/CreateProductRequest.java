@@ -1,13 +1,13 @@
-package com.growgate.knowledge.dto;
+package com.growgate.product.dto;
 
-// 제품 지식 생성 요청 DTO
+// 제품 생성 요청 DTO
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 @Getter
 @NoArgsConstructor
-public class CreateKnowledgeRequest {
+public class CreateProductRequest {
 
     @NotBlank(message = "제품명은 필수입니다.")
     private String name;

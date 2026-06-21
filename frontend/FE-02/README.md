@@ -209,6 +209,7 @@ export async function getProducts() {
 ## 9. Required Backend APIs
 
 > 현재 모두 mock 대체 상태. 백엔드 연동 시 아래 엔드포인트 구현 필요.
+> 아래 경로는 백엔드(`backend/BE-02`) 실제 구현 기준. `services/apiClient.js`는 `${VITE_API_URL}/api`를 베이스로 사용.
 
 ### 인증·사용자
 
@@ -230,10 +231,12 @@ export async function getProducts() {
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/products` | 제품 목록 조회 | `getProducts()` |
 | `POST` | `/api/products` | 신규 제품 생성 | `createProduct(payload)` |
-| `GET` | `/api/products/:productId/knowledge` | 제품 상세·지식 조회 | `getProductKnowledge(id)` |
-| `PUT` | `/api/products/:productId/knowledge` | 제품 지식 수정 | `saveProductKnowledge(id, payload)` |
+| `GET` | `/api/products/:productId/knowledge` | 제품 상세·지식 조회 (인증서·FTO·바이어요구사항·출처 포함) | `getProductKnowledge(id)` |
+| `PUT` | `/api/products/:productId/knowledge` | 제품 정보·지식 수정 | `saveProductKnowledge(id, payload)` |
 | `DELETE` | `/api/products/:productId` | 제품 삭제 | — (미구현) |
 | `GET` | `/api/products/:productId/audit-logs` | 변경 이력 조회 | — (미연동, `KnowledgeDetail` 변경 이력 탭은 현재 빈 배열) |
+
+인증서/FTO/바이어요구사항/지식출처 등록·수정·삭제 엔드포인트(`/api/products/{productId}/certifications` 등)는 백엔드 구현 완료, KnowledgeEdit 화면은 제품 기본 정보만 다뤄 대응 서비스 함수 미구현. 자세한 경로는 `backend/BE-02/README.md` 4번 섹션 참고.
 
 ### 진단
 
