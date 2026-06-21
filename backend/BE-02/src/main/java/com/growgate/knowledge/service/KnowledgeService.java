@@ -592,7 +592,7 @@ public class KnowledgeService {
     private Product findProductByUser(User user, String productId) {
         Company company = resolveCompany(user.getId());
         if (company != null) {
-            return productRepository.findByIdAndOwner_Company_Id(productId, company.getId())
+            return productRepository.findByIdAndCompany_Id(productId, company.getId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "등록된 제품을 찾을 수 없습니다."));
         }
         return productRepository.findByIdAndOwnerId(productId, user.getId())

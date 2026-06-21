@@ -8,7 +8,41 @@
 ![Public Data](https://img.shields.io/badge/Public%20Data-KCS%20%7C%20KOTRA%20%7C%20KATS%20%7C%20KIPRIS-blue)
 ![Status](https://img.shields.io/badge/Prototype-demo-green)
 
-## Why
+---
+
+## Table of Contents
+
+1. [Main App (FE-02 / BE-02)](#1-main-app-fe-02--be-02)
+2. [Why](#2-why)
+3. [What It Does](#3-what-it-does)
+4. [Public Data Coverage](#4-public-data-coverage)
+5. [Screens](#5-screens)
+6. [Quick Start](#6-quick-start)
+7. [Code Gate Git Bridge](#7-code-gate-git-bridge)
+8. [Architecture](#8-architecture)
+9. [Repository Layout](#9-repository-layout)
+10. [Verification](#10-verification)
+11. [Current Demo Scenario](#11-current-demo-scenario)
+12. [Security Notes](#12-security-notes)
+13. [License](#13-license)
+14. [Timeline](#14-timeline)
+
+---
+
+## 1. Main App (FE-02 / BE-02)
+
+| Type | Path | Stack | Description |
+| :--- | :--- | :--- | :--- |
+| React FE | `frontend/FE-02/` | React 18 + Vite | [frontend/FE-02/README.md](frontend/FE-02/README.md) |
+| Spring Boot BE | `backend/BE-02/` | Spring Boot 3.4 + MySQL | [backend/BE-02/README.md](backend/BE-02/README.md) |
+
+| 홈 | AI 진단 결과 |
+| :--- | :--- |
+| ![홈 화면](docs/screenshot-home.png) | ![진단 결과 화면](docs/screenshot-diagnosis.png) |
+
+---
+
+## 2. Why
 
 지역 제조기업은 제품을 해외에 팔기 전에 시장성보다 더 현실적인 질문에 막힙니다.
 
@@ -20,7 +54,9 @@
 
 GROW-GATE Local EX는 이 질문을 공공데이터 기반 실행 보드로 바꿉니다.
 
-## What It Does
+---
+
+## 3. What It Does
 
 | 영역 | 기능 |
 | :--- | :--- |
@@ -30,7 +66,9 @@ GROW-GATE Local EX는 이 질문을 공공데이터 기반 실행 보드로 바�
 | 팀 운영실 | 데이터 활용도, 부족 데이터, 역할자별 기획 완성도, 입상 가능성, 개선 액션을 점수화 |
 | 코드 게이트 | 리뷰 체크리스트, 커밋 전 확인, 로컬 Git 커밋, GitHub push 가이드를 제공 |
 
-## Public Data Coverage
+---
+
+## 4. Public Data Coverage
 
 | Source | Target Table | Used For |
 | :--- | :--- | :--- |
@@ -42,7 +80,9 @@ GROW-GATE Local EX는 이 질문을 공공데이터 기반 실행 보드로 바�
 
 팀 운영실의 공공데이터 카드를 클릭하면 활용 내역, 실제 코드 연결, 데이터 형태, 간단 통계를 즉시 볼 수 있습니다.
 
-## Screens
+---
+
+## 5. Screens
 
 ```text
 grow_gate_local_ex_demo/frontend/
@@ -54,7 +94,9 @@ grow_gate_local_ex_demo/frontend/
 └─ code-gate.html   # 코드 리뷰·커밋 게이트
 ```
 
-## Quick Start
+---
+
+## 6. Quick Start
 
 ### 1. HTML만 열기
 
@@ -97,7 +139,9 @@ POST /analyze
 POST /report
 ```
 
-## Code Gate Git Bridge
+---
+
+## 7. Code Gate Git Bridge
 
 `code-gate.html`은 FastAPI 백엔드가 켜져 있을 때 로컬 Git 작업을 요청할 수 있습니다. 보안상 기본값은 잠김입니다.
 
@@ -118,7 +162,9 @@ GROW_GATE_GIT_TOKEN="local-only-token" \
 - GitHub 인증 정보나 토큰은 저장하지 않습니다.
 - push는 이 컴퓨터에 GitHub write 권한이 설정된 경우에만 성공합니다.
 
-## Architecture
+---
+
+## 8. Architecture
 
 ```mermaid
 flowchart LR
@@ -132,7 +178,9 @@ flowchart LR
   I --> J["Commit / Push Guide"]
 ```
 
-## Repository Layout
+---
+
+## 9. Repository Layout
 
 ```text
 grow_gate_local_ex_demo/
@@ -156,7 +204,9 @@ grow_gate_local_ex_demo/
    └─ test_agent.py
 ```
 
-## Verification
+---
+
+## 10. Verification
 
 ```bash
 cd grow_gate_local_ex_demo
@@ -169,7 +219,9 @@ Expected:
 1 passed
 ```
 
-## Current Demo Scenario
+---
+
+## 11. Current Demo Scenario
 
 - 기업: 경남 배터리테크
 - 제품: 리튬이온 배터리팩
@@ -177,7 +229,9 @@ Expected:
 - 대상국: Germany / EU
 - 핵심 규제: UN38.3, IEC 62133, CE/LVD/EMC, EU Battery Passport
 
-## Security Notes
+---
+
+## 12. Security Notes
 
 This is a local prototype. The code includes guardrails for demo safety:
 
@@ -187,6 +241,21 @@ This is a local prototype. The code includes guardrails for demo safety:
 - Frontend rendering escapes dynamic text before inserting HTML.
 - GitHub credentials are never stored by the app.
 
-## License 
+---
+
+## 13. License
 
 See [LICENSE](LICENSE).
+
+---
+
+## 14. Timeline
+
+| Date | Type | Description |
+| :--- | :--- | :--- |
+| 26.05.18 | 온라인 미팅 |  |
+| 26.05.31 | 1차 스프린트 |  |
+| 26.06.04 | 2차 스프린트 |  |
+| 26.06.20 | 3차 스프린트 |  |
+
+---

@@ -4,6 +4,7 @@ import styles from './Knowledge.module.css'
 import { usePermission } from '../../hooks/usePermission.js'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
 import { getProducts } from '../../services/productService.js'
+import { toGradeLabel } from '../../utils/trustGrade.js'
 
 // 지식 품질 상태 맵
 const QUALITY_STATUS = {
@@ -62,7 +63,7 @@ export default function Knowledge() {
               <div className={styles.meta}>{p.category}</div>
 
               <div className={styles.infoRow}>
-                <span className={styles.grade}>신뢰도 {p.grade}</span>
+                <span className={styles.grade}>신뢰도 {toGradeLabel(p.trustGrade)}</span>
                 {QUALITY_STATUS[p.knowledgeStatus] && (
                   <span className={`pill ${QUALITY_STATUS[p.knowledgeStatus].cls}`}>
                     {QUALITY_STATUS[p.knowledgeStatus].label}

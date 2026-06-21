@@ -30,7 +30,7 @@ export default function DiagnosisList() {
           <h1 className={styles.title}>AI 진단 이력</h1>
           <p className={styles.sub}>요청한 진단 목록과 분석 결과를 확인하세요.</p>
         </div>
-        <button className={styles.newBtn} onClick={() => navigate('/diagnosis/diag-001')}>
+        <button className={styles.newBtn} onClick={() => navigate('/diagnosis/new')}>
           + 새 진단 시작
         </button>
       </div>
@@ -64,7 +64,7 @@ export default function DiagnosisList() {
                   </div>
                   <div className={styles.cardRight}>
                     {diag.diagnosisScore !== null && (
-                      <div className={styles.score}>{diag.diagnosisScore}<span>/100</span></div>
+                      <div className={styles.score}>{diag.diagnosisScore.overall}<span>/100</span></div>
                     )}
                     <span className={`${styles.badge} ${status.cls}`}>{status.label}</span>
                   </div>

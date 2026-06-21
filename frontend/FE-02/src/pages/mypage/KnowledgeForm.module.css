@@ -65,6 +65,7 @@
   transition: transform .18s;
 }
 .submitBtn:hover { transform: translateY(-1px); }
+.submitBtn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
 
 /* 유효성 오류 상태 입력 */
 .inputError { border-color: var(--red) !important; background: #fff8f7 !important; }

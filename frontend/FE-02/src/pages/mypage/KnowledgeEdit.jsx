@@ -1,14 +1,9 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import styles from './KnowledgeForm.module.css'
 import { usePermission } from '../../hooks/usePermission.js'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
-
-const INITIAL = {
-  productName: '리튬이온 배터리팩',
-  category: '전기전자',
-  description: 'UN38.3 인증 추진 중인 리튬이온 배터리팩. 독일/EU 수출 목표.',
-}
+import { getProductKnowledge, saveProductKnowledge } from '../../services/productService.js'
 
 const CATEGORIES = ['전기전자', '전자부품', '기계·장비', '화학·소재', '식품·의료', '기타']
 
@@ -18,7 +13,20 @@ export default function KnowledgeEdit() {
   const navigate = useNavigate()
   const { can } = usePermission()
 
-  const [form, setForm] = useState({ ...INITIAL })
+  const [form, setForm] = useState({ productName: '', category: '', description: '' })
+  const [pageState, setPageState] = useState('loading')
+  const [error, setError] = useState('')
+  const [saving, setSaving] = useState(false)
+
+  useEffect(() => {
+    setPageState('loading')
+    getProductKnowledge(productId)
+      .then((data) => {
+        setForm({ productName: data.name, category: data.category, description: data.description })
+        setPageState('ok')
+      })
+      .catch(() => setPageState('error'))
+  }, [productId])
 
   if (!can('knowledge:edit')) {
     return (
@@ -34,14 +42,35 @@ export default function KnowledgeEdit() {
     )
   }
 
+  if (pageState === 'loading') return (
+    <div className={styles.wrap}>
+      <StatusMessage type="loading" message="제품 지식을 불러오는 중입니다." />
+    </div>
+  )
+  if (pageState === 'error') return (
+    <div className={styles.wrap}>
+      <button className={styles.back} onClick={() => navigate(`/mypage/knowledge/${productId}`)}>
+        ← 제품 상세로 돌아가기
+      </button>
+      <StatusMessage type="error" message="제품 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요." />
+    </div>
+  )
+
   // 입력값 변경 처리
   const handleChange = (e) =>
     setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }))
 
   // 수정 저장 처리
-  const handleSave = () => {
-
-    navigate(`/mypage/knowledge/${productId}`)
+  const handleSave = async () => {
+    setSaving(true)
+    setError('')
+    try {
+      await saveProductKnowledge(productId, form)
+      navigate(`/mypage/knowledge/${productId}`)
+    } catch {
+      setError('저장에 실패했습니다. 잠시 후 다시 시도해주세요.')
+      setSaving(false)
+    }
   }
 
   return (
@@ -98,8 +127,10 @@ export default function KnowledgeEdit() {
           💡 저장하면 변경 이력(Audit Log)이 자동으로 기록됩니다.
         </div>
 
-        <button className={styles.submitBtn} onClick={handleSave}>
-          수정 저장
+        {error && <p className={styles.errorMsg} role="alert">{error}</p>}
+
+        <button className={styles.submitBtn} onClick={handleSave} disabled={saving}>
+          {saving ? '저장 중…' : '수정 저장'}
         </button>
       </div>
     </div>

@@ -8,13 +8,20 @@ export const CURRENT_SESSION = {
   productId:            'prod-001',
   companyId:            'comp-001',
   knowledgeSnapshotId:  'snap-prod-001-20250528',  // 진단 시점 제품 지식 버전
-  trustGrade:           'A',
+  trustGrade:           'high',
   missingFields:        ['MSDS 최신본', 'CE DoC 초안'],
   evidenceSources:      ['관세청', 'KOTRA', 'KTL', 'SafetyKorea', 'KIPRIS', '기업마당', 'EU RAPEX'],
   updatedAt:            '2025-05-28',
 
   // 진단 결과 요약
-  diagnosisScore: 83,
+  diagnosisScore: {
+    overall: 83,
+    market: 91,
+    regulation: 75,
+    recall: 88,
+    fto: 75,
+    support: 79,
+  },
   riskItems: [
     { level: 'high',   label: '과열·열폭주 리콜 유사도 0.86' },
     { level: 'high',   label: 'BMS 특허 침해 위험 (삼성SDI)' },

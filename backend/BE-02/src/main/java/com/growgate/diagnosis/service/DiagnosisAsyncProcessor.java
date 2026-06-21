@@ -34,7 +34,14 @@ public class DiagnosisAsyncProcessor {
             diagnosisRepository.save(run);
 
             Map<String, Object> resultMap = new HashMap<>();
-            resultMap.put("diagnosisScore", 72);
+            resultMap.put("diagnosisScore", Map.of(
+                    "overall", 72,
+                    "market", 80,
+                    "regulation", 68,
+                    "recall", 75,
+                    "fto", 60,
+                    "support", 70
+            ));
             resultMap.put("summary", "전반적인 수출 준비도는 양호하나 FTO 리스크 보완 필요");
             resultMap.put("evidenceSources", List.of("관세청", "KOTRA", "KTL", "SafetyKorea", "KIPRIS", "기업마당", "EU RAPEX"));
             resultMap.put("riskItems", List.of(

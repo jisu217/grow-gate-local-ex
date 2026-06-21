@@ -112,6 +112,7 @@ public class ProductService {
 
         Product product = Product.builder()
                 .owner(user)
+                .company(resolveCompany(userId))
                 .name(request.getName())
                 .category(request.getCategory())
                 .description(request.getDescription())
@@ -209,7 +210,7 @@ public class ProductService {
     private List<Product> findProductsByUser(User user) {
         Company company = resolveCompany(user.getId());
         if (company != null) {
-            return productRepository.findByOwner_Company_IdOrderByUpdatedAtDesc(company.getId());
+            return productRepository.findByCompany_IdOrderByUpdatedAtDesc(company.getId());
         }
         return productRepository.findByOwnerIdOrderByUpdatedAtDesc(user.getId());
     }
@@ -217,7 +218,7 @@ public class ProductService {
     private Product findProductByUser(User user, String productId) {
         Company company = resolveCompany(user.getId());
         if (company != null) {
-            return productRepository.findByIdAndOwner_Company_Id(productId, company.getId())
+            return productRepository.findByIdAndCompany_Id(productId, company.getId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "등록된 제품을 찾을 수 없습니다."));
         }
         return productRepository.findByIdAndOwnerId(productId, user.getId())

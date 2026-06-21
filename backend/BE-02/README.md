@@ -142,6 +142,13 @@ BE-02/
 ## 4. API Endpoints
 
 모든 인증 필요 API는 요청 헤더에 `Authorization: Bearer {token}` 포함 필요.
+응답 필드 네이밍: camelCase 고정
+
+### 헬스체크
+
+| 메서드 | 경로 | 설명 | 인증 |
+| :--- | :--- | :--- | :--- |
+| `GET` | `/health` | 서버 상태 확인 (배포·연결 체크용) | |
 
 ### 인증
 
@@ -149,8 +156,7 @@ BE-02/
 | :--- | :--- | :--- | :--- |
 | `POST` | `/api/auth/login` | 이메일·비밀번호 로그인, JWT 발급 | |
 | `POST` | `/api/auth/logout` | 로그아웃 | |
-| `POST` | `/api/auth/signup/personal` | 개인 계정 회원가입 | |
-| `POST` | `/api/auth/signup/company` | 기업 계정 회원가입 | |
+| `POST` | `/api/auth/signup` | 회원가입 (`type`: personal/company로 구분) | |
 
 ### 사용자
 
