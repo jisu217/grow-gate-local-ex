@@ -1,0 +1,28 @@
+/* 진단 근거 출처 스타일 */
+
+/* 페이지 래퍼 */
+.wrap { max-width: 800px; margin: 0 auto; padding: 40px 28px; }
+
+/* 뒤로가기 버튼 */
+.back { font-family: var(--kr); font-size: 14px; color: var(--blue); background: none; border: none; cursor: pointer; margin-bottom: 20px; }
+
+/* 페이지 타이틀 */
+.title { font-family: var(--en); font-size: 26px; font-weight: 800; color: var(--navy); }
+
+/* 진단 ID 부제 */
+.sub { font-size: 13px; color: var(--slate-2); margin-top: 4px; margin-bottom: 28px; }
+
+/* 출처 섹션 */
+.section { margin-bottom: 28px; }
+
+/* 섹션 레이블 */
+.sectionTitle { font-family: var(--en); font-size: 11px; font-weight: 700; letter-spacing: .07em; color: var(--slate-2); text-transform: uppercase; margin-bottom: 12px; }
+
+/* 출처 항목 카드 */
+.item { display: flex; justify-content: space-between; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 8px; }
+
+/* 출처 제목 */
+.itemTitle { font-size: 14px; font-weight: 600; color: var(--ink); }
+
+/* 출처 날짜 */
+.itemDate { font-family: var(--en); font-size: 12px; color: var(--slate-2); }

@@ -1,0 +1,74 @@
+/* 제품 지식 폼 공통 스타일 */
+
+/* 페이지 래퍼 */
+.wrap { max-width: 640px; margin: 0 auto; padding: 40px 28px; }
+
+/* 뒤로가기 버튼 */
+.back { font-family: var(--kr); font-size: 14px; color: var(--blue); background: none; border: none; cursor: pointer; margin-bottom: 16px; padding: 0; }
+.back:hover { text-decoration: underline; }
+
+/* 페이지 타이틀 */
+.title { font-family: var(--en); font-size: 24px; font-weight: 800; color: var(--navy); margin-bottom: 24px; }
+
+/* 폼 카드 */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  box-shadow: var(--shadow);
+  padding: 28px 32px;
+}
+
+/* 입력 필드 래퍼 */
+.field { margin-bottom: 20px; }
+
+/* 필드 레이블 */
+.label { font-size: 13px; font-weight: 600; color: var(--ink); display: block; margin-bottom: 7px; }
+
+/* 텍스트 입력·텍스트에어리어 */
+.input,
+.textarea {
+  width: 100%;
+  font-family: var(--kr);
+  font-size: 14px;
+  color: var(--ink);
+  background: #f9fafc;
+  border: 1.5px solid var(--line);
+  border-radius: 11px;
+  padding: 11px 14px;
+  outline: none;
+  transition: border-color .15s, background .15s;
+  resize: none;
+  appearance: none;
+}
+.input:focus,
+.textarea:focus {
+  border-color: var(--blue);
+  background: #fff;
+}
+
+/* 저장 버튼 */
+.submitBtn {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  background: var(--blue);
+  color: #fff;
+  font-family: var(--kr);
+  font-weight: 700;
+  font-size: 15px;
+  border: none;
+  padding: 15px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(47, 107, 255, 0.3);
+  transition: transform .18s;
+}
+.submitBtn:hover { transform: translateY(-1px); }
+.submitBtn:disabled { opacity: .6; cursor: not-allowed; transform: none; }
+
+/* 유효성 오류 상태 입력 */
+.inputError { border-color: var(--red) !important; background: #fff8f7 !important; }
+
+/* 오류 메시지 */
+.errorMsg   { font-size: 12px; color: var(--red); font-weight: 600; margin-top: 6px; }
