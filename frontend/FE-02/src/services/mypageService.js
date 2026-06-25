@@ -1,6 +1,27 @@
 // 마이페이지 서비스 — 로그인 사용자 기준 DB API 연동
 import { apiFetch } from './apiClient.js'
 
+const ROLE_LABELS = {
+  owner: '소유자',
+  admin: '관리자',
+  editor: '편집',
+  viewer: '조회',
+}
+
+function normalizeRole(role) {
+  return String(role ?? 'owner').toLowerCase()
+}
+
+function toMypageMember(member) {
+  const role = normalizeRole(member.role)
+  return {
+    name: member.name,
+    initial: member.name?.slice(0, 1) ?? 'U',
+    role,
+    roleLabel: ROLE_LABELS[role] ?? role,
+  }
+}
+
 function toMypageProduct(product) {
   const missingCount = product.missingFieldCount ?? 0
   const expiringCount = product.expiringCertCount ?? 0
@@ -39,9 +60,14 @@ export async function getMypageOverview() {
     manager: user.name,
     email: user.email,
   }
+  let members = [toMypageMember(user)]
 
   if (user.userType === 'company') {
-    const companyInfo = await apiFetch('/companies/me')
+    const [companyInfo, memberInfo] = await Promise.all([
+      apiFetch('/companies/me'),
+      apiFetch('/companies/me/members'),
+    ])
+
     company = {
       name: companyInfo.name,
       industry: companyInfo.industry ?? '',
@@ -49,17 +75,10 @@ export async function getMypageOverview() {
       email: user.email,
       businessNumber: companyInfo.businessNumber,
     }
+    members = (memberInfo.members ?? []).map(toMypageMember)
   }
 
-  return {
-    company,
-    members: [{
-      name: user.name,
-      initial: user.name?.slice(0, 1) ?? 'U',
-      role: user.role ?? 'owner',
-      roleLabel: user.role ?? 'owner',
-    }],
-  }
+  return { company, members }
 }
 
 // 제품 목록 — 백엔드가 인증 사용자 기준으로 개인/회사 범위를 분리해서 반환

@@ -9,4 +9,5 @@ import java.util.Optional;
 public interface MembershipRepository extends JpaRepository<Membership, String> {
     Optional<Membership> findFirstByUserId(String userId);
     List<Membership> findByUserId(String userId);
+    List<Membership> findByCompanyId(String companyId);
 }

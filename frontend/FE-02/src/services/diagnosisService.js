@@ -62,7 +62,7 @@ export async function getDiagnosisList() {
 // 백엔드 제공 범위: 세션(점수·리스크·로드맵·근거자료). S02~S10(커넥터·시장·규제·리콜·
 // 특허·실행보드·파이프라인)은 백엔드 데이터 모델 부재로 mock 그대로 사용.
 // → S02~S10 실데이터화는 별도 백엔드 작업(공공데이터 연동·예측 모델)으로 분리.
-function mapDiagnosisDetail(d) {
+function mapDiagnosisDetail(d, evidenceSources) {
   const session = {
     ...CURRENT_SESSION,
     productId: d.productId,
@@ -72,7 +72,7 @@ function mapDiagnosisDetail(d) {
     targetMarket: d.targetCountry,
     trustGrade: d.knowledgeSnapshot?.trustGrade ?? CURRENT_SESSION.trustGrade,
     missingFields: d.knowledgeSnapshot?.missingFields ?? CURRENT_SESSION.missingFields,
-    evidenceSources: d.result?.evidenceSources ?? CURRENT_SESSION.evidenceSources,
+    evidenceSources: evidenceSources ?? d.result?.evidenceSources ?? CURRENT_SESSION.evidenceSources,
     updatedAt: d.createdAt,
     diagnosisScore: d.result?.diagnosisScore ?? CURRENT_SESSION.diagnosisScore,
     riskItems: d.result?.riskItems ?? CURRENT_SESSION.riskItems,
@@ -93,11 +93,25 @@ function mapDiagnosisDetail(d) {
   }
 }
 
+// 진단 근거/출처 조회 — 실패 시 null 반환(상세 응답의 result.evidenceSources로 대체됨)
+export async function getDiagnosisSources(id) {
+  try {
+    const res = await apiFetch(`/diagnosis/${id}/sources`)
+    return (res.sources ?? []).map((s) => s.documentName ?? s.url ?? s.field)
+  } catch (err) {
+    console.warn('[diagnosisService] getDiagnosisSources API 실패, null로 대체합니다.', err)
+    return null
+  }
+}
+
 // 진단 결과 상세 조회
 export async function getDiagnosisResult(id) {
   try {
-    const detail = await apiFetch(`/diagnosis/${id}`)
-    return mapDiagnosisDetail(detail)
+    const [detail, evidenceSources] = await Promise.all([
+      apiFetch(`/diagnosis/${id}`),
+      getDiagnosisSources(id),
+    ])
+    return mapDiagnosisDetail(detail, evidenceSources)
   } catch (err) {
     console.warn('[diagnosisService] getDiagnosisResult API 실패, mock으로 대체합니다.', err)
     return { session: CURRENT_SESSION, kpiData: KPI_DATA, stages: MOCK_STAGES }
