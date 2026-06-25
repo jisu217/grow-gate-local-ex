@@ -148,6 +148,8 @@ public class KnowledgeService {
                 .productId(product.getId())
                 .name(product.getName())
                 .category(product.getCategory())
+                .hsCode(product.getHsCode())
+                .targetCountry(product.getTargetCountry())
                 .description(product.getDescription())
                 .knowledge(knowledgeData)
                 .certifications(certData)
@@ -178,13 +180,24 @@ public class KnowledgeService {
             previousValues.put("category", product.getCategory());
             newValues.put("category", request.getCategory());
         }
+        if (request.getHsCode() != null && !request.getHsCode().equals(product.getHsCode())) {
+            changedFields.add("hsCode");
+            previousValues.put("hsCode", product.getHsCode());
+            newValues.put("hsCode", request.getHsCode());
+        }
+        if (request.getTargetCountry() != null && !request.getTargetCountry().equals(product.getTargetCountry())) {
+            changedFields.add("targetCountry");
+            previousValues.put("targetCountry", product.getTargetCountry());
+            newValues.put("targetCountry", request.getTargetCountry());
+        }
         if (request.getDescription() != null && !request.getDescription().equals(product.getDescription())) {
             changedFields.add("description");
             previousValues.put("description", product.getDescription());
             newValues.put("description", request.getDescription());
         }
 
-        product.update(request.getName(), request.getCategory(), request.getDescription());
+        product.update(request.getName(), request.getCategory(), request.getHsCode(),
+                request.getTargetCountry(), request.getDescription());
 
         if (request.getKnowledge() != null && knowledge != null) {
             UpdateKnowledgeRequest.KnowledgeUpdateData kd = request.getKnowledge();

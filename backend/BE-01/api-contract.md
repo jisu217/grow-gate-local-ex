@@ -397,6 +397,9 @@
       "productId": "uuid-prod-001",
       "name": "스마트 온도계",
       "category": "전자기기",
+      "hsCode": "902519",
+      "targetCountry": "독일",
+      "description": "IoT 기반 실시간 온도 모니터링 기기",
       "trustGrade": "high",
       "knowledgeStatus": "valid",
       "expiringCertCount": 1,
@@ -424,6 +427,8 @@
 {
   "name": "스마트 온도계",
   "category": "전자기기",
+  "hsCode": "902519",
+  "targetCountry": "독일",
   "description": "IoT 기반 실시간 온도 모니터링 기기"
 }
 ```
@@ -447,6 +452,8 @@
   "productId": "uuid-prod-001",
   "name": "스마트 온도계",
   "category": "전자기기",
+  "hsCode": "902519",
+  "targetCountry": "독일",
   "description": "IoT 기반 실시간 온도 모니터링 기기",
   "knowledge": {
     "trustGrade": "high",

@@ -14,5 +14,9 @@ public class CreateProductRequest {
 
     private String category;
 
+    private String hsCode;
+
+    private String targetCountry;
+
     private String description;
 }

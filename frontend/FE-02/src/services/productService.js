@@ -17,6 +17,9 @@ function mapProductSummary(p) {
     id: p.productId,
     name: p.name,
     category: p.category,
+    hsCode: p.hsCode,
+    targetCountry: p.targetCountry,
+    description: p.description,
     grade: p.trustGrade,
     expiringCerts: p.expiringCertCount,
     updatedAt: p.updatedAt,
@@ -47,6 +50,8 @@ function mapProductDetail(p) {
     id: p.productId,
     name: p.name,
     category: p.category,
+    hsCode: p.hsCode,
+    targetCountry: p.targetCountry,
     description: p.description,
     grade: p.knowledge?.trustGrade,
     knowledgeStatus: undefined,
@@ -96,6 +101,8 @@ export async function saveProductKnowledge(productId, payload) {
   const body = {
     name: payload.productName ?? payload.name,
     category: payload.category,
+    hsCode: payload.hsCode,
+    targetCountry: payload.targetCountry,
     description: payload.description,
     knowledge: payload.knowledge,
     reason: payload.reason,
@@ -112,6 +119,8 @@ export async function createProduct(payload) {
   const body = {
     name: payload.productName ?? payload.name,
     category: payload.category,
+    hsCode: payload.hsCode,
+    targetCountry: payload.targetCountry,
     description: payload.description,
   }
   const res = await apiFetch('/products', { method: 'POST', body: JSON.stringify(body) })

@@ -13,6 +13,8 @@ public class KnowledgeDetailResponse {
     private String productId;
     private String name;
     private String category;
+    private String hsCode;
+    private String targetCountry;
     private String description;
     private KnowledgeData knowledge;
     private List<CertificationData> certifications;

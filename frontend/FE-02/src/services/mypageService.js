@@ -1,40 +1,139 @@
-// 마이페이지 서비스 (백엔드 연동 시 이 함수 내부만 fetch로 교체)
-import { MYPAGE_COMPANY, MYPAGE_MEMBERS, MYPAGE_PRODUCTS } from '../mock/mypageData.js'
+// 마이페이지 서비스 — 로그인 사용자 기준 DB API 연동
+import { apiFetch } from './apiClient.js'
 
-// 회사 정보 + 팀원 — 페이지 첫 진입 시 1회 호출
-export async function getMypageOverview() {
-  return { company: MYPAGE_COMPANY, members: MYPAGE_MEMBERS }
+const ROLE_LABELS = {
+  owner: '소유자',
+  admin: '관리자',
+  editor: '편집',
+  viewer: '조회',
 }
 
-// 제품 목록 (제품별 진단/지식/리포트 요약 포함)
-export async function getMypageProducts() {
-  return [...MYPAGE_PRODUCTS]
+function normalizeRole(role) {
+  return String(role ?? 'owner').toLowerCase()
 }
 
-// 신규 제품 등록 — POST /api/products 대응
-// mock 단계에선 공유 배열(MYPAGE_PRODUCTS)에 직접 추가해 마이페이지·새 진단 화면이 같은 목록을 공유
-export async function createMypageProduct({ name, hs, country, description = '' }) {
-  const created = {
-    id: `prod_${Date.now()}`,
-    name, hs, country, description,
-    score: null, chips: [],
-    todo: [{ task: '제품 지식 입력하기', due: '30' }],
-    kn: 0, miss: '미입력 (정보를 채워주세요)',
-    reports: [],
+function toMypageMember(member) {
+  const role = normalizeRole(member.role)
+  return {
+    name: member.name,
+    initial: member.name?.slice(0, 1) ?? 'U',
+    role,
+    roleLabel: ROLE_LABELS[role] ?? role,
   }
-  MYPAGE_PRODUCTS.push(created)
-  return created
 }
 
-// 제품 정보 수정 — PATCH /api/products/{id} 대응
-export async function updateMypageProduct(id, { name, hs, country }) {
-  return { id, name, hs, country }
+function toMypageProduct(product) {
+  const missingCount = product.missingFieldCount ?? 0
+  const expiringCount = product.expiringCertCount ?? 0
+  const chips = []
+
+  if (product.knowledgeStatus === 'valid') chips.push('제품 지식 확인 완료')
+  if (expiringCount > 0) chips.push(`만료 임박 ${expiringCount}건`)
+  if (missingCount > 0) chips.push(`누락 정보 ${missingCount}건`)
+
+  return {
+    id: product.productId,
+    runId: null,
+    name: product.name,
+    hs: product.hsCode ?? '',
+    country: product.targetCountry ?? '',
+    category: product.category ?? '',
+    description: product.description ?? '',
+    score: null,
+    chips,
+    todo: missingCount > 0
+      ? [{ task: '제품 지식 보완하기', due: '30' }]
+      : [{ task: 'AI 진단 실행하기', due: '30' }],
+    kn: product.knowledgeStatus === 'valid' ? 100 : missingCount > 0 ? 60 : 30,
+    miss: missingCount > 0 ? `누락 정보 ${missingCount}건` : '기본 정보 저장됨',
+    reports: [],
+    updatedAt: product.updatedAt,
+  }
 }
 
-// AI 진단 다시 실행 — POST /api/diagnosis 대응 (비동기 처리 가정)
-export async function rerunDiagnosis(productId) {
-  // 실제로는 POST 후 GET /api/diagnosis/:id 폴링으로 결과 수신
-  return new Promise((resolve) => {
-    setTimeout(() => resolve({ productId, status: 'done' }), 1800)
+// 회사 정보 + 팀원 — 현재 로그인 사용자 기준
+export async function getMypageOverview() {
+  const user = await apiFetch('/users/me')
+  let company = {
+    name: user.companyName ?? '개인 계정',
+    industry: '',
+    manager: user.name,
+    email: user.email,
+  }
+  let members = [toMypageMember(user)]
+
+  if (user.userType === 'company') {
+    const [companyInfo, memberInfo] = await Promise.all([
+      apiFetch('/companies/me'),
+      apiFetch('/companies/me/members'),
+    ])
+
+    company = {
+      name: companyInfo.name,
+      industry: companyInfo.industry ?? '',
+      manager: user.name,
+      email: user.email,
+      businessNumber: companyInfo.businessNumber,
+    }
+    members = (memberInfo.members ?? []).map(toMypageMember)
+  }
+
+  return { company, members }
+}
+
+// 제품 목록 — 백엔드가 인증 사용자 기준으로 개인/회사 범위를 분리해서 반환
+export async function getMypageProducts() {
+  const res = await apiFetch('/products')
+  return (res.products ?? []).map(toMypageProduct)
+}
+
+// 신규 제품 등록 — POST /api/products
+export async function createMypageProduct({ name, hs, country, description = '', category = '' }) {
+  const created = await apiFetch('/products', {
+    method: 'POST',
+    body: JSON.stringify({
+      name,
+      category,
+      hsCode: hs,
+      targetCountry: country,
+      description,
+    }),
+  })
+
+  return toMypageProduct({
+    productId: created.productId,
+    name: created.name,
+    category,
+    hsCode: hs,
+    targetCountry: country,
+    description,
+    knowledgeStatus: 'incomplete',
+    missingFieldCount: 2,
+    expiringCertCount: 0,
+    updatedAt: created.createdAt,
+  })
+}
+
+// 제품 기본 정보 수정 — PUT /api/products/{id}/knowledge
+export async function updateMypageProduct(id, { name, hs, country, description, category }) {
+  await apiFetch(`/products/${id}/knowledge`, {
+    method: 'PUT',
+    body: JSON.stringify({
+      name,
+      category,
+      hsCode: hs,
+      targetCountry: country,
+      description,
+      reason: '마이페이지 제품 기본 정보 수정',
+    }),
+  })
+  return { id, name, hs, country, description, category }
+}
+
+// AI 진단 다시 실행 — 실제 진단 생성 API로 연결
+export async function rerunDiagnosis(productId, targetCountry) {
+  return apiFetch('/diagnosis', {
+    method: 'POST',
+    body: JSON.stringify({ productId, targetCountry }),
   })
 }

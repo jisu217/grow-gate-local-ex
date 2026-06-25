@@ -95,6 +95,9 @@ public class ProductService {
                     .productId(product.getId())
                     .name(product.getName())
                     .category(product.getCategory())
+                    .hsCode(product.getHsCode())
+                    .targetCountry(product.getTargetCountry())
+                    .description(product.getDescription())
                     .trustGrade(trustGrade)
                     .knowledgeStatus(knowledgeStatus)
                     .expiringCertCount(expiringCertCount)
@@ -115,6 +118,8 @@ public class ProductService {
                 .company(resolveCompany(userId))
                 .name(request.getName())
                 .category(request.getCategory())
+                .hsCode(request.getHsCode())
+                .targetCountry(request.getTargetCountry())
                 .description(request.getDescription())
                 .build();
         productRepository.save(product);
@@ -130,10 +135,12 @@ public class ProductService {
                 .product(product)
                 .changedBy(user)
                 .changeType(ChangeType.create)
-                .changedFields(List.of("name", "category", "description"))
+                .changedFields(List.of("name", "category", "hsCode", "targetCountry", "description"))
                 .previousValue(null)
                 .newValue(toJson(Map.of("name", request.getName(),
                         "category", request.getCategory() != null ? request.getCategory() : "",
+                        "hsCode", request.getHsCode() != null ? request.getHsCode() : "",
+                        "targetCountry", request.getTargetCountry() != null ? request.getTargetCountry() : "",
                         "description", request.getDescription() != null ? request.getDescription() : "")))
                 .reason("신규 제품 지식 등록")
                 .build();
