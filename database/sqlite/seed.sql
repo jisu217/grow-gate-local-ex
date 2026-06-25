@@ -24,7 +24,7 @@ VALUES
 ON CONFLICT(id) DO UPDATE SET
   role = excluded.role;
 
-INSERT INTO products (id, owner_user_id, company_id, name, category, description, created_at, updated_at)
+INSERT INTO products (id, owner_user_id, company_id, name, category, hs_code, target_country, description, created_at, updated_at)
 VALUES
   (
     '55555555-5555-5555-5555-555555555555',
@@ -32,6 +32,8 @@ VALUES
     '11111111-1111-1111-1111-111111111111',
     '리튬이온 배터리팩',
     '전기전자',
+    '850760',
+    'Germany / EU',
     'EU 수출 준비 중인 산업용 리튬이온 배터리팩. HS Code 850760 기준 인증, 리콜, FTO, 지원사업 진단 테스트용 제품.',
     datetime('now'),
     datetime('now')
@@ -39,6 +41,8 @@ VALUES
 ON CONFLICT(id) DO UPDATE SET
   name = excluded.name,
   category = excluded.category,
+  hs_code = excluded.hs_code,
+  target_country = excluded.target_country,
   description = excluded.description,
   updated_at = datetime('now');
 

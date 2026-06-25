@@ -36,6 +36,8 @@ CREATE TABLE IF NOT EXISTS products (
   company_id TEXT,
   name TEXT NOT NULL,
   category TEXT,
+  hs_code TEXT,
+  target_country TEXT,
   description TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
@@ -133,6 +135,8 @@ CREATE INDEX IF NOT EXISTS idx_memberships_user_id ON memberships (user_id);
 CREATE INDEX IF NOT EXISTS idx_memberships_company_id ON memberships (company_id);
 CREATE INDEX IF NOT EXISTS idx_products_owner_user_id ON products (owner_user_id);
 CREATE INDEX IF NOT EXISTS idx_products_company_id ON products (company_id);
+CREATE INDEX IF NOT EXISTS idx_products_hs_code ON products (hs_code);
+CREATE INDEX IF NOT EXISTS idx_products_target_country ON products (target_country);
 CREATE INDEX IF NOT EXISTS idx_certifications_product_id ON certifications (product_id);
 CREATE INDEX IF NOT EXISTS idx_fto_product_id ON fto (product_id);
 CREATE INDEX IF NOT EXISTS idx_buyer_requirements_product_id ON buyer_requirements (product_id);

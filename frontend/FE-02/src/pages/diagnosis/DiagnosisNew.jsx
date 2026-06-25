@@ -41,7 +41,7 @@ export default function DiagnosisNew() {
       productName: p.name,
       hsCode: p.hs,
       targetCountry: p.country,
-      description: '',
+      description: p.description ?? '',
     })
     setSelectedId(p.id)
     setErrors({})
@@ -62,6 +62,7 @@ export default function DiagnosisNew() {
         name: formData.productName.trim(),
         hs: formData.hsCode.trim(),
         country: formData.targetCountry.trim(),
+        description: formData.description.trim(),
       })
     }
 

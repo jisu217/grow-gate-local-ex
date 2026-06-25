@@ -10,6 +10,8 @@ public class UpdateKnowledgeRequest {
 
     private String name;
     private String category;
+    private String hsCode;
+    private String targetCountry;
     private String description;
     private KnowledgeUpdateData knowledge;
     private String reason;

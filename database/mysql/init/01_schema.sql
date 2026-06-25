@@ -51,12 +51,16 @@ CREATE TABLE IF NOT EXISTS products (
   company_id VARCHAR(36) NULL,
   name VARCHAR(200) NOT NULL,
   category VARCHAR(100) NULL,
+  hs_code VARCHAR(20) NULL,
+  target_country VARCHAR(100) NULL,
   description TEXT NULL,
   created_at DATETIME(6) NOT NULL,
   updated_at DATETIME(6) NOT NULL,
   PRIMARY KEY (id),
   KEY idx_products_owner_user_id (owner_user_id),
   KEY idx_products_company_id (company_id),
+  KEY idx_products_hs_code (hs_code),
+  KEY idx_products_target_country (target_country),
   CONSTRAINT fk_products_owner FOREIGN KEY (owner_user_id) REFERENCES users (id),
   CONSTRAINT fk_products_company FOREIGN KEY (company_id) REFERENCES companies (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;

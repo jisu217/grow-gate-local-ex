@@ -86,7 +86,7 @@ export default function Mypage() {
   async function rerun() {
     if (!current) return
     setRerunLoading(true)
-    await rerunDiagnosis(current.id)
+    await rerunDiagnosis(current.id, current.country)
     setProducts((prev) => prev.map((p) => {
       if (p.id !== current.id) return p
       if (p.score == null) {

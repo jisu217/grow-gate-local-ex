@@ -17,6 +17,8 @@ SELECT
   u.email AS owner_email,
   m.role AS owner_role,
   p.name AS product_name,
+  p.hs_code,
+  p.target_country AS product_target_country,
   pk.trust_grade,
   dr.status AS latest_diagnosis_status,
   dr.target_country

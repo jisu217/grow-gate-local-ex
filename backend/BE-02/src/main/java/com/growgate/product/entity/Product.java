@@ -46,6 +46,12 @@ public class Product {
     @Column(length = 100)
     private String category;
 
+    @Column(name = "hs_code", length = 20)
+    private String hsCode;
+
+    @Column(name = "target_country", length = 100)
+    private String targetCountry;
+
     @Column(columnDefinition = "TEXT")
     private String description;
 
@@ -67,9 +73,11 @@ public class Product {
         this.updatedAt = LocalDateTime.now();
     }
 
-    public void update(String name, String category, String description) {
+    public void update(String name, String category, String hsCode, String targetCountry, String description) {
         if (name != null) this.name = name;
         if (category != null) this.category = category;
+        if (hsCode != null) this.hsCode = hsCode;
+        if (targetCountry != null) this.targetCountry = targetCountry;
         if (description != null) this.description = description;
         this.updatedAt = LocalDateTime.now();
     }

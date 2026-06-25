@@ -18,6 +18,9 @@ public class ProductListResponse {
         private String productId;
         private String name;
         private String category;
+        private String hsCode;
+        private String targetCountry;
+        private String description;
         private String trustGrade;
         private String knowledgeStatus;  // valid | expiring_soon | expired | needs_review | incomplete
         private int expiringCertCount;
