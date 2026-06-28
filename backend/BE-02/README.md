@@ -23,7 +23,7 @@
 | ORM | Spring Data JPA (Hibernate) |
 | 인증 | JWT (jjwt 0.11.5) |
 | 빌드 | Gradle 8.13 (Wrapper 포함) |
-
+ 
 ---
 
 ## 2. Getting Started
@@ -107,6 +107,13 @@ BE-02/
         │   ├── controller/CompanyController.java   # 내 회사 정보 API 엔드포인트
         │   └── dto/                                # CompanyMeResponse, UpdateCompanyRequest·Response
         │
+        ├── membership/
+        │   ├── entity/Membership.java              # 회사 구성원/멤버십 엔티티
+        │   ├── repository/MembershipRepository.java # 회사 구성원 DB 조회
+        │   ├── service/MembershipService.java      # 내 회사 팀원 목록 조회
+        │   ├── controller/MembershipController.java # 회사 구성원 API 엔드포인트
+        │   └── dto/MemberListResponse.java         # 팀원 목록 응답
+        │
         ├── product/
         │   ├── entity/Product.java                 # 상품 엔티티
         │   ├── repository/ProductRepository.java   # 상품 DB 조회
@@ -130,6 +137,9 @@ BE-02/
         │   ├── service/DiagnosisAsyncProcessor.java # @Async 진단 실행 처리
         │   ├── controller/DiagnosisController.java # 진단 API 엔드포인트
         │   └── dto/                                # Create·List·Detail·Sources Request·Response
+        │
+        ├── health/
+        │   └── controller/HealthController.java    # 서버 상태 확인 API 엔드포인트
         │
         ├── security/                           # JwtTokenProvider, JwtAuthenticationFilter, UserDetailsServiceImpl
         ├── config/                             # SecurityConfig (CORS + JWT Filter), JacksonConfig
@@ -171,6 +181,7 @@ BE-02/
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/companies/me` | 내 회사 정보 조회 | ✓ |
 | `PATCH` | `/api/companies/me` | 내 회사 정보 수정 | ✓ |
+| `GET` | `/api/companies/me/members` | 내 회사 팀원 목록 조회 | ✓ |
 
 ### 제품
 
