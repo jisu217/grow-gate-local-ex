@@ -12,10 +12,15 @@ import org.springframework.web.util.UriComponentsBuilder;
 import java.net.URI;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.regex.Pattern;
 
 @Slf4j
 @RequiredArgsConstructor
 public abstract class AbstractPublicDataConnector implements PublicDataConnector {
+
+    private static final Pattern SECRET_QUERY_PARAM = Pattern.compile(
+            "(?i)([?&](?:serviceKey|servicekey|apiKey|apikey|key|token|access_token|client_secret)=)([^&\\s]+)");
+    private static final String REDACTED = "[REDACTED]";
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
@@ -42,8 +47,9 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
             String body = restTemplate.getForObject(uri, String.class);
             return success(request, endpoint, body);
         } catch (IllegalArgumentException | RestClientException e) {
-            log.warn("Public data connector failed: {}", provider(), e);
-            return fallback(request, e.getMessage());
+            String reason = sanitizeErrorMessage(e.getMessage());
+            log.warn("Public data connector failed: provider={}, reason={}", provider(), reason);
+            return fallback(request, reason);
         }
     }
 
@@ -65,7 +71,8 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
     }
 
     protected PublicDataConnectorResult fallback(PublicDataRequest request, String reason) {
-        Map<String, Object> normalized = normalize(request, null, true, reason);
+        String safeReason = sanitizeErrorMessage(reason);
+        Map<String, Object> normalized = normalize(request, null, true, safeReason);
         return PublicDataConnectorResult.builder()
                 .provider(provider())
                 .endpoint(endpointLabel())
@@ -74,11 +81,11 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
                 .targetCountry(request.getTargetCountry())
                 .matchedKey(matchedKey(request))
                 .usedFor(usedFor())
-                .rawPayload(toJson(Map.of("fallback", true, "reason", reason == null ? "unknown" : reason)))
+                .rawPayload(toJson(Map.of("fallback", true, "reason", safeReason)))
                 .normalizedPayload(normalized)
                 .scoreContribution(scoreContribution(request, true))
                 .fallbackUsed(true)
-                .errorMessage(reason)
+                .errorMessage(safeReason)
                 .build();
     }
 
@@ -116,6 +123,13 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
 
     protected String safe(String value) {
         return value == null ? "" : value;
+    }
+
+    protected String sanitizeErrorMessage(String message) {
+        if (message == null || message.isBlank()) {
+            return "unknown";
+        }
+        return SECRET_QUERY_PARAM.matcher(message).replaceAll("$1" + REDACTED);
     }
 
     private boolean isCatalogOrApplicationPage(String endpoint) {

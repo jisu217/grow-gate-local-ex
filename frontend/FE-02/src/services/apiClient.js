@@ -1,8 +1,8 @@
 // 백엔드 API 공통 fetch 헬퍼
-const rawApiUrl = import.meta.env.VITE_API_URL ?? 'http://localhost:8080'
-const API_BASE = rawApiUrl.replace(/\/+$/, '').endsWith('/api')
-  ? rawApiUrl.replace(/\/+$/, '')
-  : `${rawApiUrl.replace(/\/+$/, '')}/api`
+const configuredApiUrl = import.meta.env.VITE_API_URL?.trim() || ''
+const rawApiUrl = configuredApiUrl || (typeof window !== 'undefined' ? window.location.origin : '')
+const normalizedApiUrl = rawApiUrl.replace(/\/+$/, '')
+const API_BASE = normalizedApiUrl.endsWith('/api') ? normalizedApiUrl : `${normalizedApiUrl}/api`
 const TOKEN_KEY = 'gg_access_token'
 const DEFAULT_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS ?? 15000)
 const DEFAULT_RETRY_COUNT = Number(import.meta.env.VITE_API_RETRY_COUNT ?? 2)

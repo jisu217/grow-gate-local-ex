@@ -60,13 +60,13 @@ cp .env.example .env
 
 | 변수 | 설명 | 기본값 |
 | :--- | :--- | :--- |
-| `VITE_API_URL` | 백엔드 API 기본 URL | `http://localhost:8080` |
+| `VITE_API_URL` | 백엔드 API 기본 URL. 비워두면 현재 origin의 `/api` 사용 | 비움 |
 | `VITE_API_TIMEOUT_MS` | API 요청 timeout | `15000` |
 | `VITE_API_RETRY_COUNT` | GET 요청 retry 횟수 | `2` |
 | `VITE_ENABLE_MOCK` | API 실패 시 mock fallback 허용 여부 | `false` |
 
 > Vite에서 브라우저에 노출되는 환경 변수는 `VITE_` 접두사 필수.  
-> 코드에서 `import.meta.env.VITE_API_URL`로 접근.
+> 코드에서 `import.meta.env.VITE_API_URL`로 접근. 로컬 Spring을 직접 호출할 때만 `.env`에 `VITE_API_URL=http://localhost:8080`을 지정합니다.
 
 ---
 
@@ -189,7 +189,7 @@ export async function getProducts() {
 }
 ```
 
-> 공통 fetch 헬퍼는 `services/apiClient.js`(`${VITE_API_URL}/api` 베이스) 참고.
+> 공통 fetch 헬퍼는 `services/apiClient.js` 참고. `VITE_API_URL`이 비어 있으면 현재 origin의 `/api`를 사용하고, 값이 있으면 `${VITE_API_URL}/api`를 베이스로 씁니다.
 
 **개발용 mock 정리 대상**
 
@@ -206,7 +206,7 @@ export async function getProducts() {
 
 ## 9. Required Backend APIs
 
-아래 경로는 백엔드(`backend/BE-02`) 실제 구현 기준입니다. `services/apiClient.js`는 `${VITE_API_URL}/api`를 베이스로 사용하며, `VITE_API_URL`이 이미 `/api`로 끝나는 경우 중복으로 붙이지 않습니다.
+아래 경로는 백엔드(`backend/BE-02`) 실제 구현 기준입니다. `services/apiClient.js`는 기본적으로 현재 origin의 `/api`를 사용하며, `VITE_API_URL`이 설정되어 있으면 `${VITE_API_URL}/api`를 베이스로 사용합니다. `VITE_API_URL`이 이미 `/api`로 끝나는 경우 중복으로 붙이지 않습니다.
 
 ### 인증·사용자
 
@@ -222,7 +222,7 @@ export async function getProducts() {
 
 ### 제품 지식
 
-> 연동 완료 (`apiFetch` 베이스: `${VITE_API_URL}/api`). 제출 기본값에서는 실패 시 error state로 전파합니다.
+> 연동 완료 (`apiFetch` 베이스: 기본 `/api`, `VITE_API_URL` 설정 시 `${VITE_API_URL}/api`). 제출 기본값에서는 실패 시 error state로 전파합니다.
 
 | 메서드 | 경로 | 설명 | 서비스 함수 |
 | :--- | :--- | :--- | :--- |
@@ -237,7 +237,7 @@ export async function getProducts() {
 
 ### 진단
 
-> 연동 완료 (`apiFetch` 베이스: `${VITE_API_URL}/api`). 제출 기본값에서는 실패 시 error state로 전파합니다.
+> 연동 완료 (`apiFetch` 베이스: 기본 `/api`, `VITE_API_URL` 설정 시 `${VITE_API_URL}/api`). 제출 기본값에서는 실패 시 error state로 전파합니다.
 > 상세 화면은 기존 단계형 UI를 유지하되, 세션/점수/리스크/로드맵/출처는 Spring 진단 응답으로 덮어씁니다.
 
 | 메서드 | 경로 | 설명 | 서비스 함수 |
