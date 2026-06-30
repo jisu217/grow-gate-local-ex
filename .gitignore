@@ -13,3 +13,5 @@ build/
 !.env.example
 !**/.env.example
 database/sqlite/*.db
+.gstack/
+**/.gradle-home/
