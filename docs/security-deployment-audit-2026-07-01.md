@@ -16,6 +16,7 @@
 | Spring API 노출면 | Spring Boot를 외부 `*:8080`이 아니라 `127.0.0.1:8080`에만 바인딩 |
 | 서버 방화벽 | UFW 활성화, inbound 22/80/443만 허용 |
 | Lightsail 방화벽 | 443/TCP 오픈, 80/22 유지 |
+| SSH 접근 제한 | Lightsail firewall과 UFW 모두 SSH 22번을 현재 관리자 공인 IP `/32`로 제한 |
 
 ## 2. 배포 검증
 
@@ -48,7 +49,7 @@
 | MySQL 바인딩 | `127.0.0.1:3306` | 양호 |
 | Spring 바인딩 | `127.0.0.1:8080` | 양호 |
 | Nginx 외부 포트 | 80/443 | 정상 |
-| SSH 외부 포트 | 22 open to anywhere | 부분 리스크 |
+| SSH 외부 포트 | 22번은 현재 관리자 공인 IP `/32`에서만 허용 | 조치 완료 |
 | 백업 파일 | `/opt/growgate/backups/...`에 jar/dist 백업만 확인 | 비밀값 백업은 확인 안 됨 |
 | 샘플 seed 계정 로그인 | `owner@growgate.local/password`, `viewer@growgate.local/password` 모두 `401` | 운영 계정 노출 확인 안 됨 |
 
@@ -56,7 +57,7 @@
 
 | 우선순위 | 리스크 | 근거 | 권장 조치 |
 | --- | --- | --- | --- |
-| P1 | SSH 22번이 전체 인터넷에 열려 있음 | Lightsail/UFW 모두 22 허용 | 관리자 IP가 고정되면 Lightsail firewall과 UFW를 해당 IP로 제한 |
+| 완료 | SSH 22번이 전체 인터넷에 열려 있음 | Lightsail/UFW 모두 현재 관리자 공인 IP `/32`로 제한 완료 | 팀원 고정 IP가 추가되면 같은 방식으로 allowlist에 추가 |
 | P1 | 프론트가 JWT를 `localStorage`에 저장 | `frontend/FE-02/src/services/apiClient.js` | HttpOnly Secure SameSite cookie + CSRF token 구조로 전환 |
 | P2 | Spring Security에서 CSRF 비활성화 | `backend/BE-02/src/main/java/com/growgate/config/SecurityConfig.java` | cookie 기반 인증 전환 시 CSRF 재활성화 |
 | P2 | 데모/standalone HTML에 시연 계정 문자열 존재 | `grow_gate_local_ex_demo/frontend/workspace.html`, `GROW_GATE_Local_EX_standalone.html` | 공개 제출물에서 데모 계정은 "로컬 시연 전용"으로 유지하거나 제거 |
