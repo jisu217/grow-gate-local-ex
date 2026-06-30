@@ -1,0 +1,101 @@
+package com.growgate.agent.service;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+class AgentInferenceServiceTest {
+
+    @Test
+    void inferUsesGeminiFirstWhenItSucceeds() {
+        FakeProvider gemini = new FakeProvider("gemini", AgentInferenceResult.success(
+                "gemini", "gemini-2.5-flash", Map.of("summary", "gemini ok"), List.of(), 31));
+        FakeProvider openRouter = new FakeProvider("openrouter", AgentInferenceResult.success(
+                "openrouter", "google/gemini-flash", Map.of("summary", "backup ok"), List.of(), 44));
+
+        AgentInferenceService service = new AgentInferenceService(List.of(gemini, openRouter));
+        ReflectionTestUtils.setField(service, "enabled", true);
+
+        AgentInferenceResult result = service.infer(request());
+
+        assertThat(result.isSucceeded()).isTrue();
+        assertThat(result.getProvider()).isEqualTo("gemini");
+        assertThat(gemini.calls).isEqualTo(1);
+        assertThat(openRouter.calls).isZero();
+    }
+
+    @Test
+    void inferFallsBackToOpenRouterWhenGeminiFails() {
+        FakeProvider gemini = new FakeProvider("gemini", AgentInferenceResult.failure("gemini", "quota"));
+        FakeProvider openRouter = new FakeProvider("openrouter", AgentInferenceResult.success(
+                "openrouter", "google/gemini-flash", Map.of("summary", "backup ok"), List.of(), 44));
+
+        AgentInferenceService service = new AgentInferenceService(List.of(gemini, openRouter));
+        ReflectionTestUtils.setField(service, "enabled", true);
+
+        AgentInferenceResult result = service.infer(request());
+
+        assertThat(result.isSucceeded()).isTrue();
+        assertThat(result.getProvider()).isEqualTo("openrouter");
+        assertThat(result.getFallbackReasons()).contains("gemini: quota");
+        assertThat(gemini.calls).isEqualTo(1);
+        assertThat(openRouter.calls).isEqualTo(1);
+    }
+
+    @Test
+    void inferReturnsFallbackResultWhenAllProvidersFail() {
+        AgentInferenceService service = new AgentInferenceService(List.of(
+                new FakeProvider("gemini", AgentInferenceResult.failure("gemini", "timeout")),
+                new FakeProvider("openrouter", AgentInferenceResult.failure("openrouter", "429"))
+        ));
+        ReflectionTestUtils.setField(service, "enabled", true);
+
+        AgentInferenceResult result = service.infer(request());
+
+        assertThat(result.isSucceeded()).isFalse();
+        assertThat(result.getProvider()).isEqualTo("spring-local");
+        assertThat(result.getFallbackReasons()).containsExactly("gemini: timeout", "openrouter: 429");
+    }
+
+    private AgentInferenceRequest request() {
+        return AgentInferenceRequest.builder()
+                .diagnosisId("diagnosis-1")
+                .productName("Battery Pack")
+                .hsCode("850760")
+                .targetCountry("DE")
+                .ragContext(Map.of("knowledge", "FTO review needed"))
+                .build();
+    }
+
+    private static class FakeProvider implements AgentProviderClient {
+        private final String name;
+        private final AgentInferenceResult result;
+        private int calls;
+
+        private FakeProvider(String name, AgentInferenceResult result) {
+            this.name = name;
+            this.result = result;
+        }
+
+        @Override
+        public String providerName() {
+            return name;
+        }
+
+        @Override
+        public boolean isEnabled() {
+            return true;
+        }
+
+        @Override
+        public Optional<AgentInferenceResult> infer(AgentInferenceRequest request) {
+            calls++;
+            return Optional.of(result);
+        }
+    }
+}

@@ -141,6 +141,31 @@ CREATE TABLE IF NOT EXISTS knowledge_sources (
   CONSTRAINT fk_knowledge_sources_knowledge FOREIGN KEY (knowledge_id) REFERENCES product_knowledge (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS knowledge_loop_items (
+  id VARCHAR(36) NOT NULL,
+  product_id VARCHAR(36) NOT NULL,
+  diagnosis_id VARCHAR(36) NULL,
+  type VARCHAR(60) NOT NULL,
+  title VARCHAR(200) NOT NULL,
+  evidence TEXT NULL,
+  rationale TEXT NULL,
+  impact TEXT NULL,
+  status VARCHAR(20) NOT NULL,
+  created_by VARCHAR(36) NULL,
+  decided_by VARCHAR(36) NULL,
+  created_at DATETIME(6) NOT NULL,
+  decided_at DATETIME(6) NULL,
+  PRIMARY KEY (id),
+  KEY idx_knowledge_loop_product_status (product_id, status),
+  KEY idx_knowledge_loop_diagnosis_id (diagnosis_id),
+  KEY idx_knowledge_loop_created_by (created_by),
+  KEY idx_knowledge_loop_decided_by (decided_by),
+  CONSTRAINT fk_knowledge_loop_product FOREIGN KEY (product_id) REFERENCES products (id),
+  CONSTRAINT fk_knowledge_loop_created_by FOREIGN KEY (created_by) REFERENCES users (id),
+  CONSTRAINT fk_knowledge_loop_decided_by FOREIGN KEY (decided_by) REFERENCES users (id),
+  CONSTRAINT chk_knowledge_loop_status CHECK (status IN ('pending', 'accepted', 'dismissed'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 CREATE TABLE IF NOT EXISTS audit_logs (
   id VARCHAR(36) NOT NULL,
   product_id VARCHAR(36) NOT NULL,

@@ -18,6 +18,8 @@ import com.growgate.knowledge.dto.KnowledgeDetailResponse.CertificationData;
 import com.growgate.knowledge.dto.KnowledgeDetailResponse.FtoData;
 import com.growgate.knowledge.dto.KnowledgeDetailResponse.KnowledgeData;
 import com.growgate.knowledge.dto.KnowledgeDetailResponse.KnowledgeSourceData;
+import com.growgate.knowledge.dto.KnowledgeLoopActionResponse;
+import com.growgate.knowledge.dto.KnowledgeLoopItemsResponse;
 import com.growgate.knowledge.dto.KnowledgeLogsResponse;
 import com.growgate.knowledge.dto.KnowledgeLogsResponse.LogEntry;
 import com.growgate.knowledge.dto.KnowledgeSourceResponse;
@@ -30,15 +32,18 @@ import com.growgate.knowledge.entity.AuditLog;
 import com.growgate.knowledge.entity.BuyerRequirement;
 import com.growgate.knowledge.entity.Certification;
 import com.growgate.knowledge.entity.Fto;
+import com.growgate.knowledge.entity.KnowledgeLoopItem;
 import com.growgate.knowledge.entity.KnowledgeSource;
 import com.growgate.knowledge.entity.ProductKnowledge;
 import com.growgate.knowledge.enums.ChangeType;
+import com.growgate.knowledge.enums.KnowledgeLoopStatus;
 import com.growgate.knowledge.enums.RiskLevel;
 import com.growgate.knowledge.enums.TrustGrade;
 import com.growgate.knowledge.repository.AuditLogRepository;
 import com.growgate.knowledge.repository.BuyerRequirementRepository;
 import com.growgate.knowledge.repository.CertificationRepository;
 import com.growgate.knowledge.repository.FtoRepository;
+import com.growgate.knowledge.repository.KnowledgeLoopItemRepository;
 import com.growgate.knowledge.repository.KnowledgeSourceRepository;
 import com.growgate.knowledge.repository.ProductKnowledgeRepository;
 import com.growgate.company.entity.Company;
@@ -86,6 +91,7 @@ public class KnowledgeService {
     private final FtoRepository ftoRepository;
     private final BuyerRequirementRepository buyerRequirementRepository;
     private final KnowledgeSourceRepository knowledgeSourceRepository;
+    private final KnowledgeLoopItemRepository knowledgeLoopItemRepository;
     private final AuditLogRepository auditLogRepository;
     private final UserRepository userRepository;
     private final MembershipRepository membershipRepository;
@@ -552,6 +558,77 @@ public class KnowledgeService {
         recordAuditLog(product, user, ChangeType.delete, List.of("knowledgeSource"), null, null, "지식 출처 삭제");
 
         return new DeleteEntryResponse("지식 출처가 삭제되었습니다.", sourceId);
+    }
+
+    @Transactional(readOnly = true)
+    public KnowledgeLoopItemsResponse getKnowledgeLoopItems(String userId, String productId) {
+        User user = findUser(userId);
+        findProductByUser(user, productId);
+        List<KnowledgeLoopItemsResponse.Item> items = knowledgeLoopItemRepository
+                .findTop20ByProductIdOrderByCreatedAtDesc(productId)
+                .stream()
+                .map(KnowledgeLoopItemsResponse::from)
+                .toList();
+        return KnowledgeLoopItemsResponse.builder()
+                .productId(productId)
+                .items(items)
+                .build();
+    }
+
+    public KnowledgeLoopActionResponse acceptKnowledgeLoopItem(String userId, String productId, String itemId) {
+        User user = findUser(userId);
+        requireRole(resolveRole(user), "edit");
+        Product product = findProductByUser(user, productId);
+        ProductKnowledge knowledge = knowledgeRepository.findByProductId(productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "제품 지식을 찾을 수 없습니다."));
+        KnowledgeLoopItem item = knowledgeLoopItemRepository.findByIdAndProductId(itemId, productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "지식화 후보를 찾을 수 없습니다."));
+        if (item.getStatus() != KnowledgeLoopStatus.pending) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "이미 처리된 지식화 후보입니다.");
+        }
+
+        KnowledgeSource source = KnowledgeSource.builder()
+                .knowledge(knowledge)
+                .url("growgate://diagnosis/" + nullToEmpty(item.getDiagnosisId()) + "/knowledge-loop/" + item.getId())
+                .documentName("[AI 지식화] " + item.getTitle())
+                .retrievedAt(LocalDate.now())
+                .build();
+        knowledgeSourceRepository.save(source);
+
+        item.accept(user);
+        knowledgeLoopItemRepository.save(item);
+        recordAuditLog(product, user, ChangeType.create, List.of("knowledgeLoop", "knowledgeSource"),
+                null, toJson(Map.of(
+                        "title", item.getTitle(),
+                        "type", item.getType(),
+                        "evidence", nullToEmpty(item.getEvidence()),
+                        "impact", nullToEmpty(item.getImpact()))),
+                "AI 진단 판단 근거를 담당자 승인으로 지식화");
+
+        return KnowledgeLoopActionResponse.builder()
+                .itemId(item.getId())
+                .status(item.getStatus().name())
+                .sourceId(source.getId())
+                .message("지식화 후보가 제품 출처로 반영되었습니다.")
+                .build();
+    }
+
+    public KnowledgeLoopActionResponse dismissKnowledgeLoopItem(String userId, String productId, String itemId) {
+        User user = findUser(userId);
+        requireRole(resolveRole(user), "edit");
+        findProductByUser(user, productId);
+        KnowledgeLoopItem item = knowledgeLoopItemRepository.findByIdAndProductId(itemId, productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "지식화 후보를 찾을 수 없습니다."));
+        if (item.getStatus() != KnowledgeLoopStatus.pending) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "이미 처리된 지식화 후보입니다.");
+        }
+        item.dismiss(user);
+        knowledgeLoopItemRepository.save(item);
+        return KnowledgeLoopActionResponse.builder()
+                .itemId(item.getId())
+                .status(item.getStatus().name())
+                .message("지식화 후보가 제외되었습니다.")
+                .build();
     }
 
     @Transactional(readOnly = true)

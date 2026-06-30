@@ -3,19 +3,26 @@ package com.growgate.diagnosis.service;
 // 비동기 진단 실행 처리 (@Async)
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.growgate.agent.service.AgentInferenceRequest;
+import com.growgate.agent.service.AgentInferenceResult;
+import com.growgate.agent.service.AgentInferenceService;
+import com.growgate.agent.service.AgentRagContextBuilder;
 import com.growgate.diagnosis.entity.DiagnosisRun;
 import com.growgate.diagnosis.enums.DiagnosisStatus;
 import com.growgate.diagnosis.repository.DiagnosisRepository;
 import com.growgate.knowledge.entity.BuyerRequirement;
 import com.growgate.knowledge.entity.Certification;
 import com.growgate.knowledge.entity.Fto;
+import com.growgate.knowledge.entity.KnowledgeLoopItem;
 import com.growgate.knowledge.entity.KnowledgeSource;
 import com.growgate.knowledge.entity.ProductKnowledge;
+import com.growgate.knowledge.enums.KnowledgeLoopStatus;
 import com.growgate.knowledge.enums.RiskLevel;
 import com.growgate.knowledge.enums.TrustGrade;
 import com.growgate.knowledge.repository.BuyerRequirementRepository;
 import com.growgate.knowledge.repository.CertificationRepository;
 import com.growgate.knowledge.repository.FtoRepository;
+import com.growgate.knowledge.repository.KnowledgeLoopItemRepository;
 import com.growgate.knowledge.repository.KnowledgeSourceRepository;
 import com.growgate.knowledge.repository.ProductKnowledgeRepository;
 import com.growgate.product.entity.Product;
@@ -54,6 +61,9 @@ public class DiagnosisAsyncProcessor {
     private final KnowledgeSourceRepository knowledgeSourceRepository;
     private final FastApiAgentClient fastApiAgentClient;
     private final PublicDataCollectionService publicDataCollectionService;
+    private final AgentInferenceService agentInferenceService;
+    private final AgentRagContextBuilder agentRagContextBuilder;
+    private final KnowledgeLoopItemRepository knowledgeLoopItemRepository;
 
     @Async
     @Transactional
@@ -81,6 +91,10 @@ public class DiagnosisAsyncProcessor {
             List<KnowledgeSource> knowledgeSources = knowledge != null
                     ? knowledgeSourceRepository.findByKnowledgeId(knowledge.getId())
                     : List.of();
+            List<KnowledgeLoopItem> acceptedLoopItems = product != null
+                    ? knowledgeLoopItemRepository.findTop20ByProductIdAndStatusOrderByCreatedAtDesc(
+                    product.getId(), KnowledgeLoopStatus.accepted)
+                    : List.of();
 
             List<Map<String, Object>> sources = new ArrayList<>();
             PublicDataCollectionResult publicDataResult = publicDataCollectionService.collectForDiagnosis(
@@ -105,6 +119,28 @@ public class DiagnosisAsyncProcessor {
             Map<String, Object> agentRequest = buildAgentRequest(run, productName, hsCode, description, targetCountry, certs);
             Optional<Map<String, Object>> agentResult = fastApiAgentClient.analyze(agentRequest);
             Optional<Map<String, Object>> reportResult = fastApiAgentClient.report(agentRequest);
+            Map<String, Object> ragContext = agentRagContextBuilder.build(knowledge, certs, ftoItems, buyers,
+                    knowledgeSources, publicDataResult.getRecords(), acceptedLoopItems);
+            AgentInferenceResult llmResult = agentInferenceService.infer(AgentInferenceRequest.builder()
+                    .diagnosisId(run.getId())
+                    .productName(productName)
+                    .hsCode(hsCode)
+                    .targetCountry(targetCountry)
+                    .ragContext(ragContext)
+                    .scoringContext(Map.of(
+                            "overall", overall,
+                            "market", market,
+                            "regulation", regulation,
+                            "recall", recall,
+                            "fto", fto,
+                            "support", support,
+                            "riskItems", riskItems,
+                            "actionRoadmap", actionRoadmap
+                    ))
+                    .build());
+            List<Map<String, Object>> loopSuggestions = buildKnowledgeLoopSuggestions(
+                    llmResult, riskItems, sources, productName, hsCode, targetCountry);
+            persistKnowledgeLoopSuggestions(run, product, loopSuggestions);
 
             sources.add(source("agent", "FASTAPI-AGENT-" + targetCountry,
                     "FastAPI Agent", "AI agent analyze/report bridge", "http://localhost:8000/docs",
@@ -131,12 +167,21 @@ public class DiagnosisAsyncProcessor {
             resultMap.put("riskItems", riskItems);
             resultMap.put("actionRoadmap", actionRoadmap);
             resultMap.put("sources", sources);
-            resultMap.put("agentTrace", buildAgentTrace(agentResult.isPresent(), reportResult.isPresent()));
+            resultMap.put("agentTrace", buildAgentTrace(agentResult.isPresent(), reportResult.isPresent(), llmResult));
             resultMap.put("stageCards", buildStageCards(productName, hsCode, targetCountry, overall, market,
-                    regulation, recall, fto, support, riskItems, actionRoadmap, sources, agentResult.orElse(null)));
+                    regulation, recall, fto, support, riskItems, actionRoadmap, sources, agentResult.orElse(null),
+                    llmResult, loopSuggestions));
             resultMap.put("reportMarkdown", extractReportMarkdown(reportResult.orElse(null),
                     productName, hsCode, targetCountry, overall, riskItems, actionRoadmap));
             resultMap.put("reportFastApiUsed", reportResult.isPresent());
+            resultMap.put("agentInference", Map.of(
+                    "succeeded", llmResult.isSucceeded(),
+                    "provider", nullToEmpty(llmResult.getProvider()),
+                    "model", nullToEmpty(llmResult.getModel()),
+                    "fallbackReasons", llmResult.getFallbackReasons() == null ? List.of() : llmResult.getFallbackReasons(),
+                    "summary", llmResult.getContent() != null ? stringValue(llmResult.getContent().get("summary")) : ""
+            ));
+            resultMap.put("knowledgeLoopSuggestions", loopSuggestions);
             resultMap.put("publicDataCollectionRunId", publicDataResult.getRun().getId());
             resultMap.put("inputTrace", Map.of(
                     "productName", nullToEmpty(productName),
@@ -247,14 +292,22 @@ public class DiagnosisAsyncProcessor {
         return features;
     }
 
-    private Map<String, Object> buildAgentTrace(boolean analyzeSucceeded, boolean reportSucceeded) {
+    private Map<String, Object> buildAgentTrace(boolean analyzeSucceeded, boolean reportSucceeded,
+                                                AgentInferenceResult llmResult) {
         Map<String, Object> trace = new LinkedHashMap<>();
-        trace.put("mode", fastApiAgentClient.isEnabled() ? "fastapi-agent-bridge" : "spring-local-orchestrator");
+        trace.put("mode", llmResult.isSucceeded() ? "spring-llm-agent-fallback-chain"
+                : fastApiAgentClient.isEnabled() ? "fastapi-agent-bridge" : "spring-local-orchestrator");
         trace.put("steps", List.of(
                 Map.of("step", "plan", "tool", "Spring DiagnosisAsyncProcessor", "status", "done",
                         "retryCount", 0, "message", "제품·HS·대상국·지식 스냅샷 기반 진단 계획 생성"),
                 Map.of("step", "score", "tool", "Spring rule scorer", "status", "done",
                         "retryCount", 0, "message", "시장/규제/리콜/FTO/지원 점수 산정"),
+                Map.of("step", "llm_reason", "tool", "Gemini/OpenRouter provider chain",
+                        "status", llmResult.isSucceeded() ? "done" : "fallback",
+                        "retryCount", llmResult.getFallbackReasons() == null ? 0 : llmResult.getFallbackReasons().size(),
+                        "message", llmResult.isSucceeded()
+                                ? llmResult.getProvider() + " agent reasoning merged"
+                                : "외부 LLM 실패 또는 비활성으로 Spring 규칙 결과 유지"),
                 Map.of("step", "agent_analyze", "tool", "FastAPI /analyze", "status", analyzeSucceeded ? "done" : "fallback",
                         "retryCount", analyzeSucceeded ? 0 : 1, "message", analyzeSucceeded ? "FastAPI agent 분석 병합" : "Spring 결과로 대체"),
                 Map.of("step", "report", "tool", "FastAPI /report", "status", reportSucceeded ? "done" : "fallback",
@@ -263,6 +316,13 @@ public class DiagnosisAsyncProcessor {
         trace.put("fastApi", fastApiAgentClient.status(fastApiAgentClient.isEnabled(),
                 analyzeSucceeded || reportSucceeded,
                 fastApiAgentClient.isEnabled() ? "FastAPI agent bridge attempted" : "FastAPI bridge disabled by configuration"));
+        trace.put("llm", Map.of(
+                "succeeded", llmResult.isSucceeded(),
+                "provider", nullToEmpty(llmResult.getProvider()),
+                "model", nullToEmpty(llmResult.getModel()),
+                "fallbackReasons", llmResult.getFallbackReasons() == null ? List.of() : llmResult.getFallbackReasons(),
+                "latencyMs", llmResult.getLatencyMs()
+        ));
         return trace;
     }
 
@@ -271,7 +331,9 @@ public class DiagnosisAsyncProcessor {
                                                 int fto, int support, List<Map<String, String>> risks,
                                                 Map<String, Object> roadmap,
                                                 List<Map<String, Object>> sources,
-                                                Map<String, Object> agentResult) {
+                                                Map<String, Object> agentResult,
+                                                AgentInferenceResult llmResult,
+                                                List<Map<String, Object>> loopSuggestions) {
         Map<String, Object> cards = new LinkedHashMap<>();
         cards.put("s00", List.of(
                 Map.of("label", "종합 준비도", "value", overall, "note", "Spring scoring + optional FastAPI agent"),
@@ -293,7 +355,8 @@ public class DiagnosisAsyncProcessor {
                         Map.of("name", "지원 적합도", "value", support)
                 ),
                 "features", List.of("hsCode=" + nullToEmpty(hsCode), "country=" + targetCountry,
-                        "agent=" + (agentResult != null ? "fastapi" : "spring-local"))
+                        "agent=" + (llmResult.isSucceeded() ? llmResult.getProvider()
+                                : agentResult != null ? "fastapi" : "spring-local"))
         ));
         cards.put("s08", roadmap);
         cards.put("s09", Map.of(
@@ -307,7 +370,78 @@ public class DiagnosisAsyncProcessor {
                 )
         ));
         cards.put("s10", sources);
+        cards.put("knowledgeLoop", loopSuggestions);
         return cards;
+    }
+
+    private List<Map<String, Object>> buildKnowledgeLoopSuggestions(AgentInferenceResult llmResult,
+                                                                    List<Map<String, String>> risks,
+                                                                    List<Map<String, Object>> sources,
+                                                                    String productName,
+                                                                    String hsCode,
+                                                                    String targetCountry) {
+        if (llmResult.getKnowledgeSuggestions() != null && !llmResult.getKnowledgeSuggestions().isEmpty()) {
+            return llmResult.getKnowledgeSuggestions().stream()
+                    .map(this::normalizeLoopSuggestion)
+                    .limit(5)
+                    .toList();
+        }
+
+        List<Map<String, Object>> suggestions = new ArrayList<>();
+        String topRisk = risks.isEmpty() ? "출처 최신성 점검" : risks.get(0).get("label");
+        suggestions.add(Map.of(
+                "type", "risk_evidence",
+                "title", "반복 진단 리스크: " + topRisk,
+                "evidence", "제품 " + nullToEmpty(productName) + ", HS " + nullToEmpty(hsCode) + ", 대상국 " + targetCountry,
+                "rationale", "진단 결과에서 가장 우선순위가 높은 보완 항목으로 식별됨",
+                "impact", "담당자가 지식화하면 다음 진단의 리스크 판단 근거로 재사용"
+        ));
+        boolean hasFallbackSource = sources.stream().anyMatch(source -> Boolean.TRUE.equals(source.get("fallbackUsed")));
+        if (hasFallbackSource) {
+            suggestions.add(Map.of(
+                    "type", "source_gap",
+                    "title", "공공 API fallback 발생 출처 보강",
+                    "evidence", "일부 public data source가 fallback 상태로 진단에 반영됨",
+                    "rationale", "실제 API key/endpoint 또는 담당자 보유 문서를 보강하면 추론 신뢰도가 상승",
+                    "impact", "출처 누락으로 인한 감점과 설명 불확실성을 줄임"
+            ));
+        }
+        suggestions.add(Map.of(
+                "type", "action_template",
+                "title", "담당자 실행 메모로 보관할 30/60/90일 보완계획",
+                "evidence", "진단 roadmap과 riskItems 기반",
+                "rationale", "팀 내부 실행 기준을 누적하면 유사 제품 진단 시 반복 업무를 줄일 수 있음",
+                "impact", "다음 진단에서 담당자 정책/실행 이력으로 참조"
+        ));
+        return suggestions.stream().limit(5).toList();
+    }
+
+    private Map<String, Object> normalizeLoopSuggestion(Map<String, Object> item) {
+        return Map.of(
+                "type", defaultString(item.get("type"), "policy_note"),
+                "title", defaultString(item.get("title"), "AI 추론 근거 지식화 후보"),
+                "evidence", defaultString(item.get("evidence"), ""),
+                "rationale", defaultString(item.get("rationale"), defaultString(item.get("reasoning"), "")),
+                "impact", defaultString(item.get("impact"), "다음 진단의 RAG context로 재사용")
+        );
+    }
+
+    private void persistKnowledgeLoopSuggestions(DiagnosisRun run, Product product, List<Map<String, Object>> suggestions) {
+        if (product == null || suggestions == null || suggestions.isEmpty()) return;
+        for (Map<String, Object> suggestion : suggestions) {
+            KnowledgeLoopItem item = KnowledgeLoopItem.builder()
+                    .product(product)
+                    .diagnosisId(run.getId())
+                    .type(prefix(defaultString(suggestion.get("type"), "policy_note"), 60))
+                    .title(prefix(defaultString(suggestion.get("title"), "AI 추론 근거 지식화 후보"), 200))
+                    .evidence(defaultString(suggestion.get("evidence"), ""))
+                    .rationale(defaultString(suggestion.get("rationale"), ""))
+                    .impact(defaultString(suggestion.get("impact"), ""))
+                    .status(KnowledgeLoopStatus.pending)
+                    .createdBy(run.getUser())
+                    .build();
+            knowledgeLoopItemRepository.save(item);
+        }
     }
 
     @SuppressWarnings("unchecked")
@@ -557,6 +691,11 @@ public class DiagnosisAsyncProcessor {
 
     private String stringValue(Object value) {
         return value == null ? "" : String.valueOf(value);
+    }
+
+    private String defaultString(Object value, String fallback) {
+        String text = value == null ? "" : String.valueOf(value);
+        return text.isBlank() ? fallback : text;
     }
 
     private String nullToEmpty(String value) {

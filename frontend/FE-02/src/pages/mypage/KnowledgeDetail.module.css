@@ -214,3 +214,91 @@
 
 /* 변경 사유 레이블 */
 .logReasonLabel { font-weight: 700; color: var(--slate-2); }
+
+.loopIntro {
+  color: var(--slate-2);
+  font-size: 13px;
+  line-height: 1.6;
+  margin-bottom: 16px;
+}
+
+.ideaPanel {
+  background: #f8fafc;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.ideaItem {
+  border-top: 1px solid var(--line);
+  color: var(--slate);
+  font-size: 13px;
+  padding: 10px 0;
+}
+
+.ideaItem:first-of-type { border-top: 0; }
+
+.loopList {
+  display: grid;
+  gap: 12px;
+}
+
+.loopItem {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 14px;
+}
+
+.loopHead {
+  align-items: flex-start;
+  display: flex;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 10px;
+}
+
+.loopTitle {
+  color: var(--ink);
+  font-size: 15px;
+  font-weight: 800;
+  margin-top: 8px;
+}
+
+.loopText {
+  color: var(--slate-2);
+  font-size: 13px;
+  line-height: 1.55;
+  margin-top: 6px;
+}
+
+.loopActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.acceptBtn,
+.dismissBtn {
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 800;
+  padding: 9px 12px;
+}
+
+.acceptBtn {
+  background: var(--ink);
+  border: 1px solid var(--ink);
+  color: white;
+}
+
+.dismissBtn {
+  background: white;
+  border: 1px solid var(--line);
+  color: var(--slate);
+}
+
+.acceptBtn:disabled,
+.dismissBtn:disabled {
+  cursor: not-allowed;
+  opacity: .55;
+}

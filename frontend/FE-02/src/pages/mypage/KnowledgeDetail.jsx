@@ -3,7 +3,13 @@ import { useParams, useNavigate } from 'react-router-dom'
 import styles from './KnowledgeDetail.module.css'
 import { usePermission } from '../../hooks/usePermission.js'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
-import { getProductKnowledge, getProductAuditLogs } from '../../services/productService.js'
+import {
+  acceptKnowledgeLoopItem,
+  dismissKnowledgeLoopItem,
+  getKnowledgeLoopItems,
+  getProductAuditLogs,
+  getProductKnowledge,
+} from '../../services/productService.js'
 import { toGradeLabel, toGradeClass } from '../../utils/trustGrade.js'
 
 // 인증 출처 유형 맵
@@ -12,7 +18,13 @@ const CERT_SOURCE = {
   internal: { label: '내부 메모', cls: 'memo' },
 }
 
-const ALL_TABS = ['기본 정보', '인증서', 'FTO', '바이어 요구사항', '변경 이력']
+const ALL_TABS = ['기본 정보', '인증서', 'FTO', '바이어 요구사항', 'AI 지식화', '변경 이력']
+const KNOWLEDGE_IDEAS = [
+  '반복 진단에서 2회 이상 등장한 리스크',
+  '담당자가 보유한 내부 정책·라벨링 기준',
+  '공공 API fallback이 발생한 영역의 대체 출처',
+  '인증 갱신·FTO 검토·바이어 요구사항 체크리스트',
+]
 
 // 제품 지식 상세 페이지 컴포넌트
 export default function KnowledgeDetail() {
@@ -21,6 +33,8 @@ export default function KnowledgeDetail() {
   const { can } = usePermission()
 
   const [product, setProduct] = useState(null)
+  const [loopItems, setLoopItems] = useState([])
+  const [loopState, setLoopState] = useState('idle')
   const [pageState, setPageState] = useState('loading')
   const [activeTab, setActiveTab] = useState(0)
 
@@ -40,9 +54,29 @@ export default function KnowledgeDetail() {
             setProduct((prev) => (prev ? { ...prev, auditLog } : prev))
           })
         }
+        getKnowledgeLoopItems(productId)
+          .then((items) => setLoopItems(items))
+          .catch(() => setLoopItems([]))
       })
       .catch(() => setPageState('error'))
   }, [productId, canViewAudit])
+
+  const refreshLoopItems = async () => {
+    const items = await getKnowledgeLoopItems(productId)
+    setLoopItems(items)
+  }
+
+  const handleLoopAction = async (itemId, action) => {
+    if (!can('knowledge:edit')) return
+    setLoopState(itemId)
+    try {
+      if (action === 'accept') await acceptKnowledgeLoopItem(productId, itemId)
+      else await dismissKnowledgeLoopItem(productId, itemId)
+      await refreshLoopItems()
+    } finally {
+      setLoopState('idle')
+    }
+  }
 
   if (pageState === 'loading') return (
     <div className={styles.wrap}>
@@ -183,6 +217,60 @@ export default function KnowledgeDetail() {
         )}
 
         {activeTab === 4 && (
+          <div className={styles.card}>
+            <div className={styles.sectionTitle}>AI 지식화 루프</div>
+            <div className={styles.loopIntro}>
+              진단 agent가 판단한 근거 중 다음 진단에 재사용할 만한 항목입니다. 담당자가 승인한 항목만 제품 지식 출처로 반영됩니다.
+            </div>
+            {loopItems.length === 0 ? (
+              <div className={styles.ideaPanel}>
+                <div className={styles.missingTitle}>지식화하면 좋은 항목</div>
+                {KNOWLEDGE_IDEAS.map((idea) => (
+                  <div key={idea} className={styles.ideaItem}>{idea}</div>
+                ))}
+              </div>
+            ) : (
+              <div className={styles.loopList}>
+                {loopItems.map((item) => (
+                  <div key={item.id} className={styles.loopItem}>
+                    <div className={styles.loopHead}>
+                      <div>
+                        <span className="pill memo">{item.type}</span>
+                        <div className={styles.loopTitle}>{item.title}</div>
+                      </div>
+                      <span className={`pill ${item.status === 'accepted' ? 'ok' : item.status === 'dismissed' ? 'cond' : 'warn'}`}>
+                        {item.status}
+                      </span>
+                    </div>
+                    {item.evidence && <div className={styles.loopText}>근거: {item.evidence}</div>}
+                    {item.rationale && <div className={styles.loopText}>판단: {item.rationale}</div>}
+                    {item.impact && <div className={styles.loopText}>효과: {item.impact}</div>}
+                    {item.status === 'pending' && can('knowledge:edit') && (
+                      <div className={styles.loopActions}>
+                        <button
+                          className={styles.acceptBtn}
+                          disabled={loopState === item.id}
+                          onClick={() => handleLoopAction(item.id, 'accept')}
+                        >
+                          지식화
+                        </button>
+                        <button
+                          className={styles.dismissBtn}
+                          disabled={loopState === item.id}
+                          onClick={() => handleLoopAction(item.id, 'dismiss')}
+                        >
+                          제외
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+
+        {activeTab === 5 && (
           <div className={styles.card}>
             <div className={styles.sectionTitle}>변경 이력 (Audit Log)</div>
             {product.auditLog.map((log, i) => (

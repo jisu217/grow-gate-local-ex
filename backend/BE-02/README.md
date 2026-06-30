@@ -244,6 +244,9 @@ BE-02/
 | `DELETE` | `/api/products/{productId}/buyer-requirements/{buyerRequirementId}` | 바이어 요구사항 삭제 | owner, admin, editor |
 | `POST` | `/api/products/{productId}/knowledge/sources` | 지식 출처 등록 | owner, admin, editor |
 | `DELETE` | `/api/products/{productId}/knowledge/sources/{sourceId}` | 지식 출처 삭제 | owner, admin, editor |
+| `GET` | `/api/products/{productId}/knowledge/loop-items` | 진단 agent가 제안한 지식화 후보 조회 | 전체 |
+| `POST` | `/api/products/{productId}/knowledge/loop-items/{itemId}/accept` | 지식화 후보를 담당자 승인 후 지식 출처로 반영 | owner, admin, editor |
+| `POST` | `/api/products/{productId}/knowledge/loop-items/{itemId}/dismiss` | 지식화 후보 제외 | owner, admin, editor |
 
 ### 진단
 
@@ -254,6 +257,20 @@ BE-02/
 | `GET` | `/api/diagnosis/{diagnosisId}` | 진단 결과 상세 조회 | 전체 |
 | `GET` | `/api/diagnosis/{diagnosisId}/sources` | 진단 출처 데이터 조회 (`sourceId`, `provider`, `matchedKey`, `usedFor`, `scoreContribution`, `fallbackUsed`) | 전체 |
 | `GET` | `/api/diagnosis/{diagnosisId}/report` | 진단 리포트 Markdown 다운로드 payload | 전체 |
+
+### Gemini/OpenRouter 추론 Agent
+
+Spring 진단 엔진은 기본 규칙 기반 점수 산정을 유지하면서, `APP_AGENT_ENABLED=true`일 때 Gemini provider를 먼저 호출하고 실패 시 OpenRouter provider로 fallback한다. 외부 agent가 실패해도 진단은 Spring 결과로 완료되며, 결과 JSON의 `agentTrace.llm`, `agentInference`, `knowledgeLoopSuggestions`에 provider 상태와 지식화 후보가 기록된다.
+
+| 환경변수 | 설명 |
+| :--- | :--- |
+| `APP_AGENT_ENABLED` | Spring 내부 LLM 추론 agent 사용 여부 |
+| `APP_AGENT_GEMINI_ENABLED` | Gemini provider 사용 여부 |
+| `APP_AGENT_GEMINI_API_KEY` | Gemini API key. repository에 저장 금지 |
+| `APP_AGENT_GEMINI_MODEL` | 기본 `gemini-2.5-flash`, 필요 시 최신 Flash 모델로 교체 |
+| `APP_AGENT_OPENROUTER_ENABLED` | OpenRouter backup provider 사용 여부 |
+| `APP_AGENT_OPENROUTER_API_KEY` | OpenRouter API key. repository에 저장 금지 |
+| `APP_AGENT_OPENROUTER_MODEL` | 기본 `google/gemini-2.5-flash` |
 
 ### 공공데이터 수집
 

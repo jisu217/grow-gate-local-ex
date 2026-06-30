@@ -220,3 +220,16 @@ export async function addKnowledgeSource(productId, payload) {
 export async function deleteKnowledgeSource(productId, sourceId) {
   return apiFetch(`/products/${productId}/knowledge/sources/${sourceId}`, { method: 'DELETE' })
 }
+
+export async function getKnowledgeLoopItems(productId) {
+  const res = await apiFetch(`/products/${productId}/knowledge/loop-items`)
+  return res.items ?? []
+}
+
+export async function acceptKnowledgeLoopItem(productId, itemId) {
+  return apiFetch(`/products/${productId}/knowledge/loop-items/${itemId}/accept`, { method: 'POST' })
+}
+
+export async function dismissKnowledgeLoopItem(productId, itemId) {
+  return apiFetch(`/products/${productId}/knowledge/loop-items/${itemId}/dismiss`, { method: 'POST' })
+}

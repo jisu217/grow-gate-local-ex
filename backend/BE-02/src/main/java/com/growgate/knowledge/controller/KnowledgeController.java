@@ -10,6 +10,8 @@ import com.growgate.knowledge.dto.CreateKnowledgeSourceRequest;
 import com.growgate.knowledge.dto.DeleteEntryResponse;
 import com.growgate.knowledge.dto.FtoResponse;
 import com.growgate.knowledge.dto.KnowledgeDetailResponse;
+import com.growgate.knowledge.dto.KnowledgeLoopActionResponse;
+import com.growgate.knowledge.dto.KnowledgeLoopItemsResponse;
 import com.growgate.knowledge.dto.KnowledgeLogsResponse;
 import com.growgate.knowledge.dto.KnowledgeSourceResponse;
 import com.growgate.knowledge.dto.UpdateBuyerRequirementRequest;
@@ -162,5 +164,28 @@ public class KnowledgeController {
             @PathVariable String productId,
             @PathVariable String sourceId) {
         return ResponseEntity.ok(knowledgeService.deleteKnowledgeSource(userDetails.getUsername(), productId, sourceId));
+    }
+
+    @GetMapping("/{productId}/knowledge/loop-items")
+    public ResponseEntity<KnowledgeLoopItemsResponse> getKnowledgeLoopItems(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String productId) {
+        return ResponseEntity.ok(knowledgeService.getKnowledgeLoopItems(userDetails.getUsername(), productId));
+    }
+
+    @PostMapping("/{productId}/knowledge/loop-items/{itemId}/accept")
+    public ResponseEntity<KnowledgeLoopActionResponse> acceptKnowledgeLoopItem(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String productId,
+            @PathVariable String itemId) {
+        return ResponseEntity.ok(knowledgeService.acceptKnowledgeLoopItem(userDetails.getUsername(), productId, itemId));
+    }
+
+    @PostMapping("/{productId}/knowledge/loop-items/{itemId}/dismiss")
+    public ResponseEntity<KnowledgeLoopActionResponse> dismissKnowledgeLoopItem(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String productId,
+            @PathVariable String itemId) {
+        return ResponseEntity.ok(knowledgeService.dismissKnowledgeLoopItem(userDetails.getUsername(), productId, itemId));
     }
 }
