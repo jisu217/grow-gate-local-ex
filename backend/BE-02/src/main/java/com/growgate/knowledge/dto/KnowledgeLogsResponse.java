@@ -12,6 +12,10 @@ public class KnowledgeLogsResponse {
 
     private String productId;
     private List<LogEntry> logs;
+    private int page;
+    private int size;
+    private long totalElements;
+    private int totalPages;
 
     @Getter
     @Builder

@@ -56,9 +56,12 @@ CREATE TABLE IF NOT EXISTS products (
   description TEXT NULL,
   created_at DATETIME(6) NOT NULL,
   updated_at DATETIME(6) NOT NULL,
+  deleted_at DATETIME(6) NULL,
+  deleted_by VARCHAR(36) NULL,
   PRIMARY KEY (id),
   KEY idx_products_owner_user_id (owner_user_id),
   KEY idx_products_company_id (company_id),
+  KEY idx_products_deleted_at (deleted_at),
   KEY idx_products_hs_code (hs_code),
   KEY idx_products_target_country (target_country),
   CONSTRAINT fk_products_owner FOREIGN KEY (owner_user_id) REFERENCES users (id),
@@ -177,6 +180,55 @@ CREATE TABLE IF NOT EXISTS diagnosis_runs (
   CONSTRAINT fk_diagnosis_runs_company FOREIGN KEY (company_id) REFERENCES companies (id),
   CONSTRAINT fk_diagnosis_runs_product FOREIGN KEY (product_id) REFERENCES products (id),
   CONSTRAINT chk_diagnosis_runs_status CHECK (status IN ('pending', 'running', 'done', 'failed'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS public_data_collection_runs (
+  id VARCHAR(36) NOT NULL,
+  diagnosis_id VARCHAR(36) NULL,
+  requested_by VARCHAR(36) NULL,
+  hs_code VARCHAR(20) NULL,
+  target_country VARCHAR(40) NULL,
+  product_name VARCHAR(160) NULL,
+  status VARCHAR(20) NOT NULL,
+  provider_count INT NOT NULL DEFAULT 0,
+  success_count INT NOT NULL DEFAULT 0,
+  fallback_count INT NOT NULL DEFAULT 0,
+  cache_hit_count INT NOT NULL DEFAULT 0,
+  error_summary TEXT NULL,
+  started_at DATETIME(6) NOT NULL,
+  finished_at DATETIME(6) NULL,
+  PRIMARY KEY (id),
+  KEY idx_public_data_runs_diagnosis_id (diagnosis_id),
+  KEY idx_public_data_runs_requested_by (requested_by),
+  KEY idx_public_data_runs_started_at (started_at),
+  CONSTRAINT fk_public_data_runs_requested_by FOREIGN KEY (requested_by) REFERENCES users (id),
+  CONSTRAINT chk_public_data_runs_status CHECK (status IN ('requested', 'running', 'done', 'partial_failed', 'failed'))
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE TABLE IF NOT EXISTS public_data_records (
+  id VARCHAR(36) NOT NULL,
+  run_id VARCHAR(36) NULL,
+  provider VARCHAR(40) NOT NULL,
+  endpoint VARCHAR(500) NULL,
+  request_key VARCHAR(240) NOT NULL,
+  hs_code VARCHAR(20) NULL,
+  target_country VARCHAR(40) NULL,
+  matched_key VARCHAR(500) NULL,
+  used_for VARCHAR(60) NULL,
+  raw_payload TEXT NULL,
+  normalized_payload TEXT NULL,
+  score_contribution INT NULL,
+  fallback_used BOOLEAN NOT NULL DEFAULT FALSE,
+  cache_hit BOOLEAN NOT NULL DEFAULT FALSE,
+  error_message TEXT NULL,
+  fetched_at DATETIME(6) NOT NULL,
+  expires_at DATETIME(6) NULL,
+  PRIMARY KEY (id),
+  KEY idx_public_data_records_run_id (run_id),
+  KEY idx_public_data_records_provider_request (provider, request_key),
+  KEY idx_public_data_records_hs_country (hs_code, target_country),
+  KEY idx_public_data_records_expires_at (expires_at),
+  CONSTRAINT fk_public_data_records_run FOREIGN KEY (run_id) REFERENCES public_data_collection_runs (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 SET FOREIGN_KEY_CHECKS = 1;

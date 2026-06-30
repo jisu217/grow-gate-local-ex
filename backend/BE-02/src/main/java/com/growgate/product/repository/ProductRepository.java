@@ -11,11 +11,11 @@ import java.util.Optional;
 @Repository
 public interface ProductRepository extends JpaRepository<Product, String> {
 
-    List<Product> findByOwnerIdOrderByUpdatedAtDesc(String ownerId);
+    List<Product> findByOwnerIdAndDeletedAtIsNullOrderByUpdatedAtDesc(String ownerId);
 
-    Optional<Product> findByIdAndOwnerId(String id, String ownerId);
+    Optional<Product> findByIdAndOwnerIdAndDeletedAtIsNull(String id, String ownerId);
 
-    List<Product> findByCompany_IdOrderByUpdatedAtDesc(String companyId);
+    List<Product> findByCompany_IdAndDeletedAtIsNullOrderByUpdatedAtDesc(String companyId);
 
-    Optional<Product> findByIdAndCompany_Id(String id, String companyId);
+    Optional<Product> findByIdAndCompany_IdAndDeletedAtIsNull(String id, String companyId);
 }

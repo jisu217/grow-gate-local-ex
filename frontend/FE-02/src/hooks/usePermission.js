@@ -3,7 +3,8 @@ import { getAuthUser } from '../services/authService.js'
 import { PERMISSIONS } from '../mock/roles.js'
 
 export function usePermission() {
-  const role = getAuthUser()?.role
+  const user = getAuthUser()
+  const role = user?.role ?? (user?.userType === 'personal' ? 'owner' : null)
 
   // 특정 액션 권한 확인
   const can = (action) => {

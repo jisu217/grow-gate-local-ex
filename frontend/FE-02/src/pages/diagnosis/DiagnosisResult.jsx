@@ -20,7 +20,7 @@ import S09Report     from '../../components/diagnosis/S09Report.jsx'
 import S10Sources    from '../../components/diagnosis/S10Sources.jsx'
 
 import { DIAGNOSIS_STEPS } from '../../mock/diagnosisSteps.js'
-import { getDiagnosisResult } from '../../services/diagnosisService.js'
+import { getDiagnosisReport, getDiagnosisResult } from '../../services/diagnosisService.js'
 
 // 진단 결과 뷰어 페이지 컴포넌트
 export default function DiagnosisResult() {
@@ -39,10 +39,29 @@ export default function DiagnosisResult() {
   const scrollRef = useRef(null)
 
   useEffect(() => {
+    let timeoutId = null
+    let cancelled = false
+
+    const load = async () => {
+      try {
+        const data = await getDiagnosisResult(id)
+        if (cancelled) return
+        setResult(data)
+        setPageState(data.session?.status === 'failed' ? 'failed' : 'ok')
+        if (['pending', 'running'].includes(String(data.session?.status ?? '').toLowerCase())) {
+          timeoutId = window.setTimeout(load, 2500)
+        }
+      } catch {
+        if (!cancelled) setPageState('error')
+      }
+    }
+
     setPageState('loading')
-    getDiagnosisResult(id)
-      .then((data) => { setResult(data); setPageState('ok') })
-      .catch(() => setPageState('error'))
+    load()
+    return () => {
+      cancelled = true
+      if (timeoutId) window.clearTimeout(timeoutId)
+    }
   }, [id])
 
   // 단계 이동
@@ -75,10 +94,23 @@ export default function DiagnosisResult() {
       case 6:  return <S06Recall     key={key} recalls={stages.s06} />
       case 7:  return <S07FtoSupport key={key} patents={stages.s07.patents} supports={stages.s07.supports} />
       case 8:  return <S08ExecBoard  key={key} execData={stages.s08} />
-      case 9:  return <S09Report     key={key} scoreBars={stages.s09} />
+      case 9:  return <S09Report     key={key} scoreBars={stages.s09.scoreBars} summary={stages.s09.summary} onDownload={downloadReport} fastApiUsed={result.session.reportFastApiUsed} />
       case 10: return <S10Sources    key={key} pipes={stages.s10} />
       default: return null
     }
+  }
+
+  const downloadReport = async () => {
+    const report = await getDiagnosisReport(id)
+    const blob = new Blob([report.markdown ?? ''], { type: report.contentType ?? 'text/markdown;charset=utf-8' })
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = report.fileName ?? `grow-gate-diagnosis-${id}.md`
+    document.body.appendChild(link)
+    link.click()
+    link.remove()
+    window.URL.revokeObjectURL(url)
   }
 
   if (pageState === 'loading') return (
@@ -96,6 +128,16 @@ export default function DiagnosisResult() {
       <div className="content">
         <div className="scroll">
           <StatusMessage type="error" message="진단 결과를 불러오지 못했습니다. 잠시 후 다시 시도해주세요." />
+        </div>
+      </div>
+    </div>
+  )
+
+  if (pageState === 'failed') return (
+    <div className="app">
+      <div className="content">
+        <div className="scroll">
+          <StatusMessage type="error" message="진단 실행이 실패했습니다. 입력값과 백엔드 로그를 확인해주세요." />
         </div>
       </div>
     </div>
@@ -119,6 +161,10 @@ export default function DiagnosisResult() {
 
         <div className="scroll" ref={scrollRef}>
           <KpiRow kpiData={result.kpiData} />
+
+          {['pending', 'running'].includes(String(result.session?.status ?? '').toLowerCase()) && (
+            <StatusMessage type="loading" message="진단이 진행 중입니다. 완료되면 이 화면이 자동으로 갱신됩니다." />
+          )}
 
           {renderStage(result.stages)}
 

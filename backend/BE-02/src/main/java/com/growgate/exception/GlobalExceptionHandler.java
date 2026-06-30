@@ -2,6 +2,7 @@ package com.growgate.exception;
 
 // 전역 예외 핸들러
 import com.growgate.common.dto.ErrorResponse;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
@@ -11,6 +12,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.util.stream.Collectors;
 
 @RestControllerAdvice
+@Slf4j
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(BusinessException.class)
@@ -33,6 +35,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleException(Exception e) {
+        log.error("Unhandled server exception", e);
         return ResponseEntity
                 .status(ErrorCode.SERVER_ERROR.getHttpStatus())
                 .body(ErrorResponse.of(ErrorCode.SERVER_ERROR.getCode(), "서버 내부 오류가 발생했습니다."));

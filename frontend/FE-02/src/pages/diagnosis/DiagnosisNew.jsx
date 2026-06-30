@@ -2,12 +2,39 @@ import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from './DiagnosisNew.module.css'
 import { getMypageProducts, createMypageProduct } from '../../services/mypageService.js'
+import { runDiagnosis } from '../../services/diagnosisService.js'
 
 const PICKER_PAGE_SIZE = 5
 const PICKER_PAGE_WINDOW = 5
 
 function normalizeSearchValue(value) {
   return String(value ?? '').toLowerCase().replace(/\s+/g, '')
+}
+
+function normalizeHsCode(value) {
+  return String(value ?? '').replace(/[^\d]/g, '')
+}
+
+function normalizeTargetCountry(value) {
+  const normalized = String(value ?? '').trim()
+  const key = normalized.toLowerCase().replace(/\s+/g, '')
+  const aliases = {
+    독일: 'DE',
+    germany: 'DE',
+    de: 'DE',
+    미국: 'US',
+    usa: 'US',
+    us: 'US',
+    일본: 'JP',
+    japan: 'JP',
+    jp: 'JP',
+    중국: 'CN',
+    china: 'CN',
+    cn: 'CN',
+    유럽: 'EU',
+    eu: 'EU',
+  }
+  return aliases[key] ?? normalized
 }
 
 // 신규 진단 입력 페이지 컴포넌트
@@ -22,6 +49,8 @@ export default function DiagnosisNew() {
   })
 
   const [errors, setErrors] = useState({})
+  const [submitError, setSubmitError] = useState('')
+  const [submitting, setSubmitting] = useState(false)
 
   // 저장된 제품 불러오기 모달
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -70,6 +99,7 @@ export default function DiagnosisNew() {
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
     if (errors[e.target.name]) setErrors((prev) => ({ ...prev, [e.target.name]: '' }))
+    if (submitError) setSubmitError('')
   }
 
   // 저장된 제품 선택 → 입력값 자동 채움
@@ -99,22 +129,44 @@ export default function DiagnosisNew() {
   // 진단 시작 제출 처리
   const handleSubmit = async () => {
     const next = {}
-    if (!formData.hsCode.trim())       next.hsCode = 'HS Code를 입력해주세요.'
+    const hsCode = normalizeHsCode(formData.hsCode)
+    const targetCountry = normalizeTargetCountry(formData.targetCountry)
+    const productName = formData.productName.trim()
+
+    if (!productName) next.productName = '제품명을 입력해주세요.'
+    if (!hsCode) next.hsCode = 'HS Code를 입력해주세요.'
+    else if (!/^\d{6,10}$/.test(hsCode)) next.hsCode = 'HS Code는 숫자 6~10자리로 입력해주세요.'
     if (!formData.targetCountry.trim()) next.targetCountry = '대상 국가를 입력해주세요.'
     if (Object.keys(next).length) { setErrors(next); return }
 
-    // 직접 입력한 신규 제품이고 "내 제품으로 저장"이 켜져 있으면 마이페이지에 추가
-    // (저장된 제품을 불러온 경우 selectedId가 있으므로 중복 저장하지 않음)
-    if (saveToMypage && !selectedId && formData.productName.trim()) {
-      await createMypageProduct({
-        name: formData.productName.trim(),
-        hs: formData.hsCode.trim(),
-        country: formData.targetCountry.trim(),
+    setSubmitting(true)
+    setSubmitError('')
+
+    try {
+      let productId = selectedId
+      if (saveToMypage && !productId) {
+        const created = await createMypageProduct({
+          name: productName,
+          hs: hsCode,
+          country: targetCountry,
+          description: formData.description.trim(),
+        })
+        productId = created.id
+      }
+
+      const result = await runDiagnosis({
+        productId,
+        productName,
+        hsCode,
+        targetCountry,
         description: formData.description.trim(),
       })
+      navigate(`/diagnosis/${result.id}`)
+    } catch (err) {
+      setSubmitError(err.message || '진단 실행에 실패했습니다. 입력값과 서버 상태를 확인해주세요.')
+    } finally {
+      setSubmitting(false)
     }
-
-    navigate('/diagnosis/diag-001')
   }
 
   return (
@@ -132,12 +184,14 @@ export default function DiagnosisNew() {
                 <label className={styles.label} htmlFor="productName">제품명 *</label>
                 <input
                   id="productName"
-                  className={styles.input}
+                  className={`${styles.input} ${errors.productName ? styles.inputError : ''}`}
                   name="productName"
                   value={formData.productName}
                   onChange={handleChange}
                   placeholder="예: 리튬이온 배터리팩"
+                  aria-describedby={errors.productName ? 'productName-error' : undefined}
                 />
+                {errors.productName && <span id="productName-error" className={styles.fieldError}>{errors.productName}</span>}
               </div>
               <div className={styles.field}>
                 <label className={styles.label} htmlFor="hsCode">HS Code *</label>
@@ -201,8 +255,10 @@ export default function DiagnosisNew() {
               </label>
             )}
 
-            <button className={styles.submitBtn} onClick={handleSubmit}>
-              AI 진단 시작 →
+            {submitError && <div className={styles.fieldError}>{submitError}</div>}
+
+            <button className={styles.submitBtn} onClick={handleSubmit} disabled={submitting}>
+              {submitting ? '진단 요청 중…' : 'AI 진단 시작 →'}
             </button>
           </div>
         </div>

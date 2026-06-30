@@ -5,6 +5,7 @@ import com.growgate.diagnosis.dto.CreateDiagnosisRequest;
 import com.growgate.diagnosis.dto.CreateDiagnosisResponse;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse;
 import com.growgate.diagnosis.dto.DiagnosisListResponse;
+import com.growgate.diagnosis.dto.DiagnosisReportResponse;
 import com.growgate.diagnosis.dto.DiagnosisSourcesResponse;
 import com.growgate.diagnosis.service.DiagnosisService;
 import jakarta.validation.Valid;
@@ -53,5 +54,12 @@ public class DiagnosisController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String diagnosisId) {
         return ResponseEntity.ok(diagnosisService.getSources(userDetails.getUsername(), diagnosisId));
+    }
+
+    @GetMapping("/{diagnosisId}/report")
+    public ResponseEntity<DiagnosisReportResponse> getReport(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String diagnosisId) {
+        return ResponseEntity.ok(diagnosisService.getReport(userDetails.getUsername(), diagnosisId));
     }
 }

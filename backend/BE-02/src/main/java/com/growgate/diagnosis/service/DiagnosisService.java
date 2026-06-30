@@ -14,6 +14,7 @@ import com.growgate.diagnosis.dto.DiagnosisDetailResponse.ResultData;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse.RiskItem;
 import com.growgate.diagnosis.dto.DiagnosisListResponse;
 import com.growgate.diagnosis.dto.DiagnosisListResponse.DiagnosisSummary;
+import com.growgate.diagnosis.dto.DiagnosisReportResponse;
 import com.growgate.diagnosis.dto.DiagnosisSourcesResponse;
 import com.growgate.diagnosis.dto.DiagnosisSourcesResponse.SourceEntry;
 import com.growgate.diagnosis.entity.DiagnosisRun;
@@ -39,6 +40,8 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -103,6 +106,9 @@ public class DiagnosisService {
         if (request.getProductId() == null && request.getInputData() == null) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "productId 또는 inputData 중 하나는 필수입니다.");
         }
+        if (request.getProductId() != null && request.getInputData() != null) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "productId와 inputData는 동시에 보낼 수 없습니다.");
+        }
 
         User user = findUser(userId);
         requireDiagnosisPermission(user);
@@ -130,7 +136,7 @@ public class DiagnosisService {
 
         diagnosisRepository.save(run);
 
-        asyncProcessor.process(run.getId());
+        dispatchAfterCommit(run.getId());
 
         return new CreateDiagnosisResponse(
                 run.getId(),
@@ -163,6 +169,10 @@ public class DiagnosisService {
                         .riskItems(riskItems)
                         .actionRoadmap(actionRoadmap)
                         .evidenceSources(evidenceSources)
+                        .agentTrace(parseObjectMap(resultMap, "agentTrace"))
+                        .stageCards(parseObjectMap(resultMap, "stageCards"))
+                        .reportMarkdown(asString(resultMap.get("reportMarkdown")))
+                        .reportFastApiUsed(Boolean.TRUE.equals(resultMap.get("reportFastApiUsed")))
                         .build();
             } catch (Exception e) {
                 log.warn("Failed to parse result JSON for diagnosis: {}", diagnosisId);
@@ -211,9 +221,21 @@ public class DiagnosisService {
                             Map<String, Object> s = (Map<String, Object>) item;
                             sources.add(SourceEntry.builder()
                                     .field((String) s.get("field"))
+                                    .sourceId(asString(s.get("sourceId")))
+                                    .provider(asString(s.get("provider")))
+                                    .datasetName(asString(s.get("datasetName")))
                                     .documentName((String) s.get("documentName"))
                                     .url((String) s.get("url"))
                                     .retrievedAt((String) s.get("retrievedAt"))
+                                    .recordId(asString(s.get("recordId")))
+                                    .matchedKey(asString(s.get("matchedKey")))
+                                    .usedFor(asString(s.get("usedFor")))
+                                    .scoreContribution(asInteger(s.get("scoreContribution")))
+                                    .fallbackUsed(asBoolean(s.get("fallbackUsed")))
+                                    .cacheHit(asBoolean(s.get("cacheHit")))
+                                    .collectionRunId(asString(s.get("collectionRunId")))
+                                    .errorMessage(asString(s.get("errorMessage")))
+                                    .reason(asString(s.get("reason")))
                                     .build());
                         }
                     }
@@ -229,10 +251,58 @@ public class DiagnosisService {
                 .build();
     }
 
-    private UserRole resolveRole(String userId) {
-        return membershipRepository.findFirstByUserId(userId)
+    @Transactional(readOnly = true)
+    public DiagnosisReportResponse getReport(String userId, String diagnosisId) {
+        User user = findUser(userId);
+        DiagnosisRun run = findDiagnosisRun(user, diagnosisId);
+        String markdown = null;
+        boolean fastApiUsed = false;
+
+        if (run.getResult() != null) {
+            try {
+                Map<String, Object> resultMap = objectMapper.readValue(run.getResult(),
+                        new TypeReference<Map<String, Object>>() {});
+                markdown = asString(resultMap.get("reportMarkdown"));
+                fastApiUsed = Boolean.TRUE.equals(resultMap.get("reportFastApiUsed"));
+            } catch (Exception e) {
+                log.warn("Failed to parse report from result JSON for diagnosis: {}", diagnosisId);
+            }
+        }
+
+        if (markdown == null || markdown.isBlank()) {
+            markdown = "# GROW-GATE Local EX 진단 리포트\n\n"
+                    + "- 제품: " + resolveProductName(run) + "\n"
+                    + "- 대상국: " + run.getTargetCountry() + "\n"
+                    + "- 상태: " + run.getStatus().name() + "\n";
+        }
+
+        return new DiagnosisReportResponse(
+                run.getId(),
+                "grow-gate-diagnosis-" + run.getId() + ".md",
+                "text/markdown; charset=UTF-8",
+                markdown,
+                fastApiUsed
+        );
+    }
+
+    private UserRole resolveRole(User user) {
+        return membershipRepository.findFirstByUserId(user.getId())
                 .map(Membership::getRole)
-                .orElse(UserRole.admin);
+                .orElse(user.getUserType().name().equals("personal") ? UserRole.owner : null);
+    }
+
+    private void dispatchAfterCommit(String diagnosisId) {
+        if (!TransactionSynchronizationManager.isSynchronizationActive()) {
+            asyncProcessor.process(diagnosisId);
+            return;
+        }
+
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                asyncProcessor.process(diagnosisId);
+            }
+        });
     }
 
     private Company resolveCompany(String userId) {
@@ -242,7 +312,10 @@ public class DiagnosisService {
     }
 
     private void requireDiagnosisPermission(User user) {
-        UserRole role = resolveRole(user.getId());
+        UserRole role = resolveRole(user);
+        if (role == null) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "진단을 실행할 회사 멤버십이 없습니다.");
+        }
         if (role == UserRole.viewer) {
             throw new BusinessException(ErrorCode.FORBIDDEN, "진단을 실행할 권한이 없습니다.");
         }
@@ -251,10 +324,10 @@ public class DiagnosisService {
     private Product findProductByUser(User user, String productId) {
         Company company = resolveCompany(user.getId());
         if (company != null) {
-            return productRepository.findByIdAndCompany_Id(productId, company.getId())
+            return productRepository.findByIdAndCompany_IdAndDeletedAtIsNull(productId, company.getId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "등록된 제품을 찾을 수 없습니다."));
         }
-        return productRepository.findByIdAndOwnerId(productId, user.getId())
+        return productRepository.findByIdAndOwnerIdAndDeletedAtIsNull(productId, user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "등록된 제품을 찾을 수 없습니다."));
     }
 
@@ -310,6 +383,7 @@ public class DiagnosisService {
             Map<String, String> map = new HashMap<>();
             map.put("productName", inputData.getProductName());
             map.put("hsCode", inputData.getHsCode());
+            map.put("description", inputData.getDescription());
             return objectMapper.writeValueAsString(map);
         } catch (Exception e) {
             return null;
@@ -405,6 +479,13 @@ public class DiagnosisService {
         return List.of();
     }
 
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> parseObjectMap(Map<String, Object> resultMap, String key) {
+        Object obj = resultMap.get(key);
+        if (obj instanceof Map) return (Map<String, Object>) obj;
+        return Map.of();
+    }
+
     private String resolveProductName(DiagnosisRun run) {
         if (run.getProduct() != null) {
             return run.getProduct().getName();
@@ -424,5 +505,17 @@ public class DiagnosisService {
     private User findUser(String userId) {
         return userRepository.findById(userId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+    }
+
+    private String asString(Object value) {
+        return value == null ? null : String.valueOf(value);
+    }
+
+    private Integer asInteger(Object value) {
+        return value instanceof Number ? ((Number) value).intValue() : null;
+    }
+
+    private Boolean asBoolean(Object value) {
+        return value instanceof Boolean ? (Boolean) value : null;
     }
 }

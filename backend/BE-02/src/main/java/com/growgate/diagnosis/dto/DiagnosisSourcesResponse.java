@@ -17,8 +17,20 @@ public class DiagnosisSourcesResponse {
     @Builder
     public static class SourceEntry {
         private String field;
+        private String sourceId;
+        private String provider;
+        private String datasetName;
         private String documentName;
         private String url;
         private String retrievedAt;
+        private String recordId;
+        private String matchedKey;
+        private String usedFor;
+        private Integer scoreContribution;
+        private Boolean fallbackUsed;
+        private Boolean cacheHit;
+        private String collectionRunId;
+        private String errorMessage;
+        private String reason;
     }
 }

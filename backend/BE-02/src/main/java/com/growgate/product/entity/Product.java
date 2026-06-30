@@ -61,6 +61,12 @@ public class Product {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by", length = 36)
+    private String deletedBy;
+
     @PrePersist
     private void prePersist() {
         if (this.id == null) this.id = UUID.randomUUID().toString();
@@ -79,6 +85,12 @@ public class Product {
         if (hsCode != null) this.hsCode = hsCode;
         if (targetCountry != null) this.targetCountry = targetCountry;
         if (description != null) this.description = description;
+        this.updatedAt = LocalDateTime.now();
+    }
+
+    public void softDelete(String deletedBy) {
+        this.deletedAt = LocalDateTime.now();
+        this.deletedBy = deletedBy;
         this.updatedAt = LocalDateTime.now();
     }
 }

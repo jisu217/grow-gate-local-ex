@@ -6,8 +6,8 @@ spring:
     driver-class-name: com.mysql.cj.jdbc.Driver
   jpa:
     hibernate:
-      ddl-auto: update
-    show-sql: true
+      ddl-auto: ${JPA_DDL_AUTO:validate}
+    show-sql: false
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQL8Dialect
@@ -18,8 +18,34 @@ spring:
       write-dates-as-timestamps: false
 
 jwt:
-  secret: YOUR_JWT_SECRET_BASE64_ENCODED
+  secret: YOUR_32_BYTE_OR_BASE64_32_BYTE_JWT_SECRET
   expiration: 86400000
+
+app:
+  cors:
+    allowed-origins: ${APP_CORS_ORIGINS:http://localhost:3000,http://localhost:5173,http://localhost:5174,http://localhost:8765,http://localhost:8000}
+  fastapi:
+    enabled: ${APP_FASTAPI_ENABLED:false}
+    base-url: ${APP_FASTAPI_BASE_URL:http://localhost:8000}
+
+public-data:
+  enabled: ${PUBLIC_DATA_ENABLED:false}
+  cache-ttl-hours: ${PUBLIC_DATA_CACHE_TTL_HOURS:24}
+  kcs-trade:
+    url: ${KCS_TRADE_API_URL:http://apis.data.go.kr/1220000/Newtrade/getNewtradeList}
+    key: ${KCS_TRADE_API_KEY:${DATAGO_SERVICE_KEY:}}
+  kotra-market:
+    url: ${KOTRA_MARKET_API_URL:https://www.data.go.kr/data/15122648/openapi.do}
+    key: ${KOTRA_MARKET_API_KEY:${DATAGO_SERVICE_KEY:}}
+  safety-recall:
+    url: ${SAFETY_RECALL_API_URL:https://www.safetykorea.kr/release/openapi}
+    key: ${SAFETY_RECALL_API_KEY:${DATAGO_SERVICE_KEY:}}
+  kipris-fto:
+    url: ${KIPRIS_API_URL:https://plus.kipris.or.kr/eng/main/contents.do?menuNo=300024}
+    key: ${KIPRIS_API_KEY:${KIPRIS_PLUS_KEY:}}
+  bizinfo-support:
+    url: ${BIZINFO_API_URL:https://www.exportvoucher.com/}
+    key: ${BIZINFO_API_KEY:${DATAGO_SERVICE_KEY:}}
 
 server:
   port: 8080
@@ -27,4 +53,4 @@ server:
 logging:
   level:
     org.springframework.security: INFO
-    com.growgate: DEBUG
+    com.growgate: INFO

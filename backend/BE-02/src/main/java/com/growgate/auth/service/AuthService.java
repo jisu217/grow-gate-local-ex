@@ -11,6 +11,7 @@ import com.growgate.exception.ErrorCode;
 import com.growgate.membership.entity.Membership;
 import com.growgate.membership.repository.MembershipRepository;
 import com.growgate.security.JwtTokenProvider;
+import com.growgate.security.TokenRevocationService;
 import com.growgate.user.entity.User;
 import com.growgate.user.enums.UserRole;
 import com.growgate.user.enums.UserType;
@@ -30,6 +31,7 @@ public class AuthService {
     private final MembershipRepository membershipRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
+    private final TokenRevocationService tokenRevocationService;
 
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
@@ -57,7 +59,16 @@ public class AuthService {
         if ("company".equals(request.getType())) {
             return signupCompany(request);
         }
+        if (!"personal".equals(request.getType())) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "가입 유형은 personal 또는 company만 허용됩니다.");
+        }
         return signupPersonal(request);
+    }
+
+    public void logout(String authorizationHeader) {
+        String token = resolveBearerToken(authorizationHeader);
+        if (token == null || !jwtTokenProvider.validateToken(token)) return;
+        tokenRevocationService.revoke(token, jwtTokenProvider.getExpirationEpochMillis(token));
     }
 
     private SignupResponse signupPersonal(SignupRequest request) {
@@ -79,6 +90,12 @@ public class AuthService {
     }
 
     private SignupResponse signupCompany(SignupRequest request) {
+        if (isBlank(request.getCompanyName()) || isBlank(request.getBusinessNumber()) || isBlank(request.getIndustry())) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "기업 가입은 회사명, 사업자번호, 업종이 필수입니다.");
+        }
+        if (!request.getBusinessNumber().matches("^\\d{10}$")) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "사업자번호는 숫자 10자리여야 합니다.");
+        }
         if (companyRepository.findByBusinessNumber(request.getBusinessNumber()).isPresent()) {
             throw new BusinessException(ErrorCode.CONFLICT, "이미 등록된 사업자번호입니다.");
         }
@@ -115,5 +132,14 @@ public class AuthService {
                 .userType(user.getUserType().name())
                 .companyId(company.getId())
                 .build();
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
+    }
+
+    private String resolveBearerToken(String authorizationHeader) {
+        if (authorizationHeader == null || !authorizationHeader.startsWith("Bearer ")) return null;
+        return authorizationHeader.substring(7);
     }
 }

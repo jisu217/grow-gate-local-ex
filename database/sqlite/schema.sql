@@ -41,6 +41,8 @@ CREATE TABLE IF NOT EXISTS products (
   description TEXT,
   created_at TEXT NOT NULL,
   updated_at TEXT NOT NULL,
+  deleted_at TEXT,
+  deleted_by TEXT,
   FOREIGN KEY (owner_user_id) REFERENCES users (id),
   FOREIGN KEY (company_id) REFERENCES companies (id)
 );
@@ -131,10 +133,50 @@ CREATE TABLE IF NOT EXISTS diagnosis_runs (
   FOREIGN KEY (product_id) REFERENCES products (id)
 );
 
+CREATE TABLE IF NOT EXISTS public_data_collection_runs (
+  id TEXT PRIMARY KEY,
+  diagnosis_id TEXT,
+  requested_by TEXT,
+  hs_code TEXT,
+  target_country TEXT,
+  product_name TEXT,
+  status TEXT NOT NULL CHECK (status IN ('requested', 'running', 'done', 'partial_failed', 'failed')),
+  provider_count INTEGER NOT NULL DEFAULT 0,
+  success_count INTEGER NOT NULL DEFAULT 0,
+  fallback_count INTEGER NOT NULL DEFAULT 0,
+  cache_hit_count INTEGER NOT NULL DEFAULT 0,
+  error_summary TEXT,
+  started_at TEXT NOT NULL,
+  finished_at TEXT,
+  FOREIGN KEY (requested_by) REFERENCES users (id)
+);
+
+CREATE TABLE IF NOT EXISTS public_data_records (
+  id TEXT PRIMARY KEY,
+  run_id TEXT,
+  provider TEXT NOT NULL,
+  endpoint TEXT,
+  request_key TEXT NOT NULL,
+  hs_code TEXT,
+  target_country TEXT,
+  matched_key TEXT,
+  used_for TEXT,
+  raw_payload TEXT,
+  normalized_payload TEXT,
+  score_contribution INTEGER,
+  fallback_used INTEGER NOT NULL DEFAULT 0,
+  cache_hit INTEGER NOT NULL DEFAULT 0,
+  error_message TEXT,
+  fetched_at TEXT NOT NULL,
+  expires_at TEXT,
+  FOREIGN KEY (run_id) REFERENCES public_data_collection_runs (id)
+);
+
 CREATE INDEX IF NOT EXISTS idx_memberships_user_id ON memberships (user_id);
 CREATE INDEX IF NOT EXISTS idx_memberships_company_id ON memberships (company_id);
 CREATE INDEX IF NOT EXISTS idx_products_owner_user_id ON products (owner_user_id);
 CREATE INDEX IF NOT EXISTS idx_products_company_id ON products (company_id);
+CREATE INDEX IF NOT EXISTS idx_products_deleted_at ON products (deleted_at);
 CREATE INDEX IF NOT EXISTS idx_products_hs_code ON products (hs_code);
 CREATE INDEX IF NOT EXISTS idx_products_target_country ON products (target_country);
 CREATE INDEX IF NOT EXISTS idx_certifications_product_id ON certifications (product_id);
@@ -144,3 +186,8 @@ CREATE INDEX IF NOT EXISTS idx_knowledge_sources_knowledge_id ON knowledge_sourc
 CREATE INDEX IF NOT EXISTS idx_audit_logs_product_id ON audit_logs (product_id);
 CREATE INDEX IF NOT EXISTS idx_diagnosis_runs_product_id ON diagnosis_runs (product_id);
 CREATE INDEX IF NOT EXISTS idx_diagnosis_runs_created_at ON diagnosis_runs (created_at);
+CREATE INDEX IF NOT EXISTS idx_public_data_runs_diagnosis_id ON public_data_collection_runs (diagnosis_id);
+CREATE INDEX IF NOT EXISTS idx_public_data_runs_started_at ON public_data_collection_runs (started_at);
+CREATE INDEX IF NOT EXISTS idx_public_data_records_provider_request ON public_data_records (provider, request_key);
+CREATE INDEX IF NOT EXISTS idx_public_data_records_hs_country ON public_data_records (hs_code, target_country);
+CREATE INDEX IF NOT EXISTS idx_public_data_records_expires_at ON public_data_records (expires_at);

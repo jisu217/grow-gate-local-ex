@@ -6,7 +6,12 @@ const USER_KEY = 'gg_auth_user'
 // 저장된 로그인 사용자 정보 조회 (로그인 안 되어 있으면 null)
 export function getAuthUser() {
   const raw = localStorage.getItem(USER_KEY)
-  return raw ? JSON.parse(raw) : null
+  try {
+    return raw ? JSON.parse(raw) : null
+  } catch {
+    localStorage.removeItem(USER_KEY)
+    return null
+  }
 }
 
 // 로그인 — 성공 시 accessToken과 사용자 정보를 저장
@@ -22,6 +27,19 @@ export async function login(email, password) {
     userType: res.userType,
     role: res.role,
     companyId: res.companyId,
+  }
+  localStorage.setItem(USER_KEY, JSON.stringify(user))
+  return user
+}
+
+export async function refreshAuthUser() {
+  const res = await apiFetch('/users/me')
+  const user = {
+    userId: res.userId,
+    userType: res.userType,
+    role: res.role ?? (res.userType === 'personal' ? 'owner' : null),
+    companyId: res.companyId,
+    companyName: res.companyName,
   }
   localStorage.setItem(USER_KEY, JSON.stringify(user))
   return user

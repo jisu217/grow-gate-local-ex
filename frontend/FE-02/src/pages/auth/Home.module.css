@@ -110,18 +110,26 @@
   box-shadow: 0 4px 14px rgba(15,27,61,.06);
 }
 .badgeIc {
-  width: 30px;
+  min-width: 30px;
   height: 30px;
-  border-radius: 50%;
+  border-radius: 8px;
   background: #e4f5ec;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
+  font-family: var(--en);
+  font-size: 11px;
+  font-weight: 800;
+  color: #0d7d4f;
 }
 .badgeTx { font-size: 13px; color: var(--slate); }
 .badgeTx b { color: var(--ink); font-weight: 600; }
-.badgeAr { color: var(--slate-2); margin-left: 2px; }
+.badgeAr {
+  color: var(--blue);
+  margin-left: 2px;
+  font-size: 12px;
+  font-weight: 700;
+}
 
 /* 히어로 메인 타이틀 */
 .h1 {
@@ -185,6 +193,39 @@
   border: 1.5px solid var(--line);
 }
 .ghost:hover { border-color: var(--blue); color: var(--blue); }
+
+/* 제출 심사 대응 근거 패널 */
+.readiness {
+  position: relative;
+  z-index: 2;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  width: min(940px, 100%);
+  margin-top: 44px;
+}
+.readyItem {
+  min-height: 118px;
+  padding: 18px;
+  border: 1px solid rgba(185, 197, 219, .85);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, .88);
+  box-shadow: 0 10px 26px rgba(15,27,61,.07);
+  backdrop-filter: blur(8px);
+}
+.readyKey {
+  display: block;
+  font-size: 12px;
+  font-weight: 800;
+  color: var(--blue);
+  margin-bottom: 10px;
+}
+.readyValue {
+  display: block;
+  font-size: 13.5px;
+  line-height: 1.58;
+  color: #293756;
+}
 
 /* 수출 네트워크 SVG 맵 */
 .heromap {
@@ -326,7 +367,10 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 24px;
+  font-family: var(--en);
+  font-size: 18px;
+  font-weight: 800;
+  color: var(--blue);
   background: #eaf1ff;
   border: 1px solid #d6e3ff;
 }
@@ -434,12 +478,16 @@
 @media (max-width: 1000px) {
   .h1 { font-size: 52px; }
   .heromap { opacity: .22; right: -160px; }
+  .readiness { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .featGrid { grid-template-columns: 1fr; }
   .stats { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 620px) {
   .navLinks { display: none; }
   .h1 { font-size: 38px; }
+  .lead { font-size: 16px; }
   .heromap { display: none; }
+  .readiness { grid-template-columns: 1fr; }
+  .readyItem { min-height: auto; }
   .secH2, .ctaBandH2 { font-size: 28px; }
 }

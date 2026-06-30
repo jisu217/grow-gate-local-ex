@@ -8,6 +8,7 @@ import { getDiagnosisList } from '../../services/diagnosisService.js'
 const STATUS_MAP = {
   done:    { label: '완료',    cls: styles.done    },
   pending: { label: '분석 중', cls: styles.pending },
+  running: { label: '분석 중', cls: styles.pending },
   failed:  { label: '실패',    cls: styles.failed  },
 }
 
@@ -53,7 +54,7 @@ export default function DiagnosisList() {
       {pageState === 'ok' && (
         <div className={styles.list}>
           {list.map((diag) => {
-            const status = STATUS_MAP[diag.status]
+            const status = STATUS_MAP[diag.status] ?? { label: diag.status ?? '알 수 없음', cls: styles.pending }
             return (
               <div
                 key={diag.id}
@@ -87,7 +88,7 @@ export default function DiagnosisList() {
                       </div>
                     ))}
                   </div>
-                ) : diag.status === 'pending' ? (
+                ) : ['pending', 'running'].includes(diag.status) ? (
                   <div className={styles.summaryPending}>AI 분석이 진행 중입니다…</div>
                 ) : diag.status === 'failed' ? (
                   <div className={styles.summaryFailed}>분석에 실패했습니다. 다시 시도해 주세요.</div>

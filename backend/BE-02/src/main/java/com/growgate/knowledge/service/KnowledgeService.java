@@ -51,9 +51,14 @@ import com.growgate.user.enums.UserRole;
 import com.growgate.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -162,7 +167,7 @@ public class KnowledgeService {
 
     public UpdateKnowledgeResponse update(String userId, String productId, UpdateKnowledgeRequest request) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "edit");
+        requireRole(resolveRole(user), "edit");
         Product product = findProductByUser(user, productId);
         ProductKnowledge knowledge = knowledgeRepository.findByProductId(productId).orElse(null);
 
@@ -205,8 +210,10 @@ public class KnowledgeService {
             TrustGrade newTrustGrade = null;
             if (kd.getTrustGrade() != null) {
                 try {
-                    newTrustGrade = TrustGrade.valueOf(kd.getTrustGrade());
-                } catch (IllegalArgumentException ignored) {}
+                    newTrustGrade = TrustGrade.valueOf(kd.getTrustGrade().toLowerCase());
+                } catch (IllegalArgumentException e) {
+                    throw new BusinessException(ErrorCode.INVALID_REQUEST, "trustGrade 값이 올바르지 않습니다. (high|medium|low)");
+                }
                 if (newTrustGrade != null && newTrustGrade != knowledge.getTrustGrade()) {
                     changedFields.add("trustGrade");
                     previousValues.put("trustGrade",
@@ -249,7 +256,7 @@ public class KnowledgeService {
 
     public CertificationResponse createCertification(String userId, String productId, CreateCertificationRequest request) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "edit");
+        requireRole(resolveRole(user), "edit");
         Product product = findProductByUser(user, productId);
 
         Certification cert = Certification.builder()
@@ -276,7 +283,7 @@ public class KnowledgeService {
     public CertificationResponse updateCertification(String userId, String productId, String certificationId,
                                                        UpdateCertificationRequest request) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "edit");
+        requireRole(resolveRole(user), "edit");
         findProductByUser(user, productId);
         Certification cert = certificationRepository.findByIdAndProductId(certificationId, productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "인증서를 찾을 수 없습니다."));
@@ -325,7 +332,7 @@ public class KnowledgeService {
 
     public DeleteEntryResponse deleteCertification(String userId, String productId, String certificationId) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "edit");
+        requireRole(resolveRole(user), "edit");
         Product product = findProductByUser(user, productId);
         Certification cert = certificationRepository.findByIdAndProductId(certificationId, productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "인증서를 찾을 수 없습니다."));
@@ -339,7 +346,7 @@ public class KnowledgeService {
 
     public FtoResponse createFto(String userId, String productId, CreateFtoRequest request) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "edit");
+        requireRole(resolveRole(user), "edit");
         Product product = findProductByUser(user, productId);
 
         Fto fto = Fto.builder()
@@ -365,7 +372,7 @@ public class KnowledgeService {
 
     public FtoResponse updateFto(String userId, String productId, String ftoId, UpdateFtoRequest request) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "edit");
+        requireRole(resolveRole(user), "edit");
         findProductByUser(user, productId);
         Fto fto = ftoRepository.findByIdAndProductId(ftoId, productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "FTO 항목을 찾을 수 없습니다."));
@@ -411,7 +418,7 @@ public class KnowledgeService {
 
     public DeleteEntryResponse deleteFto(String userId, String productId, String ftoId) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "edit");
+        requireRole(resolveRole(user), "edit");
         Product product = findProductByUser(user, productId);
         Fto fto = ftoRepository.findByIdAndProductId(ftoId, productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "FTO 항목을 찾을 수 없습니다."));
@@ -426,7 +433,7 @@ public class KnowledgeService {
     public BuyerRequirementResponse createBuyerRequirement(String userId, String productId,
                                                              CreateBuyerRequirementRequest request) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "edit");
+        requireRole(resolveRole(user), "edit");
         Product product = findProductByUser(user, productId);
 
         BuyerRequirement buyer = BuyerRequirement.builder()
@@ -451,7 +458,7 @@ public class KnowledgeService {
     public BuyerRequirementResponse updateBuyerRequirement(String userId, String productId, String buyerRequirementId,
                                                              UpdateBuyerRequirementRequest request) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "edit");
+        requireRole(resolveRole(user), "edit");
         findProductByUser(user, productId);
         BuyerRequirement buyer = buyerRequirementRepository.findByIdAndProductId(buyerRequirementId, productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "바이어 요구사항을 찾을 수 없습니다."));
@@ -488,7 +495,7 @@ public class KnowledgeService {
 
     public DeleteEntryResponse deleteBuyerRequirement(String userId, String productId, String buyerRequirementId) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "edit");
+        requireRole(resolveRole(user), "edit");
         Product product = findProductByUser(user, productId);
         BuyerRequirement buyer = buyerRequirementRepository.findByIdAndProductId(buyerRequirementId, productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "바이어 요구사항을 찾을 수 없습니다."));
@@ -506,8 +513,9 @@ public class KnowledgeService {
                 && (request.getDocumentName() == null || request.getDocumentName().isBlank())) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "url 또는 documentName 중 하나는 필수입니다.");
         }
+        validateUrl(request.getUrl());
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "edit");
+        requireRole(resolveRole(user), "edit");
         Product product = findProductByUser(user, productId);
         ProductKnowledge knowledge = knowledgeRepository.findByProductId(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "제품 지식을 찾을 수 없습니다."));
@@ -533,7 +541,7 @@ public class KnowledgeService {
 
     public DeleteEntryResponse deleteKnowledgeSource(String userId, String productId, String sourceId) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "edit");
+        requireRole(resolveRole(user), "edit");
         Product product = findProductByUser(user, productId);
         ProductKnowledge knowledge = knowledgeRepository.findByProductId(productId)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "제품 지식을 찾을 수 없습니다."));
@@ -547,13 +555,18 @@ public class KnowledgeService {
     }
 
     @Transactional(readOnly = true)
-    public KnowledgeLogsResponse getLogs(String userId, String productId) {
+    public KnowledgeLogsResponse getLogs(String userId, String productId, int page, int size) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "audit");
+        requireRole(resolveRole(user), "audit");
         findProductByUser(user, productId);
-        List<AuditLog> logs = auditLogRepository.findByProductIdOrderByChangedAtDesc(productId);
+        int safePage = Math.max(0, page);
+        int safeSize = Math.max(1, Math.min(size, 100));
+        Page<AuditLog> logs = auditLogRepository.findByProductId(
+                productId,
+                PageRequest.of(safePage, safeSize, Sort.by(Sort.Direction.DESC, "changedAt"))
+        );
 
-        List<LogEntry> entries = logs.stream().map(logEntry -> LogEntry.builder()
+        List<LogEntry> entries = logs.getContent().stream().map(logEntry -> LogEntry.builder()
                 .logId(logEntry.getId())
                 .changedBy(logEntry.getChangedBy().getName())
                 .changeType(logEntry.getChangeType().name())
@@ -567,13 +580,17 @@ public class KnowledgeService {
         return KnowledgeLogsResponse.builder()
                 .productId(productId)
                 .logs(entries)
+                .page(safePage)
+                .size(safeSize)
+                .totalElements(logs.getTotalElements())
+                .totalPages(logs.getTotalPages())
                 .build();
     }
 
-    private UserRole resolveRole(String userId) {
-        return membershipRepository.findFirstByUserId(userId)
+    private UserRole resolveRole(User user) {
+        return membershipRepository.findFirstByUserId(user.getId())
                 .map(Membership::getRole)
-                .orElse(UserRole.admin);
+                .orElse(user.getUserType().name().equals("personal") ? UserRole.owner : null);
     }
 
     private Company resolveCompany(String userId) {
@@ -605,10 +622,10 @@ public class KnowledgeService {
     private Product findProductByUser(User user, String productId) {
         Company company = resolveCompany(user.getId());
         if (company != null) {
-            return productRepository.findByIdAndCompany_Id(productId, company.getId())
+            return productRepository.findByIdAndCompany_IdAndDeletedAtIsNull(productId, company.getId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "등록된 제품을 찾을 수 없습니다."));
         }
-        return productRepository.findByIdAndOwnerId(productId, user.getId())
+        return productRepository.findByIdAndOwnerIdAndDeletedAtIsNull(productId, user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "등록된 제품을 찾을 수 없습니다."));
     }
 
@@ -653,9 +670,22 @@ public class KnowledgeService {
     private RiskLevel parseRiskLevel(String value) {
         if (value == null || value.isBlank()) return null;
         try {
-            return RiskLevel.valueOf(value);
+            return RiskLevel.valueOf(value.toLowerCase());
         } catch (IllegalArgumentException e) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "riskLevel 값이 올바르지 않습니다. (high|medium|low)");
+        }
+    }
+
+    private void validateUrl(String value) {
+        if (value == null || value.isBlank()) return;
+        try {
+            URI uri = new URI(value);
+            String scheme = uri.getScheme();
+            if (!"http".equalsIgnoreCase(scheme) && !"https".equalsIgnoreCase(scheme)) {
+                throw new BusinessException(ErrorCode.INVALID_REQUEST, "url은 http 또는 https 형식이어야 합니다.");
+            }
+        } catch (URISyntaxException e) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "url 형식이 올바르지 않습니다.");
         }
     }
 

@@ -13,5 +13,7 @@ public interface FtoRepository extends JpaRepository<Fto, String> {
 
     List<Fto> findByProductId(String productId);
 
+    List<Fto> findByProductIdIn(List<String> productIds);
+
     Optional<Fto> findByIdAndProductId(String id, String productId);
 }
