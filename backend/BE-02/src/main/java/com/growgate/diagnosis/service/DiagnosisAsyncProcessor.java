@@ -69,11 +69,13 @@ public class DiagnosisAsyncProcessor {
     @Transactional
     public void process(String diagnosisId) {
         DiagnosisRun run = diagnosisRepository.findById(diagnosisId).orElse(null);
-        if (run == null) return;
+        if (run == null) {
+            log.warn("Diagnosis run not found for async processing: {}", diagnosisId);
+            return;
+        }
 
         try {
-            run.setStatus(DiagnosisStatus.running);
-            diagnosisRepository.save(run);
+            updateStatus(run, DiagnosisStatus.running);
 
             Product product = run.getProduct();
             Map<String, Object> inputData = parseInputData(run.getInputData());
@@ -193,12 +195,47 @@ public class DiagnosisAsyncProcessor {
             ));
 
             run.setResult(objectMapper.writeValueAsString(resultMap));
-            run.setStatus(DiagnosisStatus.done);
-            diagnosisRepository.save(run);
+            updateStatus(run, DiagnosisStatus.done);
         } catch (Exception e) {
             log.error("Diagnosis processing failed for id: {}", diagnosisId, e);
-            run.setStatus(DiagnosisStatus.failed);
-            diagnosisRepository.save(run);
+            run.setResult(buildFailureResult(e));
+            updateStatus(run, DiagnosisStatus.failed);
+        }
+    }
+
+    private void updateStatus(DiagnosisRun run, DiagnosisStatus status) {
+        DiagnosisStatus previous = run.getStatus();
+        run.setStatus(status);
+        diagnosisRepository.save(run);
+        log.info("Diagnosis status changed: diagnosisId={}, previous={}, current={}",
+                run.getId(), previous, status);
+    }
+
+    private String buildFailureResult(Exception e) {
+        try {
+            Map<String, Object> failure = new LinkedHashMap<>();
+            failure.put("summary", "진단 처리 중 오류가 발생했습니다.");
+            failure.put("errorType", e.getClass().getSimpleName());
+            failure.put("errorMessage", "진단 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.");
+            failure.put("failedAt", OffsetDateTime.now(ZoneOffset.UTC).toString());
+            failure.put("evidenceSources", List.of());
+            failure.put("riskItems", List.of());
+            failure.put("agentTrace", Map.of(
+                    "mode", "failed",
+                    "steps", List.of(Map.of(
+                            "step", "process",
+                            "tool", "Spring DiagnosisAsyncProcessor",
+                            "status", "failed",
+                            "retryCount", 0,
+                            "message", "진단 처리 실패"
+                    ))
+            ));
+            return objectMapper.writeValueAsString(failure);
+        } catch (Exception serializationFailure) {
+            log.error("Failed to serialize diagnosis failure result", serializationFailure);
+            return "{\"summary\":\"진단 처리 중 오류가 발생했습니다.\",\"errorType\":\"ProcessingFailure\","
+                    + "\"errorMessage\":\"진단 처리 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.\","
+                    + "\"failedAt\":\"" + OffsetDateTime.now(ZoneOffset.UTC) + "\"}";
         }
     }
 

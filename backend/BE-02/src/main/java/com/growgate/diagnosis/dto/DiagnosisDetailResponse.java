@@ -34,6 +34,9 @@ public class DiagnosisDetailResponse {
         private Map<String, Object> stageCards;
         private String reportMarkdown;
         private boolean reportFastApiUsed;
+        private String errorType;
+        private String errorMessage;
+        private String failedAt;
     }
 
     @Getter
@@ -65,6 +68,9 @@ public class DiagnosisDetailResponse {
     @Getter
     @Builder
     public static class KnowledgeSnapshot {
+        private String productName;
+        private String hsCode;
+        private String targetCountry;
         private String trustGrade;
         private String sourceType;
         private List<CertSnapshot> certifications;

@@ -118,3 +118,12 @@ gh pr checks 34 --repo jiyongKim615/grow_gate_local_ex
 현재 상태의 PR #34는 "문제 없음"이 아니다. 기능 의도는 좋지만 최신 main과 충돌하며, 병합 해결을 잘못하면 최근 반영한 제출용 핵심 기능을 되돌릴 수 있다.
 
 권장 결정은 `changes requested`에 가깝다. 다만 PR 작성자가 수정하기 어렵다면, main에서 별도 커밋으로 PR #34의 유효 변경만 선별 반영하는 방식이 더 안전하다.
+
+## 2026-07-01 후속 반영
+
+PR #34는 그대로 merge하지 않고, 위 권장안대로 최신 `main`에 유효 변경만 선별 반영했다.
+
+- 최신 `main`의 `dispatchAfterCommit`, live 공공데이터 수집, FastAPI agent/report, Gemini/OpenRouter 추론, RAG/knowledge loop 흐름은 유지
+- 직접 입력 진단에도 `knowledgeSnapshot.productName`, `hsCode`, `targetCountry`, `sourceType=direct_input`을 남기도록 보강
+- 진단 실패 시 status를 `failed`로 저장하고 `summary`, `errorType`, `errorMessage`, `failedAt`, 최소 `agentTrace`를 result JSON에 남기도록 보강
+- 사용자에게 내려가는 실패 메시지는 raw exception 대신 일반화된 안내 문구로 제한

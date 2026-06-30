@@ -122,6 +122,7 @@ public class DiagnosisService {
             knowledgeSnapshotJson = buildKnowledgeSnapshot(request.getProductId());
         } else {
             inputDataJson = serializeInputData(request.getInputData());
+            knowledgeSnapshotJson = buildInputSnapshot(request.getInputData(), request.getTargetCountry());
         }
 
         DiagnosisRun run = DiagnosisRun.builder()
@@ -173,6 +174,9 @@ public class DiagnosisService {
                         .stageCards(parseObjectMap(resultMap, "stageCards"))
                         .reportMarkdown(asString(resultMap.get("reportMarkdown")))
                         .reportFastApiUsed(Boolean.TRUE.equals(resultMap.get("reportFastApiUsed")))
+                        .errorType(asString(resultMap.get("errorType")))
+                        .errorMessage(asString(resultMap.get("errorMessage")))
+                        .failedAt(asString(resultMap.get("failedAt")))
                         .build();
             } catch (Exception e) {
                 log.warn("Failed to parse result JSON for diagnosis: {}", diagnosisId);
@@ -390,6 +394,25 @@ public class DiagnosisService {
         }
     }
 
+    private String buildInputSnapshot(CreateDiagnosisRequest.InputData inputData, String targetCountry) {
+        if (inputData == null) return null;
+        try {
+            Map<String, Object> snapshot = new HashMap<>();
+            snapshot.put("productName", inputData.getProductName());
+            snapshot.put("hsCode", inputData.getHsCode());
+            snapshot.put("targetCountry", targetCountry);
+            snapshot.put("trustGrade", null);
+            snapshot.put("sourceType", "direct_input");
+            snapshot.put("certifications", List.of());
+            snapshot.put("missingFields", List.of("productKnowledge", "certifications", "fto", "buyerRequirements"));
+            snapshot.put("snapshotAt", LocalDate.now().format(DATE_FMT) + "T00:00:00Z");
+            return objectMapper.writeValueAsString(snapshot);
+        } catch (Exception e) {
+            log.warn("Failed to build direct input knowledge snapshot");
+            return null;
+        }
+    }
+
     private KnowledgeSnapshot parseKnowledgeSnapshot(String json) {
         if (json == null) return null;
         try {
@@ -416,6 +439,9 @@ public class DiagnosisService {
             List<String> missingFields = (List<String>) map.getOrDefault("missingFields", new ArrayList<>());
 
             return KnowledgeSnapshot.builder()
+                    .productName((String) map.get("productName"))
+                    .hsCode((String) map.get("hsCode"))
+                    .targetCountry((String) map.get("targetCountry"))
                     .trustGrade((String) map.get("trustGrade"))
                     .sourceType((String) map.get("sourceType"))
                     .certifications(certSnapshots)
