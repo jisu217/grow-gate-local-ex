@@ -8,17 +8,17 @@ const PARTNERS = ['관세청', 'KOTRA', 'KTL', 'SafetyKorea', 'KIPRIS', '기업�
 // 기능 소개
 const FEATURES = [
   {
-    no: '01', icon: '🧩', title: '한 번의 진단',
-    desc: '제품 정보를 넣으면 수출 가능성·규제 매칭·리콜·특허 위험을 한 화면에서 분석합니다.',
+    no: '01', icon: '01', title: '한 번의 진단',
+    desc: '제품 정보, HS Code, 대상국을 기준으로 수출 가능성·규제 매칭·리콜·특허 위험을 한 화면에서 분석합니다.',
     link: '진단 시작',
   },
   {
-    no: '02', icon: '📊', title: '근거가 보이는 데이터',
-    desc: '관세청·KOTRA·SafetyKorea·KIPRIS·지원사업 → 어떤 공공데이터에서 나온 결론인지 그대로 보여줍니다.',
+    no: '02', icon: '02', title: '근거가 보이는 데이터',
+    desc: '관세청·KOTRA·SafetyKorea·KIPRIS·지원사업의 live/cache/fallback 출처를 진단 결과에 남깁니다.',
     link: '데이터 보기',
   },
   {
-    no: '03', icon: '🗓️', title: '30·60·90일 할 일',
+    no: '03', icon: '03', title: '30·60·90일 할 일',
     desc: '국내·인증·해외에서 담당자가 언제 무엇을 해야 하는지, 산출물까지 일정별로 받습니다.',
     link: '로드맵 열기',
   },
@@ -26,10 +26,17 @@ const FEATURES = [
 
 // 수치 통계
 const STATS = [
-  { v: '7', u: '종', l: '연동 공공데이터 API' },
-  { v: '6', u: '건', l: '자동 매칭 규제·인증' },
-  { v: '83', u: '/100', l: '데모 수출 준비도' },
+  { v: '5', u: '종', l: 'live/cache 공공데이터 provider' },
+  { v: '6', u: '축', l: '시장·규제·리콜·FTO·지원 점수' },
+  { v: '100', u: '%', l: '출처 trace 포함 진단 결과' },
   { v: '90', u: '일', l: '실행 로드맵 자동 생성' },
+]
+
+const READINESS = [
+  { k: '공공데이터', v: '관세청·KOTRA·KATS·KIPRIS·지원사업 connector와 cache/fallback 기록' },
+  { k: '서비스 구현', v: 'React 메인 화면에서 Spring 진단 생성·상태 갱신·결과 리포트 흐름 연결' },
+  { k: '운영 근거', v: 'JWT 검증, 권한 검사, audit pagination, soft delete, retry/backoff 반영' },
+  { k: '제출 산출물', v: '변경사항·평가 대응·미완료 범위를 공개 문서로 분리 정리' },
 ]
 
 // 수출 네트워크 SVG 맵 컴포넌트
@@ -106,22 +113,21 @@ export default function Home() {
 
           {/* 출품 뱃지 */}
           <div className={styles.badge}>
-            <span className={styles.badgeIc}>⚡</span>
+            <span className={styles.badgeIc}>EX</span>
             <span className={styles.badgeTx}>
               <b>2026 산업부 공공데이터 활용 공모전</b> · 출품작
             </span>
-            <span className={styles.badgeAr}>→</span>
+            <span className={styles.badgeAr}>심사용 메인</span>
           </div>
 
           <h1 className={styles.h1}>
-            수출, 어디서<br />
-            막힐지 <span className={styles.hl}>먼저 압니다.</span>
+            지역 제조기업의<br />
+            수출 막힘을 <span className={styles.hl}>근거로 풉니다.</span>
           </h1>
 
           <p className={styles.lead}>
-            제품명과 HS Code만 입력하면, AI가 공공데이터를 연결해<br />
-            인증·규제·리콜·지원사업을{' '}
-            <b style={{color:'var(--blue)'}}>오늘 할 업무 순서</b>로 정리합니다.
+            제품명과 HS Code를 입력하면 공공데이터, 제품 지식, 인증·특허·리콜 신호를 연결해
+            <b style={{color:'var(--blue)'}}> 점수·근거·30/60/90일 실행계획</b>으로 정리합니다.
           </p>
 
           {/* CTA */}
@@ -129,9 +135,18 @@ export default function Home() {
             <button className={`${styles.btn} ${styles.primary}`} onClick={() => navigate('/diagnosis')}>
               3분 만에 진단 시작 →
             </button>
-            <button className={`${styles.btn} ${styles.ghost}`} onClick={() => navigate('/diagnosis/diag-001')}>
-              데모 결과 먼저 보기
+            <button className={`${styles.btn} ${styles.ghost}`} onClick={() => navigate('/diagnosis/new')}>
+              새 제품으로 바로 진단
             </button>
+          </div>
+
+          <div className={styles.readiness}>
+            {READINESS.map(item => (
+              <div key={item.k} className={styles.readyItem}>
+                <span className={styles.readyKey}>{item.k}</span>
+                <span className={styles.readyValue}>{item.v}</span>
+              </div>
+            ))}
           </div>
         </section>
 

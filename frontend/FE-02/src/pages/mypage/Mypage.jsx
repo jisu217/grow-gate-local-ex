@@ -86,15 +86,14 @@ export default function Mypage() {
   async function rerun() {
     if (!current) return
     setRerunLoading(true)
-    await rerunDiagnosis(current.id, current.country)
-    setProducts((prev) => prev.map((p) => {
-      if (p.id !== current.id) return p
-      if (p.score == null) {
-        return { ...p, score: 60, chips: ['규제 위험 3건', '인증 필요 2건', 'FTO 위험 보통'] }
-      }
-      return { ...p, score: Math.min(100, p.score + 5) }
-    }))
-    setRerunLoading(false)
+    try {
+      const result = await rerunDiagnosis(current.id, current.country)
+      navigate(`/diagnosis/${result.diagnosisId}`)
+    } catch (err) {
+      alert(err.message || '진단 실행에 실패했습니다.')
+    } finally {
+      setRerunLoading(false)
+    }
   }
 
   return (

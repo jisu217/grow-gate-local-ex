@@ -36,6 +36,8 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -63,12 +65,21 @@ public class ProductService {
     public ProductListResponse getList(String userId) {
         User user = findUser(userId);
         List<Product> products = findProductsByUser(user);
+        List<String> productIds = products.stream().map(Product::getId).collect(Collectors.toList());
+        Map<String, ProductKnowledge> knowledgeByProductId = knowledgeRepository.findByProductIdIn(productIds).stream()
+                .collect(Collectors.toMap(k -> k.getProduct().getId(), k -> k));
+        Map<String, List<Certification>> certsByProductId = certificationRepository.findByProductIdIn(productIds).stream()
+                .collect(Collectors.groupingBy(c -> c.getProduct().getId()));
+        Map<String, List<Fto>> ftoByProductId = ftoRepository.findByProductIdIn(productIds).stream()
+                .collect(Collectors.groupingBy(f -> f.getProduct().getId()));
+        Map<String, List<BuyerRequirement>> buyersByProductId = buyerRequirementRepository.findByProductIdIn(productIds).stream()
+                .collect(Collectors.groupingBy(b -> b.getProduct().getId()));
 
         List<ProductSummary> summaries = products.stream().map(product -> {
-            ProductKnowledge knowledge = knowledgeRepository.findByProductId(product.getId()).orElse(null);
-            List<Certification> certs = certificationRepository.findByProductId(product.getId());
-            List<Fto> ftoList = ftoRepository.findByProductId(product.getId());
-            List<BuyerRequirement> buyers = buyerRequirementRepository.findByProductId(product.getId());
+            ProductKnowledge knowledge = knowledgeByProductId.get(product.getId());
+            List<Certification> certs = certsByProductId.getOrDefault(product.getId(), Collections.emptyList());
+            List<Fto> ftoList = ftoByProductId.getOrDefault(product.getId(), Collections.emptyList());
+            List<BuyerRequirement> buyers = buyersByProductId.getOrDefault(product.getId(), Collections.emptyList());
 
             LocalDate today = LocalDate.now();
 
@@ -111,7 +122,7 @@ public class ProductService {
 
     public CreateProductResponse create(String userId, CreateProductRequest request) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "create");
+        requireRole(resolveRole(user), "create");
 
         Product product = Product.builder()
                 .owner(user)
@@ -155,7 +166,7 @@ public class ProductService {
 
     public DeleteProductResponse delete(String userId, String productId) {
         User user = findUser(userId);
-        requireRole(resolveRole(userId), "delete");
+        requireRole(resolveRole(user), "delete");
         Product product = findProductByUser(user, productId);
 
         AuditLog log = AuditLog.builder()
@@ -167,19 +178,16 @@ public class ProductService {
                 .build();
         auditLogRepository.save(log);
 
-        certificationRepository.deleteAll(certificationRepository.findByProductId(productId));
-        ftoRepository.deleteAll(ftoRepository.findByProductId(productId));
-        buyerRequirementRepository.deleteAll(buyerRequirementRepository.findByProductId(productId));
-        knowledgeRepository.findByProductId(productId).ifPresent(knowledgeRepository::delete);
-        productRepository.delete(product);
+        product.softDelete(user.getId());
+        productRepository.save(product);
 
-        return new DeleteProductResponse("제품이 삭제되었습니다.", productId);
+        return new DeleteProductResponse("제품이 삭제 처리되었습니다. 감사 로그와 진단 이력은 유지됩니다.", productId);
     }
 
-    private UserRole resolveRole(String userId) {
-        return membershipRepository.findFirstByUserId(userId)
+    private UserRole resolveRole(User user) {
+        return membershipRepository.findFirstByUserId(user.getId())
                 .map(Membership::getRole)
-                .orElse(UserRole.admin);
+                .orElse(user.getUserType().name().equals("personal") ? UserRole.owner : null);
     }
 
     private Company resolveCompany(String userId) {
@@ -217,18 +225,18 @@ public class ProductService {
     private List<Product> findProductsByUser(User user) {
         Company company = resolveCompany(user.getId());
         if (company != null) {
-            return productRepository.findByCompany_IdOrderByUpdatedAtDesc(company.getId());
+            return productRepository.findByCompany_IdAndDeletedAtIsNullOrderByUpdatedAtDesc(company.getId());
         }
-        return productRepository.findByOwnerIdOrderByUpdatedAtDesc(user.getId());
+        return productRepository.findByOwnerIdAndDeletedAtIsNullOrderByUpdatedAtDesc(user.getId());
     }
 
     private Product findProductByUser(User user, String productId) {
         Company company = resolveCompany(user.getId());
         if (company != null) {
-            return productRepository.findByIdAndCompany_Id(productId, company.getId())
+            return productRepository.findByIdAndCompany_IdAndDeletedAtIsNull(productId, company.getId())
                     .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "등록된 제품을 찾을 수 없습니다."));
         }
-        return productRepository.findByIdAndOwnerId(productId, user.getId())
+        return productRepository.findByIdAndOwnerIdAndDeletedAtIsNull(productId, user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "등록된 제품을 찾을 수 없습니다."));
     }
 

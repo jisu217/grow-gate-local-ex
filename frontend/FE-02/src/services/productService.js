@@ -2,6 +2,8 @@
 import { apiFetch } from './apiClient.js'
 import { PRODUCTS, PRODUCT_DETAILS } from '../mock/productData.js'
 
+const ENABLE_MOCK = import.meta.env.VITE_ENABLE_MOCK === 'true'
+
 // 백엔드 knowledgeStatus(snake_case) → FE 표시용 key 변환
 const STATUS_MAP = {
   valid: 'valid',
@@ -36,16 +38,29 @@ export async function getProducts() {
     const res = await apiFetch('/products')
     return res.products.map(mapProductSummary)
   } catch (err) {
-    console.warn('[productService] getProducts API 실패, mock으로 대체합니다.', err)
+    if (!ENABLE_MOCK) throw err
+    console.warn('[productService] getProducts API 실패, VITE_ENABLE_MOCK=true라 mock으로 대체합니다.', err)
     return PRODUCTS
   }
 }
 
 // 제품 상세 매핑
-// 백엔드 상세 응답에 없는 knowledgeStatus·sourceType(인증서 단위)은 undefined 처리.
-// 변경 이력(auditLog)은 이 응답에 포함되지 않아 기본값 []이며,
-// audit:view 권한이 있는 화면에서 getProductAuditLogs()로 별도 조회해 채워야 함.
 function mapProductDetail(p) {
+  const missingFields = []
+  if ((p.fto ?? []).length === 0) missingFields.push('fto')
+  if ((p.buyerRequirements ?? []).length === 0) missingFields.push('buyerRequirements')
+  const hasExpired = (p.certifications ?? []).some((c) => c.daysUntilExpiry < 0)
+  const hasExpiring = (p.certifications ?? []).some((c) => c.daysUntilExpiry >= 0 && c.daysUntilExpiry <= 30)
+  const knowledgeStatus = hasExpired
+    ? 'expired'
+    : hasExpiring
+      ? 'expiring'
+      : missingFields.length > 0
+        ? 'needs-check'
+        : p.knowledge?.trustGrade
+          ? 'valid'
+          : 'missing'
+
   return {
     id: p.productId,
     name: p.name,
@@ -54,16 +69,16 @@ function mapProductDetail(p) {
     targetCountry: p.targetCountry,
     description: p.description,
     grade: p.knowledge?.trustGrade,
-    knowledgeStatus: undefined,
+    knowledgeStatus,
     sourceBasis: p.knowledge?.sourceType,
-    missingFields: [],
+    missingFields,
     updatedAt: p.updatedAt,
     certs: (p.certifications ?? []).map((c) => ({
       id: c.id,
       name: c.name,
       expiryDate: c.expiresAt,
       renewalCycle: c.renewalCycle,
-      status: c.daysUntilExpiry <= 30 ? '임박' : '정상',
+      status: c.daysUntilExpiry < 0 ? '만료' : c.daysUntilExpiry <= 30 ? '임박' : '정상',
       sourceType: undefined,
     })),
     fto: (p.fto ?? []).map((f) => ({
@@ -88,7 +103,8 @@ export async function getProductKnowledge(productId) {
     const detail = await apiFetch(`/products/${productId}/knowledge`)
     return mapProductDetail(detail)
   } catch (err) {
-    console.warn('[productService] getProductKnowledge API 실패, mock으로 대체합니다.', err)
+    if (!ENABLE_MOCK) throw err
+    console.warn('[productService] getProductKnowledge API 실패, VITE_ENABLE_MOCK=true라 mock으로 대체합니다.', err)
     const product = PRODUCT_DETAILS[productId]
     if (!product) throw new Error(`제품을 찾을 수 없습니다. (id: ${productId})`)
     return product
@@ -145,7 +161,8 @@ export async function getProductAuditLogs(productId) {
       reason: log.reason,
     }))
   } catch (err) {
-    console.warn('[productService] getProductAuditLogs API 실패, 빈 배열로 대체합니다.', err)
+    if (!ENABLE_MOCK) throw err
+    console.warn('[productService] getProductAuditLogs API 실패, VITE_ENABLE_MOCK=true라 빈 배열로 대체합니다.', err)
     return []
   }
 }

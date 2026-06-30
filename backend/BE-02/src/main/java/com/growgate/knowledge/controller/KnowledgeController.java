@@ -31,6 +31,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -58,8 +59,10 @@ public class KnowledgeController {
     @GetMapping("/{productId}/audit-logs")
     public ResponseEntity<KnowledgeLogsResponse> getLogs(
             @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String productId) {
-        return ResponseEntity.ok(knowledgeService.getLogs(userDetails.getUsername(), productId));
+            @PathVariable String productId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size) {
+        return ResponseEntity.ok(knowledgeService.getLogs(userDetails.getUsername(), productId, page, size));
     }
 
     @PostMapping("/{productId}/certifications")

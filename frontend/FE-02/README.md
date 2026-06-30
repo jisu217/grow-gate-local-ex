@@ -61,6 +61,9 @@ cp .env.example .env
 | 변수 | 설명 | 기본값 |
 | :--- | :--- | :--- |
 | `VITE_API_URL` | 백엔드 API 기본 URL | `http://localhost:8080` |
+| `VITE_API_TIMEOUT_MS` | API 요청 timeout | `15000` |
+| `VITE_API_RETRY_COUNT` | GET 요청 retry 횟수 | `2` |
+| `VITE_ENABLE_MOCK` | API 실패 시 mock fallback 허용 여부 | `false` |
 
 > Vite에서 브라우저에 노출되는 환경 변수는 `VITE_` 접두사 필수.  
 > 코드에서 `import.meta.env.VITE_API_URL`로 접근.
@@ -75,7 +78,7 @@ src/
 ├── App.jsx                     # 라우트 전체 정의
 ├── styles/global.css           # CSS 변수 + 전역 스타일
 │
-├── mock/                       # 백엔드 연동 전 임시 데이터
+├── mock/                       # 개발용 fallback 데이터 (VITE_ENABLE_MOCK=true에서만 조회 실패 대체)
 │   ├── auth.js                 # 로그인 상태 (isLoggedIn, role, accountType)
 │   ├── roles.js                # 역할별 허용 액션 테이블
 │   ├── diagnosisSteps.js       # 진단 단계 정의 (UI 전용)
@@ -171,21 +174,16 @@ if (can('knowledge:edit')) { ... }
 
 ## 8. Backend Integration Guide
 
-현재 `services/`는 `mock/` 데이터를 반환. 연동 시 **`services/` 내부 함수만 교체**하면 컴포넌트 변경 불필요.
+현재 `services/`는 Spring Boot `/api`를 기본 호출합니다. 제출/운영 기본값에서는 API 실패를 mock 성공으로 숨기지 않고 error state로 전파합니다. 개발 중 화면 확인이 필요할 때만 `.env`에 `VITE_ENABLE_MOCK=true`를 설정하면 조회 API에 한해 fallback이 동작합니다.
 
 ```js
-// 연동 전
-export async function getProducts() {
-  return PRODUCTS
-}
-
-// 연동 후 (실 API 호출 → 실패 시 mock fallback)
+// 기본: 실 API 호출, 실패 시 에러 전파
 export async function getProducts() {
   try {
     const res = await apiFetch('/products')
     return res.products.map(mapProductSummary)
   } catch (err) {
-    console.warn('[productService] getProducts API 실패, mock으로 대체합니다.', err)
+    if (!ENABLE_MOCK) throw err
     return PRODUCTS
   }
 }
@@ -193,39 +191,38 @@ export async function getProducts() {
 
 > 공통 fetch 헬퍼는 `services/apiClient.js`(`${VITE_API_URL}/api` 베이스) 참고.
 
-**연동 후 삭제 대상**
+**개발용 mock 정리 대상**
 
 | 파일 | 처리 |
 | :--- | :--- |
-| `mock/productData.js` | 삭제 |
-| `mock/diagnosisData.js` | 삭제 |
-| `mock/diagnosisListData.js` | 삭제 |
-| `mock/auth.js` | AuthContext로 교체 후 삭제 |
-| `mock/roles.js` | 서버 권한 응답으로 교체 후 삭제 |
+| `mock/productData.js` | `VITE_ENABLE_MOCK=true` 개발 fallback 외 사용 금지 |
+| `mock/diagnosisData.js` | 결과 단계 UI 기본 shape 유지용, 실제 점수/세션은 API 응답으로 덮어씀 |
+| `mock/diagnosisListData.js` | `VITE_ENABLE_MOCK=true` 개발 fallback 외 사용 금지 |
+| `mock/auth.js` | 사용하지 않음 |
+| `mock/roles.js` | UI 보조 권한 테이블, 서버 권한 검증을 대체하지 않음 |
 | `mock/diagnosisSteps.js` | UI 전용이므로 유지 가능 |
 
 ---
 
 ## 9. Required Backend APIs
 
-> 현재 모두 mock 대체 상태. 백엔드 연동 시 아래 엔드포인트 구현 필요.
-> 아래 경로는 백엔드(`backend/BE-02`) 실제 구현 기준. `services/apiClient.js`는 `${VITE_API_URL}/api`를 베이스로 사용.
+아래 경로는 백엔드(`backend/BE-02`) 실제 구현 기준입니다. `services/apiClient.js`는 `${VITE_API_URL}/api`를 베이스로 사용하며, `VITE_API_URL`이 이미 `/api`로 끝나는 경우 중복으로 붙이지 않습니다.
 
 ### 인증·사용자
 
 | 메서드 | 경로 | 설명 | 서비스 파일 |
 | :--- | :--- | :--- | :--- |
-| `POST` | `/api/auth/login` | 이메일·비밀번호 로그인, JWT 발급 | — (미구현) |
-| `POST` | `/api/auth/signup` | 회원가입 (개인/기업 구분은 요청 바디로 전달) | — (미구현) |
-| `POST` | `/api/auth/logout` | 로그아웃 | — (미구현) |
-| `GET` | `/api/users/me` | 현재 로그인 사용자 정보 조회 | — (미구현) |
-| `PATCH` | `/api/users/me` | 사용자 정보 수정 | — (미구현) |
-| `GET` | `/api/companies/me` | 소속 기업 정보 조회 (기업 계정) | — (미구현) |
-| `PATCH` | `/api/companies/me` | 소속 기업 정보 수정 (기업 계정) | — (미구현) |
+| `POST` | `/api/auth/login` | 이메일·비밀번호 로그인, JWT 발급 | `authService.js` |
+| `POST` | `/api/auth/signup` | 회원가입 (개인/기업 구분은 요청 바디로 전달) | `authService.js` |
+| `POST` | `/api/auth/logout` | 클라이언트 토큰 제거 | `authService.js` |
+| `GET` | `/api/users/me` | 현재 로그인 사용자 정보 조회 | `mypageService.js` |
+| `PATCH` | `/api/users/me` | 사용자 정보 수정 | `authService.js` |
+| `GET` | `/api/companies/me` | 소속 기업 정보 조회 (기업 계정) | `mypageService.js` |
+| `PATCH` | `/api/companies/me` | 소속 기업 정보 수정 (기업 계정) | 구현 엔드포인트 |
 
 ### 제품 지식
 
-> 연동 완료 (`apiFetch` 베이스: `${VITE_API_URL}/api`). 실패 시 mock fallback.
+> 연동 완료 (`apiFetch` 베이스: `${VITE_API_URL}/api`). 제출 기본값에서는 실패 시 error state로 전파합니다.
 
 | 메서드 | 경로 | 설명 | 서비스 함수 |
 | :--- | :--- | :--- | :--- |
@@ -233,23 +230,22 @@ export async function getProducts() {
 | `POST` | `/api/products` | 신규 제품 생성 | `createProduct(payload)` |
 | `GET` | `/api/products/:productId/knowledge` | 제품 상세·지식 조회 (인증서·FTO·바이어요구사항·출처 포함) | `getProductKnowledge(id)` |
 | `PUT` | `/api/products/:productId/knowledge` | 제품 정보·지식 수정 | `saveProductKnowledge(id, payload)` |
-| `DELETE` | `/api/products/:productId` | 제품 삭제 | — (미구현) |
-| `GET` | `/api/products/:productId/audit-logs` | 변경 이력 조회 | — (미연동, `KnowledgeDetail` 변경 이력 탭은 현재 빈 배열) |
+| `DELETE` | `/api/products/:productId` | 제품 소프트 삭제 | `deleteProduct(id)` |
+| `GET` | `/api/products/:productId/audit-logs` | 변경 이력 조회 | `getProductAuditLogs(id)` |
 
-인증서/FTO/바이어요구사항/지식출처 등록·수정·삭제 엔드포인트(`/api/products/{productId}/certifications` 등)는 백엔드 구현 완료, KnowledgeEdit 화면은 제품 기본 정보만 다뤄 대응 서비스 함수 미구현. 자세한 경로는 `backend/BE-02/README.md` 4번 섹션 참고.
+인증서/FTO/바이어요구사항/지식출처 등록·수정·삭제 엔드포인트(`/api/products/{productId}/certifications` 등)는 백엔드와 서비스 함수가 구현되어 있습니다. 화면별 버튼 노출 범위는 `KnowledgeEdit`/`KnowledgeDetail` UX에 맞춰 단계적으로 연결합니다. 자세한 경로는 `backend/BE-02/README.md` 4번 섹션 참고.
 
 ### 진단
 
-> 연동 완료 (`apiFetch` 베이스: `${VITE_API_URL}/api`). 실패 시 mock fallback.
-> S02~S10(커넥터·시장·규제·리콜·특허·실행보드·파이프라인)은 백엔드에 데이터 모델이
-> 없어 mock 데이터를 그대로 사용 중 — 별도 백엔드 작업(공공데이터 연동·예측 모델) 필요.
+> 연동 완료 (`apiFetch` 베이스: `${VITE_API_URL}/api`). 제출 기본값에서는 실패 시 error state로 전파합니다.
+> 상세 화면은 기존 단계형 UI를 유지하되, 세션/점수/리스크/로드맵/출처는 Spring 진단 응답으로 덮어씁니다.
 
 | 메서드 | 경로 | 설명 | 서비스 함수 |
 | :--- | :--- | :--- | :--- |
 | `GET` | `/api/diagnosis` | 진단 이력 목록 조회 | `getDiagnosisList()` |
 | `POST` | `/api/diagnosis` | 새 진단 실행 요청 | `runDiagnosis(payload)` |
 | `GET` | `/api/diagnosis/:id` | 진단 결과 상세 조회 | `getDiagnosisResult(id)` |
-| `GET` | `/api/diagnosis/:id/sources` | 진단 출처 데이터 조회 | — (미구현) |
+| `GET` | `/api/diagnosis/:id/sources` | 진단 출처 데이터 조회 | `getDiagnosisSources(id)` |
 
 > 화면 라우트(`/mypage/knowledge`, `/diagnosis` 등)는 [§5 Routing](#5-routing)의 UI 경로로 위 표의 `/api/...` 경로와는 별개. 화면 라우트는 유지, 실제 백엔드 호출만 `/api` 경로로 연결.
 
@@ -259,17 +255,17 @@ export async function getProducts() {
 
 ### 인증·사용자
 
-- [ ] 실제 로그인 API 연동 및 JWT 토큰 저장 (현재: mock 고정값)
-- [ ] 회원가입 API 연동 (현재: 폼 UI만 존재, 제출 시 navigate만)
-- [ ] 로그아웃 기능
+- [x] 실제 로그인 API 연동 및 JWT 토큰 저장
+- [x] 회원가입 API 연동
+- [x] 로그아웃 기능
 - [ ] 로그인 상태 유지 (LocalStorage / AuthContext)
-- [ ] 마이페이지 사용자 정보 API 연동 (현재: 하드코딩)
+- [x] 마이페이지 사용자 정보 API 연동
 
 ### 진단
 
-- [ ] 새 진단 제출 시 실제 API 호출 (현재: 항상 `diag-001`로 이동)
+- [x] 새 진단 제출 시 실제 API 호출 및 반환 id로 이동
 - [ ] 진단 진행 상태 폴링 / WebSocket 실시간 업데이트
-- [ ] "저장된 제품 지식 불러오기" 버튼 동작 연결
+- [x] "저장된 제품 지식 불러오기" 버튼 동작 연결
 - [ ] 진단 저장·삭제 기능
 
 ### 제품 지식

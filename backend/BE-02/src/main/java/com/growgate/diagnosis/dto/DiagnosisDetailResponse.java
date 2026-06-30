@@ -5,6 +5,7 @@ import lombok.Builder;
 import lombok.Getter;
 
 import java.util.List;
+import java.util.Map;
 
 @Getter
 @Builder
@@ -29,6 +30,10 @@ public class DiagnosisDetailResponse {
         private List<RiskItem> riskItems;
         private ActionRoadmap actionRoadmap;
         private List<String> evidenceSources;
+        private Map<String, Object> agentTrace;
+        private Map<String, Object> stageCards;
+        private String reportMarkdown;
+        private boolean reportFastApiUsed;
     }
 
     @Getter

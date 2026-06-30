@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
@@ -22,14 +23,11 @@ public class JwtTokenProvider {
     public JwtTokenProvider(
             @Value("${jwt.secret}") String secret,
             @Value("${jwt.expiration}") long expiration) {
-        byte[] keyBytes = secret.getBytes(StandardCharsets.UTF_8);
+        byte[] keyBytes = resolveKeyBytes(secret);
         if (keyBytes.length < 32) {
-            byte[] padded = new byte[32];
-            System.arraycopy(keyBytes, 0, padded, 0, keyBytes.length);
-            this.key = Keys.hmacShaKeyFor(padded);
-        } else {
-            this.key = Keys.hmacShaKeyFor(keyBytes);
+            throw new IllegalArgumentException("jwt.secret은 HS256 기준 32 bytes 이상이어야 합니다.");
         }
+        this.key = Keys.hmacShaKeyFor(keyBytes);
         this.expiration = expiration;
     }
 
@@ -54,6 +52,15 @@ public class JwtTokenProvider {
         return claims.getSubject();
     }
 
+    public long getExpirationEpochMillis(String token) {
+        Claims claims = Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody();
+        return claims.getExpiration().getTime();
+    }
+
     public boolean validateToken(String token) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
@@ -61,5 +68,18 @@ public class JwtTokenProvider {
         } catch (JwtException | IllegalArgumentException e) {
             return false;
         }
+    }
+
+    private byte[] resolveKeyBytes(String secret) {
+        if (secret == null || secret.isBlank()) {
+            throw new IllegalArgumentException("jwt.secret 설정이 필요합니다.");
+        }
+        try {
+            byte[] decoded = Base64.getDecoder().decode(secret);
+            if (decoded.length >= 32) return decoded;
+        } catch (IllegalArgumentException ignored) {
+            // Plain text secrets are accepted below when they are strong enough.
+        }
+        return secret.getBytes(StandardCharsets.UTF_8);
     }
 }

@@ -13,5 +13,7 @@ public interface BuyerRequirementRepository extends JpaRepository<BuyerRequireme
 
     List<BuyerRequirement> findByProductId(String productId);
 
+    List<BuyerRequirement> findByProductIdIn(List<String> productIds);
+
     Optional<BuyerRequirement> findByIdAndProductId(String id, String productId);
 }

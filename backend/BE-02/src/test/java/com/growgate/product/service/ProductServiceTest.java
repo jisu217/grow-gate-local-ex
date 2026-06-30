@@ -107,11 +107,11 @@ class ProductServiceTest {
 
         when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
         when(membershipRepository.findFirstByUserId("user-1")).thenReturn(Optional.empty());
-        when(productRepository.findByOwnerIdOrderByUpdatedAtDesc("user-1")).thenReturn(List.of(product));
-        when(knowledgeRepository.findByProductId("product-1")).thenReturn(Optional.empty());
-        when(certificationRepository.findByProductId("product-1")).thenReturn(List.of());
-        when(ftoRepository.findByProductId("product-1")).thenReturn(List.of());
-        when(buyerRequirementRepository.findByProductId("product-1")).thenReturn(List.of());
+        when(productRepository.findByOwnerIdAndDeletedAtIsNullOrderByUpdatedAtDesc("user-1")).thenReturn(List.of(product));
+        when(knowledgeRepository.findByProductIdIn(List.of("product-1"))).thenReturn(List.of());
+        when(certificationRepository.findByProductIdIn(List.of("product-1"))).thenReturn(List.of());
+        when(ftoRepository.findByProductIdIn(List.of("product-1"))).thenReturn(List.of());
+        when(buyerRequirementRepository.findByProductIdIn(List.of("product-1"))).thenReturn(List.of());
 
         ProductListResponse response = productService.getList("user-1");
 
@@ -120,7 +120,7 @@ class ProductServiceTest {
         assertThat(summary.getHsCode()).isEqualTo("853710");
         assertThat(summary.getTargetCountry()).isEqualTo("미국");
         assertThat(summary.getDescription()).isEqualTo("보호회로 제어 모듈");
-        verify(productRepository).findByOwnerIdOrderByUpdatedAtDesc("user-1");
+        verify(productRepository).findByOwnerIdAndDeletedAtIsNullOrderByUpdatedAtDesc("user-1");
     }
 
     private User user(String id, UserType type) {

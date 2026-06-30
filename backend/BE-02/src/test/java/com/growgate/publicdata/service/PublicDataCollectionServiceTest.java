@@ -1,0 +1,139 @@
+package com.growgate.publicdata.service;
+
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.growgate.publicdata.entity.PublicDataCollectionRun;
+import com.growgate.publicdata.entity.PublicDataRecord;
+import com.growgate.publicdata.enums.PublicDataCollectionStatus;
+import com.growgate.publicdata.enums.PublicDataProvider;
+import com.growgate.publicdata.repository.PublicDataCollectionRunRepository;
+import com.growgate.publicdata.repository.PublicDataRecordRepository;
+import com.growgate.user.entity.User;
+import com.growgate.user.enums.UserType;
+import com.growgate.user.repository.UserRepository;
+import org.junit.jupiter.api.Test;
+import org.springframework.test.util.ReflectionTestUtils;
+
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+
+class PublicDataCollectionServiceTest {
+
+    @Test
+    void collectForDiagnosisPersistsFallbackRecordsWhenLiveCollectionDisabled() {
+        PublicDataConnector connector = mock(PublicDataConnector.class);
+        when(connector.provider()).thenReturn(PublicDataProvider.KCS_TRADE);
+        when(connector.usedFor()).thenReturn("market");
+        when(connector.requestKey(any(PublicDataRequest.class))).thenReturn("KCS_TRADE:850760:DE");
+
+        PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
+        PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        User user = user("user-1");
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(runRepository.save(any(PublicDataCollectionRun.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.save(any(PublicDataRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.findTopByProviderAndRequestKeyAndExpiresAtAfterOrderByFetchedAtDesc(
+                eq(PublicDataProvider.KCS_TRADE), eq("KCS_TRADE:850760:DE"), any(LocalDateTime.class)))
+                .thenReturn(Optional.empty());
+
+        PublicDataCollectionService service = service(
+                List.of(connector), runRepository, recordRepository, userRepository);
+        ReflectionTestUtils.setField(service, "enabled", false);
+        ReflectionTestUtils.setField(service, "cacheTtlHours", 24L);
+
+        PublicDataCollectionResult result = service.collectForDiagnosis(
+                "diagnosis-1", "user-1", "850760", "독일", "배터리팩");
+
+        assertThat(result.getRun().getStatus()).isEqualTo(PublicDataCollectionStatus.failed);
+        assertThat(result.getRun().getFallbackCount()).isEqualTo(1);
+        assertThat(result.getRecords()).hasSize(1);
+        assertThat(result.getRecords().get(0).isFallbackUsed()).isTrue();
+        assertThat(result.getRecords().get(0).getErrorMessage()).isEqualTo("PUBLIC_DATA_ENABLED=false");
+        verify(connector, never()).collect(any(PublicDataRequest.class));
+    }
+
+    @Test
+    void collectForDiagnosisReusesValidCacheBeforeCallingConnector() {
+        PublicDataConnector connector = mock(PublicDataConnector.class);
+        when(connector.provider()).thenReturn(PublicDataProvider.KCS_TRADE);
+        when(connector.usedFor()).thenReturn("market");
+        when(connector.requestKey(any(PublicDataRequest.class))).thenReturn("KCS_TRADE:850760:DE");
+
+        PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
+        PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        User user = user("user-1");
+        PublicDataRecord cached = PublicDataRecord.builder()
+                .provider(PublicDataProvider.KCS_TRADE)
+                .endpoint("https://api.example.test/kcs")
+                .requestKey("KCS_TRADE:850760:DE")
+                .hsCode("850760")
+                .targetCountry("DE")
+                .matchedKey("hsCode=850760;country=DE")
+                .usedFor("market")
+                .rawPayload("{\"ok\":true}")
+                .normalizedPayload("{\"signal\":\"live\"}")
+                .scoreContribution(8)
+                .fallbackUsed(false)
+                .cacheHit(false)
+                .fetchedAt(LocalDateTime.now().minusMinutes(10))
+                .expiresAt(LocalDateTime.now().plusHours(2))
+                .build();
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(runRepository.save(any(PublicDataCollectionRun.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.save(any(PublicDataRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.findTopByProviderAndRequestKeyAndExpiresAtAfterOrderByFetchedAtDesc(
+                eq(PublicDataProvider.KCS_TRADE), eq("KCS_TRADE:850760:DE"), any(LocalDateTime.class)))
+                .thenReturn(Optional.of(cached));
+
+        PublicDataCollectionService service = service(
+                List.of(connector), runRepository, recordRepository, userRepository);
+        ReflectionTestUtils.setField(service, "enabled", true);
+        ReflectionTestUtils.setField(service, "cacheTtlHours", 24L);
+
+        PublicDataCollectionResult result = service.collectForDiagnosis(
+                "diagnosis-1", "user-1", "850760", "DE", "배터리팩");
+
+        assertThat(result.getRun().getStatus()).isEqualTo(PublicDataCollectionStatus.done);
+        assertThat(result.getRun().getCacheHitCount()).isEqualTo(1);
+        assertThat(result.getRecords()).hasSize(1);
+        assertThat(result.getRecords().get(0).isCacheHit()).isTrue();
+        assertThat(result.getRecords().get(0).getScoreContribution()).isEqualTo(8);
+        verify(connector, never()).collect(any(PublicDataRequest.class));
+    }
+
+    private PublicDataCollectionService service(List<PublicDataConnector> connectors,
+                                                PublicDataCollectionRunRepository runRepository,
+                                                PublicDataRecordRepository recordRepository,
+                                                UserRepository userRepository) {
+        return new PublicDataCollectionService(
+                connectors,
+                runRepository,
+                recordRepository,
+                userRepository,
+                new ObjectMapper()
+        );
+    }
+
+    private User user(String id) {
+        return User.builder()
+                .id(id)
+                .email(id + "@growgate.local")
+                .passwordHash("encoded")
+                .name("테스트 사용자")
+                .userType(UserType.personal)
+                .build();
+    }
+}

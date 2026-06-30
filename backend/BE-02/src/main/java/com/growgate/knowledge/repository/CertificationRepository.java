@@ -13,5 +13,7 @@ public interface CertificationRepository extends JpaRepository<Certification, St
 
     List<Certification> findByProductId(String productId);
 
+    List<Certification> findByProductIdIn(List<String> productIds);
+
     Optional<Certification> findByIdAndProductId(String id, String productId);
 }

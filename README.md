@@ -1,7 +1,7 @@
 # GROW-GATE Local EX
 
-> 지역 제조기업을 위한 수출 규제·인증 실행 AI 에이전트.
-> 공공데이터를 시장성, 인증, 리콜, 특허/FTO, 지원사업, 30·60·90일 실행계획으로 연결하는 로컬 시연형 프로토타입입니다.
+> 지역 제조기업을 위한 수출 규제·인증 실행 진단 서비스.
+> 제출용 메인 앱은 React FE-02 + Spring Boot BE-02이며, 제품·HS Code·대상국·제품 지식과 공공데이터 출처 신호를 수출 준비도와 30·60·90일 실행계획으로 연결합니다.
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB)
 ![FastAPI](https://img.shields.io/badge/FastAPI-local%20API-009688)
@@ -36,6 +36,8 @@
 | React FE | `frontend/FE-02/` | React 18 + Vite | [frontend/FE-02/README.md](frontend/FE-02/README.md) |
 | Spring Boot BE | `backend/BE-02/` | Spring Boot 3.4 + MySQL | [backend/BE-02/README.md](backend/BE-02/README.md) |
 
+최근 제출 보완 내역은 [docs/submission-update-report.md](docs/submission-update-report.md)에 정리했습니다. 첨부 평가 항목별 완료/미완료 판정은 [docs/evaluation-resolution-status.md](docs/evaluation-resolution-status.md)에서 확인할 수 있습니다.
+
 | 홈 | AI 진단 결과 |
 | :--- | :--- |
 | ![홈 화면](docs/screenshot-home.png) | ![진단 결과 화면](docs/screenshot-diagnosis.png) |
@@ -60,8 +62,9 @@ GROW-GATE Local EX는 이 질문을 공공데이터 기반 실행 보드로 바�
 
 | 영역 | 기능 |
 | :--- | :--- |
-| AI 진단 | 기업·제품·HS Code·대상국을 입력하면 수출 준비도와 실행 우선순위를 계산 |
-| 공공데이터 파이프라인 | 관세청, KOTRA, Safety Korea, KIPRIS, 지원사업 데이터를 화면별 근거로 추적 |
+| 진단 실행 | 기업·제품·HS Code·대상국을 입력하면 Spring API가 실제 진단 run을 생성하고 결과 id로 이동 |
+| 규칙 기반 스코어링 | HS Code, 대상국, 인증 만료, FTO 위험, 바이어 요구사항, 지식 신뢰도, 출처 수를 점수에 반영 |
+| 공공데이터 근거 추적 | 관세청, KOTRA, Safety Korea, KIPRIS, 지원사업 live/cache/fallback 수집 record를 `sourceId`, `matchedKey`, `usedFor`, `scoreContribution`으로 반환 |
 | 실행 로드맵 | 30·60·90일 단위로 담당자, 산출물, 시험·인증 태스크를 정리 |
 | 팀 운영실 | 데이터 활용도, 부족 데이터, 역할자별 기획 완성도, 입상 가능성, 개선 액션을 점수화 |
 | 코드 게이트 | 리뷰 체크리스트, 커밋 전 확인, 로컬 Git 커밋, GitHub push 가이드를 제공 |
@@ -70,15 +73,15 @@ GROW-GATE Local EX는 이 질문을 공공데이터 기반 실행 보드로 바�
 
 ## 4. Public Data Coverage
 
-| Source | Target Table | Used For |
+| Source | Current Implementation | Used For |
 | :--- | :--- | :--- |
-| 관세청 수출입무역통계 GW | `trade_signal` | HS Code·대상국 기반 시장성 점수 |
-| KOTRA 글로벌 공급망 인사이트 | `country_profile` | 공급망 이슈, 바이어 요구, 국가별 로드맵 메모 |
-| Safety Korea 제품 안전인증 및 리콜 정보 | `recall_case` | 유사 리콜 위험, 시험 전 체크리스트, FMEA 초안 |
-| KIPRIS Plus Open API | `patent_signal` | BMS·보호회로·열관리 FTO 1차 위험지도 |
-| 수출바우처·해외규격인증·지역TP 공고 | `support_program` | 인증 갭 기반 지원사업 추천 |
+| 관세청 수출입무역통계 GW | 기본 endpoint `http://apis.data.go.kr/1220000/Newtrade/getNewtradeList`, `KCS_TRADE_API_KEY` 또는 `DATAGO_SERVICE_KEY`로 live 수집 | 시장성 점수 contribution |
+| KOTRA 글로벌 공급망 인사이트 | 기본 공식 카탈로그 `https://www.data.go.kr/data/15122648/openapi.do`, 승인 후 `KOTRA_MARKET_API_URL`에 operation endpoint 설정 | 국가별 실행 메모와 지원 적합도 |
+| Safety Korea 제품 안전인증 및 리콜 정보 | 기본 공식 안내 `https://www.safetykorea.kr/release/openapi`, 실제 operation endpoint 설정 시 live 수집 | 규제·리콜 점수 contribution |
+| KIPRIS Plus Open API | 기본 공식 신청 페이지 `https://plus.kipris.or.kr/eng/main/contents.do?menuNo=300024`, `KIPRIS_API_KEY` 또는 `KIPRIS_PLUS_KEY` 사용 | 특허/FTO 점수 contribution |
+| 기업마당·지원사업 | 기본 공식 포털 `https://www.exportvoucher.com/`, 실제 operation endpoint 설정 시 live 수집 | 지원사업/실행 가능성 점수 |
 
-팀 운영실의 공공데이터 카드를 클릭하면 활용 내역, 실제 코드 연결, 데이터 형태, 간단 통계를 즉시 볼 수 있습니다.
+현재 제출용 Spring 앱은 API key와 실제 호출 endpoint가 있으면 live 공공 API를 호출하고, key가 없거나 호출이 실패하면 `public_data_collection_runs`, `public_data_records`에 fallback 사유를 저장합니다. 공식 카탈로그/신청 페이지 URL은 출처 추적용 기본값으로 보존하되, HTML 상세 페이지를 API 응답으로 저장하지 않도록 fallback 처리합니다. 메인 진단 결과에는 live/cache/fallback 여부와 점수 기여도가 표시됩니다.
 
 ---
 
@@ -98,15 +101,32 @@ grow_gate_local_ex_demo/frontend/
 
 ## 6. Quick Start
 
-### 1. HTML만 열기
+### 1. 제출용 메인 앱 실행
 
-브라우저에서 아래 파일을 직접 열 수 있습니다.
+Spring Boot와 React를 함께 실행합니다.
 
-```text
-grow_gate_local_ex_demo/frontend/index.html
+```bash
+cd backend/BE-02
+export DB_PASSWORD=your_local_db_password
+export JWT_SECRET=$(openssl rand -base64 32)
+export JPA_DDL_AUTO=update   # 빈 로컬 DB에서 빠르게 실행할 때만 사용. 제출/운영 기본값은 validate
+export PUBLIC_DATA_ENABLED=true
+./gradlew bootRun
 ```
 
-### 2. 정적 서버로 보기
+```bash
+cd frontend/FE-02
+npm install
+npm run dev
+```
+
+Open:
+
+```text
+http://localhost:5173
+```
+
+### 2. 보조 정적 데모 보기
 
 ```bash
 cd grow_gate_local_ex_demo
@@ -135,8 +155,17 @@ GET  /pipeline/preview
 GET  /public-data/sources
 GET  /public-data/normalized
 POST /public-data/collect
+GET  /public-data/runs
+GET  /public-data/records
 POST /analyze
 POST /report
+```
+
+Spring 메인 앱에서 FastAPI agent/report bridge를 함께 쓰려면 FastAPI를 먼저 실행한 뒤 Spring 환경변수에 아래 값을 추가합니다.
+
+```bash
+export APP_FASTAPI_ENABLED=true
+export APP_FASTAPI_BASE_URL=http://localhost:8000
 ```
 
 ---
@@ -168,14 +197,13 @@ GROW_GATE_GIT_TOKEN="local-only-token" \
 
 ```mermaid
 flowchart LR
-  A["Product Input<br/>company, HS code, target market"] --> B["FastAPI Agent Layer"]
-  C["Public Data Sources"] --> D["Normalization Pipeline"]
-  D --> B
-  B --> E["Market / Regulation / Recall / FTO / Support Scores"]
-  E --> F["30·60·90 Roadmap"]
-  E --> G["Team Operations Dashboard"]
-  H["Local Git Repository"] --> I["Code Gate"]
-  I --> J["Commit / Push Guide"]
+  A["Product Input<br/>company, HS code, target market"]
+  A --> S["Spring Diagnosis API"]
+  K["Product Knowledge DB<br/>certs, FTO, buyers, sources"] --> S
+  C["Public Data Source Signals"] --> S
+  S --> E["Market / Regulation / Recall / FTO / Support Scores"]
+  E --> F["30·60·90 Roadmap + Source Trace"]
+  D["FastAPI/HTML Demo"] -. optional prototype .-> C
 ```
 
 ---
