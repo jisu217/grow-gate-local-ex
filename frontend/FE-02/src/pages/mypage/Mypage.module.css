@@ -146,6 +146,12 @@
 .add { font-family: var(--kr); font-weight: 700; font-size: 13.5px; color: var(--blue); background: #eaf1ff; border: 1px solid #d6e3ff; padding: 9px 16px; border-radius: 11px; cursor: pointer; transition: .15s; display: inline-flex; align-items: center; gap: 6px; }
 .add:hover { background: #dde9ff; transform: translateY(-1px); }
 .plist { display: flex; flex-direction: column; gap: 10px; }
+/* 내 제품 관리 목록 페이지네이션 */
+.ppager { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 16px; }
+.ppBtn { font-family: var(--kr); font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; transition: .15s; }
+.ppBtn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); background: #f4f8ff; }
+.ppBtn:disabled { opacity: .45; cursor: default; }
+.ppInfo { font-family: var(--en); font-size: 13px; font-weight: 700; color: var(--mute); min-width: 44px; text-align: center; }
 .prow { display: flex; align-items: center; gap: 16px; padding: 15px 18px; border: 1px solid var(--line); border-radius: 14px; transition: .15s; }
 .prow:hover { border-color: #d6e3ff; background: #f9fbff; }
 .prow.cur { border-color: var(--blue); background: #f4f8ff; box-shadow: 0 0 0 1px var(--blue) inset; }
@@ -161,6 +167,9 @@
 .ab:hover { border-color: #c4cee2; color: var(--ink); }
 .abPrimary { background: var(--blue); color: #fff; border-color: var(--blue); }
 .abPrimary:hover { background: #2559e0; }
+/* 삭제(위험) 버튼 */
+.abDanger { color: #e2504a; }
+.abDanger:hover { border-color: #e2504a; color: #e2504a; background: #fdecea; }
 
 /* modal */
 .modal { position: fixed; inset: 0; z-index: 50; background: rgba(11,21,48,.5); backdrop-filter: blur(3px); display: none; align-items: center; justify-content: center; padding: 20px; }
@@ -180,6 +189,10 @@
 .cancel:hover { background: #e3e6ee; }
 .save { background: var(--blue); color: #fff; box-shadow: 0 8px 20px rgba(47,107,255,.3); }
 .save:hover { transform: translateY(-1px); }
+/* 삭제 확인용 위험 버튼 */
+.saveDanger { background: #e2504a; color: #fff; box-shadow: 0 8px 20px rgba(226,80,74,.3); }
+.saveDanger:hover { transform: translateY(-1px); }
+.saveDanger:disabled, .cancel:disabled { opacity: .6; cursor: default; transform: none; }
 
 /* footer */
 .footer { border-top: 1px solid var(--line); margin-top: 50px; padding: 26px 0 50px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }

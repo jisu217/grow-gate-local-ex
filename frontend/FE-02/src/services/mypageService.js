@@ -130,6 +130,12 @@ export async function updateMypageProduct(id, { name, hs, country, description, 
   return { id, name, hs, country, description, category }
 }
 
+// 제품 삭제 — DELETE /api/products/{id} (백엔드 소프트 삭제: 감사 로그·진단 이력은 보존)
+export async function deleteMypageProduct(id) {
+  await apiFetch(`/products/${id}`, { method: 'DELETE' })
+  return { id }
+}
+
 // AI 진단 다시 실행 — 실제 진단 생성 API로 연결
 export async function rerunDiagnosis(productId, targetCountry) {
   return apiFetch('/diagnosis', {

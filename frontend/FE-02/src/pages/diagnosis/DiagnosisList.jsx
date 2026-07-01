@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import styles from './DiagnosisList.module.css'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
 import { getDiagnosisList } from '../../services/diagnosisService.js'
@@ -12,11 +12,15 @@ const STATUS_MAP = {
   failed:  { label: '실패',    cls: styles.failed  },
 }
 
+// 한 페이지에 보여줄 진단 이력 수
+const ITEMS_PER_PAGE = 5
+
 // 진단 이력 목록 페이지 컴포넌트
 export default function DiagnosisList() {
   const navigate = useNavigate()
   const [list, setList] = useState([])
   const [pageState, setPageState] = useState('loading')
+  const [page, setPage] = useState(0)
 
   useEffect(() => {
     getDiagnosisList()
@@ -24,21 +28,25 @@ export default function DiagnosisList() {
       .catch(() => setPageState('error'))
   }, [])
 
+  // 페이지네이션 (범위 자동 보정)
+  const pageCount = Math.max(1, Math.ceil(list.length / ITEMS_PER_PAGE))
+  const safePage = Math.min(page, pageCount - 1)
+  const pagedList = list.slice(safePage * ITEMS_PER_PAGE, safePage * ITEMS_PER_PAGE + ITEMS_PER_PAGE)
+
   return (
     <>
-      <header className={styles.topbar}>
-        <Link to="/" className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></Link>
-      </header>
-
       <div className={styles.wrap}>
       <div className={styles.header}>
         <div>
           <h1 className={styles.title}>AI 진단 이력</h1>
           <p className={styles.sub}>요청한 진단 목록과 분석 결과를 확인하세요.</p>
         </div>
-        <button className={styles.newBtn} onClick={() => navigate('/diagnosis/new')}>
-          + 새 진단 시작
-        </button>
+        {/* 빈 화면에는 아래 전용 CTA가 있으므로 목록이 있을 때만 헤더 버튼 노출 */}
+        {!(pageState === 'ok' && list.length === 0) && (
+          <button className={styles.newBtn} onClick={() => navigate('/diagnosis/new')}>
+            + 새 진단 시작
+          </button>
+        )}
       </div>
 
       {pageState === 'loading' && (
@@ -48,12 +56,30 @@ export default function DiagnosisList() {
         <StatusMessage type="error" message="현재 진단을 불러오지 못했습니다. 잠시 후 다시 시도해주세요." />
       )}
       {pageState === 'ok' && list.length === 0 && (
-        <StatusMessage type="empty" message="아직 진단 이력이 없습니다. 새 진단을 시작해보세요." />
+        <div className={styles.empty}>
+          <div className={styles.emptyIcon}>
+            <svg fill="none" strokeWidth="2" viewBox="0 0 24 24" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" />
+            </svg>
+          </div>
+          <h3 className={styles.emptyTitle}>아직 진단한 제품이 없어요</h3>
+          <p className={styles.emptyDesc}>
+            제품을 등록하면 첫 AI 진단이 여기서 시작됩니다. 아래 3단계면 충분해요.
+          </p>
+          <div className={styles.steps}>
+            <span className={styles.step}><b>1</b> 제품 등록</span>
+            <span className={styles.step}><b>2</b> 대상국 선택</span>
+            <span className={styles.step}><b>3</b> 진단 실행</span>
+          </div>
+          <button className={styles.emptyCta} onClick={() => navigate('/diagnosis/new')}>
+            제품 등록하고 진단 시작 →
+          </button>
+        </div>
       )}
 
-      {pageState === 'ok' && (
+      {pageState === 'ok' && list.length > 0 && (
         <div className={styles.list}>
-          {list.map((diag) => {
+          {pagedList.map((diag) => {
             const status = STATUS_MAP[diag.status] ?? { label: diag.status ?? '알 수 없음', cls: styles.pending }
             return (
               <div
@@ -96,6 +122,27 @@ export default function DiagnosisList() {
               </div>
             )
           })}
+
+          {/* 진단 이력이 한 페이지를 넘으면 페이지네이션 노출 */}
+          {pageCount > 1 && (
+            <div className={styles.pager}>
+              <button
+                className={styles.pagerBtn}
+                onClick={() => setPage((n) => Math.max(0, n - 1))}
+                disabled={safePage === 0}
+              >
+                ← 이전
+              </button>
+              <span className={styles.pagerInfo}>{safePage + 1} / {pageCount}</span>
+              <button
+                className={styles.pagerBtn}
+                onClick={() => setPage((n) => Math.min(pageCount - 1, n + 1))}
+                disabled={safePage >= pageCount - 1}
+              >
+                다음 →
+              </button>
+            </div>
+          )}
         </div>
       )}
       </div>

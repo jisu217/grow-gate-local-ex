@@ -1,6 +1,6 @@
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import styles from './Home.module.css'
-import { getAuthUser, logout } from '../../services/authService.js'
+import TopNav from '../../components/layout/TopNav.jsx'
 
 // 파트너 목록
 const PARTNERS = ['관세청', 'KOTRA', 'KTL', 'SafetyKorea', 'KIPRIS', '기업마당', 'EU']
@@ -73,14 +73,6 @@ function HeroMap() {
 // 랜딩 홈 페이지 컴포넌트
 export default function Home() {
   const navigate = useNavigate()
-  const user = getAuthUser() // 로그인 정보 (없으면 null)
-
-  // 로그아웃 → 홈 새로고침 효과(상태 갱신)
-  const handleLogout = async () => {
-    await logout()
-    navigate('/', { replace: true })
-    window.location.reload()
-  }
 
   return (
     <>
@@ -92,20 +84,10 @@ export default function Home() {
         <div className={styles.bgGrid} />
       </div>
 
-      <div className={styles.page}>
+      {/* 공통 고정 내비게이션 */}
+      <TopNav />
 
-        {/* 내비게이션 */}
-        <nav className={styles.nav}>
-          <Link to="/" className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></Link>
-          <div className={styles.navLinks}>
-            <Link to="/" className={styles.active}>홈</Link>
-            <Link to="/diagnosis">AI 진단 이력</Link>
-            <Link to="/mypage">마이페이지</Link>
-            {user
-              ? <button className={styles.navLogout} onClick={handleLogout}>로그아웃</button>
-              : <Link to="/login">로그인</Link>}
-          </div>
-        </nav>
+      <div className={styles.page}>
 
         {/* 히어로 */}
         <section className={styles.hero}>
@@ -130,13 +112,13 @@ export default function Home() {
             <b style={{color:'var(--blue)'}}> 점수·근거·30/60/90일 실행계획</b>으로 정리합니다.
           </p>
 
-          {/* CTA */}
+          {/* CTA — 시작 동선은 '진단 시작'(제품 입력) 하나로 통일 */}
           <div className={styles.heroCta}>
-            <button className={`${styles.btn} ${styles.primary}`} onClick={() => navigate('/diagnosis')}>
-              3분 만에 진단 시작 →
+            <button className={`${styles.btn} ${styles.primary}`} onClick={() => navigate('/diagnosis/new')}>
+              제품 등록하고 진단 시작 →
             </button>
-            <button className={`${styles.btn} ${styles.ghost}`} onClick={() => navigate('/diagnosis/new')}>
-              새 제품으로 바로 진단
+            <button className={`${styles.btn} ${styles.ghost}`} onClick={() => navigate('/diagnosis')}>
+              내 진단 이력 보기
             </button>
           </div>
 
@@ -192,7 +174,7 @@ export default function Home() {
           <p className={styles.ctaBandP}>제품명과 HS Code만 있으면 됩니다. 5분 뒤, 손에 잡히는 실행 리포트가 됩니다.</p>
           <button
             className={`${styles.btn} ${styles.ctaBandBtn}`}
-            onClick={() => navigate('/diagnosis')}
+            onClick={() => navigate('/diagnosis/new')}
           >
             3분 만에 진단 시작 →
           </button>

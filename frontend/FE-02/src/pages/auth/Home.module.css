@@ -99,6 +99,8 @@
 
 /* 공모전 출품 뱃지 */
 .badge {
+  position: relative;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   gap: 12px;
@@ -133,12 +135,14 @@
 
 /* 히어로 메인 타이틀 */
 .h1 {
-  font-size: 74px;
+  position: relative;
+  z-index: 2;
+  font-size: 54px;
   font-weight: 800;
-  letter-spacing: -.035em;
-  line-height: 1.02;
+  letter-spacing: -.03em;
+  line-height: 1.1;
   color: #0b1530;
-  max-width: 880px;
+  max-width: 620px;
 }
 /* 그라디언트 강조 텍스트 */
 .hl {
@@ -150,6 +154,8 @@
 
 /* 히어로 부제 */
 .lead {
+  position: relative;
+  z-index: 2;
   font-size: 20px;
   color: var(--slate);
   margin-top: 26px;
@@ -159,6 +165,8 @@
 
 /* 히어로 CTA 버튼 그룹 */
 .heroCta {
+  position: relative;
+  z-index: 2;
   display: flex;
   gap: 13px;
   margin-top: 38px;
@@ -230,12 +238,12 @@
 /* 수출 네트워크 SVG 맵 */
 .heromap {
   position: absolute;
-  right: -60px;
-  top: 90px;
-  width: 720px;
-  height: 560px;
+  right: -120px;
+  top: 120px;
+  width: 640px;
+  height: 500px;
   z-index: 1;
-  opacity: .92;
+  opacity: .6;
   pointer-events: none;
 }
 /* 국가 라벨 텍스트 */
