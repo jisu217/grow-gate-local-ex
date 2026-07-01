@@ -39,7 +39,7 @@ npm run build
 ## Production Smoke Test
 
 ```bash
-BASE_URL=http://3.36.60.121 ./scripts/smoke-prod.sh
+BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/smoke-prod.sh
 ```
 
 The smoke script checks health, unauthenticated 401, signup/login, `/api/users/me`, product create, diagnosis create/polling, sources, PDF report download, and public-data run counts.
@@ -55,3 +55,23 @@ BASE_URL=https://your-domain.example \
 
 - `SMOKE_CORS_ORIGIN` verifies the deployed API CORS preflight headers for browser API calls.
 - `SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true` fails if the run records no live public-data success. Use it only on the presentation server after API keys and operation endpoints are configured.
+
+## Demo Scenario Setup
+
+```bash
+BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/setup-demo-scenario.sh
+```
+
+This creates a complete presentation scenario through the deployed API: signup/login, product creation, manager-verified knowledge, certifications, FTO, buyer requirements, source documents, public-data collection, diagnosis polling, source trace retrieval, PDF download, and one approved self-loop knowledge item.
+
+Use HTTPS after the domain is attached:
+
+```bash
+BASE_URL=https://your-domain.example ./scripts/setup-demo-scenario.sh
+```
+
+Require at least one live public-data success on a fully configured presentation server:
+
+```bash
+DEMO_REQUIRE_LIVE_PUBLIC_DATA=true BASE_URL=https://your-domain.example ./scripts/setup-demo-scenario.sh
+```

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BASE_URL="${1:-${BASE_URL:-http://3.36.60.121}}"
+BASE_URL="${1:-${BASE_URL:-https://growgate.54.180.56.24.sslip.io}}"
 BASE_URL="${BASE_URL%/}"
 EMAIL="${SMOKE_EMAIL:-smoke-$(date +%s)@growgate.local}"
 PASSWORD="${SMOKE_PASSWORD:-SmokePass123!}"
@@ -10,6 +10,8 @@ HS_CODE="${SMOKE_HS_CODE:-850760}"
 TARGET_COUNTRY="${SMOKE_TARGET_COUNTRY:-DE}"
 SMOKE_CORS_ORIGIN="${SMOKE_CORS_ORIGIN:-}"
 SMOKE_REQUIRE_LIVE_PUBLIC_DATA="${SMOKE_REQUIRE_LIVE_PUBLIC_DATA:-false}"
+SMOKE_CONNECT_TIMEOUT="${SMOKE_CONNECT_TIMEOUT:-10}"
+SMOKE_MAX_TIME="${SMOKE_MAX_TIME:-45}"
 
 LOG_DIR="${SMOKE_LOG_DIR:-/tmp/growgate-smoke}"
 mkdir -p "$LOG_DIR"
@@ -39,12 +41,14 @@ request() {
   fi
   if [[ -n "$body" ]]; then
     curl -sS -o "$output" -D "$header_file" -w "%{http_code}" -X "$method" "$BASE_URL$path" \
+      --connect-timeout "$SMOKE_CONNECT_TIMEOUT" --max-time "$SMOKE_MAX_TIME" \
       -b "$COOKIE_JAR" -c "$COOKIE_JAR" \
-      -H "Content-Type: application/json" "${auth_args[@]}" -d "$body" > "$status_file"
+      -H "Content-Type: application/json" ${auth_args[@]+"${auth_args[@]}"} -d "$body" > "$status_file"
   else
     curl -sS -o "$output" -D "$header_file" -w "%{http_code}" -X "$method" "$BASE_URL$path" \
+      --connect-timeout "$SMOKE_CONNECT_TIMEOUT" --max-time "$SMOKE_MAX_TIME" \
       -b "$COOKIE_JAR" -c "$COOKIE_JAR" \
-      "${auth_args[@]}" > "$status_file"
+      ${auth_args[@]+"${auth_args[@]}"} > "$status_file"
   fi
 }
 
@@ -59,6 +63,7 @@ if [[ -n "$SMOKE_CORS_ORIGIN" ]]; then
   CORS_OUT="$LOG_DIR/cors-preflight.txt"
   CORS_HEADERS="$LOG_DIR/cors-preflight.headers"
   curl -sS -o "$CORS_OUT" -D "$CORS_HEADERS" -w "%{http_code}" -X OPTIONS "$BASE_URL/api/users/me" \
+    --connect-timeout "$SMOKE_CONNECT_TIMEOUT" --max-time "$SMOKE_MAX_TIME" \
     -H "Origin: $SMOKE_CORS_ORIGIN" \
     -H "Access-Control-Request-Method: GET" \
     -H "Access-Control-Request-Headers: authorization,content-type" > "$CORS_OUT.status"
