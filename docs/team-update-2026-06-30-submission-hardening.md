@@ -38,7 +38,7 @@ GROW-GATE Local EX 제출용 메인 앱을 대대적으로 보완했습니다.
 | FastAPI agent | 보조 프로토타입으로만 존재 | Spring에서 optional analyze/report bridge 사용 가능 |
 | API 안정성 | timeout/에러 처리 제한적 | timeout, retry/backoff, 중첩 error message 파싱 |
 | 인증/권한 | localStorage 중심, 권한 fallback 과함 | access token 확인, authorities, service layer 권한 검증 강화 |
-| 토큰 폐기 | logout 후 기존 token 재사용 가능 | in-memory token denylist 기반 logout revocation |
+| 토큰 폐기 | logout 후 기존 token 재사용 가능 | DB hash 기반 logout revocation |
 | 감사/지식 로그 | pagination 부족 | audit log pagination API 구조 반영 |
 | 제품 삭제 | FK 이력 손상 가능 | soft delete로 감사/진단 이력 보존 |
 | 운영 설정 | CORS/log/JPA/public-data 설정 하드코딩 | env 기반 설정과 example 정리 |
@@ -227,7 +227,7 @@ http://localhost:5173/
 - `PUBLIC_DATA_ENABLED=false` 기본 모드에서 fallback record가 의도대로 저장되는지 확인.
 - 실제 발급 key로 `KCS_TRADE` live 호출 smoke test.
 - KOTRA/Safety/KIPRIS operation endpoint 확보 후 env 교체.
-- token revocation이 in-memory라 서버 재시작 시 초기화되는 점을 운영 문서에 반영할지 판단.
+- token revocation은 DB hash 기반으로 보강됨. refresh token rotation과 Redis cache는 운영 고도화 항목으로 별도 판단.
 
 ### 데이터/기획 담당
 

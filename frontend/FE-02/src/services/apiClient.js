@@ -3,21 +3,25 @@ const configuredApiUrl = import.meta.env.VITE_API_URL?.trim() || ''
 const rawApiUrl = configuredApiUrl || (typeof window !== 'undefined' ? window.location.origin : '')
 const normalizedApiUrl = rawApiUrl.replace(/\/+$/, '')
 const API_BASE = normalizedApiUrl.endsWith('/api') ? normalizedApiUrl : `${normalizedApiUrl}/api`
-const TOKEN_KEY = 'gg_access_token'
+const LEGACY_TOKEN_KEY = 'gg_access_token'
 const DEFAULT_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS ?? 15000)
 const DEFAULT_RETRY_COUNT = Number(import.meta.env.VITE_API_RETRY_COUNT ?? 2)
+let memoryAccessToken = null
 
-// accessToken 저장/조회/삭제 (authService에서 로그인·로그아웃 시 호출)
+// accessToken은 XSS 노출면을 줄이기 위해 localStorage에 저장하지 않는다.
+// 새로고침 뒤 인증은 서버가 내려준 HttpOnly cookie가 담당한다.
 export function getAccessToken() {
-  return localStorage.getItem(TOKEN_KEY)
+  return memoryAccessToken
 }
 
 export function setAccessToken(token) {
-  localStorage.setItem(TOKEN_KEY, token)
+  memoryAccessToken = token || null
+  localStorage.removeItem(LEGACY_TOKEN_KEY)
 }
 
 export function clearAccessToken() {
-  localStorage.removeItem(TOKEN_KEY)
+  memoryAccessToken = null
+  localStorage.removeItem(LEGACY_TOKEN_KEY)
 }
 
 // 인증 필요한 API는 저장된 accessToken을 Authorization 헤더로 자동 첨부
@@ -48,6 +52,7 @@ async function apiFetchOnce(path, options = {}) {
   try {
     const res = await fetch(`${API_BASE}${path}`, {
       ...options,
+      credentials: options.credentials ?? 'include',
       signal: options.signal ?? controller.signal,
       headers: {
         ...(hasBody ? { 'Content-Type': 'application/json' } : {}),

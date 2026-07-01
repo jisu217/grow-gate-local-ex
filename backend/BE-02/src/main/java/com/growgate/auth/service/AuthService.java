@@ -72,8 +72,9 @@ public class AuthService {
         return signupPersonal(request);
     }
 
-    public void logout(String authorizationHeader) {
+    public void logout(String authorizationHeader, String cookieToken) {
         String token = resolveBearerToken(authorizationHeader);
+        if (token == null && cookieToken != null && !cookieToken.isBlank()) token = cookieToken;
         if (token == null || !jwtTokenProvider.validateToken(token)) return;
         tokenRevocationService.revoke(token, jwtTokenProvider.getExpirationEpochMillis(token));
     }

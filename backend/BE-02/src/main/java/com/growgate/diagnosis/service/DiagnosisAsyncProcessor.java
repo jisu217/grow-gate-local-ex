@@ -268,6 +268,11 @@ public class DiagnosisAsyncProcessor {
             resultMap.put("actionRoadmap", actionRoadmap);
             resultMap.put("sources", sources);
             resultMap.put("agentTrace", agentLoop.toTrace(agentResult.isPresent(), reportResult.isPresent(), llmResult));
+            resultMap.put("ragRetrieval", Map.of(
+                    "mode", stringValue(ragContext.get("retrievalMode")),
+                    "query", stringValue(ragContext.get("retrievalQuery")),
+                    "topK", ragContext.getOrDefault("retrievalTopK", List.of())
+            ));
             resultMap.put("scoringRubric", buildScoringRubric());
             resultMap.put("stageCards", buildStageCards(productName, hsCode, targetCountry, overall, market,
                     regulation, recall, fto, support, riskItems, actionRoadmap, sources, agentResult.orElse(null),

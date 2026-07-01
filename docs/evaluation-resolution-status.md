@@ -57,7 +57,7 @@
 | 6 | 멤버십이 없으면 admin 처리 | 완료 | `orElse(UserRole.admin)` 제거, 개인 owner/회사 멤버십 기준으로 권한 정리 |
 | 7 | 제품 삭제가 FK를 깨뜨릴 수 있음 | 완료 | 물리 삭제 대신 `deleted_at`, `deleted_by` 기반 soft delete 적용 |
 | 8 | XGBoost가 synthetic data 기반 | 완료 | UI/문서에서 XGBoost 표현을 제거하고 `Rule rubric · LLM assisted`로 구현 수준에 맞춤. 실제 라벨 ML은 후속 과제로 유지 |
-| 9 | RAG가 vector retrieval 수준이 아님 | 부분 완료 | pgvector 주장은 하지 않고 DB context injection + knowledge loop로 범위를 명확화. vector retrieval은 후속 과제로 유지 |
+| 9 | RAG가 vector retrieval 수준이 아님 | 완료 | pgvector 주장은 하지 않고 DB chunk 기반 BM25-lite top-k retrieval을 `ragRetrieval.topK`에 저장. embedding/vector index는 후속 과제 |
 | 10 | README와 실제 코드 수준 불일치 | 완료 | 제출용 메인 앱 범위, FastAPI 보조 성격, 남은 한계를 README와 보완 보고서에 반영 |
 
 ## 5. 프론트엔드 세부 항목
@@ -145,4 +145,4 @@
 다만 “모든 점수가 항상 실시간 공공 API만으로 계산되는 AI/RAG 서비스”라고 주장하면 아직 방어가 어렵다. 제출 표현은 아래처럼 잡는 것이 안전하다.
 
 - 완료로 말할 수 있는 것: React/Spring 메인 앱의 실제 진단 run 생성, 입력 기반 규칙 진단, API key 기반 live 공공데이터 수집 구조, cache/fallback record, sourceType/domain signal, S00~S10 stageCards API화, 권한/삭제/검증/문서 정합성 보완
-- 아직 말하면 안 되는 것: API key/operation endpoint 없이도 항상 live 데이터가 수집된다는 주장, 실제 라벨 기반 XGBoost 예측, pgvector급 RAG 검색, LLM이 임의 도구를 동적으로 발견하는 open-ended agent, token revocation 기반 보안 완성
+- 아직 말하면 안 되는 것: API key/operation endpoint 없이도 항상 live 데이터가 수집된다는 주장, 실제 라벨 기반 XGBoost 예측, pgvector급 RAG 검색, LLM이 임의 도구를 동적으로 발견하는 open-ended agent, refresh token rotation까지 갖춘 상용 인증 완성

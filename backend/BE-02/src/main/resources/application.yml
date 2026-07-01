@@ -41,6 +41,8 @@ app:
       url: ${APP_AGENT_OPENROUTER_URL:https://openrouter.ai/api/v1/chat/completions}
       site-url: ${APP_AGENT_OPENROUTER_SITE_URL:${APP_PUBLIC_SITE_URL:}}
       app-title: ${APP_AGENT_OPENROUTER_APP_TITLE:GrowGate Local EX}
+  auth:
+    cookie-secure: ${APP_AUTH_COOKIE_SECURE:false}
 
 public-data:
   enabled: ${PUBLIC_DATA_ENABLED:true}
