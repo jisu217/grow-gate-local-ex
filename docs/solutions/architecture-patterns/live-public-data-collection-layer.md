@@ -73,7 +73,7 @@ Use environment variables to keep provider configuration deploy-specific:
 
 ```yaml
 public-data:
-  enabled: ${PUBLIC_DATA_ENABLED:false}
+  enabled: ${PUBLIC_DATA_ENABLED:true}
   cache-ttl-hours: ${PUBLIC_DATA_CACHE_TTL_HOURS:24}
   kcs-trade:
     url: ${KCS_TRADE_API_URL:http://apis.data.go.kr/1220000/Newtrade/getNewtradeList}

@@ -28,7 +28,7 @@ public class KotraMarketConnector extends AbstractPublicDataConnector {
 
     @Override
     public String usedFor() {
-        return "support";
+        return "market";
     }
 
     @Override
@@ -46,7 +46,7 @@ public class KotraMarketConnector extends AbstractPublicDataConnector {
 
     @Override
     protected int scoreContribution(PublicDataRequest request, boolean fallbackUsed) {
-        return fallbackUsed ? -1 : 6;
+        return fallbackUsed ? -1 : 4;
     }
 
     @Override

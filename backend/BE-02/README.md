@@ -59,7 +59,7 @@ cp src/main/resources/application.yml.example src/main/resources/application.yml
 export DB_PASSWORD=your_local_db_password
 export JWT_SECRET=your_jwt_secret_base64_encoded
 export APP_FASTAPI_ENABLED=false
-export PUBLIC_DATA_ENABLED=false
+export PUBLIC_DATA_ENABLED=true
 ```
 
 > `application.yml`에 직접 값을 입력하거나 위처럼 환경변수로 주입하면 됩니다.  
@@ -75,7 +75,7 @@ export PUBLIC_DATA_ENABLED=false
 | `APP_CORS_ORIGINS` | 허용 CORS origin CSV | 로컬 개발 포트 |
 | `APP_FASTAPI_ENABLED` | FastAPI `/analyze`, `/report` bridge 사용 여부 | `false` |
 | `APP_FASTAPI_BASE_URL` | FastAPI backend URL | `http://localhost:8000` |
-| `PUBLIC_DATA_ENABLED` | 공공 API live 수집 사용 여부 | `false` |
+| `PUBLIC_DATA_ENABLED` | 공공 API live 수집 사용 여부. 기본값은 true이며, key/operation endpoint가 없으면 fallback record로 투명하게 남김 | `true` |
 | `PUBLIC_DATA_CACHE_TTL_HOURS` | live/cache record 재사용 시간 | `24` |
 | `DATAGO_SERVICE_KEY` | 공공데이터포털 일반 인증키 공통 alias | 없음 |
 | `KCS_TRADE_API_URL`, `KCS_TRADE_API_KEY` | 관세청 수출입무역통계 API URL/key. key 미설정 시 `DATAGO_SERVICE_KEY` 사용 | `http://apis.data.go.kr/1220000/Newtrade/getNewtradeList` |
@@ -87,7 +87,7 @@ export PUBLIC_DATA_ENABLED=false
 | `JPA_SHOW_SQL` | SQL 로그 출력 여부 | `false` |
 | `APP_LOG_LEVEL` | `com.growgate` 로그 레벨 | `INFO` |
 
-KOTRA, Safety Korea, KIPRIS, 수출바우처 기본 URL은 공식 카탈로그/신청 페이지입니다. `PUBLIC_DATA_ENABLED=true` 상태에서도 이 URL이 그대로면 HTML 상세 페이지를 API 응답으로 저장하지 않고 fallback record에 "operation endpoint 필요" 사유를 남깁니다. 활용신청 후 발급 화면의 실제 요청 URL을 각 `*_API_URL`에 넣으면 live 호출로 전환됩니다.
+KOTRA, Safety Korea, KIPRIS, 수출바우처 기본 URL은 공식 카탈로그/신청 페이지입니다. `PUBLIC_DATA_ENABLED=true`가 기본값이지만 이 URL이 그대로면 HTML 상세 페이지를 API 응답으로 저장하지 않고 `public_fallback` record에 "operation endpoint 필요" 사유를 남깁니다. 활용신청 후 발급 화면의 실제 요청 URL을 각 `*_API_URL`에 넣으면 `public_api` source trace로 전환됩니다.
 
 ---
 
@@ -271,6 +271,10 @@ Spring 진단 엔진은 기본 규칙 기반 점수 산정을 유지하면서, `
 | `APP_AGENT_OPENROUTER_ENABLED` | OpenRouter backup provider 사용 여부 |
 | `APP_AGENT_OPENROUTER_API_KEY` | OpenRouter API key. repository에 저장 금지 |
 | `APP_AGENT_OPENROUTER_MODEL` | 기본 `google/gemini-2.5-flash` |
+| `APP_AGENT_OPENROUTER_SITE_URL` | OpenRouter attribution용 서비스 URL. 키 아님 |
+| `APP_AGENT_OPENROUTER_APP_TITLE` | OpenRouter attribution용 앱 이름. 기본 `GrowGate Local EX` |
+
+Gemini/OpenRouter 키는 반드시 서버 환경변수나 secret manager로만 주입한다. `.env`, `application.yml`, README, PR/issue/comment에 실제 `AIza...`, `AQ...`, `sk-or-...` 값을 남기지 않는다. Gemini 호출은 `generativelanguage.googleapis.com` HTTPS endpoint로만 활성화되고, API key는 URL query가 아니라 `x-goog-api-key` 헤더로 전송한다. OpenRouter 호출 로그와 공통 fallback reason은 `Bearer ...`, `sk-or-v1-...`, `AIza...`, `AQ...`, `apiKey=...` 형태의 값을 자동 마스킹한다.
 
 ### 공공데이터 수집
 
