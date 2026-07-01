@@ -205,11 +205,11 @@ export const S09_SCORE_BARS = [
 
 // S10 파이프라인
 export const S10_PIPES = [
-  { source: '관세청 무역통계',    count: '1,240', label: '수집 레코드', sourceType: 'public_api' },
-  { source: 'KOTRA 해외시장',     count: '84',    label: '리포트 건',   sourceType: 'public_api' },
-  { source: 'KTL Certinfo',       count: '312',   label: '인증 항목',   sourceType: 'public_api' },
-  { source: 'SafetyKorea',        count: '56',    label: '리콜 사례',   sourceType: 'public_api' },
-  { source: 'KIPRIS 특허',        count: '2,810', label: '검색 결과',   sourceType: 'public_api' },
-  { source: '기업마당 지원사업',  count: '18',    label: '매칭 사업',   sourceType: 'public_api' },
-  { source: 'EU RAPEX',           count: '430',   label: 'EU 리콜 경보', sourceType: 'public_api' },
+  { source: '관세청 무역통계',    count: '1,240', label: '수집 레코드', sourceType: 'live' },
+  { source: 'KOTRA 해외시장',     count: '84',    label: '리포트 건',   sourceType: 'live' },
+  { source: 'KTL Certinfo',       count: '312',   label: '인증 항목',   sourceType: 'live' },
+  { source: 'SafetyKorea',        count: '56',    label: '리콜 사례',   sourceType: 'live' },
+  { source: 'KIPRIS 특허',        count: '2,810', label: '검색 결과',   sourceType: 'live' },
+  { source: '기업마당 지원사업',  count: '18',    label: '매칭 사업',   sourceType: 'live' },
+  { source: 'EU RAPEX',           count: '430',   label: 'EU 리콜 경보', sourceType: 'live' },
 ]

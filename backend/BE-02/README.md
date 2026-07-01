@@ -87,7 +87,7 @@ export PUBLIC_DATA_ENABLED=true
 | `JPA_SHOW_SQL` | SQL 로그 출력 여부 | `false` |
 | `APP_LOG_LEVEL` | `com.growgate` 로그 레벨 | `INFO` |
 
-KOTRA, Safety Korea, KIPRIS, 수출바우처 기본 URL은 공식 카탈로그/신청 페이지입니다. `PUBLIC_DATA_ENABLED=true`가 기본값이지만 이 URL이 그대로면 HTML 상세 페이지를 API 응답으로 저장하지 않고 `public_fallback` record에 "operation endpoint 필요" 사유를 남깁니다. 활용신청 후 발급 화면의 실제 요청 URL을 각 `*_API_URL`에 넣으면 `public_api` source trace로 전환됩니다.
+KOTRA, Safety Korea, KIPRIS, 수출바우처 기본 URL은 공식 카탈로그/신청 페이지입니다. `PUBLIC_DATA_ENABLED=true`가 기본값이지만 이 URL이 그대로면 HTML 상세 페이지를 API 응답으로 저장하지 않고 `fallback` record에 "operation endpoint 필요" 사유를 남깁니다. 활용신청 후 발급 화면의 실제 요청 URL을 각 `*_API_URL`에 넣으면 `live` source trace로 전환됩니다.
 
 ---
 

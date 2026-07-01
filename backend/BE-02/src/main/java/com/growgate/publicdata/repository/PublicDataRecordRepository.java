@@ -21,4 +21,12 @@ public interface PublicDataRecordRepository extends JpaRepository<PublicDataReco
     List<PublicDataRecord> findTop50ByHsCodeAndTargetCountryOrderByFetchedAtDesc(String hsCode, String targetCountry);
 
     List<PublicDataRecord> findTop50ByOrderByFetchedAtDesc();
+
+    List<PublicDataRecord> findTop50ByRun_RequestedBy_IdInOrderByFetchedAtDesc(List<String> userIds);
+
+    List<PublicDataRecord> findTop50ByRun_RequestedBy_IdInAndHsCodeAndTargetCountryOrderByFetchedAtDesc(
+            List<String> userIds,
+            String hsCode,
+            String targetCountry
+    );
 }

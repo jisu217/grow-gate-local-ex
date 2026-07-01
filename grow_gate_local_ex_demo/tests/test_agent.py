@@ -124,7 +124,7 @@ def test_ai_diagnosis_tab_uses_workspace3_step_ui():
     assert "GROW-GATE Local EX · AI 진단" in html
     assert 'id="stageWrap"' in html
     assert "const STEPS=[" in html
-    assert "S04 XGBOOST PREDICTION LAB" in html
+    assert "S04 READINESS SCORING LAB" in html
     assert "S11 PUBLIC DATA PIPELINE" in html
     assert 'href="index.html"' in html
     assert 'href="roadmap.html"' in html

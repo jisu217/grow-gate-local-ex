@@ -258,14 +258,18 @@ public class DiagnosisAsyncProcessor {
             source.put("scoreContribution", record.getScoreContribution());
             source.put("fallbackUsed", record.isFallbackUsed());
             source.put("cacheHit", record.isCacheHit());
-            source.put("sourceType", record.isFallbackUsed() ? "public_fallback"
-                    : record.isCacheHit() ? "public_cache" : "public_api");
+            source.put("sourceType", sourceType(record));
             source.put("collectionRunId", record.getRun() != null ? record.getRun().getId() : null);
             source.put("errorMessage", record.getErrorMessage());
+            source.put("confidence", record.getConfidence());
             Map<String, Object> normalizedPayload = parseObjectMap(record.getNormalizedPayload());
             Object domainSignals = normalizedPayload.get("domainSignals");
             if (domainSignals instanceof Map<?, ?>) {
                 source.put("domainSignals", domainSignals);
+            }
+            Object metrics = normalizedPayload.get("metrics");
+            if (metrics instanceof Map<?, ?>) {
+                source.put("metrics", metrics);
             }
             source.put("reason", record.isFallbackUsed()
                     ? "live 공공 API 수집 실패/비활성 상태를 명시하고 fallback 신호로 반영"
@@ -430,8 +434,8 @@ public class DiagnosisAsyncProcessor {
 
     private List<Map<String, Object>> buildMarketStageCard(String targetCountry, int market,
                                                            List<Map<String, Object>> sources) {
-        int publicCount = sourceCount(sources, "market", "public_api", "public_cache");
-        int fallbackCount = sourceCount(sources, "market", "public_fallback");
+        int publicCount = sourceCount(sources, "market", "live", "cache");
+        int fallbackCount = sourceCount(sources, "market", "fallback");
         int evidenceStrength = maxEvidenceStrength(sources, "market");
         return List.of(Map.of(
                 "flag", countryLabel(targetCountry),
@@ -446,8 +450,8 @@ public class DiagnosisAsyncProcessor {
 
     private List<Map<String, Object>> buildRegulationStageCard(String targetCountry, int regulation,
                                                                List<Map<String, Object>> sources) {
-        int publicCount = sourceCount(sources, "regulation", "public_api", "public_cache");
-        int fallbackCount = sourceCount(sources, "regulation", "public_fallback");
+        int publicCount = sourceCount(sources, "regulation", "live", "cache");
+        int fallbackCount = sourceCount(sources, "regulation", "fallback");
         String statusLabel = regulation >= 75 ? "대응가능" : regulation >= 60 ? "보완필요" : "누락위험";
         String statusType = regulation >= 75 ? "ok" : regulation >= 60 ? "warn" : "req";
         return List.of(
@@ -462,7 +466,7 @@ public class DiagnosisAsyncProcessor {
                 ),
                 Map.of(
                         "nm", "공공 API 규제 출처",
-                        "mkt", "sourceType public_api/cache/fallback 분리",
+                        "mkt", "sourceType live/cache/fallback 분리",
                         "market", List.of(publicCount > 0 ? "ok" : "warn", targetCountry),
                         "priority", List.of(fallbackCount > 0 ? "warn" : "ok", fallbackCount > 0 ? "확인" : "정상"),
                         "status", List.of(publicCount > 0 ? "ok" : "warn", publicCount + "건 연결"),
@@ -476,7 +480,7 @@ public class DiagnosisAsyncProcessor {
                                                            List<Map<String, String>> risks) {
         String riskClass = recall >= 75 ? "l" : recall >= 60 ? "m" : "h";
         String badge = recall >= 75 ? "저위험" : recall >= 60 ? "중위험" : "고위험";
-        int publicCount = sourceCount(sources, "recall", "public_api", "public_cache");
+        int publicCount = sourceCount(sources, "recall", "live", "cache");
         String topRisk = risks.isEmpty() ? "출처 최신성 점검" : risks.get(0).get("label");
         return List.of(
                 Map.of(
@@ -495,8 +499,8 @@ public class DiagnosisAsyncProcessor {
 
     private Map<String, Object> buildFtoSupportStageCard(String targetCountry, int fto, int support,
                                                          List<Map<String, Object>> sources) {
-        int ftoPublicCount = sourceCount(sources, "fto", "public_api", "public_cache");
-        int supportPublicCount = sourceCount(sources, "support", "public_api", "public_cache");
+        int ftoPublicCount = sourceCount(sources, "fto", "live", "cache");
+        int supportPublicCount = sourceCount(sources, "support", "live", "cache");
         List<Map<String, Object>> patents = List.of(Map.of(
                 "riskClass", fto >= 75 ? "l" : fto >= 60 ? "m" : "h",
                 "badge", fto >= 75 ? "저위험" : fto >= 60 ? "중위험" : "고위험",
@@ -754,7 +758,7 @@ public class DiagnosisAsyncProcessor {
                         Map.of("key", "support", "weight", 0.17, "evidence", "knowledge trust, buyer requirements, source count, Bizinfo/KOTRA trace")
                 ),
                 "guardrails", List.of(
-                        "public_api/cache/fallback/heuristic_rule sourceType을 결과에 함께 저장",
+                        "live/cache/fallback/heuristic/agent sourceType을 결과에 함께 저장",
                         "fallback 공공데이터는 감점 또는 낮은 contribution으로만 반영",
                         "LLM provider는 점수 산식의 단일 근거가 아니라 설명과 지식화 후보 보조 역할"
                 )
@@ -805,9 +809,15 @@ public class DiagnosisAsyncProcessor {
         return source;
     }
 
+    private String sourceType(PublicDataRecord record) {
+        if (record.isCacheHit()) return "cache";
+        if (record.isFallbackUsed()) return "fallback";
+        return "live";
+    }
+
     private String sourceType(String provider, String field) {
-        if ("RULE_ENGINE".equals(provider)) return "heuristic_rule";
-        if ("agent".equals(field)) return "agent_bridge";
+        if ("RULE_ENGINE".equals(provider)) return "heuristic";
+        if ("agent".equals(field)) return "agent";
         return "internal";
     }
 

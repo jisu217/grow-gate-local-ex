@@ -81,7 +81,7 @@ GROW-GATE Local EX는 이 질문을 공공데이터 기반 실행 보드로 바�
 | KIPRIS Plus Open API | 기본 공식 신청 페이지 `https://plus.kipris.or.kr/eng/main/contents.do?menuNo=300024`, `KIPRIS_API_KEY` 또는 `KIPRIS_PLUS_KEY` 사용 | 특허/FTO 점수 contribution |
 | 기업마당·지원사업 | 기본 공식 포털 `https://www.exportvoucher.com/`, 실제 operation endpoint 설정 시 live 수집 | 지원사업/실행 가능성 점수 |
 
-현재 제출용 Spring 앱은 `PUBLIC_DATA_ENABLED=true`가 기본값입니다. API key와 실제 호출 endpoint가 있으면 live 공공 API를 호출하고, key가 없거나 호출이 실패하면 `public_data_collection_runs`, `public_data_records`에 fallback 사유를 저장합니다. 공식 카탈로그/신청 페이지 URL은 출처 추적용 기본값으로 보존하되, HTML 상세 페이지를 API 응답으로 저장하지 않도록 fallback 처리합니다. 메인 진단 결과에는 `public_api`, `public_cache`, `public_fallback`, `heuristic_rule` 여부와 점수 기여도, 도메인 signal이 표시됩니다.
+현재 제출용 Spring 앱은 `PUBLIC_DATA_ENABLED=true`가 기본값입니다. API key와 실제 호출 endpoint가 있으면 live 공공 API를 호출하고, key가 없거나 호출이 실패하면 `public_data_collection_runs`, `public_data_records`에 fallback 사유를 저장합니다. 공식 카탈로그/신청 페이지 URL은 출처 추적용 기본값으로 보존하되, HTML 상세 페이지를 API 응답으로 저장하지 않도록 fallback 처리합니다. 메인 진단 결과에는 `live`, `cache`, `fallback`, `heuristic`, `agent` sourceType과 점수 기여도, provider별 metric signal이 표시됩니다.
 
 ---
 

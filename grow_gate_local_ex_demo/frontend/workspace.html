@@ -411,7 +411,7 @@
 <script>
 const STEPS=[
   {no:'01',nm:'기업·제품 입력',aux:'Input'},{no:'02',nm:'AI 예비진단',aux:'Agent Brief'},
-  {no:'03',nm:'근거 데이터 연계',aux:'Evidence'},{no:'04',nm:'ML 예측',aux:'Predict'},
+  {no:'03',nm:'근거 데이터 연계',aux:'Evidence'},{no:'04',nm:'준비도 추정',aux:'Scoring'},
   {no:'05',nm:'시장성',aux:'Market'},{no:'06',nm:'규제·인증',aux:'Regulation'},
   {no:'07',nm:'리콜 위험',aux:'Recall'},{no:'08',nm:'FTO·지원',aux:'FTO·Support'},
   {no:'09',nm:'실행 보드',aux:'Roadmap'},{no:'10',nm:'리포트',aux:'Report'},
@@ -455,12 +455,12 @@ function connectors(){return sHead('S03 EVIDENCE DATA LINK','근거 데이터 �
   ${agentNote()}`;}
 function conn(n,nm,meta){return `<div class="conn"><span class="no">${n}</span><span class="txt"><span class="nm">${nm}</span><span class="meta">${meta}</span></span><span class="dot"></span></div>`;}
 
-function predLab(){return sHead('S04 XGBOOST PREDICTION LAB','예측·추정 모델 진단','',`<span class="s-tag">XGBoost · deterministic demo</span>`)+`
+function predLab(){return sHead('S04 READINESS SCORING LAB','준비도 추정 진단','',`<span class="s-tag">Rule-based · source-traced scoring</span>`)+`
   <div class="pred-grid">
-    ${pred('XGBClassifier','82%','90일 파일럿 수출 실행 가능성','95.3','%',95,'시장성·규제압력·문서 준비도를 종합해 90일 내 파일럿 수출 패키지 완성 가능성을 추정합니다.')}
-    ${pred('XGBRegressor','78%','인증·시험 리드타임 추정','49','days',55,'긴급 규제 수·배터리 여부·문서 준비도를 기준으로 시험기관 상담부터 보완 완료까지 기간을 추정합니다.')}
-    ${pred('XGBClassifier','80%','지원사업 선정 적합 확률','84.8','%',85,'인증 갭·지역 제조기업 태그·지원사업 매칭 점수로 신청 우선순위를 예측합니다.')}
-    ${pred('XGBRegressor','74%','시험·보완 예비비율 추정','13.6','%',30,'리콜·FTO·규제 위험을 반영해 시험 실패·라벨 보완·회피설계 상담에 필요한 예비비율을 추정합니다.')}
+    ${pred('RuleScore','trace','90일 파일럿 수출 실행 가능성','95.3','%',95,'시장성·규제압력·문서 준비도를 종합해 90일 내 파일럿 수출 패키지 완성 가능성을 추정합니다.')}
+    ${pred('RuleScore','trace','인증·시험 리드타임 추정','49','days',55,'긴급 규제 수·배터리 여부·문서 준비도를 기준으로 시험기관 상담부터 보완 완료까지 기간을 추정합니다.')}
+    ${pred('RuleScore','trace','지원사업 선정 적합 확률','84.8','%',85,'인증 갭·지역 제조기업 태그·지원사업 매칭 점수로 신청 우선순위를 추정합니다.')}
+    ${pred('RuleScore','trace','시험·보완 예비비율 추정','13.6','%',30,'리콜·FTO·규제 위험을 반영해 시험 실패·라벨 보완·회피설계 상담에 필요한 예비비율을 추정합니다.')}
   </div>
   <div class="fi"><h3>통합 Feature Importance</h3>${fi('시장성 점수',96)}${fi('규제 압력',88)}${fi('문서 준비도',72)}${fi('지원사업 적합도',60)}${fi('리콜 위험도',48)}</div>`;}
 function pred(h,acc,t,v,u,bar,d){return `<div class="pred"><div class="ph"><span>${h}</span><span>${acc}</span></div><div class="pt">${t}</div><div class="pv">${v}<span>${u}</span></div><div class="pbar"><i style="width:${bar}%"></i></div><div class="pd">${d}</div></div>`;}

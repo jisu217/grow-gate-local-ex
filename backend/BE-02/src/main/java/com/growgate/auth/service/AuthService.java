@@ -32,15 +32,22 @@ public class AuthService {
     private final PasswordEncoder passwordEncoder;
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenRevocationService tokenRevocationService;
+    private final LoginAttemptRateLimiter loginAttemptRateLimiter;
 
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
+        loginAttemptRateLimiter.assertAllowed(request.getEmail());
         User user = userRepository.findByEmail(request.getEmail())
-                .orElseThrow(() -> new BusinessException(ErrorCode.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다."));
+                .orElseThrow(() -> {
+                    loginAttemptRateLimiter.recordFailure(request.getEmail());
+                    return new BusinessException(ErrorCode.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다.");
+                });
 
         if (!passwordEncoder.matches(request.getPassword(), user.getPasswordHash())) {
+            loginAttemptRateLimiter.recordFailure(request.getEmail());
             throw new BusinessException(ErrorCode.UNAUTHORIZED, "이메일 또는 비밀번호가 올바르지 않습니다.");
         }
+        loginAttemptRateLimiter.recordSuccess(request.getEmail());
 
         String accessToken = jwtTokenProvider.generateToken(user.getId());
 

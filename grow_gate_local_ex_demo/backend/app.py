@@ -562,9 +562,9 @@ def review_analysis_report(result: AnalysisResult, search_result: Dict[str, Any]
     if not checks["has_search_quality"]:
         review_notes.append("AI 검색 품질 신호가 누락되어 추천 근거 검수가 어렵습니다.")
     if not checks["has_ml_predictions"]:
-        review_notes.append("ML 예측 결과가 없어 리스크 우선순위 설명력이 낮습니다.")
+        review_notes.append("준비도 추정 결과가 없어 리스크 우선순위 설명력이 낮습니다.")
     if not review_notes:
-        review_notes.append("보고서가 AI 요약, 근거, 검색 품질, ML 예측, 실행 로드맵을 모두 포함합니다.")
+        review_notes.append("보고서가 AI 요약, 근거, 검색 품질, 준비도 추정, 실행 로드맵을 모두 포함합니다.")
     return {
         "overall_status": "pass" if overall_score >= 84 else "review",
         "overall_score": overall_score,

@@ -90,7 +90,7 @@
 | 영역 | 평가 지적 | 현재 판정 | 처리 내용 |
 | --- | --- | --- | --- |
 | `DiagnosisAsyncProcessor` | 점수/출처/문구 하드코딩 | 완료 | 입력과 제품 지식 기반 규칙 점수 및 source trace 생성 |
-| `DiagnosisAsyncProcessor` | 실제 공공 API 데이터 미사용 | 부분 완료 | `PublicDataCollectionService`로 live/cache/fallback record와 domain signal을 수집하고 source trace/점수에 반영. 단, 심사 환경에 실제 API key/operation endpoint가 없으면 `public_fallback`으로 기록 |
+| `DiagnosisAsyncProcessor` | 실제 공공 API 데이터 미사용 | 부분 완료 | `PublicDataCollectionService`로 live/cache/fallback record와 provider별 metric signal을 수집하고 source trace/점수에 반영. 단, 심사 환경에 실제 API key/operation endpoint가 없으면 `fallback`으로 기록 |
 | `DiagnosisAsyncProcessor` | FastAPI agent 미연동 | 부분 완료 | `APP_FASTAPI_ENABLED=true`일 때 FastAPI `/analyze`, `/report` 호출 및 fallback trace 기록 |
 | `DiagnosisService` | `productId`와 `inputData` 정책 없음 | 완료 | 동시 전달 거부, 직접 입력 필수값 검증 |
 | `DiagnosisService` | description 누락 | 완료 | `inputData` snapshot에 description 저장 |

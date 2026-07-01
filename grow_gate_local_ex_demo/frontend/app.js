@@ -2115,7 +2115,7 @@ function buildReportHtml(result) {
     </div>
     <div class="score">${result.readiness_score}/100 <span class="badge">${result.readiness_level}</span></div>
     <h2>AI 요약</h2><p>${escapeHtml(result.ai_summary)}</p>
-    <h2>ML 예측·추정</h2>${(result.ml_predictions || []).map((m) => `<div class="card"><b>${escapeHtml(m.target)}</b> <span class="badge">${escapeHtml(m.model_type)}</span><br><span style="font-size:26px;font-weight:900;color:#0f766e">${escapeHtml(m.value)}${escapeHtml(m.unit)}</span><br><small>${escapeHtml(m.interpretation)}</small></div>`).join('')}
+    <h2>준비도 추정</h2>${(result.ml_predictions || []).map((m) => `<div class="card"><b>${escapeHtml(m.target)}</b> <span class="badge">${escapeHtml(m.model_type)}</span><br><span style="font-size:26px;font-weight:900;color:#0f766e">${escapeHtml(m.value)}${escapeHtml(m.unit)}</span><br><small>${escapeHtml(m.interpretation)}</small></div>`).join('')}
     <h2>규제·인증 우선순위</h2>${(result.regulations || []).slice(0,5).map((r) => `<div class="card"><b>${escapeHtml(r.title)}</b> <span class="badge">${escapeHtml(r.priority)}</span><br>${escapeHtml(r.action)}<br><small>${escapeHtml((r.typical_evidence || []).join(', '))}</small></div>`).join('')}
     <h2>30·60·90일 실행 로드맵</h2>${(result.roadmap || []).map((r) => `<div class="card"><b>${escapeHtml(r.day_bucket)} · ${escapeHtml(r.title)}</b><ul>${(r.tasks || []).map((t) => `<li>${escapeHtml(t)}</li>`).join('')}</ul><small>산출물: ${escapeHtml(r.output)} / 담당: ${escapeHtml(r.owner)}</small></div>`).join('')}
     <h2>유의사항</h2><ul>${(result.guardrails || []).map((g) => `<li>${escapeHtml(g)}</li>`).join('')}</ul>

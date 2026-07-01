@@ -27,6 +27,8 @@ public class DiagnosisSourcesResponse {
         private String matchedKey;
         private String usedFor;
         private Integer scoreContribution;
+        private Double confidence;
+        private String sourceType;
         private Boolean fallbackUsed;
         private Boolean cacheHit;
         private String collectionRunId;

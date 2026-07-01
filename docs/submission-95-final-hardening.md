@@ -10,9 +10,9 @@ GrowGate Local EX는 지역 수출 담당자가 제품 단위로 시장성, 규�
 
 | 평가 지적 | 조치 | 코드/문서 기준 |
 | --- | --- | --- |
-| live 공공 API가 기본 경로가 아님 | `PUBLIC_DATA_ENABLED` 기본값을 `true`로 전환. key/operation endpoint 부재 시 `public_fallback`으로 투명 기록 | `backend/BE-02/src/main/resources/application.yml` |
+| live 공공 API가 기본 경로가 아님 | `PUBLIC_DATA_ENABLED` 기본값을 `true`로 전환. key/operation endpoint 부재 시 `fallback`으로 투명 기록 | `backend/BE-02/src/main/resources/application.yml` |
 | 공공 API 결과가 도메인 필드로 파싱되지 않음 | normalized payload에 HS/국가/제품명 매칭, record count, numeric token, evidence strength 저장 | `AbstractPublicDataConnector` |
-| 로컬 규칙 출처가 실제 기관 출처처럼 보임 | 로컬 산식 출처 provider를 `RULE_ENGINE`, sourceType을 `heuristic_rule`로 분리 | `DiagnosisAsyncProcessor` |
+| 로컬 규칙 출처가 실제 기관 출처처럼 보임 | 로컬 산식 출처 provider를 `RULE_ENGINE`, sourceType을 `heuristic`으로 분리 | `DiagnosisAsyncProcessor` |
 | S04~S07 상세 카드가 mock 기반 | S04 시장, S05 규제, S06 리콜, S07 FTO/지원 stageCards를 백엔드에서 생성하고 프론트 매핑 | `DiagnosisAsyncProcessor`, `diagnosisService.js` |
 | XGBoost UI 표기가 실제 구현과 다름 | S03을 `RULE SCORING LAB`으로 변경하고 rule rubric + LLM assisted로 표기 | `S03PredLab.jsx` |
 | agentic loop 과장 위험 | `agentTrace.claimBoundary`를 추가해 bounded orchestration임을 명시 | `DiagnosisAsyncProcessor` |
@@ -22,7 +22,7 @@ GrowGate Local EX는 지역 수출 담당자가 제품 단위로 시장성, 규�
 ## 기획서에서 밀 강점
 
 1. **공공데이터를 실패까지 추적하는 구조**
-   - live 호출 성공만 보여주는 데모가 아니라 `public_api`, `public_cache`, `public_fallback`, `heuristic_rule`을 분리한다.
+   - live 호출 성공만 보여주는 데모가 아니라 `live`, `cache`, `fallback`, `heuristic`, `agent`를 분리한다.
    - API key 미발급, operation endpoint 미확정, 네트워크 실패가 발생해도 결과 JSON에 사유가 남는다.
 
 2. **제품 단위 수출 준비도 산식**
@@ -65,4 +65,3 @@ GrowGate Local EX는 지역 수출 담당자가 제품 단위로 시장성, 규�
 | 실제 성과 라벨 기반 ML 부재 | rule rubric으로 투명화 | 진단/수출 결과 라벨 축적 후 ML 전환 |
 | vector DB RAG 부재 | DB context injection과 지식화 루프 | embedding/chunk/citation score 도입 |
 | 운영형 agent loop 제한 | bounded orchestration 명시 | tool registry와 retry policy 고도화 |
-

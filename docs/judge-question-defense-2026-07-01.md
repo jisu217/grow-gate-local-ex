@@ -1,0 +1,33 @@
+# 심사 질문 20개 방어 답변표
+
+작성일: 2026-07-01
+
+| # | 질문 | 강화된 답변 | 근거 |
+| --- | --- | --- | --- |
+| 1 | 산업통상부 산하 공공데이터를 실제로 사용했습니까? | 산업부 직접 산하 API만으로 한정하지 않고 관세청, KOTRA, SafetyKorea/KATS 계열, KIPRIS, Bizinfo를 provider로 분리했다. key와 operation endpoint가 있으면 `live`, 없으면 `fallback`으로 저장한다. | `publicdata/service/*Connector.java` |
+| 2 | 배포 서버에서 최근 수집한 관세청 API 원문을 보여줄 수 있습니까? | `/api/public-data/records`가 사용자 scope 내 raw/normalized record를 반환한다. smoke script가 public-data runs와 count를 출력한다. | `scripts/smoke-prod.sh`, `PublicDataRecordResponse` |
+| 3 | 관세청 데이터의 어떤 필드가 시장성 점수에 들어갑니까? | `importAmountUsd`, `exportAmountUsd`, `yoyGrowthPct`, `recordCount`를 파싱하고 이 metric으로 contribution/confidence를 계산한다. | `KcsTradeConnectorTest` |
+| 4 | KOTRA connector가 왜 `usedFor="support"`입니까? | 수정 완료. KOTRA market connector는 `usedFor="market"`이며 국가/제품 mention, article count, growth signal을 시장성에 반영한다. | `KotraMarketConnector.java` |
+| 5 | SafetyKorea 리콜 건수는 어디서 파싱합니까? | `recallCount`, `highRiskCount`, `recordCount`를 normalized payload metrics에 저장하고 recall score contribution에 반영한다. | `SafetyRecallConnector.java` |
+| 6 | KIPRIS 특허 검색 결과 몇 건이 FTO 점수에 반영됩니까? | `patentCount`, `claimsCount`, `productMentions`를 metrics로 저장하고 patent count가 높을수록 FTO contribution을 낮춘다. | `KiprisFtoConnector.java` |
+| 7 | 이 점수 가중치는 누가 검증했습니까? | 현재는 전문가 검증 완료가 아니라 제출용 rubric이다. 사용자 검증 문서에 3 persona, 5 scenario, expert review 질문을 정의했다. | `docs/user-validation-2026.md` |
+| 8 | XGBoost 모델 파일과 학습 데이터는 어디 있습니까? | 메인 앱은 XGBoost를 주장하지 않는다. UI는 readiness scoring으로 바꿨고 실제 라벨 ML은 후속 과제로 분리했다. | `S03PredLab.jsx`, `diagnosisSteps.js` |
+| 9 | RAG 검색에서 top-k chunk를 보여주세요. | pgvector/top-k vector retrieval은 주장하지 않는다. 현재는 DB context injection과 knowledge loop 구조다. | `docs/submission-95-final-hardening.md` |
+| 10 | Agent가 실패하면 어떤 계획을 다시 세웁니까? | 완전 자율 재계획 loop가 아니라 bounded orchestration이다. trace에 plan/collect/score/llm_reason/verify/fallback 경계를 명시한다. | `DiagnosisAsyncProcessor.buildAgentTrace()` |
+| 11 | FastAPI Agent가 배포 서버에서 켜져 있습니까? | 기본은 optional bridge다. `APP_FASTAPI_ENABLED=true`일 때만 `/analyze`, `/report`를 호출하고, 비활성 시 Spring 결과로 degrade한다. | `FastApiAgentClient`, `agentTrace` |
+| 12 | S04 시장성 화면은 backend API 값입니까? | 예. `stageCards.s04~s07`을 backend에서 생성하고 frontend는 해당 값을 매핑한다. S04~S07 mock fallback import를 제거했다. | `DiagnosisAsyncProcessor`, `diagnosisService.js` |
+| 13 | 이 리포트는 PDF입니까? | Markdown API와 별도로 `/api/diagnosis/{id}/report.pdf`가 `application/pdf` bytes를 내려준다. | `DiagnosisController.getReportPdf()` |
+| 14 | 사용자 A가 사용자 B의 public data runs를 볼 수 있습니까? | scope 제한을 추가했다. 개인은 본인 run만, 회사 사용자는 같은 company membership 사용자 run만 조회한다. | `PublicDataCollectionService.scopeUserIds()` |
+| 15 | 로그아웃한 JWT는 서버 재시작 후에도 무효입니까? | 현재 denylist는 in-memory라 서버 재시작 시 사라진다. 이 한계는 남아 있으며 Redis/DB revocation이 후속 과제다. | `TokenRevocationService` |
+| 16 | XSS로 localStorage token이 털리면 어떻게 합니까? | HttpOnly cookie 전환은 아직 후속 과제다. 제출 서버에서는 CSP 점검과 짧은 access token, logout denylist, rate limit을 병행한다. | `docs/security-deployment-audit-2026-07-01.md` |
+| 17 | 발표장 인터넷이 느리면 Gradle/npm 빌드가 됩니까? | `scripts/verify-local.sh`, GitHub Actions CI, `BUILD.md`로 재현 명령을 고정했다. 완전 오프라인 빌드는 dependency cache가 필요하다. | `BUILD.md`, `.github/workflows/ci.yml` |
+| 18 | 사용자 테스트 결과가 있습니까? | 실제 사용자 3명 인터뷰 완료 주장은 하지 않는다. 대신 persona/scenario/측정표/전문가 질문지를 문서화했다. | `docs/user-validation-2026.md` |
+| 19 | 공공데이터 fallback 비율은 몇 %입니까? | run마다 `successCount`, `fallbackCount`, `cacheHitCount`가 있고 smoke script가 이를 출력한다. | `public_data_collection_runs`, `scripts/smoke-prod.sh` |
+| 20 | 기존 수출 컨설팅/체크리스트와 다른 점은 무엇입니까? | 제품별 점수 산식, sourceType trace, provider metric, LLM 보조 추론, 담당자 지식 루프가 한 흐름으로 연결된다. | `docs/submission-95-final-hardening.md` |
+
+## 남은 한계
+
+- 실제 API key와 operation endpoint가 없는 provider는 `fallback`으로 남는다.
+- 실제 라벨 기반 XGBoost와 pgvector top-k RAG는 제출 주장 범위에서 제외한다.
+- JWT revocation persistence와 HttpOnly cookie 전환은 상용화 보안 과제로 남아 있다.
+

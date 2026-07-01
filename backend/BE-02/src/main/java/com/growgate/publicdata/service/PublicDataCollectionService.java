@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;
+import com.growgate.membership.entity.Membership;
+import com.growgate.membership.repository.MembershipRepository;
 import com.growgate.publicdata.entity.PublicDataCollectionRun;
 import com.growgate.publicdata.entity.PublicDataRecord;
 import com.growgate.publicdata.enums.PublicDataCollectionStatus;
@@ -31,6 +33,7 @@ public class PublicDataCollectionService {
     private final PublicDataCollectionRunRepository runRepository;
     private final PublicDataRecordRepository recordRepository;
     private final UserRepository userRepository;
+    private final MembershipRepository membershipRepository;
     private final ObjectMapper objectMapper;
 
     @Value("${public-data.enabled:false}")
@@ -99,17 +102,18 @@ public class PublicDataCollectionService {
     }
 
     @Transactional(readOnly = true)
-    public List<PublicDataCollectionRun> getRecentRuns() {
-        return runRepository.findTop20ByOrderByStartedAtDesc();
+    public List<PublicDataCollectionRun> getRecentRuns(String userId) {
+        return runRepository.findTop20ByRequestedBy_IdInOrderByStartedAtDesc(scopeUserIds(userId));
     }
 
     @Transactional(readOnly = true)
-    public List<PublicDataRecord> getRecentRecords(String hsCode, String targetCountry) {
+    public List<PublicDataRecord> getRecentRecords(String userId, String hsCode, String targetCountry) {
+        List<String> scopeUserIds = scopeUserIds(userId);
         if (hsCode != null && !hsCode.isBlank() && targetCountry != null && !targetCountry.isBlank()) {
-            return recordRepository.findTop50ByHsCodeAndTargetCountryOrderByFetchedAtDesc(
-                    normalizeHsCode(hsCode), normalizeCountry(targetCountry));
+            return recordRepository.findTop50ByRun_RequestedBy_IdInAndHsCodeAndTargetCountryOrderByFetchedAtDesc(
+                    scopeUserIds, normalizeHsCode(hsCode), normalizeCountry(targetCountry));
         }
-        return recordRepository.findTop50ByOrderByFetchedAtDesc();
+        return recordRepository.findTop50ByRun_RequestedBy_IdInOrderByFetchedAtDesc(scopeUserIds);
     }
 
     public PublicDataCollectionResult collectManual(String userId, String hsCode, String targetCountry, String productName) {
@@ -145,10 +149,15 @@ public class PublicDataCollectionService {
                 .normalizedPayload(java.util.Map.of(
                         "provider", connector.provider().name(),
                         "usedFor", connector.usedFor(),
+                        "metrics", java.util.Map.of("recordCount", 0),
+                        "scoreContribution", -1,
+                        "confidence", 0.0,
                         "fallbackUsed", true,
                         "reason", "PUBLIC_DATA_ENABLED=false"
                 ))
                 .scoreContribution(-1)
+                .confidence(0.0)
+                .sourceType("fallback")
                 .fallbackUsed(true)
                 .errorMessage("PUBLIC_DATA_ENABLED=false")
                 .build();
@@ -167,6 +176,8 @@ public class PublicDataCollectionService {
                 .rawPayload(result.getRawPayload())
                 .normalizedPayload(toJson(result.getNormalizedPayload()))
                 .scoreContribution(result.getScoreContribution())
+                .confidence(result.getConfidence())
+                .sourceType(result.getSourceType() == null ? result.isFallbackUsed() ? "fallback" : "live" : result.getSourceType())
                 .fallbackUsed(result.isFallbackUsed())
                 .cacheHit(false)
                 .errorMessage(result.getErrorMessage())
@@ -188,6 +199,8 @@ public class PublicDataCollectionService {
                 .rawPayload(cached.getRawPayload())
                 .normalizedPayload(cached.getNormalizedPayload())
                 .scoreContribution(cached.getScoreContribution())
+                .confidence(cached.getConfidence())
+                .sourceType("cache")
                 .fallbackUsed(cached.isFallbackUsed())
                 .cacheHit(true)
                 .errorMessage(cached.getErrorMessage())
@@ -208,6 +221,21 @@ public class PublicDataCollectionService {
         } catch (JsonProcessingException e) {
             return "{}";
         }
+    }
+
+    private List<String> scopeUserIds(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+        if (user.getUserType().name().equals("company")) {
+            return membershipRepository.findFirstByUserId(userId)
+                    .map(Membership::getCompany)
+                    .map(company -> membershipRepository.findByCompanyId(company.getId()).stream()
+                            .map(membership -> membership.getUser().getId())
+                            .toList())
+                    .filter(ids -> !ids.isEmpty())
+                    .orElse(List.of(userId));
+        }
+        return List.of(userId);
     }
 
     private String normalizeHsCode(String value) {

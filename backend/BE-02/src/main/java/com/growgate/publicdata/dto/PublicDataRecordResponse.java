@@ -18,6 +18,8 @@ public class PublicDataRecordResponse {
     private String matchedKey;
     private String usedFor;
     private Integer scoreContribution;
+    private Double confidence;
+    private String sourceType;
     private boolean fallbackUsed;
     private boolean cacheHit;
     private String errorMessage;
@@ -37,6 +39,8 @@ public class PublicDataRecordResponse {
                 .matchedKey(record.getMatchedKey())
                 .usedFor(record.getUsedFor())
                 .scoreContribution(record.getScoreContribution())
+                .confidence(record.getConfidence())
+                .sourceType(record.getSourceType())
                 .fallbackUsed(record.isFallbackUsed())
                 .cacheHit(record.isCacheHit())
                 .errorMessage(record.getErrorMessage())
