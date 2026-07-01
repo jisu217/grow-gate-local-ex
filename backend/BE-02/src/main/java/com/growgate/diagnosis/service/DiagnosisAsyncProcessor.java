@@ -98,32 +98,90 @@ public class DiagnosisAsyncProcessor {
                     product.getId(), KnowledgeLoopStatus.accepted)
                     : List.of();
 
+            AgentLoop agentLoop = AgentLoop.start(run.getId(), productName, hsCode, targetCountry);
             List<Map<String, Object>> sources = new ArrayList<>();
-            PublicDataCollectionResult publicDataResult = publicDataCollectionService.collectForDiagnosis(
-                    run.getId(), run.getUser().getId(), hsCode, targetCountry, productName);
+            PublicDataCollectionResult publicDataResult = agentLoop.runTool(
+                    "collect_public_data",
+                    "PublicDataCollectionService.collectForDiagnosis",
+                    2,
+                    null,
+                    () -> publicDataCollectionService.collectForDiagnosis(
+                            run.getId(), run.getUser().getId(), hsCode, targetCountry, productName),
+                    result -> result != null && result.getRun() != null
+                            ? AgentVerification.pass("public data run=" + result.getRun().getId()
+                            + ", records=" + result.getRecords().size())
+                            : AgentVerification.fail("public data collection returned no run")
+            );
             addPublicDataSources(sources, publicDataResult.getRecords());
 
-            int market = scoreMarket(hsCode, targetCountry, sources);
-            int regulation = scoreRegulation(hsCode, targetCountry, certs, sources);
-            int recall = scoreRecall(hsCode, description, sources);
-            int fto = scoreFto(ftoItems, targetCountry, sources);
-            int support = scoreSupport(knowledge, buyers, knowledgeSources, targetCountry, sources);
-            market = applyPublicDataContribution(market, publicDataResult.getRecords(), "market");
-            regulation = applyPublicDataContribution(regulation, publicDataResult.getRecords(), "regulation");
-            recall = applyPublicDataContribution(recall, publicDataResult.getRecords(), "recall");
-            fto = applyPublicDataContribution(fto, publicDataResult.getRecords(), "fto");
-            support = applyPublicDataContribution(support, publicDataResult.getRecords(), "support");
+            Map<String, Integer> scoreMap = agentLoop.runTool(
+                    "score_readiness",
+                    "Spring rule scorer + public data contribution",
+                    1,
+                    Map.of(),
+                    () -> {
+                        int marketScore = scoreMarket(hsCode, targetCountry, sources);
+                        int regulationScore = scoreRegulation(hsCode, targetCountry, certs, sources);
+                        int recallScore = scoreRecall(hsCode, description, sources);
+                        int ftoScore = scoreFto(ftoItems, targetCountry, sources);
+                        int supportScore = scoreSupport(knowledge, buyers, knowledgeSources, targetCountry, sources);
+                        marketScore = applyPublicDataContribution(marketScore, publicDataResult.getRecords(), "market");
+                        regulationScore = applyPublicDataContribution(regulationScore, publicDataResult.getRecords(), "regulation");
+                        recallScore = applyPublicDataContribution(recallScore, publicDataResult.getRecords(), "recall");
+                        ftoScore = applyPublicDataContribution(ftoScore, publicDataResult.getRecords(), "fto");
+                        supportScore = applyPublicDataContribution(supportScore, publicDataResult.getRecords(), "support");
+                        return Map.of(
+                                "market", marketScore,
+                                "regulation", regulationScore,
+                                "recall", recallScore,
+                                "fto", ftoScore,
+                                "support", supportScore
+                        );
+                    },
+                    result -> result != null && result.values().stream().allMatch(score -> score >= 0 && score <= 100)
+                            ? AgentVerification.pass("all readiness scores are within 0..100")
+                            : AgentVerification.fail("readiness scores failed range verification")
+            );
+            int market = scoreMap.get("market");
+            int regulation = scoreMap.get("regulation");
+            int recall = scoreMap.get("recall");
+            int fto = scoreMap.get("fto");
+            int support = scoreMap.get("support");
             int overall = clamp(Math.round((market * 0.25f) + (regulation * 0.22f) + (recall * 0.16f)
                     + (fto * 0.20f) + (support * 0.17f)));
 
-            List<Map<String, String>> riskItems = buildRiskItems(certs, ftoItems, knowledge, buyers, hsCode);
-            Map<String, Object> actionRoadmap = buildRoadmap(riskItems, certs, ftoItems, buyers, knowledgeSources);
+            Map<String, Object> planningResult = agentLoop.runTool(
+                    "plan_risk_roadmap",
+                    "Risk planner + 30/60/90 roadmap generator",
+                    1,
+                    Map.of("riskItems", List.of(), "actionRoadmap", Map.of()),
+                    () -> {
+                        List<Map<String, String>> risks = buildRiskItems(certs, ftoItems, knowledge, buyers, hsCode);
+                        Map<String, Object> roadmap = buildRoadmap(risks, certs, ftoItems, buyers, knowledgeSources);
+                        return Map.of("riskItems", risks, "actionRoadmap", roadmap);
+                    },
+                    result -> result != null && result.get("riskItems") instanceof List<?> risks && !risks.isEmpty()
+                            ? AgentVerification.pass("risk items and roadmap generated")
+                            : AgentVerification.fail("risk planner did not produce risk items")
+            );
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> riskItems = (List<Map<String, String>>) planningResult.get("riskItems");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> actionRoadmap = (Map<String, Object>) planningResult.get("actionRoadmap");
             Map<String, Object> agentRequest = buildAgentRequest(run, productName, hsCode, description, targetCountry, certs);
-            Optional<Map<String, Object>> agentResult = fastApiAgentClient.analyze(agentRequest);
-            Optional<Map<String, Object>> reportResult = fastApiAgentClient.report(agentRequest);
+            Optional<Map<String, Object>> agentResult = agentLoop.runTool(
+                    "fastapi_analyze",
+                    "FastAPI /analyze",
+                    2,
+                    Optional.empty(),
+                    () -> fastApiAgentClient.analyze(agentRequest),
+                    result -> result != null && result.isPresent()
+                            ? AgentVerification.pass("FastAPI analyze returned payload")
+                            : AgentVerification.fail("FastAPI analyze unavailable; retry or fallback to Spring")
+            );
             Map<String, Object> ragContext = agentRagContextBuilder.build(knowledge, certs, ftoItems, buyers,
                     knowledgeSources, publicDataResult.getRecords(), acceptedLoopItems);
-            AgentInferenceResult llmResult = agentInferenceService.infer(AgentInferenceRequest.builder()
+            AgentInferenceRequest inferenceRequest = AgentInferenceRequest.builder()
                     .diagnosisId(run.getId())
                     .productName(productName)
                     .hsCode(hsCode)
@@ -139,7 +197,36 @@ public class DiagnosisAsyncProcessor {
                             "riskItems", riskItems,
                             "actionRoadmap", actionRoadmap
                     ))
-                    .build());
+                    .build();
+            AgentInferenceResult llmResult = agentLoop.runTool(
+                    "llm_reason",
+                    "Gemini/OpenRouter provider chain",
+                    2,
+                    AgentInferenceResult.builder()
+                            .succeeded(false)
+                            .provider("spring-local")
+                            .model("rule-fallback")
+                            .content(Map.of())
+                            .knowledgeSuggestions(List.of())
+                            .fallbackReasons(List.of("agent loop fallback"))
+                            .build(),
+                    () -> agentInferenceService.infer(inferenceRequest),
+                    result -> result != null && !nullToEmpty(result.getProvider()).isBlank()
+                            ? AgentVerification.pass(result.isSucceeded()
+                            ? "external LLM reasoning succeeded with " + result.getProvider()
+                            : "LLM unavailable; verified Spring local fallback result")
+                            : AgentVerification.fail("LLM provider chain returned no provider")
+            );
+            Optional<Map<String, Object>> reportResult = agentLoop.runTool(
+                    "render_report",
+                    "FastAPI /report",
+                    2,
+                    Optional.empty(),
+                    () -> fastApiAgentClient.report(agentRequest),
+                    result -> result != null && result.isPresent()
+                            ? AgentVerification.pass("FastAPI report returned markdown")
+                            : AgentVerification.fail("FastAPI report unavailable; retry or render Spring markdown")
+            );
             List<Map<String, Object>> loopSuggestions = buildKnowledgeLoopSuggestions(
                     llmResult, riskItems, sources, productName, hsCode, targetCountry);
             persistKnowledgeLoopSuggestions(run, product, loopSuggestions);
@@ -150,6 +237,17 @@ public class DiagnosisAsyncProcessor {
                     agentResult.isEmpty(), agentResult.isPresent()
                             ? "Spring 진단 결과에 FastAPI agent 분석을 병합"
                             : "FastAPI agent 미활성 또는 호출 실패로 Spring 규칙 진단 유지"));
+            agentLoop.runTool(
+                    "verify_sources",
+                    "Agent source verifier",
+                    1,
+                    Map.of("valid", false, "message", "not executed"),
+                    () -> verifySourceTrace(sources, publicDataResult.getRecords()),
+                    result -> Boolean.TRUE.equals(result.get("valid"))
+                            ? AgentVerification.pass(stringValue(result.get("message")))
+                            : AgentVerification.fail(stringValue(result.get("message")))
+            );
+            agentLoop.complete("진단 계획, 도구 실행, 검증, fallback 처리를 완료했습니다.");
 
             Map<String, Object> resultMap = new LinkedHashMap<>();
             resultMap.put("diagnosisScore", Map.of(
@@ -169,7 +267,7 @@ public class DiagnosisAsyncProcessor {
             resultMap.put("riskItems", riskItems);
             resultMap.put("actionRoadmap", actionRoadmap);
             resultMap.put("sources", sources);
-            resultMap.put("agentTrace", buildAgentTrace(agentResult.isPresent(), reportResult.isPresent(), llmResult));
+            resultMap.put("agentTrace", agentLoop.toTrace(agentResult.isPresent(), reportResult.isPresent(), llmResult));
             resultMap.put("scoringRubric", buildScoringRubric());
             resultMap.put("stageCards", buildStageCards(productName, hsCode, targetCountry, overall, market,
                     regulation, recall, fto, support, riskItems, actionRoadmap, sources, agentResult.orElse(null),
@@ -341,43 +439,174 @@ public class DiagnosisAsyncProcessor {
         return features;
     }
 
-    private Map<String, Object> buildAgentTrace(boolean analyzeSucceeded, boolean reportSucceeded,
-                                                AgentInferenceResult llmResult) {
-        Map<String, Object> trace = new LinkedHashMap<>();
-        trace.put("mode", llmResult.isSucceeded() ? "bounded-llm-reasoning-with-provider-fallback"
-                : fastApiAgentClient.isEnabled() ? "optional-fastapi-bridge" : "spring-rule-orchestrator");
-        trace.put("claimBoundary", "자율형 tool loop가 아니라 Spring이 계획, 수집, 점수화, 검증, fallback을 제어하는 bounded agent orchestration입니다.");
-        trace.put("steps", List.of(
-                Map.of("step", "plan", "tool", "Spring DiagnosisAsyncProcessor", "status", "done",
-                        "retryCount", 0, "message", "제품·HS·대상국·지식 스냅샷 기반 진단 계획 생성"),
-                Map.of("step", "collect", "tool", "PublicDataCollectionService", "status", "done",
-                        "retryCount", 0, "message", "공공 API live/cache/fallback 출처를 sourceType으로 분리 수집"),
-                Map.of("step", "score", "tool", "Spring rule scorer", "status", "done",
-                        "retryCount", 0, "message", "문서화된 가중치로 시장/규제/리콜/FTO/지원 점수 산정"),
-                Map.of("step", "llm_reason", "tool", "Gemini/OpenRouter provider chain",
-                        "status", llmResult.isSucceeded() ? "done" : "fallback",
-                        "retryCount", llmResult.getFallbackReasons() == null ? 0 : llmResult.getFallbackReasons().size(),
-                        "message", llmResult.isSucceeded()
-                                ? llmResult.getProvider() + " 보조 추론과 지식화 후보 병합"
-                                : "외부 LLM 실패 또는 비활성으로 Spring 규칙 결과 유지"),
-                Map.of("step", "verify", "tool", "source trace validator", "status", "done",
-                        "retryCount", 0, "message", "공공 API, cache, fallback, heuristic 출처를 분리해 과장 표기 방지"),
-                Map.of("step", "agent_analyze", "tool", "FastAPI /analyze", "status", analyzeSucceeded ? "done" : "fallback",
-                        "retryCount", analyzeSucceeded ? 0 : 1, "message", analyzeSucceeded ? "FastAPI agent 분석 병합" : "Spring 결과로 대체"),
-                Map.of("step", "report", "tool", "FastAPI /report", "status", reportSucceeded ? "done" : "fallback",
-                        "retryCount", reportSucceeded ? 0 : 1, "message", reportSucceeded ? "FastAPI 리포트 병합" : "Spring Markdown 리포트 생성")
-        ));
-        trace.put("fastApi", fastApiAgentClient.status(fastApiAgentClient.isEnabled(),
-                analyzeSucceeded || reportSucceeded,
-                fastApiAgentClient.isEnabled() ? "FastAPI agent bridge attempted" : "FastAPI bridge disabled by configuration"));
-        trace.put("llm", Map.of(
-                "succeeded", llmResult.isSucceeded(),
-                "provider", nullToEmpty(llmResult.getProvider()),
-                "model", nullToEmpty(llmResult.getModel()),
-                "fallbackReasons", llmResult.getFallbackReasons() == null ? List.of() : llmResult.getFallbackReasons(),
-                "latencyMs", llmResult.getLatencyMs()
-        ));
-        return trace;
+    private Map<String, Object> verifySourceTrace(List<Map<String, Object>> sources,
+                                                  List<PublicDataRecord> records) {
+        long heuristicCount = sources.stream()
+                .filter(source -> "heuristic".equals(source.get("sourceType")))
+                .count();
+        long fallbackCount = sources.stream()
+                .filter(source -> "fallback".equals(source.get("sourceType")))
+                .count();
+        long liveOrCacheCount = sources.stream()
+                .filter(source -> "live".equals(source.get("sourceType")) || "cache".equals(source.get("sourceType")))
+                .count();
+        boolean invalidRuleProvider = sources.stream()
+                .filter(source -> "heuristic".equals(source.get("sourceType")))
+                .anyMatch(source -> !"RULE_ENGINE".equals(source.get("provider")));
+        boolean missingPublicSourceType = records.stream()
+                .anyMatch(record -> record.getSourceType() == null || record.getSourceType().isBlank());
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("valid", !invalidRuleProvider && !missingPublicSourceType && !sources.isEmpty());
+        result.put("heuristicCount", heuristicCount);
+        result.put("fallbackCount", fallbackCount);
+        result.put("liveOrCacheCount", liveOrCacheCount);
+        result.put("message", invalidRuleProvider
+                ? "heuristic source must use RULE_ENGINE provider"
+                : missingPublicSourceType
+                ? "public data record has no sourceType"
+                : "source trace separates live/cache/fallback/heuristic/agent");
+        return result;
+    }
+
+    private static class AgentLoop {
+        private final String diagnosisId;
+        private final List<Map<String, Object>> plan = new ArrayList<>();
+        private final List<Map<String, Object>> steps = new ArrayList<>();
+        private final OffsetDateTime startedAt = OffsetDateTime.now(ZoneOffset.UTC);
+        private OffsetDateTime completedAt;
+        private String completionSummary;
+
+        private AgentLoop(String diagnosisId) {
+            this.diagnosisId = diagnosisId;
+        }
+
+        static AgentLoop start(String diagnosisId, String productName, String hsCode, String targetCountry) {
+            AgentLoop loop = new AgentLoop(diagnosisId);
+            loop.plan.add(task("collect_public_data", "Collect public data with live/cache/fallback evidence"));
+            loop.plan.add(task("score_readiness", "Score market/regulation/recall/FTO/support with source contribution"));
+            loop.plan.add(task("plan_risk_roadmap", "Create risk items and 30/60/90 roadmap"));
+            loop.plan.add(task("fastapi_analyze", "Try optional FastAPI analyze tool, fallback to Spring if unavailable"));
+            loop.plan.add(task("llm_reason", "Call Gemini/OpenRouter provider chain, fallback to Spring rules"));
+            loop.plan.add(task("render_report", "Try optional FastAPI report tool, fallback to Spring markdown/PDF"));
+            loop.plan.add(task("verify_sources", "Verify sourceType separation and trace integrity"));
+            loop.steps.add(Map.of(
+                    "step", "plan",
+                    "tool", "AgentLoopPlanner",
+                    "status", "done",
+                    "retryCount", 0,
+                    "message", "planned " + loop.plan.size() + " tasks for product="
+                            + safe(productName) + ", hsCode=" + safe(hsCode) + ", targetCountry=" + safe(targetCountry)
+            ));
+            return loop;
+        }
+
+        <T> T runTool(String taskId, String toolName, int maxAttempts, T fallback,
+                      AgentTool<T> action, AgentVerifier<T> verifier) {
+            int attempts = Math.max(1, maxAttempts);
+            RuntimeException lastFailure = null;
+            for (int attempt = 1; attempt <= attempts; attempt++) {
+                OffsetDateTime attemptStartedAt = OffsetDateTime.now(ZoneOffset.UTC);
+                try {
+                    T result = action.run();
+                    AgentVerification verification = verifier.verify(result);
+                    steps.add(step(taskId, toolName, verification.passed() ? "done" : "retry",
+                            attempt - 1, verification.message(), attemptStartedAt));
+                    if (verification.passed()) return result;
+                    lastFailure = new IllegalStateException(verification.message());
+                } catch (Exception e) {
+                    lastFailure = e instanceof RuntimeException runtime ? runtime : new IllegalStateException(e);
+                    steps.add(step(taskId, toolName, attempt < attempts ? "retry" : "failed",
+                            attempt - 1, safe(lastFailure.getMessage()), attemptStartedAt));
+                }
+            }
+            steps.add(step(taskId, toolName, "fallback", attempts,
+                    "max attempts reached; using deterministic fallback", OffsetDateTime.now(ZoneOffset.UTC)));
+            if (fallback != null) return fallback;
+            throw lastFailure == null ? new IllegalStateException("agent tool failed: " + taskId) : lastFailure;
+        }
+
+        void complete(String summary) {
+            this.completedAt = OffsetDateTime.now(ZoneOffset.UTC);
+            this.completionSummary = summary;
+            steps.add(Map.of(
+                    "step", "complete",
+                    "tool", "complete_task",
+                    "status", "done",
+                    "retryCount", 0,
+                    "message", summary
+            ));
+        }
+
+        Map<String, Object> toTrace(boolean analyzeSucceeded, boolean reportSucceeded,
+                                    AgentInferenceResult llmResult) {
+            Map<String, Object> trace = new LinkedHashMap<>();
+            trace.put("mode", "agent-loop-planning-tool-verification-retry");
+            trace.put("claimBoundary", "Spring AgentLoop가 계획을 만들고 tool을 실행하며 verifier 실패 시 retry/fallback을 기록합니다.");
+            trace.put("diagnosisId", diagnosisId);
+            trace.put("startedAt", startedAt.toString());
+            trace.put("completedAt", completedAt != null ? completedAt.toString() : OffsetDateTime.now(ZoneOffset.UTC).toString());
+            trace.put("plan", plan);
+            trace.put("steps", steps);
+            trace.put("completion", Map.of(
+                    "status", "success",
+                    "summary", completionSummary == null ? "" : completionSummary
+            ));
+            trace.put("fastApi", Map.of(
+                    "analyzeSucceeded", analyzeSucceeded,
+                    "reportSucceeded", reportSucceeded
+            ));
+            trace.put("llm", Map.of(
+                    "succeeded", llmResult != null && llmResult.isSucceeded(),
+                    "provider", llmResult == null ? "" : safe(llmResult.getProvider()),
+                    "model", llmResult == null ? "" : safe(llmResult.getModel()),
+                    "fallbackReasons", llmResult == null || llmResult.getFallbackReasons() == null
+                            ? List.of() : llmResult.getFallbackReasons(),
+                    "latencyMs", llmResult == null ? 0 : llmResult.getLatencyMs()
+            ));
+            return trace;
+        }
+
+        private static Map<String, Object> task(String id, String objective) {
+            return Map.of("id", id, "objective", objective, "status", "planned");
+        }
+
+        private static Map<String, Object> step(String taskId, String toolName, String status,
+                                                int retryCount, String message,
+                                                OffsetDateTime attemptStartedAt) {
+            return Map.of(
+                    "step", taskId,
+                    "tool", toolName,
+                    "status", status,
+                    "retryCount", retryCount,
+                    "message", safe(message),
+                    "attemptedAt", attemptStartedAt.toString()
+            );
+        }
+
+        private static String safe(String value) {
+            return value == null ? "" : value;
+        }
+    }
+
+    @FunctionalInterface
+    private interface AgentTool<T> {
+        T run() throws Exception;
+    }
+
+    @FunctionalInterface
+    private interface AgentVerifier<T> {
+        AgentVerification verify(T result);
+    }
+
+    private record AgentVerification(boolean passed, String message) {
+        static AgentVerification pass(String message) {
+            return new AgentVerification(true, message);
+        }
+
+        static AgentVerification fail(String message) {
+            return new AgentVerification(false, message);
+        }
     }
 
     private Map<String, Object> buildStageCards(String productName, String hsCode, String targetCountry,

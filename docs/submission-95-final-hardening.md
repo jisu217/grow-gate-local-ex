@@ -15,7 +15,7 @@ GrowGate Local EX는 지역 수출 담당자가 제품 단위로 시장성, 규�
 | 로컬 규칙 출처가 실제 기관 출처처럼 보임 | 로컬 산식 출처 provider를 `RULE_ENGINE`, sourceType을 `heuristic`으로 분리 | `DiagnosisAsyncProcessor` |
 | S04~S07 상세 카드가 mock 기반 | S04 시장, S05 규제, S06 리콜, S07 FTO/지원 stageCards를 백엔드에서 생성하고 프론트 매핑 | `DiagnosisAsyncProcessor`, `diagnosisService.js` |
 | XGBoost UI 표기가 실제 구현과 다름 | S03을 `RULE SCORING LAB`으로 변경하고 rule rubric + LLM assisted로 표기 | `S03PredLab.jsx` |
-| agentic loop 과장 위험 | `agentTrace.claimBoundary`를 추가해 bounded orchestration임을 명시 | `DiagnosisAsyncProcessor` |
+| agentic loop 과장 위험 | 실제 `AgentLoop`로 plan/tool execution/verification/retry/fallback/complete_task trace를 생성 | `DiagnosisAsyncProcessor` |
 | RAG 과장 위험 | LLM은 점수 근거가 아니라 DB 지식/공공데이터 context 기반 보조 추론 및 지식화 후보 생성으로 제한 | `AgentRagContextBuilder`, `AgentInferenceService` |
 | 점수 산식이 임의로 보임 | `scoringRubric`에 weight, evidence, guardrail을 결과 JSON으로 저장 | `DiagnosisAsyncProcessor` |
 
@@ -38,7 +38,7 @@ GrowGate Local EX는 지역 수출 담당자가 제품 단위로 시장성, 규�
    - 키는 환경변수로만 주입하고, 오류 메시지와 fallback reason은 secret sanitizer로 마스킹한다.
 
 5. **정직한 기술 범위**
-   - 현재 제출 표현은 실제 라벨 기반 XGBoost, pgvector급 vector RAG, 완전 자율 agent loop라고 주장하지 않는다.
+   - 현재 제출 표현은 실제 라벨 기반 XGBoost, pgvector급 vector RAG, LLM 동적 도구 발견형 open-ended agent라고 주장하지 않는다.
    - 대신 공공 API 수집, source trace, 규칙 산식, bounded LLM reasoning, 지식 순환이라는 구현된 강점을 전면에 둔다.
 
 ## 발표/서류 표현 가이드
@@ -64,4 +64,4 @@ GrowGate Local EX는 지역 수출 담당자가 제품 단위로 시장성, 규�
 | 일부 공공데이터는 활용신청 후 operation endpoint 필요 | fallback record로 명시 | 실제 발급 URL과 key 확보 후 smoke test |
 | 실제 성과 라벨 기반 ML 부재 | rule rubric으로 투명화 | 진단/수출 결과 라벨 축적 후 ML 전환 |
 | vector DB RAG 부재 | DB context injection과 지식화 루프 | embedding/chunk/citation score 도입 |
-| 운영형 agent loop 제한 | bounded orchestration 명시 | tool registry와 retry policy 고도화 |
+| Agent 고도화 | Spring `AgentLoop`는 고정 도구 계획과 retry/fallback을 수행 | 동적 tool registry, checkpoint/resume, 사용자 승인형 agent action 추가 |

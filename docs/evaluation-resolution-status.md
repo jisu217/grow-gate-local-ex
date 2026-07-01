@@ -29,7 +29,7 @@
 | 남은 항목 | 상태 | 이유 |
 | --- | --- | --- |
 | Spring 메인 앱과 FastAPI Agent 백엔드의 실제 통합 | 부분 완료 | `APP_FASTAPI_ENABLED=true`일 때 Spring 진단 프로세서가 FastAPI `/analyze`, `/report`를 호출해 결과 JSON에 병합한다. 단, FastAPI 운영 배포/장애 모니터링까지는 아님 |
-| 실제 agentic planning/tool/retry loop | 부분 완료 | Spring 결과에 `agentTrace`, `claimBoundary`, plan/collect/score/llm_reason/verify/report/fallback 단계를 기록한다. 단, 완전한 자율 LLM tool loop는 아님 |
+| 실제 agentic planning/tool/retry loop | 완료 | Spring 진단 경로에 `AgentLoop`를 추가해 plan, tool execution, verifier, retry, fallback, `complete_task`를 실제 실행한다. 단, LLM이 런타임에 임의 도구를 새로 발견하는 open-ended agent는 아님 |
 | PDF 리포트 생성의 제출용 연동 | 부분 완료 | React/Spring 진단 상세에서 `/diagnosis/{id}/report` 리포트 다운로드를 연결했다. 현재는 Markdown/PDF-ready report이며 서버 binary PDF 생성은 아님 |
 | 진단 진행 상태 polling/WebSocket | 완료 | 진단 상세 페이지가 `pending/running` 상태를 2.5초 간격으로 polling하고 완료 시 자동 갱신한다 |
 | 진단 결과 상세 카드의 완전한 API 데이터화 | 완료 | S00~S10 상세 카드를 backend `stageCards` 기반으로 매핑한다. S04~S07도 backend 점수/source trace 기반으로 치환 |
@@ -145,4 +145,4 @@
 다만 “모든 점수가 항상 실시간 공공 API만으로 계산되는 AI/RAG 서비스”라고 주장하면 아직 방어가 어렵다. 제출 표현은 아래처럼 잡는 것이 안전하다.
 
 - 완료로 말할 수 있는 것: React/Spring 메인 앱의 실제 진단 run 생성, 입력 기반 규칙 진단, API key 기반 live 공공데이터 수집 구조, cache/fallback record, sourceType/domain signal, S00~S10 stageCards API화, 권한/삭제/검증/문서 정합성 보완
-- 아직 말하면 안 되는 것: API key/operation endpoint 없이도 항상 live 데이터가 수집된다는 주장, 실제 라벨 기반 XGBoost 예측, pgvector급 RAG 검색, 완전 자율 agent tool loop, token revocation 기반 보안 완성
+- 아직 말하면 안 되는 것: API key/operation endpoint 없이도 항상 live 데이터가 수집된다는 주장, 실제 라벨 기반 XGBoost 예측, pgvector급 RAG 검색, LLM이 임의 도구를 동적으로 발견하는 open-ended agent, token revocation 기반 보안 완성

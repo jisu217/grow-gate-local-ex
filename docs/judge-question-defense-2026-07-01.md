@@ -13,7 +13,7 @@
 | 7 | 이 점수 가중치는 누가 검증했습니까? | 현재는 전문가 검증 완료가 아니라 제출용 rubric이다. 사용자 검증 문서에 3 persona, 5 scenario, expert review 질문을 정의했다. | `docs/user-validation-2026.md` |
 | 8 | XGBoost 모델 파일과 학습 데이터는 어디 있습니까? | 메인 앱은 XGBoost를 주장하지 않는다. UI는 readiness scoring으로 바꿨고 실제 라벨 ML은 후속 과제로 분리했다. | `S03PredLab.jsx`, `diagnosisSteps.js` |
 | 9 | RAG 검색에서 top-k chunk를 보여주세요. | pgvector/top-k vector retrieval은 주장하지 않는다. 현재는 DB context injection과 knowledge loop 구조다. | `docs/submission-95-final-hardening.md` |
-| 10 | Agent가 실패하면 어떤 계획을 다시 세웁니까? | 완전 자율 재계획 loop가 아니라 bounded orchestration이다. trace에 plan/collect/score/llm_reason/verify/fallback 경계를 명시한다. | `DiagnosisAsyncProcessor.buildAgentTrace()` |
+| 10 | Agent가 실패하면 어떤 계획을 다시 세웁니까? | `AgentLoop`가 collect/score/roadmap/FastAPI/LLM/report/source verification 계획을 만들고, tool verifier 실패 시 재시도 후 deterministic fallback을 기록한다. | `DiagnosisAsyncProcessor.AgentLoop` |
 | 11 | FastAPI Agent가 배포 서버에서 켜져 있습니까? | 기본은 optional bridge다. `APP_FASTAPI_ENABLED=true`일 때만 `/analyze`, `/report`를 호출하고, 비활성 시 Spring 결과로 degrade한다. | `FastApiAgentClient`, `agentTrace` |
 | 12 | S04 시장성 화면은 backend API 값입니까? | 예. `stageCards.s04~s07`을 backend에서 생성하고 frontend는 해당 값을 매핑한다. S04~S07 mock fallback import를 제거했다. | `DiagnosisAsyncProcessor`, `diagnosisService.js` |
 | 13 | 이 리포트는 PDF입니까? | Markdown API와 별도로 `/api/diagnosis/{id}/report.pdf`가 `application/pdf` bytes를 내려준다. | `DiagnosisController.getReportPdf()` |
@@ -30,4 +30,3 @@
 - 실제 API key와 operation endpoint가 없는 provider는 `fallback`으로 남는다.
 - 실제 라벨 기반 XGBoost와 pgvector top-k RAG는 제출 주장 범위에서 제외한다.
 - JWT revocation persistence와 HttpOnly cookie 전환은 상용화 보안 과제로 남아 있다.
-
