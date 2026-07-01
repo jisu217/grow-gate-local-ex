@@ -16,6 +16,17 @@ require_file() {
   [[ -f "$ROOT_DIR/$1" ]] || fail "missing required file: $1"
 }
 
+search_quiet() {
+  local pattern="$1"
+  shift
+
+  if command -v rg >/dev/null 2>&1; then
+    rg -n "$pattern" "$@" >/dev/null
+  else
+    grep -R -n -E "$pattern" "$@" >/dev/null
+  fi
+}
+
 require_file "scripts/smoke-prod.sh"
 require_file "scripts/verify-local.sh"
 require_file ".github/workflows/ci.yml"
@@ -31,36 +42,36 @@ grep -q 'enabled: ${PUBLIC_DATA_ENABLED:true}' "$ROOT_DIR/backend/BE-02/src/main
   || fail "application.yml.example public-data.enabled must default to true"
 pass "public data defaults to enabled"
 
-if rg -n 'MOCK_STAGES|S04_MARKETS|S05_REGULATIONS|S06_RECALLS|S07_PATENTS|S07_SUPPORTS' \
-  "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" >/dev/null; then
+if search_quiet 'MOCK_STAGES|S04_MARKETS|S05_REGULATIONS|S06_RECALLS|S07_PATENTS|S07_SUPPORTS' \
+  "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js"; then
   fail "diagnosisService must not import or merge S04-S07 mock stage data"
 fi
 pass "S04-S07 diagnosis service mapping is backend-driven"
 
-rg -n 'reportError|try \{|catch \(err\)' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisResult.jsx" >/dev/null \
+search_quiet 'reportError|try \{|catch \(err\)' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisResult.jsx" \
   || fail "DiagnosisResult must surface report download errors"
 pass "report download has visible error handling"
 
-if rg -n 'localStorage\.setItem\((LEGACY_TOKEN_KEY|["'\'']gg_access_token)' "$ROOT_DIR/frontend/FE-02/src" >/dev/null; then
+if search_quiet 'localStorage\.setItem\((LEGACY_TOKEN_KEY|["'\'']gg_access_token)' "$ROOT_DIR/frontend/FE-02/src"; then
   fail "access token must not be written to localStorage"
 fi
-rg -n 'httpOnly\(true\)' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/auth/controller/AuthController.java" >/dev/null \
+search_quiet 'httpOnly\(true\)' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/auth/controller/AuthController.java" \
   || fail "auth cookie must be HttpOnly"
-rg -n 'gg_access_token' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/security/JwtAuthenticationFilter.java" >/dev/null \
+search_quiet 'gg_access_token' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/security/JwtAuthenticationFilter.java" \
   || fail "JWT filter must accept gg_access_token cookie"
-rg -n 'X-GG-CSRF|gg_csrf_token' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/security/CsrfCookieFilter.java" >/dev/null \
+search_quiet 'X-GG-CSRF|gg_csrf_token' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/security/CsrfCookieFilter.java" \
   || fail "cookie auth must have CSRF double-submit filter"
-rg -n 'X-GG-CSRF|gg_csrf_token' "$ROOT_DIR/frontend/FE-02/src/services/apiClient.js" >/dev/null \
+search_quiet 'X-GG-CSRF|gg_csrf_token' "$ROOT_DIR/frontend/FE-02/src/services/apiClient.js" \
   || fail "frontend API client must send CSRF header from cookie"
 pass "auth uses HttpOnly cookie path and avoids localStorage token persistence"
 
-if rg -n 'findTop20ByOrderByStartedAtDesc|findTop50ByOrderByFetchedAtDesc|findTop50ByHsCodeAndTargetCountryOrderByFetchedAtDesc' \
-  "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataCollectionService.java" >/dev/null; then
+if search_quiet 'findTop20ByOrderByStartedAtDesc|findTop50ByOrderByFetchedAtDesc|findTop50ByHsCodeAndTargetCountryOrderByFetchedAtDesc' \
+  "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataCollectionService.java"; then
   fail "public-data service must not use global recent run/record queries"
 fi
-rg -n 'findTop20ByRequestedBy_IdInOrderByStartedAtDesc' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataCollectionService.java" >/dev/null \
+search_quiet 'findTop20ByRequestedBy_IdInOrderByStartedAtDesc' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataCollectionService.java" \
   || fail "public-data runs must be scoped by requestedBy"
-rg -n 'findTop50ByRun_RequestedBy_IdIn' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataCollectionService.java" >/dev/null \
+search_quiet 'findTop50ByRun_RequestedBy_IdIn' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataCollectionService.java" \
   || fail "public-data records must be scoped by requestedBy"
 pass "public data APIs use user/company scoped queries"
 
