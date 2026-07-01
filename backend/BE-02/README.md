@@ -77,6 +77,10 @@ export PUBLIC_DATA_ENABLED=true
 | `APP_FASTAPI_BASE_URL` | FastAPI backend URL | `http://localhost:8000` |
 | `PUBLIC_DATA_ENABLED` | 공공 API live 수집 사용 여부. 기본값은 true이며, key/operation endpoint가 없으면 fallback record로 투명하게 남김 | `true` |
 | `PUBLIC_DATA_CACHE_TTL_HOURS` | live/cache record 재사용 시간 | `24` |
+| `PUBLIC_DATA_DAILY_REFRESH_ENABLED` | 등록 제품 기준 일별 public data refresh scheduler 사용 여부 | `true` |
+| `PUBLIC_DATA_DAILY_REFRESH_CRON` | 일별 수집 cron | `0 20 3 * * *` |
+| `PUBLIC_DATA_DAILY_REFRESH_MAX_PRODUCTS` | 한 번에 refresh할 최대 제품 수 | `30` |
+| `PUBLIC_DATA_DAILY_REFRESH_FRESHNESS_HOURS` | 같은 HS/국가 provider coverage가 있으면 스킵할 freshness 기준 | `20` |
 | `DATAGO_SERVICE_KEY` | 공공데이터포털 일반 인증키 공통 alias | 없음 |
 | `KCS_TRADE_API_URL`, `KCS_TRADE_API_KEY` | 관세청 수출입무역통계 API URL/key. key 미설정 시 `DATAGO_SERVICE_KEY` 사용 | `http://apis.data.go.kr/1220000/Newtrade/getNewtradeList` |
 | `KOTRA_MARKET_API_URL`, `KOTRA_MARKET_API_KEY` | KOTRA 시장/뉴스 API URL/key. key 미설정 시 `DATAGO_SERVICE_KEY` 사용 | `https://www.data.go.kr/data/15122648/openapi.do` |
@@ -88,6 +92,8 @@ export PUBLIC_DATA_ENABLED=true
 | `APP_LOG_LEVEL` | `com.growgate` 로그 레벨 | `INFO` |
 
 KOTRA, Safety Korea, KIPRIS, 수출바우처 기본 URL은 공식 카탈로그/신청 페이지입니다. `PUBLIC_DATA_ENABLED=true`가 기본값이지만 이 URL이 그대로면 HTML 상세 페이지를 API 응답으로 저장하지 않고 `fallback` record에 "operation endpoint 필요" 사유를 남깁니다. 활용신청 후 발급 화면의 실제 요청 URL을 각 `*_API_URL`에 넣으면 `live` source trace로 전환됩니다.
+
+등록 제품의 HS Code/대상국 기준 public data cache는 매일 `PUBLIC_DATA_DAILY_REFRESH_CRON`에 따라 갱신됩니다. 로그인 사용자는 `POST /api/public-data/daily-refresh`로 본인 제품 대상 refresh를 수동 실행할 수 있습니다.
 
 ---
 

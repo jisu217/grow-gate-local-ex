@@ -3,6 +3,8 @@ package com.growgate.publicdata.repository;
 import com.growgate.publicdata.entity.PublicDataRecord;
 import com.growgate.publicdata.enums.PublicDataProvider;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.LocalDateTime;
@@ -29,4 +31,15 @@ public interface PublicDataRecordRepository extends JpaRepository<PublicDataReco
             String hsCode,
             String targetCountry
     );
+
+    @Query("""
+            select count(distinct r.provider)
+            from PublicDataRecord r
+            where r.hsCode = :hsCode
+              and r.targetCountry = :targetCountry
+              and r.fetchedAt >= :since
+            """)
+    long countDistinctProvidersCollectedSince(@Param("hsCode") String hsCode,
+                                              @Param("targetCountry") String targetCountry,
+                                              @Param("since") LocalDateTime since);
 }
