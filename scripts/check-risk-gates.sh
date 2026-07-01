@@ -104,6 +104,18 @@ grep -q 'daily-refresh:' "$ROOT_DIR/backend/BE-02/src/main/resources/application
   || fail "public-data daily refresh settings must be configurable"
 pass "daily public-data refresh pipeline is wired"
 
+search_quiet 'MotieWebCrawlConnector' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/MotieWebCrawlConnector.java" \
+  || fail "safe public web crawl connector must exist"
+search_quiet 'ConditionalOnProperty' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/MotieWebCrawlConnector.java" \
+  || fail "crawler must be disabled unless explicitly enabled"
+search_quiet 'allowed-hosts' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml" \
+  || fail "crawler must use configured allowlist hosts"
+search_quiet 'EMAIL_REDACTED|PHONE_REDACTED|REDACTED' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/MotieWebCrawlConnector.java" \
+  || fail "crawler must mask secrets and personal contact patterns"
+search_quiet 'sourceType === '\''crawl'\''' "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
+  || fail "frontend source mapper must label crawl sourceType separately"
+pass "safe public web crawl path is opt-in, allowlisted, masked, and source-typed"
+
 grep -q 'SMOKE_CORS_ORIGIN' "$ROOT_DIR/scripts/smoke-prod.sh" \
   || fail "smoke-prod must support CORS preflight checks"
 grep -q 'SMOKE_REQUIRE_LIVE_PUBLIC_DATA' "$ROOT_DIR/scripts/smoke-prod.sh" \

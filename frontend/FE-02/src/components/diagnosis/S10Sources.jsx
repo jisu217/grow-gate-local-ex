@@ -14,12 +14,13 @@ export default function S10Sources({ pipes }) {
           const status = pipe.status ?? 'fallback'
           const statusText = status === 'live' ? 'Live'
             : status === 'cache' ? 'Cache'
+              : status === 'crawl' ? 'Crawl'
               : status === 'heuristic' ? 'Rule'
                 : status === 'agent' ? 'Agent'
                   : status === 'user_input' ? 'User'
                     : 'Fallback'
           const chipType = status === 'live' || status === 'cache' ? 'ok'
-            : status === 'heuristic' || status === 'agent' || status === 'user_input' ? 'warn'
+            : status === 'crawl' || status === 'heuristic' || status === 'agent' || status === 'user_input' ? 'warn'
               : 'req'
           return (
           <div key={pipe.source} className="pipe-card">
@@ -46,8 +47,8 @@ export default function S10Sources({ pipes }) {
       </div>
 
       <div style={{ fontSize: 11.5, color: 'var(--slate-2)', marginTop: 16, lineHeight: 1.6 }}>
-        출처는 live/cache/fallback 공공데이터와 heuristic 규칙 엔진을 구분합니다.
-        fallback 또는 heuristic은 “공공데이터 연결됨”으로 해석하지 말고 보강 대상 여부를 확인하십시오.
+        출처는 live/cache/fallback 공공데이터, crawl 공개 웹, heuristic 규칙 엔진을 구분합니다.
+        fallback, crawl, heuristic은 “공공 API 연결됨”으로 해석하지 말고 보강 대상 여부를 확인하십시오.
       </div>
     </DiagnosisStage>
   )

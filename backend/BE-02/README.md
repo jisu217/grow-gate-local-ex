@@ -81,6 +81,9 @@ export PUBLIC_DATA_ENABLED=true
 | `PUBLIC_DATA_DAILY_REFRESH_CRON` | 일별 수집 cron | `0 20 3 * * *` |
 | `PUBLIC_DATA_DAILY_REFRESH_MAX_PRODUCTS` | 한 번에 refresh할 최대 제품 수 | `30` |
 | `PUBLIC_DATA_DAILY_REFRESH_FRESHNESS_HOURS` | 같은 HS/국가 provider coverage가 있으면 스킵할 freshness 기준 | `20` |
+| `PUBLIC_DATA_CRAWL_ENABLED` | 안전 공개 웹 크롤링 connector 사용 여부. 기본 비활성 | `false` |
+| `PUBLIC_DATA_CRAWL_URLS` | 크롤링할 HTTPS 공개 페이지 CSV. allowlist host만 허용 | 없음 |
+| `PUBLIC_DATA_CRAWL_ALLOWED_HOSTS` | 크롤링 허용 host CSV | 산업부/KOTRA/SafetyKorea/data.go.kr 기본 allowlist |
 | `DATAGO_SERVICE_KEY` | 공공데이터포털 일반 인증키 공통 alias | 없음 |
 | `KCS_TRADE_API_URL`, `KCS_TRADE_API_KEY` | 관세청 수출입무역통계 API URL/key. key 미설정 시 `DATAGO_SERVICE_KEY` 사용 | `http://apis.data.go.kr/1220000/Newtrade/getNewtradeList` |
 | `KOTRA_MARKET_API_URL`, `KOTRA_MARKET_API_KEY` | KOTRA 시장/뉴스 API URL/key. key 미설정 시 `DATAGO_SERVICE_KEY` 사용 | `https://www.data.go.kr/data/15122648/openapi.do` |
@@ -96,6 +99,8 @@ KOTRA, Safety Korea, KIPRIS, 수출바우처 기본 URL은 공식 카탈로그/�
 등록 제품의 HS Code/대상국 기준 public data cache는 매일 `PUBLIC_DATA_DAILY_REFRESH_CRON`에 따라 갱신됩니다. 로그인 사용자는 `POST /api/public-data/daily-refresh`로 본인 제품 대상 refresh를 수동 실행할 수 있습니다.
 
 Gate 판단 결과는 `gateDecision`, `confidencePanel`, `riskItems`, `actionRoadmap`, `evidenceSources`, `inputTrace`를 함께 저장합니다. `gateDecision.status`는 `GO`, `CONDITIONAL_GO`, `HOLD`, `STOP` 중 하나이며, `actionRoadmap`은 `thisWeek`, `beforeQuote`, `beforeShipment` 업무 bucket으로 내려갑니다.
+
+공개 웹 크롤링은 `PUBLIC_DATA_CRAWL_ENABLED=true`와 `PUBLIC_DATA_CRAWL_URLS`가 모두 설정된 경우에만 수집단에 들어옵니다. connector는 HTTPS URL, host allowlist, 최대 5페이지, raw/text 길이 제한, script/style 제거, 이메일/전화/키 패턴 마스킹을 적용한 뒤 `sourceType=crawl` record로 적재합니다. crawl record는 공공 API live record가 아니므로 S10에서 별도 badge로 표시됩니다.
 
 ---
 

@@ -435,6 +435,7 @@ public class DiagnosisAsyncProcessor {
             case SAFETY_RECALL -> "제품안전·리콜 live/cache 수집";
             case KIPRIS_FTO -> "KIPRIS Plus 특허/FTO live/cache 수집";
             case BIZINFO_SUPPORT -> "기업마당 지원사업 live/cache 수집";
+            case MOTIE_WEB_CRAWL -> "산업부 공개 웹 안전 크롤링 수집";
         };
     }
 
@@ -1336,6 +1337,7 @@ public class DiagnosisAsyncProcessor {
     private String sourceType(PublicDataRecord record) {
         if (record.isCacheHit()) return "cache";
         if (record.isFallbackUsed()) return "fallback";
+        if (record.getSourceType() != null && !record.getSourceType().isBlank()) return record.getSourceType();
         return "live";
     }
 

@@ -347,6 +347,7 @@ function sourceTypeLabel(sourceType, usedFor) {
   if (sourceType === 'live') return `live 공공데이터 수집 record${suffix}`
   if (sourceType === 'cache') return `캐시 공공데이터${suffix}`
   if (sourceType === 'fallback') return `수집 실패/fallback${suffix}`
+  if (sourceType === 'crawl') return `안전 크롤링 공개 웹${suffix}`
   if (sourceType === 'heuristic') return `규칙 엔진${suffix}`
   if (sourceType === 'agent') return `추론 Agent${suffix}`
   if (sourceType === 'user_input') return `담당자 입력${suffix}`

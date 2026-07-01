@@ -53,6 +53,10 @@ public-data:
     zone: ${PUBLIC_DATA_DAILY_REFRESH_ZONE:Asia/Seoul}
     max-products: ${PUBLIC_DATA_DAILY_REFRESH_MAX_PRODUCTS:30}
     freshness-hours: ${PUBLIC_DATA_DAILY_REFRESH_FRESHNESS_HOURS:20}
+  crawl:
+    enabled: ${PUBLIC_DATA_CRAWL_ENABLED:false}
+    urls: ${PUBLIC_DATA_CRAWL_URLS:}
+    allowed-hosts: ${PUBLIC_DATA_CRAWL_ALLOWED_HOSTS:www.motie.go.kr,motie.go.kr,www.kotra.or.kr,dream.kotra.or.kr,www.safetykorea.kr,www.data.go.kr}
   kcs-trade:
     url: ${KCS_TRADE_API_URL:http://apis.data.go.kr/1220000/Newtrade/getNewtradeList}
     key: ${KCS_TRADE_API_KEY:${DATAGO_SERVICE_KEY:}}
