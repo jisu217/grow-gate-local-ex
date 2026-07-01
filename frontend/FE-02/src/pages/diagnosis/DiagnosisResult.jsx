@@ -35,6 +35,7 @@ export default function DiagnosisResult() {
   const [pageState, setPageState] = useState('loading')
   const [currentStep, setCurrentStep] = useState(initialStep)
   const [isCollapsed, setIsCollapsed] = useState(false)
+  const [reportError, setReportError] = useState('')
 
   const scrollRef = useRef(null)
 
@@ -101,16 +102,21 @@ export default function DiagnosisResult() {
   }
 
   const downloadReport = async () => {
-    const report = await getDiagnosisReport(id)
-    const blob = new Blob([report.markdown ?? ''], { type: report.contentType ?? 'text/markdown;charset=utf-8' })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = report.fileName ?? `grow-gate-diagnosis-${id}.md`
-    document.body.appendChild(link)
-    link.click()
-    link.remove()
-    window.URL.revokeObjectURL(url)
+    setReportError('')
+    try {
+      const report = await getDiagnosisReport(id)
+      const blob = new Blob([report.markdown ?? ''], { type: report.contentType ?? 'text/markdown;charset=utf-8' })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = report.fileName ?? `grow-gate-diagnosis-${id}.md`
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      setReportError(err.message || '리포트 다운로드에 실패했습니다. 잠시 후 다시 시도해주세요.')
+    }
   }
 
   if (pageState === 'loading') return (
@@ -165,6 +171,7 @@ export default function DiagnosisResult() {
           {['pending', 'running'].includes(String(result.session?.status ?? '').toLowerCase()) && (
             <StatusMessage type="loading" message="진단이 진행 중입니다. 완료되면 이 화면이 자동으로 갱신됩니다." />
           )}
+          {reportError && <StatusMessage type="error" message={reportError} />}
 
           {renderStage(result.stages)}
 

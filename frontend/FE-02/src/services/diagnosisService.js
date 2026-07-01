@@ -41,7 +41,7 @@ function mapDiagnosisSummary(d) {
     status: d.status,
     requestedAt: d.createdAt,
     updatedAt: null,
-    diagnosisScore: null,
+    diagnosisScore: d.overallScore ?? null,
     riskItems: null,
     actionRoadmap: null,
     summary: null,

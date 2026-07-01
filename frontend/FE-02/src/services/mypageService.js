@@ -1,5 +1,6 @@
 // 마이페이지 서비스 — 로그인 사용자 기준 DB API 연동
 import { apiFetch } from './apiClient.js'
+import { getDiagnosisList } from './diagnosisService.js'
 
 const ROLE_LABELS = {
   owner: '소유자',
@@ -33,15 +34,18 @@ function toMypageProduct(product) {
 
   return {
     id: product.productId,
-    runId: null,
+    runId: product.runId ?? null,
+    diagnosisStatus: product.diagnosisStatus ?? null,
     name: product.name,
     hs: product.hsCode ?? '',
     country: product.targetCountry ?? '',
     category: product.category ?? '',
     description: product.description ?? '',
-    score: null,
+    score: product.score ?? null,
     chips,
-    todo: missingCount > 0
+    todo: product.diagnosisStatus === 'running' || product.diagnosisStatus === 'pending'
+      ? [{ task: '진단 완료 상태 확인하기', due: '30' }]
+      : missingCount > 0
       ? [{ task: '제품 지식 보완하기', due: '30' }]
       : [{ task: 'AI 진단 실행하기', due: '30' }],
     kn: product.knowledgeStatus === 'valid' ? 100 : missingCount > 0 ? 60 : 30,
@@ -84,7 +88,31 @@ export async function getMypageOverview() {
 // 제품 목록 — 백엔드가 인증 사용자 기준으로 개인/회사 범위를 분리해서 반환
 export async function getMypageProducts() {
   const res = await apiFetch('/products')
-  return (res.products ?? []).map(toMypageProduct)
+  const latestByProductId = await getLatestDiagnosisByProductId()
+  return (res.products ?? []).map((product) => {
+    const latest = latestByProductId.get(product.productId)
+    return toMypageProduct({
+      ...product,
+      runId: latest?.id,
+      diagnosisStatus: latest?.status,
+      score: latest?.diagnosisScore,
+    })
+  })
+}
+
+async function getLatestDiagnosisByProductId() {
+  try {
+    const diagnoses = await getDiagnosisList()
+    const latestByProductId = new Map()
+    diagnoses.forEach((diagnosis) => {
+      if (!diagnosis.productId || latestByProductId.has(diagnosis.productId)) return
+      latestByProductId.set(diagnosis.productId, diagnosis)
+    })
+    return latestByProductId
+  } catch (err) {
+    console.warn('[mypageService] 최신 진단 목록을 불러오지 못해 제품 기본 정보만 표시합니다.', err)
+    return new Map()
+  }
 }
 
 // 신규 제품 등록 — POST /api/products

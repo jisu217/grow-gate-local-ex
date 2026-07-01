@@ -3,6 +3,7 @@ package com.growgate.diagnosis.service;
 // 진단 생성·조회
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.growgate.common.DateTimeUtils;
 import com.growgate.diagnosis.dto.CreateDiagnosisRequest;
 import com.growgate.diagnosis.dto.CreateDiagnosisResponse;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse;
@@ -59,7 +60,6 @@ import java.util.stream.Collectors;
 @Transactional
 public class DiagnosisService {
 
-    private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final int EXPIRY_WARNING_DAYS = 90;
 
@@ -96,7 +96,8 @@ public class DiagnosisService {
                     .productName(productName)
                     .targetCountry(run.getTargetCountry())
                     .status(run.getStatus().name())
-                    .createdAt(run.getCreatedAt().format(ISO_FMT))
+                    .createdAt(DateTimeUtils.formatUtc(run.getCreatedAt()))
+                    .overallScore(extractOverallScore(run.getResult()))
                     .build();
         }).collect(Collectors.toList());
 
@@ -203,8 +204,20 @@ public class DiagnosisService {
                 .status(run.getStatus().name())
                 .result(resultData)
                 .knowledgeSnapshot(snapshot)
-                .createdAt(run.getCreatedAt().format(ISO_FMT))
+                .createdAt(DateTimeUtils.formatUtc(run.getCreatedAt()))
                 .build();
+    }
+
+    private Integer extractOverallScore(String resultJson) {
+        if (resultJson == null || resultJson.isBlank()) return null;
+        try {
+            Map<String, Object> resultMap = objectMapper.readValue(resultJson,
+                    new TypeReference<Map<String, Object>>() {});
+            DiagnosisScore score = parseDiagnosisScore(resultMap);
+            return score.getOverall();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Transactional(readOnly = true)
