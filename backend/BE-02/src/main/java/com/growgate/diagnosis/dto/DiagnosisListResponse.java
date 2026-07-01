@@ -18,6 +18,7 @@ public class DiagnosisListResponse {
         private String id;
         private String productId;
         private String productName;
+        private String hsCode;
         private String targetCountry;
         private String status;
         private String createdAt;
