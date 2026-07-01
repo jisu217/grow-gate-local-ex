@@ -62,6 +62,20 @@ class AgentInferenceServiceTest {
         assertThat(result.getFallbackReasons()).containsExactly("gemini: timeout", "openrouter: 429");
     }
 
+    @Test
+    void inferRedactsProviderFailureSecretsFromFallbackReasons() {
+        AgentInferenceService service = new AgentInferenceService(List.of(
+                new FakeProvider("openrouter", AgentInferenceResult.failure("openrouter",
+                        "401 Bearer sk-or-v1-test-secret-token apiKey=sk-or-v1-test-secret-token"))
+        ));
+        ReflectionTestUtils.setField(service, "enabled", true);
+
+        AgentInferenceResult result = service.infer(request());
+
+        assertThat(result.getFallbackReasons().get(0)).contains("[REDACTED]");
+        assertThat(result.getFallbackReasons().get(0)).doesNotContain("sk-or-v1-test-secret-token");
+    }
+
     private AgentInferenceRequest request() {
         return AgentInferenceRequest.builder()
                 .diagnosisId("diagnosis-1")

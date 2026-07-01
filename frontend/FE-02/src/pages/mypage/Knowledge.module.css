@@ -46,7 +46,7 @@
 /* 최근 수정일 */
 .updated { font-size: 11.5px; color: var(--slate-2); margin-top: 10px; }
 
-/* AI 진단 반영 버튼 */
+/* 준비도 진단 반영 버튼 */
 .diagBtn { display: block; width: 100%; margin-top: 14px; background: var(--blue-soft); color: var(--blue); font-family: var(--kr); font-weight: 700; font-size: 13px; border: 1px solid var(--blue-line); padding: 10px; border-radius: 10px; cursor: pointer; transition: .15s; }
 .diagBtn:hover { background: var(--blue); color: #fff; border-color: var(--blue); }
 

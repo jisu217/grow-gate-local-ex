@@ -11,6 +11,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -34,6 +36,12 @@ public class OpenRouterAgentProviderClient extends AbstractLlmAgentProviderClien
     @Value("${app.agent.openrouter.url:https://openrouter.ai/api/v1/chat/completions}")
     private String url;
 
+    @Value("${app.agent.openrouter.site-url:}")
+    private String siteUrl;
+
+    @Value("${app.agent.openrouter.app-title:GrowGate Local EX}")
+    private String appTitle;
+
     public OpenRouterAgentProviderClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(objectMapper);
         this.restTemplate = restTemplate;
@@ -46,7 +54,7 @@ public class OpenRouterAgentProviderClient extends AbstractLlmAgentProviderClien
 
     @Override
     public boolean isEnabled() {
-        return enabled && apiKey != null && !apiKey.isBlank();
+        return enabled && apiKey != null && !apiKey.isBlank() && isAllowedEndpoint();
     }
 
     @Override
@@ -58,7 +66,10 @@ public class OpenRouterAgentProviderClient extends AbstractLlmAgentProviderClien
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.setBearerAuth(apiKey);
-            headers.add("X-Title", "GrowGate Local EX");
+            if (siteUrl != null && !siteUrl.isBlank()) {
+                headers.add("HTTP-Referer", siteUrl);
+            }
+            headers.add("X-Title", appTitle == null || appTitle.isBlank() ? "GrowGate Local EX" : appTitle);
             Map<String, Object> body = Map.of(
                     "model", model,
                     "messages", List.of(Map.of("role", "user", "content", buildPrompt(request)))
@@ -67,8 +78,9 @@ public class OpenRouterAgentProviderClient extends AbstractLlmAgentProviderClien
             String text = extractOpenRouterText(response);
             return Optional.of(parseTextResult(providerName(), model, text, System.currentTimeMillis() - started));
         } catch (IllegalArgumentException | RestClientException e) {
-            log.warn("OpenRouter agent provider failed: {}", sanitize(e.getMessage()));
-            return Optional.of(AgentInferenceResult.failure(providerName(), sanitize(e.getMessage())));
+            String safeMessage = LlmSecretSanitizer.sanitize(e.getMessage());
+            log.warn("OpenRouter agent provider failed: {}", safeMessage);
+            return Optional.of(AgentInferenceResult.failure(providerName(), safeMessage));
         }
     }
 
@@ -85,8 +97,14 @@ public class OpenRouterAgentProviderClient extends AbstractLlmAgentProviderClien
         return "";
     }
 
-    private String sanitize(String message) {
-        if (message == null || message.isBlank()) return "unknown";
-        return message.replaceAll("(?i)(Bearer\\s+)[A-Za-z0-9._\\-]+", "$1[REDACTED]");
+    private boolean isAllowedEndpoint() {
+        try {
+            URI uri = new URI(url);
+            return "https".equalsIgnoreCase(uri.getScheme())
+                    && "openrouter.ai".equalsIgnoreCase(uri.getHost());
+        } catch (URISyntaxException | IllegalArgumentException e) {
+            log.warn("OpenRouter agent provider disabled because endpoint URL is invalid");
+            return false;
+        }
     }
 }

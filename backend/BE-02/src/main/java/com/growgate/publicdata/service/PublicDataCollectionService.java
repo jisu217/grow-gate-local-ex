@@ -1,12 +1,19 @@
 package com.growgate.publicdata.service;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.growgate.common.DateTimeUtils;
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;
+import com.growgate.publicdata.dto.PublicDataDashboardResponse;
+import com.growgate.publicdata.dto.PublicDataDashboardResponse.ProviderStatus;
+import com.growgate.membership.entity.Membership;
+import com.growgate.membership.repository.MembershipRepository;
 import com.growgate.publicdata.entity.PublicDataCollectionRun;
 import com.growgate.publicdata.entity.PublicDataRecord;
 import com.growgate.publicdata.enums.PublicDataCollectionStatus;
+import com.growgate.publicdata.enums.PublicDataProvider;
 import com.growgate.publicdata.repository.PublicDataCollectionRunRepository;
 import com.growgate.publicdata.repository.PublicDataRecordRepository;
 import com.growgate.user.entity.User;
@@ -19,7 +26,9 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 @Service
@@ -31,6 +40,7 @@ public class PublicDataCollectionService {
     private final PublicDataCollectionRunRepository runRepository;
     private final PublicDataRecordRepository recordRepository;
     private final UserRepository userRepository;
+    private final MembershipRepository membershipRepository;
     private final ObjectMapper objectMapper;
 
     @Value("${public-data.enabled:false}")
@@ -99,17 +109,55 @@ public class PublicDataCollectionService {
     }
 
     @Transactional(readOnly = true)
-    public List<PublicDataCollectionRun> getRecentRuns() {
-        return runRepository.findTop20ByOrderByStartedAtDesc();
+    public List<PublicDataCollectionRun> getRecentRuns(String userId) {
+        return runRepository.findTop20ByRequestedBy_IdInOrderByStartedAtDesc(scopeUserIds(userId));
     }
 
     @Transactional(readOnly = true)
-    public List<PublicDataRecord> getRecentRecords(String hsCode, String targetCountry) {
+    public List<PublicDataRecord> getRecentRecords(String userId, String hsCode, String targetCountry) {
+        List<String> scopeUserIds = scopeUserIds(userId);
         if (hsCode != null && !hsCode.isBlank() && targetCountry != null && !targetCountry.isBlank()) {
-            return recordRepository.findTop50ByHsCodeAndTargetCountryOrderByFetchedAtDesc(
-                    normalizeHsCode(hsCode), normalizeCountry(targetCountry));
+            return recordRepository.findTop50ByRun_RequestedBy_IdInAndHsCodeAndTargetCountryOrderByFetchedAtDesc(
+                    scopeUserIds, normalizeHsCode(hsCode), normalizeCountry(targetCountry));
         }
-        return recordRepository.findTop50ByOrderByFetchedAtDesc();
+        return recordRepository.findTop50ByRun_RequestedBy_IdInOrderByFetchedAtDesc(scopeUserIds);
+    }
+
+    @Transactional(readOnly = true)
+    public PublicDataDashboardResponse getDashboard(String userId) {
+        List<String> scopeUserIds = scopeUserIds(userId);
+        List<PublicDataCollectionRun> runs = runRepository.findTop20ByRequestedBy_IdInOrderByStartedAtDesc(scopeUserIds);
+        List<PublicDataRecord> records = recordRepository.findTop50ByRun_RequestedBy_IdInOrderByFetchedAtDesc(scopeUserIds);
+
+        int successCount = runs.stream().mapToInt(PublicDataCollectionRun::getSuccessCount).sum();
+        int fallbackCount = runs.stream().mapToInt(PublicDataCollectionRun::getFallbackCount).sum();
+        int cacheHitCount = runs.stream().mapToInt(PublicDataCollectionRun::getCacheHitCount).sum();
+        int providerCount = runs.stream().mapToInt(PublicDataCollectionRun::getProviderCount).sum();
+        double averageConfidence = records.stream()
+                .map(PublicDataRecord::getConfidence)
+                .filter(confidence -> confidence != null)
+                .mapToDouble(Double::doubleValue)
+                .average()
+                .orElse(0.0);
+
+        return PublicDataDashboardResponse.builder()
+                .runCount(runs.size())
+                .recordCount(records.size())
+                .successCount(successCount)
+                .fallbackCount(fallbackCount)
+                .cacheHitCount(cacheHitCount)
+                .fallbackRatio(ratio(fallbackCount, providerCount))
+                .liveRatio(ratio(successCount, providerCount))
+                .cacheRatio(ratio(cacheHitCount, providerCount))
+                .averageConfidence(round4(averageConfidence))
+                .motieRelatedRecordCount((int) records.stream().filter(record -> record.getProvider().motieRelated()).count())
+                .otherGovRecordCount((int) records.stream().filter(record -> !record.getProvider().motieRelated()).count())
+                .newestFetchedAt(records.stream().map(PublicDataRecord::getFetchedAt)
+                        .filter(value -> value != null).max(LocalDateTime::compareTo).map(DateTimeUtils::formatUtc).orElse(null))
+                .oldestFetchedAt(records.stream().map(PublicDataRecord::getFetchedAt)
+                        .filter(value -> value != null).min(LocalDateTime::compareTo).map(DateTimeUtils::formatUtc).orElse(null))
+                .providers(providerStatuses(records))
+                .build();
     }
 
     public PublicDataCollectionResult collectManual(String userId, String hsCode, String targetCountry, String productName) {
@@ -142,16 +190,41 @@ public class PublicDataCollectionService {
                 .matchedKey("hsCode=" + request.getHsCode() + ";country=" + request.getTargetCountry())
                 .usedFor(connector.usedFor())
                 .rawPayload("{\"fallback\":true,\"reason\":\"PUBLIC_DATA_ENABLED=false\"}")
-                .normalizedPayload(java.util.Map.of(
-                        "provider", connector.provider().name(),
-                        "usedFor", connector.usedFor(),
-                        "fallbackUsed", true,
-                        "reason", "PUBLIC_DATA_ENABLED=false"
-                ))
+                .normalizedPayload(disabledNormalizedPayload(connector))
                 .scoreContribution(-1)
+                .confidence(0.0)
+                .sourceType("fallback")
                 .fallbackUsed(true)
                 .errorMessage("PUBLIC_DATA_ENABLED=false")
                 .build();
+    }
+
+    private Map<String, Object> disabledNormalizedPayload(PublicDataConnector connector) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("provider", connector.provider().name());
+        payload.put("usedFor", connector.usedFor());
+        payload.put("agency", connector.provider().agency());
+        payload.put("ministry", connector.provider().ministry());
+        payload.put("dataFamily", connector.provider().dataFamily());
+        payload.put("motieRelated", connector.provider().motieRelated());
+        payload.put("refreshCycleHours", connector.provider().refreshCycleHours());
+        payload.put("metrics", java.util.Map.of("recordCount", 0));
+        payload.put("metricSchema", List.of("recordCount"));
+        payload.put("scoreContribution", -1);
+        payload.put("confidence", 0.0);
+        payload.put("fallbackUsed", true);
+        payload.put("collectionEvidence", java.util.Map.of(
+                "endpointConfigured", false,
+                "operationEndpoint", false,
+                "endpointType", "disabled",
+                "apiKeyConfigured", false,
+                "apiKeyStored", false,
+                "fallbackUsed", true,
+                "reason", "PUBLIC_DATA_ENABLED=false"
+        ));
+        payload.put("scoreFormula", "disabled public data contributes fallback penalty and zero confidence");
+        payload.put("reason", "PUBLIC_DATA_ENABLED=false");
+        return payload;
     }
 
     private PublicDataRecord toRecord(PublicDataCollectionRun run, PublicDataConnectorResult result) {
@@ -167,6 +240,8 @@ public class PublicDataCollectionService {
                 .rawPayload(result.getRawPayload())
                 .normalizedPayload(toJson(result.getNormalizedPayload()))
                 .scoreContribution(result.getScoreContribution())
+                .confidence(result.getConfidence())
+                .sourceType(result.getSourceType() == null ? result.isFallbackUsed() ? "fallback" : "live" : result.getSourceType())
                 .fallbackUsed(result.isFallbackUsed())
                 .cacheHit(false)
                 .errorMessage(result.getErrorMessage())
@@ -188,6 +263,8 @@ public class PublicDataCollectionService {
                 .rawPayload(cached.getRawPayload())
                 .normalizedPayload(cached.getNormalizedPayload())
                 .scoreContribution(cached.getScoreContribution())
+                .confidence(cached.getConfidence())
+                .sourceType("cache")
                 .fallbackUsed(cached.isFallbackUsed())
                 .cacheHit(true)
                 .errorMessage(cached.getErrorMessage())
@@ -208,6 +285,89 @@ public class PublicDataCollectionService {
         } catch (JsonProcessingException e) {
             return "{}";
         }
+    }
+
+    private List<ProviderStatus> providerStatuses(List<PublicDataRecord> records) {
+        return java.util.Arrays.stream(PublicDataProvider.values())
+                .map(provider -> {
+                    List<PublicDataRecord> providerRecords = records.stream()
+                            .filter(record -> record.getProvider() == provider)
+                            .toList();
+                    int recordCount = providerRecords.size();
+                    int fallbackCount = (int) providerRecords.stream().filter(PublicDataRecord::isFallbackUsed).count();
+                    int cacheCount = (int) providerRecords.stream().filter(PublicDataRecord::isCacheHit).count();
+                    int liveCount = (int) providerRecords.stream()
+                            .filter(record -> !record.isFallbackUsed() && !record.isCacheHit())
+                            .count();
+                    double avgConfidence = providerRecords.stream()
+                            .map(PublicDataRecord::getConfidence)
+                            .filter(confidence -> confidence != null)
+                            .mapToDouble(Double::doubleValue)
+                            .average()
+                            .orElse(0.0);
+                    return ProviderStatus.builder()
+                            .provider(provider.name())
+                            .agency(provider.agency())
+                            .ministry(provider.ministry())
+                            .dataFamily(provider.dataFamily())
+                            .motieRelated(provider.motieRelated())
+                            .usedFor(provider.usedFor())
+                            .refreshCycleHours(provider.refreshCycleHours())
+                            .recordCount(recordCount)
+                            .liveCount(liveCount)
+                            .cacheCount(cacheCount)
+                            .fallbackCount(fallbackCount)
+                            .fallbackRatio(ratio(fallbackCount, recordCount))
+                            .averageConfidence(round4(avgConfidence))
+                            .newestFetchedAt(providerRecords.stream().map(PublicDataRecord::getFetchedAt)
+                                    .filter(value -> value != null).max(LocalDateTime::compareTo).map(DateTimeUtils::formatUtc).orElse(null))
+                            .newestExpiresAt(providerRecords.stream().map(PublicDataRecord::getExpiresAt)
+                                    .filter(value -> value != null).max(LocalDateTime::compareTo).map(DateTimeUtils::formatUtc).orElse(null))
+                            .operationEndpointSeen(providerRecords.stream().anyMatch(record -> evidenceBoolean(record, "operationEndpoint")))
+                            .apiKeyConfiguredSeen(providerRecords.stream().anyMatch(record -> evidenceBoolean(record, "apiKeyConfigured")))
+                            .build();
+                })
+                .toList();
+    }
+
+    private boolean evidenceBoolean(PublicDataRecord record, String key) {
+        Object value = parseNormalized(record).get("collectionEvidence");
+        if (!(value instanceof Map<?, ?> evidence)) return false;
+        Object raw = evidence.get(key);
+        return raw instanceof Boolean bool && bool;
+    }
+
+    private Map<String, Object> parseNormalized(PublicDataRecord record) {
+        if (record.getNormalizedPayload() == null || record.getNormalizedPayload().isBlank()) return Map.of();
+        try {
+            return objectMapper.readValue(record.getNormalizedPayload(), new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
+            return Map.of();
+        }
+    }
+
+    private double ratio(int value, int total) {
+        if (total <= 0) return 0.0;
+        return round4(value / (double) total);
+    }
+
+    private double round4(double value) {
+        return Math.round(value * 10000.0) / 10000.0;
+    }
+
+    private List<String> scopeUserIds(String userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "사용자를 찾을 수 없습니다."));
+        if (user.getUserType().name().equals("company")) {
+            return membershipRepository.findFirstByUserId(userId)
+                    .map(Membership::getCompany)
+                    .map(company -> membershipRepository.findByCompanyId(company.getId()).stream()
+                            .map(membership -> membership.getUser().getId())
+                            .toList())
+                    .filter(ids -> !ids.isEmpty())
+                    .orElse(List.of(userId));
+        }
+        return List.of(userId);
     }
 
     private String normalizeHsCode(String value) {

@@ -20,6 +20,8 @@ public class PublicDataConnectorResult {
     private String rawPayload;
     private Map<String, Object> normalizedPayload;
     private Integer scoreContribution;
+    private Double confidence;
+    private String sourceType;
     private boolean fallbackUsed;
     private String errorMessage;
 }

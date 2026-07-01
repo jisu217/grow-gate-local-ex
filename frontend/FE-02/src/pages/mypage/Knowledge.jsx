@@ -78,7 +78,7 @@ export default function Knowledge() {
 
               {p.missingFields?.length > 0 && (
                 <div className={styles.missingHint}>
-                  누락 {p.missingFields.length}건 · AI 진단 정확도에 영향
+                  누락 {p.missingFields.length}건 · 진단 신뢰도에 영향
                 </div>
               )}
 
@@ -87,7 +87,7 @@ export default function Knowledge() {
                 className={styles.diagBtn}
                 onClick={(e) => { e.stopPropagation(); navigate('/diagnosis/new') }}
               >
-                AI 진단에 반영 →
+                준비도 진단에 반영 →
               </button>
             </div>
           ))}

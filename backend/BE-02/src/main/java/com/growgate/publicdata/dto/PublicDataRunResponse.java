@@ -1,6 +1,7 @@
 package com.growgate.publicdata.dto;
 
 import com.growgate.publicdata.entity.PublicDataCollectionRun;
+import com.growgate.common.DateTimeUtils;
 import lombok.Builder;
 import lombok.Getter;
 
@@ -18,6 +19,8 @@ public class PublicDataRunResponse {
     private int successCount;
     private int fallbackCount;
     private int cacheHitCount;
+    private double fallbackRatio;
+    private double liveRatio;
     private String errorSummary;
     private String startedAt;
     private String finishedAt;
@@ -34,9 +37,16 @@ public class PublicDataRunResponse {
                 .successCount(run.getSuccessCount())
                 .fallbackCount(run.getFallbackCount())
                 .cacheHitCount(run.getCacheHitCount())
+                .fallbackRatio(ratio(run.getFallbackCount(), run.getProviderCount()))
+                .liveRatio(ratio(run.getSuccessCount(), run.getProviderCount()))
                 .errorSummary(run.getErrorSummary())
-                .startedAt(run.getStartedAt() != null ? run.getStartedAt().toString() : null)
-                .finishedAt(run.getFinishedAt() != null ? run.getFinishedAt().toString() : null)
+                .startedAt(DateTimeUtils.formatUtc(run.getStartedAt()))
+                .finishedAt(DateTimeUtils.formatUtc(run.getFinishedAt()))
                 .build();
+    }
+
+    private static double ratio(int value, int total) {
+        if (total <= 0) return 0.0;
+        return Math.round((value * 10000.0 / total)) / 10000.0;
     }
 }

@@ -2,6 +2,7 @@ package com.growgate.product.service;
 
 // 제품 CRUD (목록/생성/삭제)
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.growgate.common.DateTimeUtils;
 import com.growgate.company.entity.Company;
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;
@@ -34,7 +35,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.Collections;
 import java.util.HashMap;
@@ -48,7 +48,6 @@ import java.util.stream.Collectors;
 @Transactional
 public class ProductService {
 
-    private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private static final int EXPIRY_WARNING_DAYS = 90;
 
     private final ProductRepository productRepository;
@@ -113,7 +112,7 @@ public class ProductService {
                     .knowledgeStatus(knowledgeStatus)
                     .expiringCertCount(expiringCertCount)
                     .missingFieldCount(missingFieldCount)
-                    .updatedAt(product.getUpdatedAt().format(ISO_FMT))
+                    .updatedAt(DateTimeUtils.formatUtc(product.getUpdatedAt()))
                     .build();
         }).collect(Collectors.toList());
 
@@ -160,7 +159,7 @@ public class ProductService {
         return CreateProductResponse.builder()
                 .productId(product.getId())
                 .name(product.getName())
-                .createdAt(product.getCreatedAt().format(ISO_FMT))
+                .createdAt(DateTimeUtils.formatUtc(product.getCreatedAt()))
                 .build();
     }
 

@@ -1,5 +1,6 @@
 package com.growgate.user.service;
 
+import com.growgate.common.DateTimeUtils;
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;
 import com.growgate.membership.entity.Membership;
@@ -13,14 +14,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.format.DateTimeFormatter;
-
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class UserService {
-
-    private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     private final UserRepository userRepository;
     private final MembershipRepository membershipRepository;
@@ -41,7 +38,7 @@ public class UserService {
                 .role(role)
                 .companyId(companyId)
                 .companyName(companyName)
-                .createdAt(user.getCreatedAt().format(ISO_FMT))
+                .createdAt(DateTimeUtils.formatUtc(user.getCreatedAt()))
                 .build();
     }
 
@@ -51,7 +48,7 @@ public class UserService {
         return UpdateUserResponse.builder()
                 .userId(user.getId())
                 .name(user.getName())
-                .updatedAt(user.getUpdatedAt().format(ISO_FMT))
+                .updatedAt(DateTimeUtils.formatUtc(user.getUpdatedAt()))
                 .build();
     }
 

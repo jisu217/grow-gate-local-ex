@@ -1,0 +1,86 @@
+/* 공통 고정 상단 내비게이션 바 */
+.bar {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: rgba(244, 246, 251, 0.82);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid var(--line);
+}
+/* 내부 폭은 페이지 컨테이너(1240px)와 정렬 */
+.inner {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 32px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+/* 브랜드 로고 */
+.brand {
+  font-family: var(--en);
+  font-weight: 800;
+  font-size: 20px;
+  color: #0b1530;
+  letter-spacing: -.01em;
+  text-decoration: none;
+}
+.ex { color: var(--blue); }
+
+/* 링크 그룹 */
+.links {
+  display: flex;
+  gap: 4px;
+  align-items: center;
+}
+.link {
+  font-size: 15px;
+  color: var(--slate);
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 9px;
+  transition: .15s;
+  text-decoration: none;
+  cursor: pointer;
+}
+.link:hover { color: var(--ink); background: var(--card); }
+.active { color: var(--blue); background: var(--blue-soft); font-weight: 600; }
+
+/* 로그인/로그아웃 (링크형) */
+.auth {
+  font-family: inherit;
+  font-size: 15px;
+  color: var(--slate);
+  font-weight: 500;
+  padding: 8px 14px;
+  border-radius: 9px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  transition: .15s;
+  text-decoration: none;
+}
+.auth:hover { color: var(--ink); background: var(--card); }
+
+/* 진단 시작 CTA */
+.cta {
+  margin-left: 6px;
+  background: var(--blue);
+  color: #fff;
+  padding: 9px 18px;
+  border-radius: 10px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  box-shadow: 0 4px 12px rgba(47, 107, 255, 0.25);
+  transition: .15s;
+}
+.cta:hover { background: #2453d6; transform: translateY(-1px); }
+
+@media (max-width: 720px) {
+  .inner { padding: 0 18px; }
+  .link { display: none; }
+  .active { display: inline-block; }
+}

@@ -15,6 +15,7 @@ import DiagnosisResult  from './pages/diagnosis/DiagnosisResult.jsx'
 import DiagnosisSources from './pages/diagnosis/DiagnosisSources.jsx'
 
 import Mypage          from './pages/mypage/Mypage.jsx'
+import DiagnosisDetail from './pages/mypage/DiagnosisDetail.jsx'
 import Knowledge       from './pages/mypage/Knowledge.jsx'
 import KnowledgeNew    from './pages/mypage/KnowledgeNew.jsx'
 import KnowledgeDetail from './pages/mypage/KnowledgeDetail.jsx'
@@ -35,14 +36,19 @@ export default function App() {
 
         {/* 로그인 필요 */}
         <Route element={<ProtectedRoute />}>
+
+          {/* 진단 결과·근거 뷰어: 자체 사이드바 레이아웃 (공통 상단바 없음) */}
+          <Route path="/diagnosis/:id"          element={<DiagnosisResult />} />
+          <Route path="/diagnosis/:id/sources"  element={<DiagnosisSources />} />
+
+          {/* 그 외 화면: 공통 상단 고정 내비게이션 레이아웃 */}
           <Route element={<AppLayout />}>
 
             <Route path="/diagnosis"              element={<DiagnosisList />} />
             <Route path="/diagnosis/new"          element={<DiagnosisNew />} />
-            <Route path="/diagnosis/:id"          element={<DiagnosisResult />} />
-            <Route path="/diagnosis/:id/sources"  element={<DiagnosisSources />} />
 
             <Route path="/mypage"                        element={<Mypage />} />
+            <Route path="/mypage/diagnosis/:productId"   element={<DiagnosisDetail />} />
             <Route path="/mypage/knowledge"              element={<Knowledge />} />
             <Route path="/mypage/knowledge/:productId"   element={<KnowledgeDetail />} />
 

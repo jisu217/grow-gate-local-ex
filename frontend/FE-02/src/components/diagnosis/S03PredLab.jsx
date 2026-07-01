@@ -1,12 +1,12 @@
-// S03 ML 예측 스테이지
+// S03 규칙 점수 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 
 export default function S03PredLab({ predictions, features }) {
   return (
     <DiagnosisStage
-      eyebrow="S03 XGBOOST PREDICTION LAB"
-      title="예측·추정 모델 진단"
-      right={<span className="s-tag">XGBoost · deterministic demo</span>}
+      eyebrow="S03 RULE SCORING LAB"
+      title="근거 기반 점수 산식 진단"
+      right={<span className="s-tag">Rule rubric · LLM assisted</span>}
     >
 
       <div className="pred-grid">

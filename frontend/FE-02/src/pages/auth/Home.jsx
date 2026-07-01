@@ -1,6 +1,6 @@
-import { useNavigate, Link } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import styles from './Home.module.css'
-import { getAuthUser, logout } from '../../services/authService.js'
+import TopNav from '../../components/layout/TopNav.jsx'
 
 // 파트너 목록
 const PARTNERS = ['관세청', 'KOTRA', 'KTL', 'SafetyKorea', 'KIPRIS', '기업마당', 'EU']
@@ -9,7 +9,7 @@ const PARTNERS = ['관세청', 'KOTRA', 'KTL', 'SafetyKorea', 'KIPRIS', '기업�
 const FEATURES = [
   {
     no: '01', icon: '01', title: '한 번의 진단',
-    desc: '제품 정보, HS Code, 대상국을 기준으로 수출 가능성·규제 매칭·리콜·특허 위험을 한 화면에서 분석합니다.',
+    desc: '제품 정보, HS Code, 대상국을 기준으로 수출 준비도·규제 매칭·리콜·특허 위험을 한 화면에서 점검합니다.',
     link: '진단 시작',
   },
   {
@@ -26,7 +26,7 @@ const FEATURES = [
 
 // 수치 통계
 const STATS = [
-  { v: '5', u: '종', l: 'live/cache 공공데이터 provider' },
+  { v: '5', u: '개', l: '공공데이터 provider 상태 추적' },
   { v: '6', u: '축', l: '시장·규제·리콜·FTO·지원 점수' },
   { v: '100', u: '%', l: '출처 trace 포함 진단 결과' },
   { v: '90', u: '일', l: '실행 로드맵 자동 생성' },
@@ -73,14 +73,6 @@ function HeroMap() {
 // 랜딩 홈 페이지 컴포넌트
 export default function Home() {
   const navigate = useNavigate()
-  const user = getAuthUser() // 로그인 정보 (없으면 null)
-
-  // 로그아웃 → 홈 새로고침 효과(상태 갱신)
-  const handleLogout = async () => {
-    await logout()
-    navigate('/', { replace: true })
-    window.location.reload()
-  }
 
   return (
     <>
@@ -92,20 +84,10 @@ export default function Home() {
         <div className={styles.bgGrid} />
       </div>
 
-      <div className={styles.page}>
+      {/* 공통 고정 내비게이션 */}
+      <TopNav />
 
-        {/* 내비게이션 */}
-        <nav className={styles.nav}>
-          <Link to="/" className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></Link>
-          <div className={styles.navLinks}>
-            <Link to="/" className={styles.active}>홈</Link>
-            <Link to="/diagnosis">AI 진단 이력</Link>
-            <Link to="/mypage">마이페이지</Link>
-            {user
-              ? <button className={styles.navLogout} onClick={handleLogout}>로그아웃</button>
-              : <Link to="/login">로그인</Link>}
-          </div>
-        </nav>
+      <div className={styles.page}>
 
         {/* 히어로 */}
         <section className={styles.hero}>
@@ -126,17 +108,17 @@ export default function Home() {
           </h1>
 
           <p className={styles.lead}>
-            제품명과 HS Code를 입력하면 공공데이터, 제품 지식, 인증·특허·리콜 신호를 연결해
+            제품명과 HS Code를 입력하면 공공데이터 수집 상태, 제품 지식, 인증·특허·리콜 신호를 연결해
             <b style={{color:'var(--blue)'}}> 점수·근거·30/60/90일 실행계획</b>으로 정리합니다.
           </p>
 
-          {/* CTA */}
+          {/* CTA — 시작 동선은 '진단 시작'(제품 입력) 하나로 통일 */}
           <div className={styles.heroCta}>
-            <button className={`${styles.btn} ${styles.primary}`} onClick={() => navigate('/diagnosis')}>
-              3분 만에 진단 시작 →
+            <button className={`${styles.btn} ${styles.primary}`} onClick={() => navigate('/diagnosis/new')}>
+              제품 등록하고 진단 시작 →
             </button>
-            <button className={`${styles.btn} ${styles.ghost}`} onClick={() => navigate('/diagnosis/new')}>
-              새 제품으로 바로 진단
+            <button className={`${styles.btn} ${styles.ghost}`} onClick={() => navigate('/diagnosis')}>
+              내 진단 이력 보기
             </button>
           </div>
 
@@ -159,8 +141,8 @@ export default function Home() {
         {/* 기능 섹션 */}
         <section className={styles.sec}>
           <div className={styles.secEyebrow}>How it works</div>
-          <h2 className={styles.secH2}>조회가 아니라, 실행입니다</h2>
-          <p className={styles.secSub}>흩어진 공공데이터를 AI가 연결해, 기업이 바로 움직일 수 있는 결정으로 바꿉니다.</p>
+          <h2 className={styles.secH2}>조회가 아니라, 실행 근거입니다</h2>
+          <p className={styles.secSub}>흩어진 공공데이터 수집 상태와 제품 지식을 연결해, 기업이 검토할 실행 후보로 정리합니다.</p>
           <div className={styles.featGrid}>
             {FEATURES.map(f => (
               <div key={f.no} className={styles.feat}>
@@ -192,7 +174,7 @@ export default function Home() {
           <p className={styles.ctaBandP}>제품명과 HS Code만 있으면 됩니다. 5분 뒤, 손에 잡히는 실행 리포트가 됩니다.</p>
           <button
             className={`${styles.btn} ${styles.ctaBandBtn}`}
-            onClick={() => navigate('/diagnosis')}
+            onClick={() => navigate('/diagnosis/new')}
           >
             3분 만에 진단 시작 →
           </button>
@@ -202,14 +184,14 @@ export default function Home() {
         <footer className={styles.footer}>
           <div className={styles.fBrand}>GROW-GATE <span style={{color:'var(--blue)'}}>Local EX</span></div>
           <div className={styles.fLinks}>
-            <a href="/diagnosis">AI 진단 이력</a>
+            <a href="/diagnosis">수출 준비도 진단</a>
             <a href="#">데이터</a>
             <a href="#">실행 로드맵</a>
             <a href="#">문서</a>
           </div>
           <div className={styles.fNote}>
             2026 산업통상자원부 공공데이터 활용 공모전 · Regulation-to-Market Twin for Regional SMEs ·
-            본 결과는 공공데이터 기반 AI 분석이며 최종 판단은 전문가와 함께 하십시오.
+            본 결과는 공공데이터 수집 신호와 규칙 기반 점검 결과이며 최종 판단은 전문가와 함께 하십시오.
           </div>
         </footer>
       </div>

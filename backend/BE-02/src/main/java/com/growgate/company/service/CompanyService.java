@@ -1,5 +1,6 @@
 package com.growgate.company.service;
 
+import com.growgate.common.DateTimeUtils;
 import com.growgate.company.dto.CompanyMeResponse;
 import com.growgate.company.dto.UpdateCompanyRequest;
 import com.growgate.company.dto.UpdateCompanyResponse;
@@ -15,14 +16,10 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.format.DateTimeFormatter;
-
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class CompanyService {
-
-    private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     private final UserRepository userRepository;
     private final MembershipRepository membershipRepository;
@@ -35,7 +32,7 @@ public class CompanyService {
                 .name(company.getName())
                 .businessNumber(company.getBusinessNumber())
                 .industry(company.getIndustry())
-                .createdAt(company.getCreatedAt().format(ISO_FMT))
+                .createdAt(DateTimeUtils.formatUtc(company.getCreatedAt()))
                 .build();
     }
 
@@ -45,7 +42,7 @@ public class CompanyService {
         return UpdateCompanyResponse.builder()
                 .companyId(company.getId())
                 .industry(company.getIndustry())
-                .updatedAt(company.getUpdatedAt().format(ISO_FMT))
+                .updatedAt(DateTimeUtils.formatUtc(company.getUpdatedAt()))
                 .build();
     }
 

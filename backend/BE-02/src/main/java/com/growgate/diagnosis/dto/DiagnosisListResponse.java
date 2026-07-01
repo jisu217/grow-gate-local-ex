@@ -22,5 +22,6 @@ public class DiagnosisListResponse {
         private String targetCountry;
         private String status;
         private String createdAt;
+        private Integer overallScore;
     }
 }

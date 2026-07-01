@@ -3,6 +3,7 @@ package com.growgate.diagnosis.service;
 // 진단 생성·조회
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.growgate.common.DateTimeUtils;
 import com.growgate.diagnosis.dto.CreateDiagnosisRequest;
 import com.growgate.diagnosis.dto.CreateDiagnosisResponse;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse;
@@ -43,6 +44,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -58,7 +60,6 @@ import java.util.stream.Collectors;
 @Transactional
 public class DiagnosisService {
 
-    private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final int EXPIRY_WARNING_DAYS = 90;
 
@@ -97,7 +98,8 @@ public class DiagnosisService {
                     .hsCode(hsCode)
                     .targetCountry(run.getTargetCountry())
                     .status(run.getStatus().name())
-                    .createdAt(run.getCreatedAt().format(ISO_FMT))
+                    .createdAt(DateTimeUtils.formatUtc(run.getCreatedAt()))
+                    .overallScore(extractOverallScore(run.getResult()))
                     .build();
         }).collect(Collectors.toList());
 
@@ -204,8 +206,20 @@ public class DiagnosisService {
                 .status(run.getStatus().name())
                 .result(resultData)
                 .knowledgeSnapshot(snapshot)
-                .createdAt(run.getCreatedAt().format(ISO_FMT))
+                .createdAt(DateTimeUtils.formatUtc(run.getCreatedAt()))
                 .build();
+    }
+
+    private Integer extractOverallScore(String resultJson) {
+        if (resultJson == null || resultJson.isBlank()) return null;
+        try {
+            Map<String, Object> resultMap = objectMapper.readValue(resultJson,
+                    new TypeReference<Map<String, Object>>() {});
+            DiagnosisScore score = parseDiagnosisScore(resultMap);
+            return score.getOverall();
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     @Transactional(readOnly = true)
@@ -229,6 +243,10 @@ public class DiagnosisService {
                                     .field((String) s.get("field"))
                                     .sourceId(asString(s.get("sourceId")))
                                     .provider(asString(s.get("provider")))
+                                    .agency(asString(s.get("agency")))
+                                    .ministry(asString(s.get("ministry")))
+                                    .dataFamily(asString(s.get("dataFamily")))
+                                    .motieRelated(asBoolean(s.get("motieRelated")))
                                     .datasetName(asString(s.get("datasetName")))
                                     .documentName((String) s.get("documentName"))
                                     .url((String) s.get("url"))
@@ -237,6 +255,12 @@ public class DiagnosisService {
                                     .matchedKey(asString(s.get("matchedKey")))
                                     .usedFor(asString(s.get("usedFor")))
                                     .scoreContribution(asInteger(s.get("scoreContribution")))
+                                    .rawScoreContribution(asInteger(s.get("rawScoreContribution")))
+                                    .confidenceAdjustedContribution(asInteger(s.get("confidenceAdjustedContribution")))
+                                    .confidence(asDouble(s.get("confidence")))
+                                    .scoreFormula(asString(s.get("scoreFormula")))
+                                    .scoreInputs(s.get("scoreInputs"))
+                                    .sourceType(asString(s.get("sourceType")))
                                     .fallbackUsed(asBoolean(s.get("fallbackUsed")))
                                     .cacheHit(asBoolean(s.get("cacheHit")))
                                     .collectionRunId(asString(s.get("collectionRunId")))
@@ -289,6 +313,15 @@ public class DiagnosisService {
                 markdown,
                 fastApiUsed
         );
+    }
+
+    @Transactional(readOnly = true)
+    public byte[] getReportPdf(String userId, String diagnosisId) {
+        DiagnosisReportResponse report = getReport(userId, diagnosisId);
+        String text = "GrowGate Local EX Report\n\n"
+                + "Diagnosis ID: " + report.getDiagnosisId() + "\n"
+                + report.getMarkdown().replaceAll("[^\\x20-\\x7E\\n]", "?");
+        return minimalPdf(text);
     }
 
     private UserRole resolveRole(User user) {
@@ -559,7 +592,50 @@ public class DiagnosisService {
         return value instanceof Number ? ((Number) value).intValue() : null;
     }
 
+    private Double asDouble(Object value) {
+        return value instanceof Number ? ((Number) value).doubleValue() : null;
+    }
+
     private Boolean asBoolean(Object value) {
         return value instanceof Boolean ? (Boolean) value : null;
+    }
+
+    private byte[] minimalPdf(String text) {
+        String[] lines = text.split("\\n");
+        StringBuilder content = new StringBuilder("BT /F1 11 Tf 50 780 Td 14 TL ");
+        int count = 0;
+        for (String line : lines) {
+            if (count++ >= 48) break;
+            content.append("(").append(escapePdf(line)).append(") Tj T* ");
+        }
+        content.append("ET");
+        byte[] stream = content.toString().getBytes(StandardCharsets.US_ASCII);
+        List<String> objects = List.of(
+                "<< /Type /Catalog /Pages 2 0 R >>",
+                "<< /Type /Pages /Kids [3 0 R] /Count 1 >>",
+                "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 595 842] /Resources << /Font << /F1 4 0 R >> >> /Contents 5 0 R >>",
+                "<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>",
+                "<< /Length " + stream.length + " >>\nstream\n" + new String(stream, StandardCharsets.US_ASCII) + "\nendstream"
+        );
+        StringBuilder pdf = new StringBuilder("%PDF-1.4\n");
+        List<Integer> offsets = new ArrayList<>();
+        for (int i = 0; i < objects.size(); i++) {
+            offsets.add(pdf.length());
+            pdf.append(i + 1).append(" 0 obj\n").append(objects.get(i)).append("\nendobj\n");
+        }
+        int xref = pdf.length();
+        pdf.append("xref\n0 ").append(objects.size() + 1).append("\n0000000000 65535 f \n");
+        for (int offset : offsets) {
+            pdf.append(String.format("%010d 00000 n \n", offset));
+        }
+        pdf.append("trailer\n<< /Size ").append(objects.size() + 1).append(" /Root 1 0 R >>\n")
+                .append("startxref\n").append(xref).append("\n%%EOF\n");
+        return pdf.toString().getBytes(StandardCharsets.US_ASCII);
+    }
+
+    private String escapePdf(String value) {
+        return value.replace("\\", "\\\\")
+                .replace("(", "\\(")
+                .replace(")", "\\)");
     }
 }

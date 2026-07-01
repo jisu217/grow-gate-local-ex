@@ -98,32 +98,90 @@ public class DiagnosisAsyncProcessor {
                     product.getId(), KnowledgeLoopStatus.accepted)
                     : List.of();
 
+            AgentLoop agentLoop = AgentLoop.start(run.getId(), productName, hsCode, targetCountry);
             List<Map<String, Object>> sources = new ArrayList<>();
-            PublicDataCollectionResult publicDataResult = publicDataCollectionService.collectForDiagnosis(
-                    run.getId(), run.getUser().getId(), hsCode, targetCountry, productName);
+            PublicDataCollectionResult publicDataResult = agentLoop.runTool(
+                    "collect_public_data",
+                    "PublicDataCollectionService.collectForDiagnosis",
+                    2,
+                    null,
+                    () -> publicDataCollectionService.collectForDiagnosis(
+                            run.getId(), run.getUser().getId(), hsCode, targetCountry, productName),
+                    result -> result != null && result.getRun() != null
+                            ? AgentVerification.pass("public data run=" + result.getRun().getId()
+                            + ", records=" + result.getRecords().size())
+                            : AgentVerification.fail("public data collection returned no run")
+            );
             addPublicDataSources(sources, publicDataResult.getRecords());
 
-            int market = scoreMarket(hsCode, targetCountry, sources);
-            int regulation = scoreRegulation(hsCode, targetCountry, certs, sources);
-            int recall = scoreRecall(hsCode, description, sources);
-            int fto = scoreFto(ftoItems, targetCountry, sources);
-            int support = scoreSupport(knowledge, buyers, knowledgeSources, targetCountry, sources);
-            market = applyPublicDataContribution(market, publicDataResult.getRecords(), "market");
-            regulation = applyPublicDataContribution(regulation, publicDataResult.getRecords(), "regulation");
-            recall = applyPublicDataContribution(recall, publicDataResult.getRecords(), "recall");
-            fto = applyPublicDataContribution(fto, publicDataResult.getRecords(), "fto");
-            support = applyPublicDataContribution(support, publicDataResult.getRecords(), "support");
+            Map<String, Integer> scoreMap = agentLoop.runTool(
+                    "score_readiness",
+                    "Spring rule scorer + public data contribution",
+                    1,
+                    Map.of(),
+                    () -> {
+                        int marketScore = scoreMarket(hsCode, targetCountry, sources);
+                        int regulationScore = scoreRegulation(hsCode, targetCountry, certs, sources);
+                        int recallScore = scoreRecall(hsCode, description, sources);
+                        int ftoScore = scoreFto(ftoItems, targetCountry, sources);
+                        int supportScore = scoreSupport(knowledge, buyers, knowledgeSources, targetCountry, sources);
+                        marketScore = applyPublicDataContribution(marketScore, publicDataResult.getRecords(), "market");
+                        regulationScore = applyPublicDataContribution(regulationScore, publicDataResult.getRecords(), "regulation");
+                        recallScore = applyPublicDataContribution(recallScore, publicDataResult.getRecords(), "recall");
+                        ftoScore = applyPublicDataContribution(ftoScore, publicDataResult.getRecords(), "fto");
+                        supportScore = applyPublicDataContribution(supportScore, publicDataResult.getRecords(), "support");
+                        return Map.of(
+                                "market", marketScore,
+                                "regulation", regulationScore,
+                                "recall", recallScore,
+                                "fto", ftoScore,
+                                "support", supportScore
+                        );
+                    },
+                    result -> result != null && result.values().stream().allMatch(score -> score >= 0 && score <= 100)
+                            ? AgentVerification.pass("all readiness scores are within 0..100")
+                            : AgentVerification.fail("readiness scores failed range verification")
+            );
+            int market = scoreMap.get("market");
+            int regulation = scoreMap.get("regulation");
+            int recall = scoreMap.get("recall");
+            int fto = scoreMap.get("fto");
+            int support = scoreMap.get("support");
             int overall = clamp(Math.round((market * 0.25f) + (regulation * 0.22f) + (recall * 0.16f)
                     + (fto * 0.20f) + (support * 0.17f)));
 
-            List<Map<String, String>> riskItems = buildRiskItems(certs, ftoItems, knowledge, buyers, hsCode);
-            Map<String, Object> actionRoadmap = buildRoadmap(riskItems, certs, ftoItems, buyers, knowledgeSources);
+            Map<String, Object> planningResult = agentLoop.runTool(
+                    "plan_risk_roadmap",
+                    "Risk planner + 30/60/90 roadmap generator",
+                    1,
+                    Map.of("riskItems", List.of(), "actionRoadmap", Map.of()),
+                    () -> {
+                        List<Map<String, String>> risks = buildRiskItems(certs, ftoItems, knowledge, buyers, hsCode);
+                        Map<String, Object> roadmap = buildRoadmap(risks, certs, ftoItems, buyers, knowledgeSources);
+                        return Map.of("riskItems", risks, "actionRoadmap", roadmap);
+                    },
+                    result -> result != null && result.get("riskItems") instanceof List<?> risks && !risks.isEmpty()
+                            ? AgentVerification.pass("risk items and roadmap generated")
+                            : AgentVerification.fail("risk planner did not produce risk items")
+            );
+            @SuppressWarnings("unchecked")
+            List<Map<String, String>> riskItems = (List<Map<String, String>>) planningResult.get("riskItems");
+            @SuppressWarnings("unchecked")
+            Map<String, Object> actionRoadmap = (Map<String, Object>) planningResult.get("actionRoadmap");
             Map<String, Object> agentRequest = buildAgentRequest(run, productName, hsCode, description, targetCountry, certs);
-            Optional<Map<String, Object>> agentResult = fastApiAgentClient.analyze(agentRequest);
-            Optional<Map<String, Object>> reportResult = fastApiAgentClient.report(agentRequest);
+            Optional<Map<String, Object>> agentResult = agentLoop.runTool(
+                    "fastapi_analyze",
+                    "FastAPI /analyze",
+                    2,
+                    Optional.empty(),
+                    () -> fastApiAgentClient.analyze(agentRequest),
+                    result -> result != null && result.isPresent()
+                            ? AgentVerification.pass("FastAPI analyze returned payload")
+                            : AgentVerification.fail("FastAPI analyze unavailable; retry or fallback to Spring")
+            );
             Map<String, Object> ragContext = agentRagContextBuilder.build(knowledge, certs, ftoItems, buyers,
                     knowledgeSources, publicDataResult.getRecords(), acceptedLoopItems);
-            AgentInferenceResult llmResult = agentInferenceService.infer(AgentInferenceRequest.builder()
+            AgentInferenceRequest inferenceRequest = AgentInferenceRequest.builder()
                     .diagnosisId(run.getId())
                     .productName(productName)
                     .hsCode(hsCode)
@@ -139,17 +197,57 @@ public class DiagnosisAsyncProcessor {
                             "riskItems", riskItems,
                             "actionRoadmap", actionRoadmap
                     ))
-                    .build());
+                    .build();
+            AgentInferenceResult llmResult = agentLoop.runTool(
+                    "llm_reason",
+                    "Gemini/OpenRouter provider chain",
+                    2,
+                    AgentInferenceResult.builder()
+                            .succeeded(false)
+                            .provider("spring-local")
+                            .model("rule-fallback")
+                            .content(Map.of())
+                            .knowledgeSuggestions(List.of())
+                            .fallbackReasons(List.of("agent loop fallback"))
+                            .build(),
+                    () -> agentInferenceService.infer(inferenceRequest),
+                    result -> result != null && !nullToEmpty(result.getProvider()).isBlank()
+                            ? AgentVerification.pass(result.isSucceeded()
+                            ? "external LLM reasoning succeeded with " + result.getProvider()
+                            : "LLM unavailable; verified Spring local fallback result")
+                            : AgentVerification.fail("LLM provider chain returned no provider")
+            );
+            Optional<Map<String, Object>> reportResult = agentLoop.runTool(
+                    "render_report",
+                    "FastAPI /report",
+                    2,
+                    Optional.empty(),
+                    () -> fastApiAgentClient.report(agentRequest),
+                    result -> result != null && result.isPresent()
+                            ? AgentVerification.pass("FastAPI report returned markdown")
+                            : AgentVerification.fail("FastAPI report unavailable; retry or render Spring markdown")
+            );
             List<Map<String, Object>> loopSuggestions = buildKnowledgeLoopSuggestions(
                     llmResult, riskItems, sources, productName, hsCode, targetCountry);
             persistKnowledgeLoopSuggestions(run, product, loopSuggestions);
 
             sources.add(source("agent", "FASTAPI-AGENT-" + targetCountry,
-                    "FastAPI Agent", "AI agent analyze/report bridge", "http://localhost:8000/docs",
+                    "FastAPI Agent", "Optional analyze/report bridge", "configured APP_FASTAPI_BASE_URL",
                     "diagnosisId=" + run.getId(), "agentic-analysis", agentResult.isPresent() ? 5 : 0,
                     agentResult.isEmpty(), agentResult.isPresent()
                             ? "Spring 진단 결과에 FastAPI agent 분석을 병합"
                             : "FastAPI agent 미활성 또는 호출 실패로 Spring 규칙 진단 유지"));
+            agentLoop.runTool(
+                    "verify_sources",
+                    "Agent source verifier",
+                    1,
+                    Map.of("valid", false, "message", "not executed"),
+                    () -> verifySourceTrace(sources, publicDataResult.getRecords()),
+                    result -> Boolean.TRUE.equals(result.get("valid"))
+                            ? AgentVerification.pass(stringValue(result.get("message")))
+                            : AgentVerification.fail(stringValue(result.get("message")))
+            );
+            agentLoop.complete("진단 계획, 도구 실행, 검증, fallback 처리를 완료했습니다.");
 
             Map<String, Object> resultMap = new LinkedHashMap<>();
             resultMap.put("diagnosisScore", Map.of(
@@ -169,7 +267,13 @@ public class DiagnosisAsyncProcessor {
             resultMap.put("riskItems", riskItems);
             resultMap.put("actionRoadmap", actionRoadmap);
             resultMap.put("sources", sources);
-            resultMap.put("agentTrace", buildAgentTrace(agentResult.isPresent(), reportResult.isPresent(), llmResult));
+            resultMap.put("agentTrace", agentLoop.toTrace(agentResult.isPresent(), reportResult.isPresent(), llmResult));
+            resultMap.put("ragRetrieval", Map.of(
+                    "mode", stringValue(ragContext.get("retrievalMode")),
+                    "query", stringValue(ragContext.get("retrievalQuery")),
+                    "topK", ragContext.getOrDefault("retrievalTopK", List.of())
+            ));
+            resultMap.put("scoringRubric", buildScoringRubric());
             resultMap.put("stageCards", buildStageCards(productName, hsCode, targetCountry, overall, market,
                     regulation, recall, fto, support, riskItems, actionRoadmap, sources, agentResult.orElse(null),
                     llmResult, loopSuggestions));
@@ -245,6 +349,10 @@ public class DiagnosisAsyncProcessor {
             source.put("field", record.getUsedFor());
             source.put("sourceId", record.getProvider().name() + "-" + record.getId());
             source.put("provider", record.getProvider().name());
+            source.put("agency", record.getProvider().agency());
+            source.put("ministry", record.getProvider().ministry());
+            source.put("dataFamily", record.getProvider().dataFamily());
+            source.put("motieRelated", record.getProvider().motieRelated());
             source.put("datasetName", publicDataDatasetName(record));
             source.put("documentName", publicDataDatasetName(record));
             source.put("url", record.getEndpoint());
@@ -254,14 +362,31 @@ public class DiagnosisAsyncProcessor {
             source.put("recordId", record.getId());
             source.put("matchedKey", record.getMatchedKey());
             source.put("usedFor", record.getUsedFor());
-            source.put("scoreContribution", record.getScoreContribution());
+            int adjustedContribution = adjustedPublicDataContribution(record);
+            source.put("rawScoreContribution", record.getScoreContribution());
+            source.put("confidenceAdjustedContribution", adjustedContribution);
+            source.put("scoreContribution", adjustedContribution);
             source.put("fallbackUsed", record.isFallbackUsed());
             source.put("cacheHit", record.isCacheHit());
+            source.put("sourceType", sourceType(record));
             source.put("collectionRunId", record.getRun() != null ? record.getRun().getId() : null);
             source.put("errorMessage", record.getErrorMessage());
+            source.put("confidence", record.getConfidence());
+            Map<String, Object> normalizedPayload = parseObjectMap(record.getNormalizedPayload());
+            Object domainSignals = normalizedPayload.get("domainSignals");
+            if (domainSignals instanceof Map<?, ?>) {
+                source.put("domainSignals", domainSignals);
+            }
+            Object metrics = normalizedPayload.get("metrics");
+            if (metrics instanceof Map<?, ?>) {
+                source.put("metrics", metrics);
+                source.put("scoreInputs", metrics);
+            }
+            source.put("scoreFormula", normalizedPayload.getOrDefault("scoreFormula",
+                    "scoreContribution = provider metric contribution adjusted by confidence"));
             source.put("reason", record.isFallbackUsed()
                     ? "live 공공 API 수집 실패/비활성 상태를 명시하고 fallback 신호로 반영"
-                    : "live 공공 API 또는 유효 cache record를 진단 점수에 반영");
+                    : "live 공공 API 또는 유효 cache record의 도메인 신호를 진단 점수에 반영");
             sources.add(source);
         }
     }
@@ -269,11 +394,21 @@ public class DiagnosisAsyncProcessor {
     private int applyPublicDataContribution(int baseScore, List<PublicDataRecord> records, String usedFor) {
         int contribution = records.stream()
                 .filter(record -> usedFor.equals(record.getUsedFor()))
-                .map(PublicDataRecord::getScoreContribution)
-                .filter(Objects::nonNull)
-                .mapToInt(Integer::intValue)
+                .mapToInt(this::adjustedPublicDataContribution)
                 .sum();
         return clamp(baseScore + contribution);
+    }
+
+    private int adjustedPublicDataContribution(PublicDataRecord record) {
+        int raw = record.getScoreContribution() == null ? 0 : record.getScoreContribution();
+        double confidence = record.getConfidence() == null ? 0.0 : Math.max(0.0, Math.min(1.0, record.getConfidence()));
+        if (record.isFallbackUsed()) return Math.min(raw, -1) - 2;
+        if (confidence < 0.20) return Math.min(raw, 0) - 1;
+        if (raw == 0) return 0;
+        int adjusted = (int) Math.round(raw * confidence);
+        if (raw > 0 && adjusted == 0) return 1;
+        if (raw < 0 && adjusted == 0) return -1;
+        return adjusted;
     }
 
     private String publicDataDatasetName(PublicDataRecord record) {
@@ -329,38 +464,174 @@ public class DiagnosisAsyncProcessor {
         return features;
     }
 
-    private Map<String, Object> buildAgentTrace(boolean analyzeSucceeded, boolean reportSucceeded,
-                                                AgentInferenceResult llmResult) {
-        Map<String, Object> trace = new LinkedHashMap<>();
-        trace.put("mode", llmResult.isSucceeded() ? "spring-llm-agent-fallback-chain"
-                : fastApiAgentClient.isEnabled() ? "fastapi-agent-bridge" : "spring-local-orchestrator");
-        trace.put("steps", List.of(
-                Map.of("step", "plan", "tool", "Spring DiagnosisAsyncProcessor", "status", "done",
-                        "retryCount", 0, "message", "제품·HS·대상국·지식 스냅샷 기반 진단 계획 생성"),
-                Map.of("step", "score", "tool", "Spring rule scorer", "status", "done",
-                        "retryCount", 0, "message", "시장/규제/리콜/FTO/지원 점수 산정"),
-                Map.of("step", "llm_reason", "tool", "Gemini/OpenRouter provider chain",
-                        "status", llmResult.isSucceeded() ? "done" : "fallback",
-                        "retryCount", llmResult.getFallbackReasons() == null ? 0 : llmResult.getFallbackReasons().size(),
-                        "message", llmResult.isSucceeded()
-                                ? llmResult.getProvider() + " agent reasoning merged"
-                                : "외부 LLM 실패 또는 비활성으로 Spring 규칙 결과 유지"),
-                Map.of("step", "agent_analyze", "tool", "FastAPI /analyze", "status", analyzeSucceeded ? "done" : "fallback",
-                        "retryCount", analyzeSucceeded ? 0 : 1, "message", analyzeSucceeded ? "FastAPI agent 분석 병합" : "Spring 결과로 대체"),
-                Map.of("step", "report", "tool", "FastAPI /report", "status", reportSucceeded ? "done" : "fallback",
-                        "retryCount", reportSucceeded ? 0 : 1, "message", reportSucceeded ? "FastAPI 리포트 병합" : "Spring Markdown 리포트 생성")
-        ));
-        trace.put("fastApi", fastApiAgentClient.status(fastApiAgentClient.isEnabled(),
-                analyzeSucceeded || reportSucceeded,
-                fastApiAgentClient.isEnabled() ? "FastAPI agent bridge attempted" : "FastAPI bridge disabled by configuration"));
-        trace.put("llm", Map.of(
-                "succeeded", llmResult.isSucceeded(),
-                "provider", nullToEmpty(llmResult.getProvider()),
-                "model", nullToEmpty(llmResult.getModel()),
-                "fallbackReasons", llmResult.getFallbackReasons() == null ? List.of() : llmResult.getFallbackReasons(),
-                "latencyMs", llmResult.getLatencyMs()
-        ));
-        return trace;
+    private Map<String, Object> verifySourceTrace(List<Map<String, Object>> sources,
+                                                  List<PublicDataRecord> records) {
+        long heuristicCount = sources.stream()
+                .filter(source -> "heuristic".equals(source.get("sourceType")))
+                .count();
+        long fallbackCount = sources.stream()
+                .filter(source -> "fallback".equals(source.get("sourceType")))
+                .count();
+        long liveOrCacheCount = sources.stream()
+                .filter(source -> "live".equals(source.get("sourceType")) || "cache".equals(source.get("sourceType")))
+                .count();
+        boolean invalidRuleProvider = sources.stream()
+                .filter(source -> "heuristic".equals(source.get("sourceType")))
+                .anyMatch(source -> !"RULE_ENGINE".equals(source.get("provider")));
+        boolean missingPublicSourceType = records.stream()
+                .anyMatch(record -> record.getSourceType() == null || record.getSourceType().isBlank());
+
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("valid", !invalidRuleProvider && !missingPublicSourceType && !sources.isEmpty());
+        result.put("heuristicCount", heuristicCount);
+        result.put("fallbackCount", fallbackCount);
+        result.put("liveOrCacheCount", liveOrCacheCount);
+        result.put("message", invalidRuleProvider
+                ? "heuristic source must use RULE_ENGINE provider"
+                : missingPublicSourceType
+                ? "public data record has no sourceType"
+                : "source trace separates live/cache/fallback/heuristic/agent");
+        return result;
+    }
+
+    private static class AgentLoop {
+        private final String diagnosisId;
+        private final List<Map<String, Object>> plan = new ArrayList<>();
+        private final List<Map<String, Object>> steps = new ArrayList<>();
+        private final OffsetDateTime startedAt = OffsetDateTime.now(ZoneOffset.UTC);
+        private OffsetDateTime completedAt;
+        private String completionSummary;
+
+        private AgentLoop(String diagnosisId) {
+            this.diagnosisId = diagnosisId;
+        }
+
+        static AgentLoop start(String diagnosisId, String productName, String hsCode, String targetCountry) {
+            AgentLoop loop = new AgentLoop(diagnosisId);
+            loop.plan.add(task("collect_public_data", "Collect public data with live/cache/fallback evidence"));
+            loop.plan.add(task("score_readiness", "Score market/regulation/recall/FTO/support with source contribution"));
+            loop.plan.add(task("plan_risk_roadmap", "Create risk items and 30/60/90 roadmap"));
+            loop.plan.add(task("fastapi_analyze", "Try optional FastAPI analyze tool, fallback to Spring if unavailable"));
+            loop.plan.add(task("llm_reason", "Call Gemini/OpenRouter provider chain, fallback to Spring rules"));
+            loop.plan.add(task("render_report", "Try optional FastAPI report tool, fallback to Spring markdown/PDF"));
+            loop.plan.add(task("verify_sources", "Verify sourceType separation and trace integrity"));
+            loop.steps.add(Map.of(
+                    "step", "plan",
+                    "tool", "AgentLoopPlanner",
+                    "status", "done",
+                    "retryCount", 0,
+                    "message", "planned " + loop.plan.size() + " tasks for product="
+                            + safe(productName) + ", hsCode=" + safe(hsCode) + ", targetCountry=" + safe(targetCountry)
+            ));
+            return loop;
+        }
+
+        <T> T runTool(String taskId, String toolName, int maxAttempts, T fallback,
+                      AgentTool<T> action, AgentVerifier<T> verifier) {
+            int attempts = Math.max(1, maxAttempts);
+            RuntimeException lastFailure = null;
+            for (int attempt = 1; attempt <= attempts; attempt++) {
+                OffsetDateTime attemptStartedAt = OffsetDateTime.now(ZoneOffset.UTC);
+                try {
+                    T result = action.run();
+                    AgentVerification verification = verifier.verify(result);
+                    steps.add(step(taskId, toolName, verification.passed() ? "done" : "retry",
+                            attempt - 1, verification.message(), attemptStartedAt));
+                    if (verification.passed()) return result;
+                    lastFailure = new IllegalStateException(verification.message());
+                } catch (Exception e) {
+                    lastFailure = e instanceof RuntimeException runtime ? runtime : new IllegalStateException(e);
+                    steps.add(step(taskId, toolName, attempt < attempts ? "retry" : "failed",
+                            attempt - 1, safe(lastFailure.getMessage()), attemptStartedAt));
+                }
+            }
+            steps.add(step(taskId, toolName, "fallback", attempts,
+                    "max attempts reached; using deterministic fallback", OffsetDateTime.now(ZoneOffset.UTC)));
+            if (fallback != null) return fallback;
+            throw lastFailure == null ? new IllegalStateException("agent tool failed: " + taskId) : lastFailure;
+        }
+
+        void complete(String summary) {
+            this.completedAt = OffsetDateTime.now(ZoneOffset.UTC);
+            this.completionSummary = summary;
+            steps.add(Map.of(
+                    "step", "complete",
+                    "tool", "complete_task",
+                    "status", "done",
+                    "retryCount", 0,
+                    "message", summary
+            ));
+        }
+
+        Map<String, Object> toTrace(boolean analyzeSucceeded, boolean reportSucceeded,
+                                    AgentInferenceResult llmResult) {
+            Map<String, Object> trace = new LinkedHashMap<>();
+            trace.put("mode", "agent-loop-planning-tool-verification-retry");
+            trace.put("claimBoundary", "Spring AgentLoop가 계획을 만들고 tool을 실행하며 verifier 실패 시 retry/fallback을 기록합니다.");
+            trace.put("diagnosisId", diagnosisId);
+            trace.put("startedAt", startedAt.toString());
+            trace.put("completedAt", completedAt != null ? completedAt.toString() : OffsetDateTime.now(ZoneOffset.UTC).toString());
+            trace.put("plan", plan);
+            trace.put("steps", steps);
+            trace.put("completion", Map.of(
+                    "status", "success",
+                    "summary", completionSummary == null ? "" : completionSummary
+            ));
+            trace.put("fastApi", Map.of(
+                    "analyzeSucceeded", analyzeSucceeded,
+                    "reportSucceeded", reportSucceeded
+            ));
+            trace.put("llm", Map.of(
+                    "succeeded", llmResult != null && llmResult.isSucceeded(),
+                    "provider", llmResult == null ? "" : safe(llmResult.getProvider()),
+                    "model", llmResult == null ? "" : safe(llmResult.getModel()),
+                    "fallbackReasons", llmResult == null || llmResult.getFallbackReasons() == null
+                            ? List.of() : llmResult.getFallbackReasons(),
+                    "latencyMs", llmResult == null ? 0 : llmResult.getLatencyMs()
+            ));
+            return trace;
+        }
+
+        private static Map<String, Object> task(String id, String objective) {
+            return Map.of("id", id, "objective", objective, "status", "planned");
+        }
+
+        private static Map<String, Object> step(String taskId, String toolName, String status,
+                                                int retryCount, String message,
+                                                OffsetDateTime attemptStartedAt) {
+            return Map.of(
+                    "step", taskId,
+                    "tool", toolName,
+                    "status", status,
+                    "retryCount", retryCount,
+                    "message", safe(message),
+                    "attemptedAt", attemptStartedAt.toString()
+            );
+        }
+
+        private static String safe(String value) {
+            return value == null ? "" : value;
+        }
+    }
+
+    @FunctionalInterface
+    private interface AgentTool<T> {
+        T run() throws Exception;
+    }
+
+    @FunctionalInterface
+    private interface AgentVerifier<T> {
+        AgentVerification verify(T result);
+    }
+
+    private record AgentVerification(boolean passed, String message) {
+        static AgentVerification pass(String message) {
+            return new AgentVerification(true, message);
+        }
+
+        static AgentVerification fail(String message) {
+            return new AgentVerification(false, message);
+        }
     }
 
     private Map<String, Object> buildStageCards(String productName, String hsCode, String targetCountry,
@@ -395,6 +666,10 @@ public class DiagnosisAsyncProcessor {
                         "agent=" + (llmResult.isSucceeded() ? llmResult.getProvider()
                                 : agentResult != null ? "fastapi" : "spring-local"))
         ));
+        cards.put("s04", buildMarketStageCard(targetCountry, market, sources));
+        cards.put("s05", buildRegulationStageCard(targetCountry, regulation, sources));
+        cards.put("s06", buildRecallStageCard(recall, sources, risks));
+        cards.put("s07", buildFtoSupportStageCard(targetCountry, fto, support, sources));
         cards.put("s08", roadmap);
         cards.put("s09", Map.of(
                 "summary", buildSummary(productName, hsCode, targetCountry, overall, risks),
@@ -409,6 +684,90 @@ public class DiagnosisAsyncProcessor {
         cards.put("s10", sources);
         cards.put("knowledgeLoop", loopSuggestions);
         return cards;
+    }
+
+    private List<Map<String, Object>> buildMarketStageCard(String targetCountry, int market,
+                                                           List<Map<String, Object>> sources) {
+        int publicCount = sourceCount(sources, "market", "live", "cache");
+        int fallbackCount = sourceCount(sources, "market", "fallback");
+        int evidenceStrength = maxEvidenceStrength(sources, "market");
+        return List.of(Map.of(
+                "flag", countryLabel(targetCountry),
+                "score", market,
+                "grade", gradeClass(market),
+                "gradeLabel", gradeLabel(market),
+                "marketSize", publicCount + " live/cache",
+                "growth", "evidence " + evidenceStrength + "/5",
+                "evidenceNote", "market source trace " + publicCount + "건, fallback " + fallbackCount + "건"
+        ));
+    }
+
+    private List<Map<String, Object>> buildRegulationStageCard(String targetCountry, int regulation,
+                                                               List<Map<String, Object>> sources) {
+        int publicCount = sourceCount(sources, "regulation", "live", "cache");
+        int fallbackCount = sourceCount(sources, "regulation", "fallback");
+        String statusLabel = regulation >= 75 ? "대응가능" : regulation >= 60 ? "보완필요" : "누락위험";
+        String statusType = regulation >= 75 ? "ok" : regulation >= 60 ? "warn" : "req";
+        return List.of(
+                Map.of(
+                        "nm", "대상국 규제 준비도",
+                        "mkt", "Spring rule score + 인증 지식",
+                        "market", List.of("req", targetCountry),
+                        "priority", List.of(regulation >= 70 ? "warn" : "req", regulation >= 70 ? "주의" : "긴급"),
+                        "status", List.of(statusType, statusLabel),
+                        "duration", regulation >= 75 ? "2-4주" : "4-8주",
+                        "cost", publicCount > 0 ? "출처확인" : "견적필요"
+                ),
+                Map.of(
+                        "nm", "공공 API 규제 출처",
+                        "mkt", "sourceType live/cache/fallback 분리",
+                        "market", List.of(publicCount > 0 ? "ok" : "warn", targetCountry),
+                        "priority", List.of(fallbackCount > 0 ? "warn" : "ok", fallbackCount > 0 ? "확인" : "정상"),
+                        "status", List.of(publicCount > 0 ? "ok" : "warn", publicCount + "건 연결"),
+                        "duration", fallbackCount > 0 ? "키/엔드포인트 확인" : "완료",
+                        "cost", "내부"
+                )
+        );
+    }
+
+    private List<Map<String, Object>> buildRecallStageCard(int recall, List<Map<String, Object>> sources,
+                                                           List<Map<String, String>> risks) {
+        String riskClass = recall >= 75 ? "l" : recall >= 60 ? "m" : "h";
+        String badge = recall >= 75 ? "저위험" : recall >= 60 ? "중위험" : "고위험";
+        int publicCount = sourceCount(sources, "recall", "live", "cache");
+        String topRisk = risks.isEmpty() ? "출처 최신성 점검" : risks.get(0).get("label");
+        return List.of(
+                Map.of(
+                        "riskClass", riskClass,
+                        "badge", badge,
+                        "title", "제품군 위해·리콜 신호",
+                        "similarity", String.format("%.2f", recall / 100.0),
+                        "checks", List.of(
+                                topRisk,
+                                "Safety source trace " + publicCount + "건 확인",
+                                "fallback 발생 시 담당자 근거 문서 지식화"
+                        )
+                )
+        );
+    }
+
+    private Map<String, Object> buildFtoSupportStageCard(String targetCountry, int fto, int support,
+                                                         List<Map<String, Object>> sources) {
+        int ftoPublicCount = sourceCount(sources, "fto", "live", "cache");
+        int supportPublicCount = sourceCount(sources, "support", "live", "cache");
+        List<Map<String, Object>> patents = List.of(Map.of(
+                "riskClass", fto >= 75 ? "l" : fto >= 60 ? "m" : "h",
+                "badge", fto >= 75 ? "저위험" : fto >= 60 ? "중위험" : "고위험",
+                "name", "대상국 FTO 준비도",
+                "sub", "KIPRIS/public trace " + ftoPublicCount + "건 · score " + fto + "/100"
+        ));
+        List<Map<String, Object>> supports = List.of(Map.of(
+                "name", targetCountry + " 수출 지원 적합도",
+                "org", "Bizinfo/KOTRA/public trace " + supportPublicCount + "건 · score " + support + "/100",
+                "dday", support >= 70 ? "우선" : "보강",
+                "isGreen", support >= 70
+        ));
+        return Map.of("patents", patents, "supports", supports);
     }
 
     private List<Map<String, Object>> buildKnowledgeLoopSuggestions(AgentInferenceResult llmResult,
@@ -525,8 +884,8 @@ public class DiagnosisAsyncProcessor {
         }
 
         score += contribution;
-        sources.add(source("market", "KCS-TRADE-" + prefix(hsCode, 6) + "-" + targetCountry,
-                "관세청", "수출입무역통계 HS/국가별 교역 신호", "https://unipass.customs.go.kr/ets/",
+        sources.add(source("market", "RULE-MARKET-" + prefix(hsCode, 6) + "-" + targetCountry,
+                "RULE_ENGINE", "로컬 HS/국가 시장성 휴리스틱", "",
                 "hsCode=" + nullToEmpty(hsCode) + ";country=" + targetCountry, "market", contribution,
                 false, reason));
         return clamp(score);
@@ -546,8 +905,8 @@ public class DiagnosisAsyncProcessor {
             else if (days <= 90) expiryPenalty -= 8;
         }
 
-        sources.add(source("regulation", "KTL-CERT-" + targetCountry,
-                "KTL/SafetyKorea", "인증·제품안전 요구사항 매칭", "https://www.safetykorea.kr/",
+        sources.add(source("regulation", "RULE-REGULATION-" + targetCountry,
+                "RULE_ENGINE", "로컬 인증·만료일 규제 준비도 휴리스틱", "",
                 "country=" + targetCountry + ";certCount=" + certs.size(), "regulation",
                 countryPenalty + certContribution + expiryPenalty, certs.isEmpty(),
                 certs.isEmpty() ? "등록 인증서가 없어 규제 준비도 감점" : "등록 인증서와 만료일을 규제 준비도에 반영"));
@@ -565,8 +924,8 @@ public class DiagnosisAsyncProcessor {
         } else {
             contribution += 4;
         }
-        sources.add(source("recall", "SAFETY-RECALL-" + prefix(hsCode, 4),
-                "SafetyKorea/EU RAPEX", "제품군 리콜·위해사례 신호", "https://www.safetykorea.kr/",
+        sources.add(source("recall", "RULE-RECALL-" + prefix(hsCode, 4),
+                "RULE_ENGINE", "로컬 제품군 위해·리콜 위험 휴리스틱", "",
                 "hsPrefix=" + prefix(hsCode, 4), "recall", contribution, false,
                 "HS 품목군과 설명 키워드를 위해사례 신호에 매칭"));
         return clamp(score + contribution);
@@ -574,8 +933,8 @@ public class DiagnosisAsyncProcessor {
 
     private int scoreFto(List<Fto> ftoItems, String targetCountry, List<Map<String, Object>> sources) {
         if (ftoItems.isEmpty()) {
-            sources.add(source("fto", "KIPRIS-FTO-MISSING-" + targetCountry,
-                    "KIPRIS", "특허/FTO 확인 상태", "https://www.kipris.or.kr/",
+            sources.add(source("fto", "RULE-FTO-MISSING-" + targetCountry,
+                    "RULE_ENGINE", "로컬 FTO 등록 여부 휴리스틱", "",
                     "country=" + targetCountry + ";ftoCount=0", "fto", -20, true,
                     "FTO 검토 항목이 없어 특허 리스크를 높게 반영"));
             return 50;
@@ -589,8 +948,8 @@ public class DiagnosisAsyncProcessor {
             else if (item.getRiskLevel() == RiskLevel.medium) contribution -= 12;
             else if (item.getRiskLevel() == RiskLevel.low) contribution += 8;
         }
-        sources.add(source("fto", "KIPRIS-FTO-" + targetCountry,
-                "KIPRIS", "FTO 위험도 등록 근거", "https://www.kipris.or.kr/",
+        sources.add(source("fto", "RULE-FTO-" + targetCountry,
+                "RULE_ENGINE", "로컬 FTO 위험도 휴리스틱", "",
                 "country=" + targetCountry + ";ftoCount=" + ftoItems.size(), "fto", contribution,
                 false, "등록된 FTO 위험 수준을 대상국 기준으로 반영"));
         return clamp(score + contribution);
@@ -607,8 +966,8 @@ public class DiagnosisAsyncProcessor {
         contribution += Math.min(12, buyers.size() * 6);
         contribution += Math.min(10, knowledgeSources.size() * 3);
 
-        sources.add(source("support", "BIZINFO-SUPPORT-" + targetCountry,
-                "기업마당/KOTRA", "지원사업·바이어 요구사항 적합도", "https://www.bizinfo.go.kr/",
+        sources.add(source("support", "RULE-SUPPORT-" + targetCountry,
+                "RULE_ENGINE", "로컬 지식·바이어·출처 기반 지원 적합도 휴리스틱", "",
                 "country=" + targetCountry + ";buyerCount=" + buyers.size(), "support", contribution,
                 knowledgeSources.isEmpty(), "지식 출처 수, 바이어 요구사항, 신뢰 등급을 실행 가능성에 반영"));
         return clamp(score + contribution);
@@ -639,6 +998,25 @@ public class DiagnosisAsyncProcessor {
         }
         if (risks.isEmpty()) risks.add(Map.of("level", "low", "label", "치명 위험은 낮으나 출처 최신성 점검 필요"));
         return risks;
+    }
+
+    private Map<String, Object> buildScoringRubric() {
+        return Map.of(
+                "version", "submission-2026-07-01",
+                "formula", "overall = market*0.25 + regulation*0.22 + recall*0.16 + fto*0.20 + support*0.17",
+                "dimensions", List.of(
+                        Map.of("key", "market", "weight", 0.25, "evidence", "HS code, target country, KCS/KOTRA public-data source trace"),
+                        Map.of("key", "regulation", "weight", 0.22, "evidence", "target-market rule, certification count, expiry risk, public-data trace"),
+                        Map.of("key", "recall", "weight", 0.16, "evidence", "HS/product keyword risk and SafetyKorea/public recall source trace"),
+                        Map.of("key", "fto", "weight", 0.20, "evidence", "registered FTO risk and KIPRIS/public trace"),
+                        Map.of("key", "support", "weight", 0.17, "evidence", "knowledge trust, buyer requirements, source count, Bizinfo/KOTRA trace")
+                ),
+                "guardrails", List.of(
+                        "live/cache/fallback/heuristic/agent sourceType을 결과에 함께 저장",
+                        "fallback 공공데이터는 감점 또는 낮은 contribution으로만 반영",
+                        "LLM provider는 점수 산식의 단일 근거가 아니라 설명과 지식화 후보 보조 역할"
+                )
+        );
     }
 
     private Map<String, Object> buildRoadmap(List<Map<String, String>> risks, List<Certification> certs,
@@ -680,8 +1058,66 @@ public class DiagnosisAsyncProcessor {
         source.put("usedFor", usedFor);
         source.put("scoreContribution", scoreContribution);
         source.put("fallbackUsed", fallbackUsed);
+        source.put("sourceType", sourceType(provider, field));
         source.put("reason", reason);
         return source;
+    }
+
+    private String sourceType(PublicDataRecord record) {
+        if (record.isCacheHit()) return "cache";
+        if (record.isFallbackUsed()) return "fallback";
+        return "live";
+    }
+
+    private String sourceType(String provider, String field) {
+        if ("RULE_ENGINE".equals(provider)) return "heuristic";
+        if ("agent".equals(field)) return "agent";
+        return "internal";
+    }
+
+    private int sourceCount(List<Map<String, Object>> sources, String field, String... sourceTypes) {
+        List<String> allowed = List.of(sourceTypes);
+        return (int) sources.stream()
+                .filter(source -> field.equals(source.get("field")) || field.equals(source.get("usedFor")))
+                .filter(source -> allowed.isEmpty() || allowed.contains(stringValue(source.get("sourceType"))))
+                .count();
+    }
+
+    private int maxEvidenceStrength(List<Map<String, Object>> sources, String field) {
+        return sources.stream()
+                .filter(source -> field.equals(source.get("field")) || field.equals(source.get("usedFor")))
+                .map(source -> source.get("domainSignals"))
+                .filter(Map.class::isInstance)
+                .map(Map.class::cast)
+                .map(signals -> signals.get("evidenceStrength"))
+                .filter(Number.class::isInstance)
+                .map(Number.class::cast)
+                .mapToInt(Number::intValue)
+                .max()
+                .orElse(0);
+    }
+
+    private String gradeClass(int score) {
+        if (score >= 75) return "h";
+        if (score >= 60) return "m";
+        return "l";
+    }
+
+    private String gradeLabel(int score) {
+        if (score >= 75) return "HIGH";
+        if (score >= 60) return "MEDIUM";
+        return "LOW";
+    }
+
+    private String countryLabel(String targetCountry) {
+        return switch (targetCountry) {
+            case "DE" -> "Germany / EU";
+            case "US" -> "United States";
+            case "JP" -> "Japan";
+            case "CN" -> "China";
+            case "EU" -> "European Union";
+            default -> targetCountry;
+        };
     }
 
     private Map<String, Object> parseInputData(String json) {
@@ -690,6 +1126,15 @@ public class DiagnosisAsyncProcessor {
             return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
         } catch (Exception e) {
             log.warn("Failed to parse diagnosis input_data JSON");
+            return Map.of();
+        }
+    }
+
+    private Map<String, Object> parseObjectMap(String json) {
+        if (json == null || json.isBlank()) return Map.of();
+        try {
+            return objectMapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+        } catch (Exception e) {
             return Map.of();
         }
     }

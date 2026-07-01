@@ -1,88 +1,143 @@
 import { useState, useEffect } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 import styles from './Mypage.module.css'
 import {
   getMypageOverview,
   getMypageProducts,
   createMypageProduct,
   updateMypageProduct,
+  deleteMypageProduct,
   rerunDiagnosis,
 } from '../../services/mypageService.js'
-import { getAuthUser, logout } from '../../services/authService.js'
+import { COUNTRY_OPTIONS, normalizeTargetCountry } from '../../utils/country.js'
 
-const COUNTRIES = ['독일', '미국', '일본', 'ASEAN', '중국', 'EU']
+// 내 제품 관리 목록: 한 페이지에 보여줄 제품 수
+const PRODUCTS_PER_PAGE = 5
 
 // 마이페이지 — 수출 준비 상태 대시보드
 export default function Mypage() {
   const navigate = useNavigate()
-  const user = getAuthUser() // 로그인 정보 (없으면 null)
-
-  // 로그아웃 → 홈으로
-  const handleLogout = async () => {
-    await logout()
-    navigate('/')
-  }
   const [overview, setOverview] = useState({ company: null, members: [] })
   const [products, setProducts] = useState([])
   const [selectedId, setSelectedId] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [saveError, setSaveError] = useState('')
 
-  // 모달 상태
+  // 제품 추가 모달 상태
   const [modalOpen, setModalOpen] = useState(false)
   const [editingId, setEditingId] = useState(null)
-  const [form, setForm] = useState({ name: '', hs: '', country: '독일' })
+  const [form, setForm] = useState({ name: '', hs: '', country: 'DE' })
+
+  // 제품 삭제 확인 모달 대상 (null이면 닫힘)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleting, setDeleting] = useState(false)
 
   // 진단 재실행 로딩
   const [rerunLoading, setRerunLoading] = useState(false)
 
+  // 내 제품 관리 목록 페이지 (0부터)
+  const [productPage, setProductPage] = useState(0)
+
   useEffect(() => {
-    getMypageOverview().then(setOverview)
-    getMypageProducts().then((data) => {
-      setProducts(data)
-      if (data.length) setSelectedId(data[0].id)
-    })
+    let cancelled = false
+    async function load() {
+      const [overviewResult, productsResult] = await Promise.allSettled([
+        getMypageOverview(),
+        getMypageProducts(),
+      ])
+      if (cancelled) return
+      const messages = []
+      if (overviewResult.status === 'fulfilled') {
+        setOverview(overviewResult.value)
+      } else {
+        messages.push(overviewResult.reason?.message || '회사/계정 정보를 불러오지 못했습니다.')
+      }
+      if (productsResult.status === 'fulfilled') {
+        setProducts(productsResult.value)
+        if (productsResult.value.length) setSelectedId(productsResult.value[0].id)
+      } else {
+        messages.push(productsResult.reason?.message || '제품 목록을 불러오지 못했습니다.')
+      }
+      setLoadError(messages.join(' '))
+    }
+    load()
+    return () => { cancelled = true }
   }, [])
 
   const current = products.find((p) => p.id === selectedId)
 
-  // 제품 선택
-  function selectProduct(id) {
-    setSelectedId(id)
-    document.querySelector(`.${styles.slabel}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
-  }
+  // 내 제품 관리 목록 페이지네이션 (제품 수가 바뀌어도 범위 벗어나지 않게 보정)
+  const pageCount = Math.max(1, Math.ceil(products.length / PRODUCTS_PER_PAGE))
+  const safePage = Math.min(productPage, pageCount - 1)
+  const pagedProducts = products.slice(safePage * PRODUCTS_PER_PAGE, safePage * PRODUCTS_PER_PAGE + PRODUCTS_PER_PAGE)
 
-  // 모달 열기/닫기
+  // 제품 추가 모달 열기/닫기
   function openAdd() {
     setEditingId(null)
-    setForm({ name: '', hs: '', country: '독일' })
+    setForm({ name: '', hs: '', country: 'DE' })
+    setSaveError('')
     setModalOpen(true)
   }
   function openEdit(id) {
     const p = products.find((x) => x.id === id)
+    if (!p) return
     setEditingId(id)
-    setForm({ name: p.name, hs: p.hs, country: p.country })
+    setForm({ name: p.name, hs: p.hs, country: normalizeTargetCountry(p.country) })
+    setSaveError('')
     setModalOpen(true)
   }
   function closeModal() { setModalOpen(false) }
 
-  // 제품 저장 (추가/수정)
+  // 제품 추가
   async function saveProduct() {
     const name = form.name.trim()
     const hs = form.hs.trim()
+    const country = normalizeTargetCountry(form.country)
     if (!name || !hs) { alert('제품명과 HS Code를 입력해주세요.'); return }
 
-    if (editingId) {
-      await updateMypageProduct(editingId, { name, hs, country: form.country })
-      setProducts((prev) => prev.map((p) =>
-        p.id === editingId ? { ...p, name, hs, country: form.country } : p))
-    } else {
-      const created = await createMypageProduct({ name, hs, country: form.country })
-      setProducts((prev) => [...prev, created])
-      setSelectedId(created.id)
+    try {
+      if (editingId) {
+        await updateMypageProduct(editingId, { name, hs, country })
+        setProducts((prev) => prev.map((p) =>
+          p.id === editingId ? { ...p, name, hs, country } : p))
+      } else {
+        const created = await createMypageProduct({ name, hs, country })
+        setProducts((prev) => [...prev, created])
+        setSelectedId(created.id)
+      }
+      closeModal()
+    } catch (err) {
+      setSaveError(err.message || '제품 저장에 실패했습니다. 입력값과 서버 상태를 확인해주세요.')
     }
-    closeModal()
   }
 
-  // AI 진단 다시 실행
+  // 삭제 버튼 → 확인 모달 열기
+  function askDelete(id) {
+    const p = products.find((x) => x.id === id)
+    if (p) setDeleteTarget(p)
+  }
+
+  // 확인 모달에서 '삭제' → 실제 소프트 삭제 API 호출 (감사 로그·진단 이력은 보존됨)
+  async function confirmDelete() {
+    const id = deleteTarget.id
+    setDeleting(true)
+    try {
+      await deleteMypageProduct(id)
+      setProducts((prev) => {
+        const next = prev.filter((x) => x.id !== id)
+        // 삭제한 게 지금 보던 제품이면 첫 제품으로 전환
+        if (id === selectedId) setSelectedId(next[0]?.id ?? '')
+        return next
+      })
+      setDeleteTarget(null)
+    } catch (err) {
+      alert(err.message || '제품 삭제에 실패했습니다. 권한이 없거나 서버 오류일 수 있어요.')
+    } finally {
+      setDeleting(false)
+    }
+  }
+
+  // 수출 준비도 진단 다시 실행
   async function rerun() {
     if (!current) return
     setRerunLoading(true)
@@ -105,22 +160,6 @@ export default function Mypage() {
       </div>
 
       <div className={styles.page}>
-        {/* NAV */}
-        <nav className={styles.nav}>
-          <Link to="/" className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></Link>
-          <div className={styles.navLinks}>
-            <Link to="/">홈</Link>
-            <Link to="/diagnosis">AI 진단</Link>
-            <Link to="/mypage" className={styles.active}>마이페이지</Link>
-          </div>
-          <div className={styles.navCta}>
-            {user
-              ? <button className={styles.login} onClick={handleLogout}>로그아웃</button>
-              : <Link className={styles.login} to="/login">로그인</Link>}
-            <Link className={styles.signup} to="/diagnosis/new">진단 시작</Link>
-          </div>
-        </nav>
-
         {/* HEAD + switcher */}
         <div className={styles.phead}>
           <div>
@@ -147,11 +186,11 @@ export default function Mypage() {
           <>
             <div className={`${styles.row} ${styles.hero}`}>
               <div
-                className={`${styles.card} ${styles.score} ${current.runId ? styles.clickable : ''}`}
-                onClick={() => current.runId && navigate(`/diagnosis/${current.runId}`)}
-                role={current.runId ? 'button' : undefined}
+                className={`${styles.card} ${styles.score} ${styles.clickable}`}
+                onClick={() => navigate(`/mypage/diagnosis/${current.id}`)}
+                role="button"
               >
-                <div className={styles.ctitle}>최근 AI 진단 결과 {current.runId && <span className={styles.goHint}>· 클릭하면 진단 결과로 →</span>}</div>
+                <div className={styles.ctitle}>최근 AI 진단 결과 <span className={styles.goHint}>· 왜 이 점수인지 보기 →</span></div>
                 <div className={styles.big}>
                   {current.score != null ? current.score : '—'}<span className={styles.u}>/100</span>
                 </div>
@@ -217,7 +256,7 @@ export default function Mypage() {
                 disabled={rerunLoading}
               >
                 <span className={styles.sp} />
-                <span className={styles.ar}>↻</span>&nbsp;이 제품 AI 진단 다시 실행
+                <span className={styles.ar}>↻</span>&nbsp;이 제품 준비도 진단 다시 실행
               </button>
             </div>
           </>
@@ -228,13 +267,15 @@ export default function Mypage() {
           <span className={styles.dot} />내 제품 · 회사 정보 · 제품을 바꿔도 회사 정보는 고정됩니다
         </div>
 
+        {loadError && <div className={styles.notice}>{loadError}</div>}
+
         <div className={`${styles.card} ${styles.pm}`}>
           <div className={styles.pmHead}>
             <div className={styles.ctitle}>내 제품 관리</div>
             <button className={styles.add} onClick={openAdd}>+ 제품 추가</button>
           </div>
           <div className={styles.plist}>
-            {products.map((p) => (
+            {pagedProducts.map((p) => (
               <div key={p.id} className={`${styles.prow} ${p.id === selectedId ? styles.cur : ''}`}>
                 <div>
                   <div className={styles.pn}>{p.name}</div>
@@ -248,11 +289,33 @@ export default function Mypage() {
                   : <span className={`${styles.sc} ${styles.scNone}`}>미진단</span>}
                 <div className={styles.acts}>
                   <button className={styles.ab} onClick={() => openEdit(p.id)}>수정</button>
-                  <button className={`${styles.ab} ${styles.abPrimary}`} onClick={() => selectProduct(p.id)}>보기</button>
+                  <button className={`${styles.ab} ${styles.abDanger}`} onClick={() => askDelete(p.id)}>삭제</button>
+                  <button className={`${styles.ab} ${styles.abPrimary}`} onClick={() => navigate(`/mypage/diagnosis/${p.id}`)}>보기</button>
                 </div>
               </div>
             ))}
           </div>
+
+          {/* 제품이 한 페이지를 넘으면 페이지네이션 노출 */}
+          {pageCount > 1 && (
+            <div className={styles.ppager}>
+              <button
+                className={styles.ppBtn}
+                onClick={() => setProductPage((n) => Math.max(0, n - 1))}
+                disabled={safePage === 0}
+              >
+                ← 이전
+              </button>
+              <span className={styles.ppInfo}>{safePage + 1} / {pageCount}</span>
+              <button
+                className={styles.ppBtn}
+                onClick={() => setProductPage((n) => Math.min(pageCount - 1, n + 1))}
+                disabled={safePage >= pageCount - 1}
+              >
+                다음 →
+              </button>
+            </div>
+          )}
         </div>
 
         <div className={`${styles.row} ${styles.companyRow}`}>
@@ -293,9 +356,9 @@ export default function Mypage() {
         onClick={(e) => { if (e.target === e.currentTarget) closeModal() }}
       >
         <div className={styles.sheet}>
-          <h3>{editingId ? '제품 정보 수정' : '제품 추가'}</h3>
+          <h3>{editingId ? '제품 수정' : '제품 추가'}</h3>
           <div className={styles.desc}>
-            {editingId ? '수정 후 진단을 다시 실행하면 새 정보로 분석됩니다.' : '제품명·HS Code·수출 대상국을 입력하면 목록에 추가됩니다.'}
+            제품명·HS Code·수출 대상국을 입력하면 마이페이지와 진단 입력에 반영됩니다.
           </div>
           <div className={styles.field}>
             <label>제품명</label>
@@ -314,9 +377,10 @@ export default function Mypage() {
           <div className={styles.field}>
             <label>수출 대상국</label>
             <select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })}>
-              {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
+              {COUNTRY_OPTIONS.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
+          {saveError && <div className={styles.modalError}>{saveError}</div>}
           {editingId && (
             <button
               className={styles.knLink}
@@ -327,7 +391,27 @@ export default function Mypage() {
           )}
           <div className={styles.foot}>
             <button className={styles.cancel} onClick={closeModal}>취소</button>
-            <button className={styles.save} onClick={saveProduct}>{editingId ? '저장' : '추가'}</button>
+            <button className={styles.save} onClick={saveProduct}>{editingId ? '수정' : '추가'}</button>
+          </div>
+        </div>
+      </div>
+
+      {/* 제품 삭제 확인 모달 */}
+      <div
+        className={`${styles.modal} ${deleteTarget ? styles.open : ''}`}
+        onClick={(e) => { if (e.target === e.currentTarget && !deleting) setDeleteTarget(null) }}
+      >
+        <div className={styles.sheet}>
+          <h3>제품을 삭제할까요?</h3>
+          <div className={styles.desc}>
+            <b>{deleteTarget?.name}</b> 제품을 목록에서 삭제합니다.<br />
+            지금까지의 <b>AI 진단 이력과 감사 로그는 그대로 보존</b>돼요.
+          </div>
+          <div className={styles.foot}>
+            <button className={styles.cancel} onClick={() => setDeleteTarget(null)} disabled={deleting}>취소</button>
+            <button className={styles.saveDanger} onClick={confirmDelete} disabled={deleting}>
+              {deleting ? '삭제 중…' : '삭제'}
+            </button>
           </div>
         </div>
       </div>

@@ -7,6 +7,7 @@ import com.growgate.publicdata.enums.PublicDataCollectionStatus;
 import com.growgate.publicdata.enums.PublicDataProvider;
 import com.growgate.publicdata.repository.PublicDataCollectionRunRepository;
 import com.growgate.publicdata.repository.PublicDataRecordRepository;
+import com.growgate.membership.repository.MembershipRepository;
 import com.growgate.user.entity.User;
 import com.growgate.user.enums.UserType;
 import com.growgate.user.repository.UserRepository;
@@ -38,6 +39,7 @@ class PublicDataCollectionServiceTest {
         PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
         PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
         UserRepository userRepository = mock(UserRepository.class);
+        MembershipRepository membershipRepository = mock(MembershipRepository.class);
         User user = user("user-1");
 
         when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
@@ -48,7 +50,7 @@ class PublicDataCollectionServiceTest {
                 .thenReturn(Optional.empty());
 
         PublicDataCollectionService service = service(
-                List.of(connector), runRepository, recordRepository, userRepository);
+                List.of(connector), runRepository, recordRepository, userRepository, membershipRepository);
         ReflectionTestUtils.setField(service, "enabled", false);
         ReflectionTestUtils.setField(service, "cacheTtlHours", 24L);
 
@@ -73,6 +75,7 @@ class PublicDataCollectionServiceTest {
         PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
         PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
         UserRepository userRepository = mock(UserRepository.class);
+        MembershipRepository membershipRepository = mock(MembershipRepository.class);
         User user = user("user-1");
         PublicDataRecord cached = PublicDataRecord.builder()
                 .provider(PublicDataProvider.KCS_TRADE)
@@ -85,6 +88,8 @@ class PublicDataCollectionServiceTest {
                 .rawPayload("{\"ok\":true}")
                 .normalizedPayload("{\"signal\":\"live\"}")
                 .scoreContribution(8)
+                .confidence(0.82)
+                .sourceType("live")
                 .fallbackUsed(false)
                 .cacheHit(false)
                 .fetchedAt(LocalDateTime.now().minusMinutes(10))
@@ -99,7 +104,7 @@ class PublicDataCollectionServiceTest {
                 .thenReturn(Optional.of(cached));
 
         PublicDataCollectionService service = service(
-                List.of(connector), runRepository, recordRepository, userRepository);
+                List.of(connector), runRepository, recordRepository, userRepository, membershipRepository);
         ReflectionTestUtils.setField(service, "enabled", true);
         ReflectionTestUtils.setField(service, "cacheTtlHours", 24L);
 
@@ -114,15 +119,38 @@ class PublicDataCollectionServiceTest {
         verify(connector, never()).collect(any(PublicDataRequest.class));
     }
 
+    @Test
+    void getRecentRunsScopesPersonalUsersToOwnPublicDataRuns() {
+        PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
+        PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        MembershipRepository membershipRepository = mock(MembershipRepository.class);
+        User user = user("user-1");
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(runRepository.findTop20ByRequestedBy_IdInOrderByStartedAtDesc(List.of("user-1")))
+                .thenReturn(List.of());
+
+        PublicDataCollectionService service = service(
+                List.of(), runRepository, recordRepository, userRepository, membershipRepository);
+
+        List<PublicDataCollectionRun> runs = service.getRecentRuns("user-1");
+
+        assertThat(runs).isEmpty();
+        verify(runRepository).findTop20ByRequestedBy_IdInOrderByStartedAtDesc(List.of("user-1"));
+    }
+
     private PublicDataCollectionService service(List<PublicDataConnector> connectors,
                                                 PublicDataCollectionRunRepository runRepository,
                                                 PublicDataRecordRepository recordRepository,
-                                                UserRepository userRepository) {
+                                                UserRepository userRepository,
+                                                MembershipRepository membershipRepository) {
         return new PublicDataCollectionService(
                 connectors,
                 runRepository,
                 recordRepository,
                 userRepository,
+                membershipRepository,
                 new ObjectMapper()
         );
     }

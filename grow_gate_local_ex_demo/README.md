@@ -10,7 +10,7 @@
 grow_gate_local_ex_demo/
 ├─ frontend/
 │  ├─ index.html          # 업무 담당자 홈
-│  ├─ workspace.html      # AI 진단 워크스페이스
+│  ├─ workspace.html      # 준비도 진단 워크스페이스
 │  ├─ ai-search.html      # 진단/RAG-ready 근거/공공데이터 통합 AI 검색
 │  ├─ data.html           # 공공데이터 파이프라인 화면
 │  ├─ roadmap.html        # 30·60·90일 실행 로드맵 화면
@@ -50,10 +50,10 @@ grow_gate_local_ex_demo/
 `frontend/index.html` 파일을 브라우저에서 열면 홈 화면이 표시됩니다. 업무별 화면은 상단 네비게이션에서 이동합니다.
 
 - `index.html`: 담당자 인사, 최근 진단, 오늘 먼저 할 일, 주요 업무 진입
-- `workspace.html`: 좌측 업무 메뉴 기반 제품 입력, AI/XGBoost 진단, 규제·리콜·FTO·지원사업·리포트
-- `ai-search.html`: 제품 문맥 기반 AI 검색, RAG-ready 근거, 공공데이터 출처, 다음 액션 확인
+- `workspace.html`: 좌측 업무 메뉴 기반 제품 입력, 준비도 점수, 규제·리콜·FTO·지원사업·리포트
+- `ai-search.html`: 제품 문맥 기반 근거 검색, top-k 근거, 공공데이터 출처, 다음 액션 확인
 - `data.html`: 화면별 공공데이터 출처, 정규화 테이블, 수집 파이프라인
-- `roadmap.html`: 30·60·90일 업무 보드와 예측 기반 운영 메모
+- `roadmap.html`: 30·60·90일 업무 보드와 근거 기반 운영 메모
 
 기본 시나리오:
 
@@ -63,7 +63,7 @@ grow_gate_local_ex_demo/
 - 대상국: Germany / EU
 - 제품 특성: 배터리, 전기전자, 산업재
 
-`AI Agent 분석 실행` 버튼을 누르면 로컬 JavaScript 분석 엔진이 다음 결과를 생성합니다.
+`Agent-assisted 진단 실행` 버튼을 누르면 로컬 JavaScript 분석 엔진이 다음 결과를 생성합니다.
 
 - 수출 준비도 점수
 - 국가별 수출기회 카드
@@ -71,7 +71,7 @@ grow_gate_local_ex_demo/
 - 유사 리콜 위험 및 시험 전 체크리스트
 - 특허/FTO 위험 키워드
 - 지원사업 매칭
-- XGBoost 기반 90일 수출 실행 가능성, 인증 리드타임, 지원사업 적합 확률, 시험·보완 예비비율 추정
+- 규칙 기반 90일 수출 패키지 준비도, 인증 리드타임, 지원사업 신청 우선순위, 시험·보완 예비비율 추정
 - 30·60·90일 실행 로드맵
 - 인쇄 가능한 보고서
 
@@ -157,9 +157,9 @@ curl http://127.0.0.1:8000/db/status
 curl -X POST http://127.0.0.1:8000/simulation/run
 ```
 
-시뮬레이션 결과는 기본 입력값 기준으로 준비도 점수, 검색 품질 전략, 보고서 검수 결과를 반환합니다. 검수 항목은 AI 요약, RAG 근거, 30·60·90일 로드맵, 유의사항, 검색 품질 신호, ML 예측 포함 여부입니다.
+시뮬레이션 결과는 기본 입력값 기준으로 준비도 점수, 검색 품질 전략, 보고서 검수 결과를 반환합니다. 검수 항목은 AI 요약, 근거 context, 30·60·90일 로드맵, 유의사항, 검색 품질 신호, 준비도 추정 포함 여부입니다.
 
-AI 진단 워크스페이스에는 `Pmgrow Corporation(피엠그로우)`을 중소기업 타겟 사례로 둔 Agent 고도화 패널이 포함됩니다. 백엔드 분석 결과의 `raw_signals`에는 다음 패키지가 함께 반환됩니다.
+준비도 진단 워크스페이스에는 `Pmgrow Corporation(피엠그로우)`을 중소기업 타겟 사례로 둔 Agent 고도화 패널이 포함됩니다. 백엔드 분석 결과의 `raw_signals`에는 다음 패키지가 함께 반환됩니다.
 
 - `target_company_profile`: 공개 기업정보 기반 SME 컨설팅 프로필
 - `target_company_rag`: 기업 seed, 규제 RAG, 리콜 RAG 상위 근거
@@ -220,12 +220,12 @@ python -m backend.run_pipeline
 
 실행하면 두 개의 빌드 파일이 생성됩니다.
 
-- `data/build/rag_documents_preview.json`: 규제·리콜 데이터를 RAG/벡터DB에 넣기 쉬운 문서 형태로 정규화
+- `data/build/rag_documents_preview.json`: 규제·리콜 데이터를 근거 검색/벡터DB에 넣기 쉬운 문서 형태로 정규화
 - `data/build/public_data_normalized.json`: 화면별 공공데이터 소스에서 수집한 원천 데이터를 `trade_signal`, `country_profile`, `recall_case`, `patent_signal`, `support_program`, `evidence_source`, `api_call_log` 형태로 정규화
 
-관리자 화면의 **ML 재학습 실행**은 `POST /ml/train`을 호출합니다. 이 엔드포인트는 공공데이터 수집, 검증, 정규화, RAG 청크 생성, ML feature 생성, XGBoost-ready 학습, 평가, artifact 발행을 하나의 실행 이력으로 기록합니다. 각 단계는 `collect_public_sources`, `validate_raw_data`, `normalize_documents`, `build_rag_chunks`, `build_ml_features`, `train_xgboost`, `evaluate_model`, `publish_model_artifacts`로 분리되어 Airflow DAG로 전환할 수 있습니다.
+관리자 화면의 **ML 재학습 실행**은 `POST /ml/train`을 호출합니다. 이 엔드포인트는 공공데이터 수집, 검증, 정규화, 근거 청크 생성, ML feature 생성, demo 학습, 평가, artifact 발행을 하나의 실행 이력으로 기록합니다. 각 단계는 `collect_public_sources`, `validate_raw_data`, `normalize_documents`, `build_rag_chunks`, `build_ml_features`, `train_xgboost`, `evaluate_model`, `publish_model_artifacts`로 분리되어 Airflow DAG로 전환할 수 있습니다.
 
-RAG 저장소는 현재 `data/build/rag_database_preview.json` JSON fallback으로 생성되며, `GET /rag/schema`에서 Supabase Postgres + pgvector로 옮길 테이블 계약을 확인할 수 있습니다.
+근거 검색 저장소는 현재 `data/build/rag_database_preview.json` JSON fallback으로 생성되며, `GET /rag/schema`에서 Supabase Postgres + pgvector로 옮길 테이블 계약을 확인할 수 있습니다.
 
 공모전용 저장소는 `SQLite + JSON fallback`을 기본값으로 둡니다. 운영 고도화 단계에서는 같은 테이블 계약을 Supabase Postgres + pgvector로 이관해 `rag_documents`, `rag_chunks`, `rag_embeddings`, `pipeline_runs`, `model_versions`, `analysis_reports`, `search_runs`를 장기 축적할 수 있습니다.
 
@@ -256,12 +256,12 @@ curl -X POST "http://127.0.0.1:8000/public-data/collect?use_live=true"
 
 ## 7. 실제 서비스 확장 포인트
 
-- `backend/ml_models.py`: XGBoost 예측/추정 레이어. macOS에 `libomp`가 없으면 시연 안정성을 위해 동일 feature contract의 Gradient Boosting fallback을 사용
+- `backend/ml_models.py`: 준비도 추정 demo 레이어. 실제 라벨 기반 운영 모델이 아니라 동일 feature contract의 Gradient Boosting fallback을 포함한 시연용 모듈
 - `backend/public_data_pipeline.py`: 공공데이터 API 호출, seed fallback, 화면별 정규화, 수집 로그 생성
 - `backend/local_demo_db.py`: SQLite 기반 제품 지식, RAG, ML, 보고서, 검색 실행 이력 저장
 - `backend/operational_pipeline.py`: Airflow-ready task 단위의 공공데이터/RAG/ML 파이프라인
-- `backend/product_knowledge.py`: 직원이 등록한 제품 지식을 Agent RAG 근거와 ML feature로 변환
-- `backend/rag_database.py`: Supabase/pgvector 이관 가능한 RAG 저장소 계약
+- `backend/product_knowledge.py`: 직원이 등록한 제품 지식을 Agent 근거와 ML feature로 변환
+- `backend/rag_database.py`: Supabase/pgvector 이관 가능한 근거 검색 저장소 계약
 - `backend/data_connectors.py`: 분석 Agent가 사용할 데이터 facade와 RAG 문서화 payload 제공
 - `backend/target_company.py`: 실제 중소기업 타겟 프로필을 RAG seed, 프롬프트 팩, 하네스 평가로 변환
 - `backend/external_llm.py`: Hugging Face Space, Groq, Gemini 추론을 선택적으로 호출하고 실패 시 fallback
@@ -280,8 +280,8 @@ curl -X POST "http://127.0.0.1:8000/public-data/collect?use_live=true"
 
 - 기존 좌측 사이드바 구조를 줄이고, 상단 네비게이션과 단계형 흐름으로 변경했습니다.
 - 첫 화면에서 `GROW-GATE Local EX` 서비스 정체성이 잘 보이도록 Hero 영역을 개선했습니다.
-- AI 진단 전/후 상태가 구분되도록 KPI, 결과 패널, 로드맵 상태 전환을 추가했습니다.
-- 하단에서 데이터 커넥터, ML 예측, 규제 매트릭스, 리콜 Copilot, FTO/지원사업, 30·60·90 실행 보드, AI 리포트, 공공데이터 파이프라인을 바로 확인할 수 있게 구성했습니다.
+- 준비도 진단 전/후 상태가 구분되도록 KPI, 결과 패널, 로드맵 상태 전환을 추가했습니다.
+- 하단에서 데이터 커넥터, 준비도 추정, 규제 매트릭스, 리콜 Copilot, FTO/지원사업, 30·60·90 실행 보드, AI 리포트, 공공데이터 파이프라인을 바로 확인할 수 있게 구성했습니다.
 
 ### 2026-06-02 주요 변경사항
 
@@ -290,5 +290,5 @@ curl -X POST "http://127.0.0.1:8000/public-data/collect?use_live=true"
 - `data.html`에 데모 DB 시드 생성, 실사용 시뮬레이션 실행, ML 재학습 실행 패널을 추가했습니다.
 - `SQLite` 기반 데모 DB를 추가해 제품 지식, RAG 문서/청크, 임베딩 preview, 파이프라인 실행, 모델 평가, AI 검색, 분석 보고서를 실제로 저장합니다.
 - 실제 중소기업 컨설팅 방향성에 맞춰 피엠그로우 SME 타겟 RAG, 고급 프롬프트 팩, 하네스 평가를 Agent raw signal에 연결했습니다.
-- AI 진단 화면은 로그인 후 단계형 진단 흐름으로 정리하고, 한글 줄바꿈 깨짐과 “데이터 호출” 문구를 실무자 친화적인 표현으로 수정했습니다.
+- 준비도 진단 화면은 로그인 후 단계형 진단 흐름으로 정리하고, 한글 줄바꿈 깨짐과 “데이터 호출” 문구를 실무자 친화적인 표현으로 수정했습니다.
 - FastAPI + 정적 프론트 서버 조합으로 `http://127.0.0.1:8766/data.html`에서 실제 배포형 데모처럼 사용할 수 있게 정리했습니다.

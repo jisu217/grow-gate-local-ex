@@ -7,23 +7,6 @@
   padding: 40px 28px;
 }
 
-/* 홈과 동일한 전체폭 상단 헤더 */
-.topbar {
-  max-width: 1240px;
-  margin: 0 auto;
-  padding: 26px 32px 0;
-}
-/* 홈으로 가는 로고 (홈 화면과 동일 크기/스타일) */
-.brand {
-  font-family: var(--en);
-  font-weight: 800;
-  font-size: 28px;
-  color: #0b1530;
-  letter-spacing: -.01em;
-  text-decoration: none;
-}
-.ex { color: var(--blue); }
-
 /* 타이틀·버튼 헤더 행 */
 .header {
   display: flex;
@@ -63,8 +46,88 @@
 }
 .newBtn:hover { transform: translateY(-1px); }
 
+/* ===== 빈 화면 (진단 이력 없음) ===== */
+.empty {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  box-shadow: var(--shadow);
+  padding: 56px 40px;
+  text-align: center;
+}
+/* 아이콘 배지 */
+.emptyIcon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  background: var(--blue-soft);
+  display: grid;
+  place-items: center;
+  margin: 0 auto 20px;
+}
+.emptyIcon svg { width: 30px; height: 30px; stroke: var(--blue); }
+/* 빈 화면 제목 */
+.emptyTitle {
+  font-family: var(--en);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--navy);
+  letter-spacing: -.01em;
+}
+/* 빈 화면 설명 */
+.emptyDesc {
+  margin: 9px auto 0;
+  max-width: 420px;
+  font-size: 14.5px;
+  color: var(--slate);
+  line-height: 1.6;
+}
+/* 3단계 미니 가이드 */
+.steps {
+  margin: 26px auto 28px;
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  max-width: 520px;
+}
+.step {
+  font-size: 13px;
+  color: var(--slate);
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 13px;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+.step b { color: var(--blue); font-family: var(--en); font-weight: 800; }
+/* 빈 화면 CTA */
+.emptyCta {
+  background: var(--blue);
+  color: #fff;
+  font-family: var(--kr);
+  font-weight: 700;
+  font-size: 15px;
+  border: none;
+  padding: 14px 26px;
+  border-radius: 12px;
+  cursor: pointer;
+  box-shadow: 0 8px 20px rgba(47,107,255,.3);
+  transition: .15s;
+}
+.emptyCta:hover { transform: translateY(-1px); }
+
 /* 진단 카드 목록 */
 .list { display: flex; flex-direction: column; gap: 12px; }
+
+/* 진단 이력 페이지네이션 */
+.pager { display: flex; align-items: center; justify-content: center; gap: 14px; margin-top: 8px; }
+.pagerBtn { font-family: var(--kr); font-size: 13px; font-weight: 600; padding: 8px 16px; border-radius: 10px; border: 1px solid var(--line); background: #fff; color: var(--ink); cursor: pointer; transition: .15s; }
+.pagerBtn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); background: #f4f8ff; }
+.pagerBtn:disabled { opacity: .45; cursor: default; }
+.pagerInfo { font-family: var(--en); font-size: 13px; font-weight: 700; color: var(--slate); min-width: 44px; text-align: center; }
 
 /* 개별 진단 카드 */
 .card {
