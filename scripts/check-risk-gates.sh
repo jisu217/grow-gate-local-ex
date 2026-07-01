@@ -75,6 +75,16 @@ search_quiet 'findTop50ByRun_RequestedBy_IdIn' "$ROOT_DIR/backend/BE-02/src/main
   || fail "public-data records must be scoped by requestedBy"
 pass "public data APIs use user/company scoped queries"
 
+search_quiet 'PublicDataDailyRefreshService' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataDailyRefreshService.java" \
+  || fail "daily public-data refresh service must exist"
+search_quiet '@Scheduled' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataDailyRefreshService.java" \
+  || fail "daily public-data refresh must run on a schedule"
+search_quiet '/daily-refresh|refreshDaily' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/controller/PublicDataController.java" \
+  || fail "public-data controller must expose manual daily refresh endpoint"
+grep -q 'daily-refresh:' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml" \
+  || fail "public-data daily refresh settings must be configurable"
+pass "daily public-data refresh pipeline is wired"
+
 grep -q 'SMOKE_CORS_ORIGIN' "$ROOT_DIR/scripts/smoke-prod.sh" \
   || fail "smoke-prod must support CORS preflight checks"
 grep -q 'SMOKE_REQUIRE_LIVE_PUBLIC_DATA' "$ROOT_DIR/scripts/smoke-prod.sh" \

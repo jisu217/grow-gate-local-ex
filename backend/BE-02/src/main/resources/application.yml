@@ -47,6 +47,12 @@ app:
 public-data:
   enabled: ${PUBLIC_DATA_ENABLED:true}
   cache-ttl-hours: ${PUBLIC_DATA_CACHE_TTL_HOURS:24}
+  daily-refresh:
+    enabled: ${PUBLIC_DATA_DAILY_REFRESH_ENABLED:true}
+    cron: ${PUBLIC_DATA_DAILY_REFRESH_CRON:0 20 3 * * *}
+    zone: ${PUBLIC_DATA_DAILY_REFRESH_ZONE:Asia/Seoul}
+    max-products: ${PUBLIC_DATA_DAILY_REFRESH_MAX_PRODUCTS:30}
+    freshness-hours: ${PUBLIC_DATA_DAILY_REFRESH_FRESHNESS_HOURS:20}
   kcs-trade:
     url: ${KCS_TRADE_API_URL:http://apis.data.go.kr/1220000/Newtrade/getNewtradeList}
     key: ${KCS_TRADE_API_KEY:${DATAGO_SERVICE_KEY:}}

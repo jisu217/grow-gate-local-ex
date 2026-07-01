@@ -2,12 +2,14 @@ package com.growgate.publicdata.controller;
 
 import com.growgate.publicdata.dto.PublicDataCollectRequest;
 import com.growgate.publicdata.dto.PublicDataCollectResponse;
+import com.growgate.publicdata.dto.PublicDataDailyRefreshResponse;
 import com.growgate.publicdata.dto.PublicDataDashboardResponse;
 import com.growgate.publicdata.dto.PublicDataRecordsResponse;
 import com.growgate.publicdata.dto.PublicDataRunsResponse;
 import com.growgate.publicdata.dto.PublicDataRecordResponse;
 import com.growgate.publicdata.dto.PublicDataRunResponse;
 import com.growgate.publicdata.service.PublicDataCollectionService;
+import com.growgate.publicdata.service.PublicDataDailyRefreshService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,6 +29,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class PublicDataController {
 
     private final PublicDataCollectionService collectionService;
+    private final PublicDataDailyRefreshService dailyRefreshService;
 
     @PostMapping("/collect")
     public ResponseEntity<PublicDataCollectResponse> collect(
@@ -67,5 +70,12 @@ public class PublicDataController {
     public ResponseEntity<PublicDataDashboardResponse> getDashboard(
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(collectionService.getDashboard(userDetails.getUsername()));
+    }
+
+    @PostMapping("/daily-refresh")
+    public ResponseEntity<PublicDataDailyRefreshResponse> refreshDaily(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.status(HttpStatus.ACCEPTED)
+                .body(dailyRefreshService.refreshForUser(userDetails.getUsername()));
     }
 }
