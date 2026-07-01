@@ -345,6 +345,11 @@ export async function getDiagnosisSources(id) {
   }
 }
 
+export async function getDiagnosisSourceEntries(id) {
+  const res = await apiFetch(`/diagnosis/${id}/sources`)
+  return res.sources ?? []
+}
+
 // 진단 결과 상세 조회
 export async function getDiagnosisResult(id) {
   try {

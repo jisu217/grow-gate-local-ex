@@ -33,13 +33,14 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
     protected PublicDataConnectorResult getJson(PublicDataRequest request, String endpoint, String apiKey,
                                                 Map<String, String> params) {
         if (endpoint == null || endpoint.isBlank()) {
-            return fallback(request, "API endpoint is not configured");
+            return fallback(request, endpoint, apiKey, "API endpoint is not configured");
         }
         if (apiKey == null || apiKey.isBlank()) {
-            return fallback(request, provider().name() + " API key is not configured");
+            return fallback(request, endpoint, apiKey, provider().name() + " API key is not configured");
         }
         if (isCatalogOrApplicationPage(endpoint)) {
-            return fallback(request, "Official catalog/application URL is configured; set the provider operation endpoint after API approval");
+            return fallback(request, endpoint, apiKey,
+                    "Official catalog/application URL is configured; set the provider operation endpoint after API approval");
         }
 
         try {
@@ -50,16 +51,17 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
             builder.queryParam("serviceKey", apiKey);
             URI uri = builder.build(true).toUri();
             String body = restTemplate.getForObject(uri, String.class);
-            return success(request, endpoint, body);
+            return success(request, endpoint, apiKey, body);
         } catch (IllegalArgumentException | RestClientException e) {
             String reason = sanitizeErrorMessage(e.getMessage());
             log.warn("Public data connector failed: provider={}, reason={}", provider(), reason);
-            return fallback(request, reason);
+            return fallback(request, endpoint, apiKey, reason);
         }
     }
 
-    protected PublicDataConnectorResult success(PublicDataRequest request, String endpoint, String rawPayload) {
+    protected PublicDataConnectorResult success(PublicDataRequest request, String endpoint, String apiKey, String rawPayload) {
         Map<String, Object> normalized = normalize(request, rawPayload, false, null);
+        normalized.put("collectionEvidence", collectionEvidence(endpoint, apiKey, false, null));
         return PublicDataConnectorResult.builder()
                 .provider(provider())
                 .endpoint(endpoint)
@@ -78,11 +80,16 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
     }
 
     protected PublicDataConnectorResult fallback(PublicDataRequest request, String reason) {
+        return fallback(request, endpointLabel(), "", reason);
+    }
+
+    protected PublicDataConnectorResult fallback(PublicDataRequest request, String endpoint, String apiKey, String reason) {
         String safeReason = sanitizeErrorMessage(reason);
         Map<String, Object> normalized = normalize(request, null, true, safeReason);
+        normalized.put("collectionEvidence", collectionEvidence(endpoint, apiKey, true, safeReason));
         return PublicDataConnectorResult.builder()
                 .provider(provider())
-                .endpoint(endpointLabel())
+                .endpoint(endpoint)
                 .requestKey(requestKey(request))
                 .hsCode(request.getHsCode())
                 .targetCountry(request.getTargetCountry())
@@ -111,12 +118,35 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
         normalized.put("reason", reason);
         normalized.put("rawLength", rawPayload == null ? 0 : rawPayload.length());
         normalized.put("signal", fallbackUsed ? "fallback" : "live");
+        normalized.put("agency", provider().agency());
+        normalized.put("ministry", provider().ministry());
+        normalized.put("dataFamily", provider().dataFamily());
+        normalized.put("motieRelated", provider().motieRelated());
+        normalized.put("refreshCycleHours", provider().refreshCycleHours());
         normalized.put("domainSignals", extractDomainSignals(request, rawPayload, fallbackUsed));
         PublicDataSignal signal = extractSignal(request, rawPayload, fallbackUsed);
         normalized.put("metrics", signal.getMetrics());
+        normalized.put("metricSchema", signal.getMetrics().keySet());
         normalized.put("scoreContribution", signal.getScoreContribution());
         normalized.put("confidence", signal.getConfidence());
+        normalized.put("scoreFormula", "scoreContribution is calculated from provider-specific metrics; diagnosis uses confidence-adjusted contribution");
         return normalized;
+    }
+
+    protected Map<String, Object> collectionEvidence(String endpoint, String apiKey, boolean fallbackUsed, String reason) {
+        String safeEndpoint = endpoint == null ? "" : endpoint;
+        Map<String, Object> evidence = new LinkedHashMap<>();
+        evidence.put("endpointConfigured", !safeEndpoint.isBlank() && !"disabled".equalsIgnoreCase(safeEndpoint));
+        evidence.put("operationEndpoint", !safeEndpoint.isBlank() && !isCatalogOrApplicationPage(safeEndpoint)
+                && !"disabled".equalsIgnoreCase(safeEndpoint));
+        evidence.put("endpointType", safeEndpoint.isBlank() ? "missing"
+                : "disabled".equalsIgnoreCase(safeEndpoint) ? "disabled"
+                : isCatalogOrApplicationPage(safeEndpoint) ? "catalog_or_application_page" : "operation");
+        evidence.put("apiKeyConfigured", apiKey != null && !apiKey.isBlank());
+        evidence.put("apiKeyStored", false);
+        evidence.put("fallbackUsed", fallbackUsed);
+        evidence.put("reason", reason == null || reason.isBlank() ? "" : sanitizeErrorMessage(reason));
+        return evidence;
     }
 
     protected PublicDataSignal extractSignal(PublicDataRequest request, String rawPayload, boolean fallbackUsed) {

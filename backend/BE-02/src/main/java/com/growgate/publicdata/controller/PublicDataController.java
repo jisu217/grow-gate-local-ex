@@ -2,6 +2,7 @@ package com.growgate.publicdata.controller;
 
 import com.growgate.publicdata.dto.PublicDataCollectRequest;
 import com.growgate.publicdata.dto.PublicDataCollectResponse;
+import com.growgate.publicdata.dto.PublicDataDashboardResponse;
 import com.growgate.publicdata.dto.PublicDataRecordsResponse;
 import com.growgate.publicdata.dto.PublicDataRunsResponse;
 import com.growgate.publicdata.dto.PublicDataRecordResponse;
@@ -60,5 +61,11 @@ public class PublicDataController {
                         .map(PublicDataRecordResponse::from)
                         .toList())
                 .build());
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<PublicDataDashboardResponse> getDashboard(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(collectionService.getDashboard(userDetails.getUsername()));
     }
 }

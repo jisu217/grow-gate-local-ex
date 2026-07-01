@@ -349,6 +349,10 @@ public class DiagnosisAsyncProcessor {
             source.put("field", record.getUsedFor());
             source.put("sourceId", record.getProvider().name() + "-" + record.getId());
             source.put("provider", record.getProvider().name());
+            source.put("agency", record.getProvider().agency());
+            source.put("ministry", record.getProvider().ministry());
+            source.put("dataFamily", record.getProvider().dataFamily());
+            source.put("motieRelated", record.getProvider().motieRelated());
             source.put("datasetName", publicDataDatasetName(record));
             source.put("documentName", publicDataDatasetName(record));
             source.put("url", record.getEndpoint());
@@ -358,7 +362,10 @@ public class DiagnosisAsyncProcessor {
             source.put("recordId", record.getId());
             source.put("matchedKey", record.getMatchedKey());
             source.put("usedFor", record.getUsedFor());
-            source.put("scoreContribution", record.getScoreContribution());
+            int adjustedContribution = adjustedPublicDataContribution(record);
+            source.put("rawScoreContribution", record.getScoreContribution());
+            source.put("confidenceAdjustedContribution", adjustedContribution);
+            source.put("scoreContribution", adjustedContribution);
             source.put("fallbackUsed", record.isFallbackUsed());
             source.put("cacheHit", record.isCacheHit());
             source.put("sourceType", sourceType(record));
@@ -373,7 +380,10 @@ public class DiagnosisAsyncProcessor {
             Object metrics = normalizedPayload.get("metrics");
             if (metrics instanceof Map<?, ?>) {
                 source.put("metrics", metrics);
+                source.put("scoreInputs", metrics);
             }
+            source.put("scoreFormula", normalizedPayload.getOrDefault("scoreFormula",
+                    "scoreContribution = provider metric contribution adjusted by confidence"));
             source.put("reason", record.isFallbackUsed()
                     ? "live 공공 API 수집 실패/비활성 상태를 명시하고 fallback 신호로 반영"
                     : "live 공공 API 또는 유효 cache record의 도메인 신호를 진단 점수에 반영");
@@ -384,11 +394,21 @@ public class DiagnosisAsyncProcessor {
     private int applyPublicDataContribution(int baseScore, List<PublicDataRecord> records, String usedFor) {
         int contribution = records.stream()
                 .filter(record -> usedFor.equals(record.getUsedFor()))
-                .map(PublicDataRecord::getScoreContribution)
-                .filter(Objects::nonNull)
-                .mapToInt(Integer::intValue)
+                .mapToInt(this::adjustedPublicDataContribution)
                 .sum();
         return clamp(baseScore + contribution);
+    }
+
+    private int adjustedPublicDataContribution(PublicDataRecord record) {
+        int raw = record.getScoreContribution() == null ? 0 : record.getScoreContribution();
+        double confidence = record.getConfidence() == null ? 0.0 : Math.max(0.0, Math.min(1.0, record.getConfidence()));
+        if (record.isFallbackUsed()) return Math.min(raw, -1) - 2;
+        if (confidence < 0.20) return Math.min(raw, 0) - 1;
+        if (raw == 0) return 0;
+        int adjusted = (int) Math.round(raw * confidence);
+        if (raw > 0 && adjusted == 0) return 1;
+        if (raw < 0 && adjusted == 0) return -1;
+        return adjusted;
     }
 
     private String publicDataDatasetName(PublicDataRecord record) {
