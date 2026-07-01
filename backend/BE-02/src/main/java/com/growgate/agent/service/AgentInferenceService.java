@@ -54,6 +54,6 @@ public class AgentInferenceService {
     }
 
     private String safeReason(String reason) {
-        return reason == null || reason.isBlank() ? "unknown" : reason;
+        return LlmSecretSanitizer.sanitize(reason);
     }
 }

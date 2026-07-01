@@ -68,6 +68,12 @@ public class PublicDataRecord {
     @Column(name = "score_contribution")
     private Integer scoreContribution;
 
+    @Column(name = "confidence")
+    private Double confidence;
+
+    @Column(name = "source_type", length = 20)
+    private String sourceType;
+
     @Column(name = "fallback_used", nullable = false)
     private boolean fallbackUsed;
 

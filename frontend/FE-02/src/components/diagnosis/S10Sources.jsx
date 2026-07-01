@@ -10,16 +10,28 @@ export default function S10Sources({ pipes }) {
     >
 
       <div className="pipe-grid">
-        {pipes.map((pipe) => (
+        {pipes.map((pipe) => {
+          const status = pipe.status ?? 'fallback'
+          const statusText = status === 'live' ? 'Live'
+            : status === 'cache' ? 'Cache'
+              : status === 'heuristic' ? 'Rule'
+                : status === 'agent' ? 'Agent'
+                  : status === 'user_input' ? 'User'
+                    : 'Fallback'
+          const chipType = status === 'live' || status === 'cache' ? 'ok'
+            : status === 'heuristic' || status === 'agent' || status === 'user_input' ? 'warn'
+              : 'req'
+          return (
           <div key={pipe.source} className="pipe-card">
             <div className="pipe-source">{pipe.source}</div>
 
             <div className="pipe-count">{pipe.count}</div>
             <div className="pipe-lbl">{pipe.label}</div>
 
-            <span className="status-chip ok">Connected</span>
+            <span className={`status-chip ${chipType}`}>{statusText}</span>
           </div>
-        ))}
+          )
+        })}
 
         <div className="pipe-card" style={{ borderStyle: 'dashed', background: '#fafbfe' }}>
           <div className="pipe-source" style={{ color: 'var(--slate-2)' }}>+ 커넥터 추가</div>
@@ -31,8 +43,8 @@ export default function S10Sources({ pipes }) {
       </div>
 
       <div style={{ fontSize: 11.5, color: 'var(--slate-2)', marginTop: 16, lineHeight: 1.6 }}>
-        출처 · 관세청 · KTL Certinfo · SafetyKorea · KOTRA · KIPRIS · 기업마당 · EU RAPEX.
-        모든 규제 답변에는 추천·최신성·전문가 확인 여부를 함께 확인하십시오.
+        출처는 live/cache/fallback 공공데이터와 heuristic 규칙 엔진을 구분합니다.
+        fallback 또는 heuristic은 “공공데이터 연결됨”으로 해석하지 말고 보강 대상 여부를 확인하십시오.
       </div>
     </DiagnosisStage>
   )

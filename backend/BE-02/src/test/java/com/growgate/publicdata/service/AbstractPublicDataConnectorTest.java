@@ -44,6 +44,31 @@ class AbstractPublicDataConnectorTest {
                 .doesNotContain("secret-api-key");
     }
 
+    @Test
+    @SuppressWarnings("unchecked")
+    void successPayloadStoresDomainSignalsAndEvidenceBasedContribution() {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        when(restTemplate.getForObject(any(URI.class), eq(String.class)))
+                .thenReturn("{\"items\":[{\"hsCode\":\"850760\",\"country\":\"DE\",\"amount\":1200,\"qty\":3}],"
+                        + "\"product\":\"Battery pack\"}");
+
+        TestConnector connector = new TestConnector(restTemplate, new ObjectMapper());
+
+        PublicDataConnectorResult result = connector.collect(
+                new PublicDataRequest("diagnosis-1", "user-1", "850760", "DE", "Battery pack"));
+
+        Map<String, Object> signals = (Map<String, Object>) result.getNormalizedPayload().get("domainSignals");
+        Map<String, Object> metrics = (Map<String, Object>) result.getNormalizedPayload().get("metrics");
+        assertThat(result.isFallbackUsed()).isFalse();
+        assertThat(signals.get("containsHsCode")).isEqualTo(true);
+        assertThat(signals.get("containsTargetCountry")).isEqualTo(true);
+        assertThat(signals.get("containsProductName")).isEqualTo(true);
+        assertThat(((Number) signals.get("evidenceStrength")).intValue()).isGreaterThanOrEqualTo(4);
+        assertThat(((Number) metrics.get("recordCount")).intValue()).isGreaterThanOrEqualTo(1);
+        assertThat(result.getScoreContribution()).isEqualTo(8);
+        assertThat(result.getConfidence()).isGreaterThan(0.0);
+    }
+
     private static class TestConnector extends AbstractPublicDataConnector {
 
         private TestConnector(RestTemplate restTemplate, ObjectMapper objectMapper) {

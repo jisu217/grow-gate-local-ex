@@ -38,8 +38,8 @@ export default function DiagnosisList() {
       <div className={styles.wrap}>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>AI 진단 이력</h1>
-          <p className={styles.sub}>요청한 진단 목록과 분석 결과를 확인하세요.</p>
+          <h1 className={styles.title}>수출 준비도 진단 이력</h1>
+          <p className={styles.sub}>요청한 진단 목록과 근거 기반 점검 결과를 확인하세요.</p>
         </div>
         {/* 빈 화면에는 아래 전용 CTA가 있으므로 목록이 있을 때만 헤더 버튼 노출 */}
         {!(pageState === 'ok' && list.length === 0) && (
@@ -115,7 +115,7 @@ export default function DiagnosisList() {
                     ))}
                   </div>
                 ) : ['pending', 'running'].includes(diag.status) ? (
-                  <div className={styles.summaryPending}>AI 분석이 진행 중입니다…</div>
+                  <div className={styles.summaryPending}>근거 수집과 점수 산식 계산이 진행 중입니다…</div>
                 ) : diag.status === 'failed' ? (
                   <div className={styles.summaryFailed}>분석에 실패했습니다. 다시 시도해 주세요.</div>
                 ) : null}

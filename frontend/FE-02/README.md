@@ -19,7 +19,7 @@
 
 ## 1. Key Screens
 
-| 홈 | AI 진단 결과 |
+| 홈 | 수출 준비도 진단 결과 |
 | :--- | :--- |
 | ![홈 화면](docs/screenshot-home.png) | ![진단 결과 화면](docs/screenshot-diagnosis.png) |
 

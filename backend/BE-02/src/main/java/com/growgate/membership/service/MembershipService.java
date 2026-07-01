@@ -1,5 +1,6 @@
 package com.growgate.membership.service;
 
+import com.growgate.common.DateTimeUtils;
 import com.growgate.company.entity.Company;
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;
@@ -14,15 +15,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.format.DateTimeFormatter;
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true)
 public class MembershipService {
-
-    private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
 
     private final UserRepository userRepository;
     private final MembershipRepository membershipRepository;
@@ -37,7 +35,7 @@ public class MembershipService {
                         .name(membership.getUser().getName())
                         .email(membership.getUser().getEmail())
                         .role(membership.getRole().name())
-                        .createdAt(membership.getCreatedAt().format(ISO_FMT))
+                        .createdAt(DateTimeUtils.formatUtc(membership.getCreatedAt()))
                         .build())
                 .toList();
 

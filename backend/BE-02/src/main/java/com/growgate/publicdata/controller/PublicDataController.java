@@ -2,6 +2,7 @@ package com.growgate.publicdata.controller;
 
 import com.growgate.publicdata.dto.PublicDataCollectRequest;
 import com.growgate.publicdata.dto.PublicDataCollectResponse;
+import com.growgate.publicdata.dto.PublicDataDashboardResponse;
 import com.growgate.publicdata.dto.PublicDataRecordsResponse;
 import com.growgate.publicdata.dto.PublicDataRunsResponse;
 import com.growgate.publicdata.dto.PublicDataRecordResponse;
@@ -41,20 +42,30 @@ public class PublicDataController {
     }
 
     @GetMapping("/runs")
-    public ResponseEntity<PublicDataRunsResponse> getRuns() {
+    public ResponseEntity<PublicDataRunsResponse> getRuns(
+            @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(PublicDataRunsResponse.builder()
-                .runs(collectionService.getRecentRuns().stream().map(PublicDataRunResponse::from).toList())
+                .runs(collectionService.getRecentRuns(userDetails.getUsername()).stream()
+                        .map(PublicDataRunResponse::from)
+                        .toList())
                 .build());
     }
 
     @GetMapping("/records")
     public ResponseEntity<PublicDataRecordsResponse> getRecords(
+            @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) String hsCode,
             @RequestParam(required = false) String targetCountry) {
         return ResponseEntity.ok(PublicDataRecordsResponse.builder()
-                .records(collectionService.getRecentRecords(hsCode, targetCountry).stream()
+                .records(collectionService.getRecentRecords(userDetails.getUsername(), hsCode, targetCountry).stream()
                         .map(PublicDataRecordResponse::from)
                         .toList())
                 .build());
+    }
+
+    @GetMapping("/dashboard")
+    public ResponseEntity<PublicDataDashboardResponse> getDashboard(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(collectionService.getDashboard(userDetails.getUsername()));
     }
 }

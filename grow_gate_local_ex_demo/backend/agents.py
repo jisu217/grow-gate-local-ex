@@ -164,8 +164,8 @@ class SupportMatchingAgent:
         return [SupportProgram(**item) for item in selected]
 
 
-class XGBoostPredictionAgent:
-    """Runs prediction and estimation models on top of normalized signals."""
+class ReadinessEstimationAgent:
+    """Runs defensible readiness estimation models on top of normalized signals."""
 
     def run(
         self,
@@ -300,7 +300,7 @@ class GrowGateAgent:
         self.recall = RecallAgent()
         self.fto = FTORiskAgent()
         self.support = SupportMatchingAgent()
-        self.predict = XGBoostPredictionAgent()
+        self.predict = ReadinessEstimationAgent()
         self.roadmap = RoadmapAgent()
         self.report = ReportAgent()
         self.guardrail = GuardrailAgent()

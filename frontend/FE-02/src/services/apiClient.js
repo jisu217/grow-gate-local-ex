@@ -1,23 +1,28 @@
 // 백엔드 API 공통 fetch 헬퍼
-const configuredApiUrl = import.meta.env.VITE_API_URL?.trim() || ''
+const viteEnv = import.meta.env ?? {}
+const configuredApiUrl = viteEnv.VITE_API_URL?.trim() || ''
 const rawApiUrl = configuredApiUrl || (typeof window !== 'undefined' ? window.location.origin : '')
 const normalizedApiUrl = rawApiUrl.replace(/\/+$/, '')
 const API_BASE = normalizedApiUrl.endsWith('/api') ? normalizedApiUrl : `${normalizedApiUrl}/api`
-const TOKEN_KEY = 'gg_access_token'
-const DEFAULT_TIMEOUT_MS = Number(import.meta.env.VITE_API_TIMEOUT_MS ?? 15000)
-const DEFAULT_RETRY_COUNT = Number(import.meta.env.VITE_API_RETRY_COUNT ?? 2)
+const LEGACY_TOKEN_KEY = 'gg_access_token'
+const DEFAULT_TIMEOUT_MS = Number(viteEnv.VITE_API_TIMEOUT_MS ?? 15000)
+const DEFAULT_RETRY_COUNT = Number(viteEnv.VITE_API_RETRY_COUNT ?? 2)
+let memoryAccessToken = null
 
-// accessToken 저장/조회/삭제 (authService에서 로그인·로그아웃 시 호출)
+// accessToken은 XSS 노출면을 줄이기 위해 localStorage에 저장하지 않는다.
+// 새로고침 뒤 인증은 서버가 내려준 HttpOnly cookie가 담당한다.
 export function getAccessToken() {
-  return localStorage.getItem(TOKEN_KEY)
+  return memoryAccessToken
 }
 
 export function setAccessToken(token) {
-  localStorage.setItem(TOKEN_KEY, token)
+  memoryAccessToken = token || null
+  getStorage()?.removeItem(LEGACY_TOKEN_KEY)
 }
 
 export function clearAccessToken() {
-  localStorage.removeItem(TOKEN_KEY)
+  memoryAccessToken = null
+  getStorage()?.removeItem(LEGACY_TOKEN_KEY)
 }
 
 // 인증 필요한 API는 저장된 accessToken을 Authorization 헤더로 자동 첨부
@@ -42,16 +47,20 @@ export async function apiFetch(path, options = {}) {
 async function apiFetchOnce(path, options = {}) {
   const token = getAccessToken()
   const controller = new AbortController()
-  const timeoutId = window.setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS)
+  const timeoutId = getTimer().setTimeout(() => controller.abort(), DEFAULT_TIMEOUT_MS)
   const hasBody = options.body !== undefined && options.body !== null
+  const csrfToken = getCookie('gg_csrf_token')
+  const unsafeMethod = !['GET', 'HEAD', 'OPTIONS', 'TRACE'].includes((options.method ?? 'GET').toUpperCase())
 
   try {
     const res = await fetch(`${API_BASE}${path}`, {
       ...options,
+      credentials: options.credentials ?? 'include',
       signal: options.signal ?? controller.signal,
       headers: {
         ...(hasBody ? { 'Content-Type': 'application/json' } : {}),
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(unsafeMethod && csrfToken ? { 'X-GG-CSRF': csrfToken } : {}),
         ...options.headers,
       },
     })
@@ -76,7 +85,7 @@ async function apiFetchOnce(path, options = {}) {
     }
     throw err
   } finally {
-    window.clearTimeout(timeoutId)
+    getTimer().clearTimeout(timeoutId)
   }
 }
 
@@ -88,5 +97,22 @@ function isRetryableError(err) {
 }
 
 function delay(ms) {
-  return new Promise((resolve) => window.setTimeout(resolve, ms))
+  return new Promise((resolve) => getTimer().setTimeout(resolve, ms))
+}
+
+function getTimer() {
+  return typeof window !== 'undefined' ? window : globalThis
+}
+
+function getStorage() {
+  return typeof localStorage !== 'undefined' ? localStorage : null
+}
+
+function getCookie(name) {
+  if (typeof document === 'undefined') return ''
+  return document.cookie
+    .split(';')
+    .map((part) => part.trim())
+    .find((part) => part.startsWith(`${name}=`))
+    ?.slice(name.length + 1) ?? ''
 }

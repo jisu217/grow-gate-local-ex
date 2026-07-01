@@ -4,12 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -45,7 +49,7 @@ public class GeminiAgentProviderClient extends AbstractLlmAgentProviderClient {
 
     @Override
     public boolean isEnabled() {
-        return enabled && apiKey != null && !apiKey.isBlank();
+        return enabled && apiKey != null && !apiKey.isBlank() && isAllowedEndpoint();
     }
 
     @Override
@@ -55,19 +59,22 @@ public class GeminiAgentProviderClient extends AbstractLlmAgentProviderClient {
         long started = System.currentTimeMillis();
         try {
             URI uri = UriComponentsBuilder.fromHttpUrl(baseUrl + "/models/" + model + ":generateContent")
-                    .queryParam("key", apiKey)
                     .build(true)
                     .toUri();
+            HttpHeaders headers = new HttpHeaders();
+            headers.setContentType(MediaType.APPLICATION_JSON);
+            headers.add("x-goog-api-key", apiKey);
             Map<String, Object> body = Map.of("contents", List.of(Map.of(
                     "role", "user",
                     "parts", List.of(Map.of("text", buildPrompt(request)))
             )));
-            Map<String, Object> response = restTemplate.postForObject(uri, body, Map.class);
+            Map<String, Object> response = restTemplate.postForObject(uri, new HttpEntity<>(body, headers), Map.class);
             String text = extractGeminiText(response);
             return Optional.of(parseTextResult(providerName(), model, text, System.currentTimeMillis() - started));
         } catch (IllegalArgumentException | RestClientException e) {
-            log.warn("Gemini agent provider failed: {}", sanitize(e.getMessage()));
-            return Optional.of(AgentInferenceResult.failure(providerName(), sanitize(e.getMessage())));
+            String safeMessage = LlmSecretSanitizer.sanitize(e.getMessage());
+            log.warn("Gemini agent provider failed: {}", safeMessage);
+            return Optional.of(AgentInferenceResult.failure(providerName(), safeMessage));
         }
     }
 
@@ -89,8 +96,14 @@ public class GeminiAgentProviderClient extends AbstractLlmAgentProviderClient {
         return "";
     }
 
-    private String sanitize(String message) {
-        if (message == null || message.isBlank()) return "unknown";
-        return message.replaceAll("(?i)(key=)[^&\\s]+", "$1[REDACTED]");
+    private boolean isAllowedEndpoint() {
+        try {
+            URI uri = new URI(baseUrl);
+            return "https".equalsIgnoreCase(uri.getScheme())
+                    && "generativelanguage.googleapis.com".equalsIgnoreCase(uri.getHost());
+        } catch (URISyntaxException | IllegalArgumentException e) {
+            log.warn("Gemini agent provider disabled because endpoint URL is invalid");
+            return false;
+        }
     }
 }

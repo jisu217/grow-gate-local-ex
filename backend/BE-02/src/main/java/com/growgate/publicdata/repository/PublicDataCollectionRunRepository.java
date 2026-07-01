@@ -10,4 +10,6 @@ import java.util.List;
 public interface PublicDataCollectionRunRepository extends JpaRepository<PublicDataCollectionRun, String> {
 
     List<PublicDataCollectionRun> findTop20ByOrderByStartedAtDesc();
+
+    List<PublicDataCollectionRun> findTop20ByRequestedBy_IdInOrderByStartedAtDesc(List<String> userIds);
 }

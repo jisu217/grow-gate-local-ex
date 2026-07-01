@@ -10,6 +10,7 @@ public enum ErrorCode {
     FORBIDDEN(HttpStatus.FORBIDDEN, "FORBIDDEN", "권한 없음 (본인 리소스가 아닌 경우)"),
     NOT_FOUND(HttpStatus.NOT_FOUND, "NOT_FOUND", "해당 리소스 없음"),
     CONFLICT(HttpStatus.CONFLICT, "CONFLICT", "이미 존재하는 리소스"),
+    TOO_MANY_REQUESTS(HttpStatus.TOO_MANY_REQUESTS, "TOO_MANY_REQUESTS", "요청 횟수 초과"),
     SERVER_ERROR(HttpStatus.INTERNAL_SERVER_ERROR, "SERVER_ERROR", "서버 내부 오류");
 
     private final HttpStatus httpStatus;

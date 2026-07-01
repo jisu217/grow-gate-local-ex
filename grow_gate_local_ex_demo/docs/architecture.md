@@ -2,7 +2,7 @@
 
 ## 핵심 컨셉
 
-GROW-GATE Local EX는 지역 제조기업의 제품 단위 해외진출 준비도를 진단하는 AI Agent 서비스입니다. 사용자는 지역, 업종, 제품명, HS Code, 대상국, 제품 특성, 보유 자료를 입력합니다. 에이전트는 시장성, 규제·인증, 리콜 위험, 특허/FTO, 지원사업을 분석하고 30·60·90일 실행 로드맵을 생성합니다.
+GROW-GATE Local EX는 지역 제조기업의 제품 단위 해외진출 준비도를 점검하는 Agent-assisted 서비스입니다. 사용자는 지역, 업종, 제품명, HS Code, 대상국, 제품 특성, 보유 자료를 입력합니다. 에이전트는 시장성, 규제·인증, 리콜 위험, 특허/FTO, 지원사업 근거를 정리하고 30·60·90일 실행 로드맵을 생성합니다.
 
 ## 화면 정보 구조
 
@@ -11,12 +11,12 @@ GROW-GATE Local EX는 지역 제조기업의 제품 단위 해외진출 준비�
 | 화면 | 파일 | 역할 |
 |---|---|---|
 | 홈 | `frontend/index.html` | 담당자 인사, 최근 진단, 오늘 먼저 할 일, 주요 업무 진입 |
-| AI 진단 워크스페이스 | `frontend/workspace.html` | 좌측 업무 메뉴 기반 기업·제품 입력, 근거 데이터 연계, XGBoost 예측, 규제·리콜·FTO·지원사업 분석, 리포트 출력 |
-| AI 검색 | `frontend/ai-search.html` | 제품 문맥 기반 진단 결과, RAG-ready 근거 문서, 공공데이터 출처 통합 검색 |
+| 준비도 진단 워크스페이스 | `frontend/workspace.html` | 좌측 업무 메뉴 기반 기업·제품 입력, 근거 데이터 연계, 규칙 기반 준비도 점수, 규제·리콜·FTO·지원사업 점검, 리포트 출력 |
+| 근거 검색 | `frontend/ai-search.html` | 제품 문맥 기반 진단 결과, top-k 근거 문서, 공공데이터 출처 통합 검색 |
 | 데이터 파이프라인 | `frontend/data.html` | 화면별 공공데이터 출처, 정규화 테이블, evidence_source 흐름 확인 |
-| 실행 로드맵 | `frontend/roadmap.html` | 30·60·90일 업무 보드, 담당자별 산출물, 예측 기반 운영 메모 |
+| 실행 로드맵 | `frontend/roadmap.html` | 30·60·90일 업무 보드, 담당자별 산출물, 근거 기반 운영 메모 |
 
-업무 담당자는 홈에서 “새 수출 진단 시작”, “데이터 보기”, “오늘 할 일 보기” 중 하나를 선택합니다. 분석 업무는 `workspace.html`에서 수행하며, 좌측 업무 메뉴로 입력, 근거 데이터 연계, ML 예측, 시장성, 규제·인증, 리콜, FTO·지원, 실행 보드, 리포트, 근거 데이터 섹션을 빠르게 이동합니다. 질문형 근거 탐색은 `ai-search.html`에서 별도로 수행합니다. 데이터 검증과 일정 관리는 별도 화면에서 확인하도록 분리했습니다.
+업무 담당자는 홈에서 “새 수출 진단 시작”, “데이터 보기”, “오늘 할 일 보기” 중 하나를 선택합니다. 분석 업무는 `workspace.html`에서 수행하며, 좌측 업무 메뉴로 입력, 근거 데이터 연계, 준비도 추정, 시장성, 규제·인증, 리콜, FTO·지원, 실행 보드, 리포트, 근거 데이터 섹션을 빠르게 이동합니다. 질문형 근거 탐색은 `ai-search.html`에서 별도로 수행합니다. 데이터 검증과 일정 관리는 별도 화면에서 확인하도록 분리했습니다.
 
 ## Agent 구성
 
@@ -24,15 +24,15 @@ GROW-GATE Local EX는 지역 제조기업의 제품 단위 해외진출 준비�
 |---|---|---|
 | PlannerAgent | 입력 제품에 필요한 분석 태스크 결정 | `backend/agents.py` |
 | DataConnectorAgent | 무역·규제·리콜·특허·지원사업 데이터 수집 | `backend/agents.py`, `backend/data_connectors.py` |
-| AISearchService | 제품 입력값으로 진단 결과, RAG-ready 문서, 공공데이터 출처를 통합 검색 | `backend/ai_search.py` |
-| TargetCompanyEnhancement | 피엠그로우 SME 타겟 프로필을 RAG 근거, 고급 프롬프트 팩, 하네스 평가로 변환 | `backend/target_company.py`, `data/target_company_pmgrow.json` |
+| AISearchService | 제품 입력값으로 진단 결과, top-k 근거 문서, 공공데이터 출처를 통합 검색 | `backend/ai_search.py` |
+| TargetCompanyEnhancement | 피엠그로우 SME 타겟 프로필을 근거 문서, 고급 프롬프트 팩, 하네스 평가로 변환 | `backend/target_company.py`, `data/target_company_pmgrow.json` |
 | ExternalLLMClient | Hugging Face Space, Groq, Gemini 외부 추론 provider를 선택적으로 호출하고 실패 시 규칙 기반 요약으로 fallback | `backend/external_llm.py` |
 | MarketScoringAgent | 수입 증가율, 관세, 제품 태그 적합도를 기반으로 수출기회 점수 산정 | `backend/agents.py`, `backend/ml_models.py` |
 | RegulationAgent | HS Code, 제품 특성, 대상권역 기반 인증·규제 후보 매칭 | `backend/agents.py`, `backend/ml_models.py` |
 | RecallAgent | 제품명·특성 기반 유사 리콜 위험 탐색 | `backend/agents.py`, `backend/ml_models.py` |
 | FTORiskAgent | 특허 키워드·IPC·출원밀집도 기반 FTO 위험 산정 | `backend/agents.py`, `backend/ml_models.py` |
 | SupportMatchingAgent | 현재 갭 프로필과 지원사업 태그를 비교해 우선순위 추천 | `backend/agents.py`, `backend/ml_models.py` |
-| XGBoostPredictionAgent | 90일 수출 실행 가능성, 인증 리드타임, 지원사업 적합 확률, 예비비율 추정 | `backend/agents.py`, `backend/ml_models.py` |
+| ReadinessScoringAgent | 90일 수출 패키지 준비도, 인증 리드타임, 지원사업 신청 우선순위, 예비비율 추정 | `backend/agents.py`, `backend/ml_models.py` |
 | RoadmapAgent | 30·60·90일 실행 태스크와 산출물 생성 | `backend/agents.py` |
 | ReportAgent | 심사위원에게 보여줄 수 있는 자연어 요약 생성 | `backend/agents.py` |
 | GuardrailAgent | 전문가 확인 필요성, 출처/버전 표시 원칙 등 안전장치 제공 | `backend/agents.py` |
@@ -56,7 +56,7 @@ GROW-GATE Local EX는 지역 제조기업의 제품 단위 해외진출 준비�
    - 지원사업 fit_tags
 
 3. 인덱싱
-   - 규제 문서: Regulation RAG용 문서로 변환
+   - 규제 문서: 근거 검색용 문서로 변환
    - 리콜 문서: 유사 리콜 검색용 문서로 변환
    - 지원사업 문서: 조건 매칭 및 신청 초안 생성용 문서로 변환
    - 타겟 기업 문서: 공개 기업정보, 중소기업 실행 제약, 수출 후보 제품군을 Agent 프롬프트용 seed 문서로 변환
@@ -68,14 +68,14 @@ GROW-GATE Local EX는 지역 제조기업의 제품 단위 해외진출 준비�
    - FTO congestion
    - Support matching
    - Readiness score
-   - XGBoost/Gradient Boosting prediction
-   - SME Target RAG retrieval
+   - Rule/Gradient Boosting demo readiness estimation
+   - SME Target evidence retrieval
    - Advanced prompt pack assembly
    - Optional external LLM inference through Hugging Face Space, Groq, or Gemini
    - Harness evaluation for evidence grounding, prompt injection defense, SME fit, source traceability
 
 5. 산출물
-   - 홈/AI 진단/데이터/로드맵 화면
+   - 홈/준비도 진단/데이터/로드맵 화면
    - 실행 로드맵
    - JSON 결과
    - 인쇄 가능한 보고서

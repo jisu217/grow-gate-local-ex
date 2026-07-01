@@ -307,7 +307,7 @@ def build_ml_feature_vector(
     has_test_report: bool,
     has_label_draft: bool,
 ) -> Dict[str, float]:
-    """Convert the current analysis output into an XGBoost-ready feature row."""
+    """Convert the current analysis output into a readiness feature row."""
     market_score = sum(market_scores[:3]) / max(1, min(3, len(market_scores)))
     critical = sum(1 for r in regulations if r.get("priority") == "critical")
     high = sum(1 for r in regulations if r.get("priority") == "high")
@@ -336,7 +336,7 @@ def risk_to_score(level: str | None) -> float:
 
 
 def run_xgboost_predictions(feature_row: Dict[str, float]) -> List[Dict[str, Any]]:
-    """Predict export execution outcomes with compact XGBoost demo models.
+    """Estimate export execution readiness with compact demo models.
 
     The models are trained at startup from deterministic synthetic cases shaped
     like the public-data signals. In production, the same feature contract can be
@@ -373,11 +373,11 @@ def run_xgboost_predictions(feature_row: Dict[str, float]) -> List[Dict[str, Any
             models["support_classifier"],
             f"{models['engine']} Support Fit Classifier",
             models["classifier_type"],
-            "지원사업 선정 적합 확률",
+            "지원사업 신청 우선순위 점수",
             round(clamp(support_probability * 100), 1),
             "%",
             confidence_from_probability(support_probability),
-            "인증 갭, 지역 제조기업 태그, 지원사업 매칭 점수로 신청 우선순위를 예측합니다.",
+            "인증 갭, 지역 제조기업 태그, 지원사업 매칭 점수로 신청 우선순위를 정렬합니다.",
         ),
         prediction_payload(
             models["risk_reserve_regressor"],
@@ -416,7 +416,7 @@ def get_xgboost_models() -> Dict[str, Any]:
             "random_state": 42,
         }
         return {
-            "engine": "XGBoost",
+            "engine": "Optional boosted-tree demo",
             "classifier_type": "XGBClassifier",
             "regressor_type": "XGBRegressor",
             "success_classifier": XGBClassifier(**classifier_params).fit(x, y_success),
@@ -430,7 +430,7 @@ def get_xgboost_models() -> Dict[str, Any]:
         classifier = {"n_estimators": 100, "max_depth": 3, "learning_rate": 0.06, "random_state": 42}
         regressor = {"n_estimators": 110, "max_depth": 3, "learning_rate": 0.055, "random_state": 42}
         return {
-            "engine": "XGBoost-ready Gradient Boosting",
+            "engine": "Gradient Boosting demo",
             "classifier_type": "GradientBoostingClassifier",
             "regressor_type": "GradientBoostingRegressor",
             "success_classifier": GradientBoostingClassifier(**classifier).fit(x, y_success),

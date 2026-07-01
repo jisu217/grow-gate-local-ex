@@ -416,7 +416,7 @@ const dataSources = [
 ];
 
 const missingData = [
-  { title: "시험기관 견적·리드타임", impact: "로드맵이 예측이 아니라 실행 일정으로 보입니다.", priority: "High", owner: "인증" },
+  { title: "시험기관 견적·리드타임", impact: "로드맵이 추정값이 아니라 실행 일정으로 보입니다.", priority: "High", owner: "인증" },
   { title: "지역기업 인터뷰 3건", impact: "현장 문제 정의와 UX 타당성을 보강합니다.", priority: "High", owner: "기획" },
   { title: "지원사업 마감 캘린더", impact: "추천 기능이 실제 신청 행동으로 이어집니다.", priority: "Medium", owner: "운영" },
   { title: "시험규격 버전·샘플 조건", impact: "인증 시험기관 관점에서 실행 가능성이 올라갑니다.", priority: "Medium", owner: "인증" },
@@ -425,7 +425,7 @@ const missingData = [
 
 const stakeholderScores = [
   { role: "공모전 심사위원", group: "평가", score: 86, confidence: "중상", evidence: "공공데이터 출처와 화면별 활용 흐름이 명확합니다.", concern: "실제 사용자 검증 수치가 아직 약합니다.", improvement: "기업 인터뷰와 전후 비교 지표를 추가하세요." },
-  { role: "박사급 실무자", group: "전문", score: 82, confidence: "중", evidence: "규제·리콜·특허·지원사업을 제품 단위로 묶은 구조가 타당합니다.", concern: "예측 모델 설명과 검증 데이터가 제한적입니다.", improvement: "모델 입력 특성과 fallback 기준을 한 장으로 설명하세요." },
+  { role: "박사급 실무자", group: "전문", score: 82, confidence: "중", evidence: "규제·리콜·특허·지원사업을 제품 단위로 묶은 구조가 타당합니다.", concern: "추정 모델 설명과 검증 데이터가 제한적입니다.", improvement: "모델 입력 특성과 fallback 기준을 한 장으로 설명하세요." },
   { role: "수출지원 업무 담당자", group: "실무", score: 88, confidence: "중상", evidence: "30·60·90일 산출물 중심 로드맵이 업무 방식과 맞습니다.", concern: "기관 상담 연결과 문서 첨부 흐름이 빠져 있습니다.", improvement: "상담 요청 버튼과 필요 서류 체크리스트를 보강하세요." },
   { role: "중소 CEO", group: "경영", score: 84, confidence: "중", evidence: "무엇을 먼저 해야 하는지 비용·일정 관점으로 보입니다.", concern: "예상 비용과 지원금 규모가 더 필요합니다.", improvement: "시험·인증 예상 비용 범위를 카드로 추가하세요." },
   { role: "대기업 CEO", group: "경영", score: 76, confidence: "중", evidence: "공급망·규제 리스크 통합 관점은 의미가 있습니다.", concern: "엔터프라이즈 권한, 감사, 다국가 운영 관점은 부족합니다.", improvement: "확장 아키텍처와 감사 로그 로드맵을 별도로 제시하세요." },
@@ -464,7 +464,7 @@ const codeGate = {
   ],
   reviewChecklist: [
     "CSP를 깨는 inline script가 없는가",
-    "수상 확률이 확정 예측처럼 표현되지 않는가",
+    "수상 가능성이 확정값처럼 표현되지 않는가",
     "공공데이터 출처와 활용 화면이 연결되는가",
     "코드 게이트 버튼이 UI 상태 표시임을 명확히 말하는가",
     "모바일 폭에서 긴 한국어 문장이 카드 밖으로 넘치지 않는가",

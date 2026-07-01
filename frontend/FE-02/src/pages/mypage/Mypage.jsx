@@ -5,11 +5,11 @@ import {
   getMypageOverview,
   getMypageProducts,
   createMypageProduct,
+  updateMypageProduct,
   deleteMypageProduct,
   rerunDiagnosis,
 } from '../../services/mypageService.js'
-
-const COUNTRIES = ['독일', '미국', '일본', 'ASEAN', '중국', 'EU']
+import { COUNTRY_OPTIONS, normalizeTargetCountry } from '../../utils/country.js'
 
 // 내 제품 관리 목록: 한 페이지에 보여줄 제품 수
 const PRODUCTS_PER_PAGE = 5
@@ -20,10 +20,13 @@ export default function Mypage() {
   const [overview, setOverview] = useState({ company: null, members: [] })
   const [products, setProducts] = useState([])
   const [selectedId, setSelectedId] = useState('')
+  const [loadError, setLoadError] = useState('')
+  const [saveError, setSaveError] = useState('')
 
   // 제품 추가 모달 상태
   const [modalOpen, setModalOpen] = useState(false)
-  const [form, setForm] = useState({ name: '', hs: '', country: '독일' })
+  const [editingId, setEditingId] = useState(null)
+  const [form, setForm] = useState({ name: '', hs: '', country: 'DE' })
 
   // 제품 삭제 확인 모달 대상 (null이면 닫힘)
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -36,11 +39,29 @@ export default function Mypage() {
   const [productPage, setProductPage] = useState(0)
 
   useEffect(() => {
-    getMypageOverview().then(setOverview)
-    getMypageProducts().then((data) => {
-      setProducts(data)
-      if (data.length) setSelectedId(data[0].id)
-    })
+    let cancelled = false
+    async function load() {
+      const [overviewResult, productsResult] = await Promise.allSettled([
+        getMypageOverview(),
+        getMypageProducts(),
+      ])
+      if (cancelled) return
+      const messages = []
+      if (overviewResult.status === 'fulfilled') {
+        setOverview(overviewResult.value)
+      } else {
+        messages.push(overviewResult.reason?.message || '회사/계정 정보를 불러오지 못했습니다.')
+      }
+      if (productsResult.status === 'fulfilled') {
+        setProducts(productsResult.value)
+        if (productsResult.value.length) setSelectedId(productsResult.value[0].id)
+      } else {
+        messages.push(productsResult.reason?.message || '제품 목록을 불러오지 못했습니다.')
+      }
+      setLoadError(messages.join(' '))
+    }
+    load()
+    return () => { cancelled = true }
   }, [])
 
   const current = products.find((p) => p.id === selectedId)
@@ -52,7 +73,17 @@ export default function Mypage() {
 
   // 제품 추가 모달 열기/닫기
   function openAdd() {
-    setForm({ name: '', hs: '', country: '독일' })
+    setEditingId(null)
+    setForm({ name: '', hs: '', country: 'DE' })
+    setSaveError('')
+    setModalOpen(true)
+  }
+  function openEdit(id) {
+    const p = products.find((x) => x.id === id)
+    if (!p) return
+    setEditingId(id)
+    setForm({ name: p.name, hs: p.hs, country: normalizeTargetCountry(p.country) })
+    setSaveError('')
     setModalOpen(true)
   }
   function closeModal() { setModalOpen(false) }
@@ -61,12 +92,23 @@ export default function Mypage() {
   async function saveProduct() {
     const name = form.name.trim()
     const hs = form.hs.trim()
+    const country = normalizeTargetCountry(form.country)
     if (!name || !hs) { alert('제품명과 HS Code를 입력해주세요.'); return }
 
-    const created = await createMypageProduct({ name, hs, country: form.country })
-    setProducts((prev) => [...prev, created])
-    setSelectedId(created.id)
-    closeModal()
+    try {
+      if (editingId) {
+        await updateMypageProduct(editingId, { name, hs, country })
+        setProducts((prev) => prev.map((p) =>
+          p.id === editingId ? { ...p, name, hs, country } : p))
+      } else {
+        const created = await createMypageProduct({ name, hs, country })
+        setProducts((prev) => [...prev, created])
+        setSelectedId(created.id)
+      }
+      closeModal()
+    } catch (err) {
+      setSaveError(err.message || '제품 저장에 실패했습니다. 입력값과 서버 상태를 확인해주세요.')
+    }
   }
 
   // 삭제 버튼 → 확인 모달 열기
@@ -95,7 +137,7 @@ export default function Mypage() {
     }
   }
 
-  // AI 진단 다시 실행
+  // 수출 준비도 진단 다시 실행
   async function rerun() {
     if (!current) return
     setRerunLoading(true)
@@ -214,7 +256,7 @@ export default function Mypage() {
                 disabled={rerunLoading}
               >
                 <span className={styles.sp} />
-                <span className={styles.ar}>↻</span>&nbsp;이 제품 AI 진단 다시 실행
+                <span className={styles.ar}>↻</span>&nbsp;이 제품 준비도 진단 다시 실행
               </button>
             </div>
           </>
@@ -224,6 +266,8 @@ export default function Mypage() {
         <div className={`${styles.slabel} ${styles.company}`}>
           <span className={styles.dot} />내 제품 · 회사 정보 · 제품을 바꿔도 회사 정보는 고정됩니다
         </div>
+
+        {loadError && <div className={styles.notice}>{loadError}</div>}
 
         <div className={`${styles.card} ${styles.pm}`}>
           <div className={styles.pmHead}>
@@ -244,6 +288,7 @@ export default function Mypage() {
                   ? <span className={styles.sc}>{p.score}<span className={styles.scU}>점</span></span>
                   : <span className={`${styles.sc} ${styles.scNone}`}>미진단</span>}
                 <div className={styles.acts}>
+                  <button className={styles.ab} onClick={() => openEdit(p.id)}>수정</button>
                   <button className={`${styles.ab} ${styles.abDanger}`} onClick={() => askDelete(p.id)}>삭제</button>
                   <button className={`${styles.ab} ${styles.abPrimary}`} onClick={() => navigate(`/mypage/diagnosis/${p.id}`)}>보기</button>
                 </div>
@@ -311,9 +356,9 @@ export default function Mypage() {
         onClick={(e) => { if (e.target === e.currentTarget) closeModal() }}
       >
         <div className={styles.sheet}>
-          <h3>제품 추가</h3>
+          <h3>{editingId ? '제품 수정' : '제품 추가'}</h3>
           <div className={styles.desc}>
-            제품명·HS Code·수출 대상국을 입력하면 목록에 추가됩니다.
+            제품명·HS Code·수출 대상국을 입력하면 마이페이지와 진단 입력에 반영됩니다.
           </div>
           <div className={styles.field}>
             <label>제품명</label>
@@ -332,12 +377,21 @@ export default function Mypage() {
           <div className={styles.field}>
             <label>수출 대상국</label>
             <select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })}>
-              {COUNTRIES.map((c) => <option key={c}>{c}</option>)}
+              {COUNTRY_OPTIONS.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
+          {saveError && <div className={styles.modalError}>{saveError}</div>}
+          {editingId && (
+            <button
+              className={styles.knLink}
+              onClick={() => { closeModal(); navigate('/mypage/knowledge') }}
+            >
+              📦 제품 지식(인증서·FTO·바이어 요구사항)은 여기서 관리 →
+            </button>
+          )}
           <div className={styles.foot}>
             <button className={styles.cancel} onClick={closeModal}>취소</button>
-            <button className={styles.save} onClick={saveProduct}>추가</button>
+            <button className={styles.save} onClick={saveProduct}>{editingId ? '수정' : '추가'}</button>
           </div>
         </div>
       </div>

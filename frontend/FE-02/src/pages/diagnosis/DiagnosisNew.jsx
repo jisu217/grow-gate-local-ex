@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import styles from './DiagnosisNew.module.css'
 import { getMypageProducts, createMypageProduct } from '../../services/mypageService.js'
 import { runDiagnosis } from '../../services/diagnosisService.js'
+import { normalizeTargetCountry } from '../../utils/country.js'
 
 const PICKER_PAGE_SIZE = 5
 const PICKER_PAGE_WINDOW = 5
@@ -13,28 +14,6 @@ function normalizeSearchValue(value) {
 
 function normalizeHsCode(value) {
   return String(value ?? '').replace(/[^\d]/g, '')
-}
-
-function normalizeTargetCountry(value) {
-  const normalized = String(value ?? '').trim()
-  const key = normalized.toLowerCase().replace(/\s+/g, '')
-  const aliases = {
-    독일: 'DE',
-    germany: 'DE',
-    de: 'DE',
-    미국: 'US',
-    usa: 'US',
-    us: 'US',
-    일본: 'JP',
-    japan: 'JP',
-    jp: 'JP',
-    중국: 'CN',
-    china: 'CN',
-    cn: 'CN',
-    유럽: 'EU',
-    eu: 'EU',
-  }
-  return aliases[key] ?? normalized
 }
 
 // 신규 진단 입력 페이지 컴포넌트
@@ -51,6 +30,7 @@ export default function DiagnosisNew() {
   const [errors, setErrors] = useState({})
   const [submitError, setSubmitError] = useState('')
   const [submitting, setSubmitting] = useState(false)
+  const [pickerLoadError, setPickerLoadError] = useState('')
 
   // 저장된 제품 불러오기 모달
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -64,7 +44,15 @@ export default function DiagnosisNew() {
 
   // 마이페이지에 저장한 제품 목록 로드
   useEffect(() => {
-    getMypageProducts().then(setSavedProducts)
+    getMypageProducts()
+      .then((products) => {
+        setSavedProducts(products)
+        setPickerLoadError('')
+      })
+      .catch((err) => {
+        setSavedProducts([])
+        setPickerLoadError(err.message || '저장된 제품을 불러오지 못했습니다. 로그인 상태와 서버 연결을 확인해주세요.')
+      })
   }, [])
 
   const filteredProducts = useMemo(() => {
@@ -141,6 +129,7 @@ export default function DiagnosisNew() {
 
     setSubmitting(true)
     setSubmitError('')
+    let createdProduct = null
 
     try {
       let productId = selectedId
@@ -152,6 +141,8 @@ export default function DiagnosisNew() {
           description: formData.description.trim(),
         })
         productId = created.id
+        createdProduct = created
+        setSavedProducts((prev) => prev.some((product) => product.id === created.id) ? prev : [...prev, created])
       }
 
       const result = await runDiagnosis({
@@ -163,7 +154,10 @@ export default function DiagnosisNew() {
       })
       navigate(`/diagnosis/${result.id}`)
     } catch (err) {
-      setSubmitError(err.message || '진단 실행에 실패했습니다. 입력값과 서버 상태를 확인해주세요.')
+      const savedNotice = createdProduct
+        ? `제품 "${createdProduct.name}"은 마이페이지에 저장됐지만 진단 생성이 실패했습니다. 저장된 제품을 선택해 다시 실행할 수 있습니다. `
+        : ''
+      setSubmitError(savedNotice + (err.message || '진단 실행에 실패했습니다. 입력값과 서버 상태를 확인해주세요.'))
     } finally {
       setSubmitting(false)
     }
@@ -258,7 +252,7 @@ export default function DiagnosisNew() {
             {submitError && <div className={styles.fieldError}>{submitError}</div>}
 
             <button className={styles.submitBtn} onClick={handleSubmit} disabled={submitting}>
-              {submitting ? '진단 요청 중…' : 'AI 진단 시작 →'}
+              {submitting ? '진단 요청 중…' : '수출 준비도 진단 시작 →'}
             </button>
           </div>
         </div>
@@ -294,6 +288,9 @@ export default function DiagnosisNew() {
             </div>
 
             <div className={styles.pickList}>
+              {pickerLoadError && (
+                <div className={styles.pickError}>{pickerLoadError}</div>
+              )}
               {savedProducts.length === 0 && (
                 <div className={styles.pickEmpty}>저장된 제품이 없습니다. 마이페이지에서 먼저 제품을 등록하세요.</div>
               )}

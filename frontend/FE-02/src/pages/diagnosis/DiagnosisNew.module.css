@@ -153,6 +153,7 @@
 .pickExamples { color: var(--slate-2); }
 .pickList { display: flex; flex-direction: column; gap: 10px; }
 .pickEmpty { font-size: 13.5px; color: var(--slate-2); padding: 28px 20px; text-align: center; border: 1.5px dashed var(--line); border-radius: 14px; background: #fbfcff; }
+.pickError { font-size: 13.5px; color: #b45309; padding: 14px 16px; border: 1.5px solid #f5d98c; border-radius: 14px; background: #fff8ec; }
 .pickItem { display: flex; align-items: center; justify-content: space-between; gap: 12px; width: 100%; text-align: left; font-family: var(--kr); padding: 14px 16px; border: 1px solid var(--line); border-radius: 13px; background: #fff; cursor: pointer; transition: .15s; }
 .pickItem:hover { border-color: var(--blue); background: #f4f8ff; }
 .pickName { font-size: 15px; font-weight: 700; color: var(--navy); }

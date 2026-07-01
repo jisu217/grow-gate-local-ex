@@ -2,6 +2,7 @@ package com.growgate.knowledge.service;
 
 // 제품 지식 조회/수정 + 감사 로그
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.growgate.common.DateTimeUtils;
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;
 import com.growgate.knowledge.dto.BuyerRequirementResponse;
@@ -81,7 +82,6 @@ import java.util.stream.Collectors;
 @Transactional
 public class KnowledgeService {
 
-    private static final DateTimeFormatter ISO_FMT = DateTimeFormatter.ofPattern("yyyy-MM-dd'T'HH:mm:ss'Z'");
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final int EXPIRY_WARNING_DAYS = 90;
 
@@ -167,7 +167,7 @@ public class KnowledgeService {
                 .fto(ftoData)
                 .buyerRequirements(buyerData)
                 .knowledgeSources(sourceData)
-                .updatedAt(product.getUpdatedAt().format(ISO_FMT))
+                .updatedAt(DateTimeUtils.formatUtc(product.getUpdatedAt()))
                 .build();
     }
 
@@ -256,7 +256,7 @@ public class KnowledgeService {
 
         return UpdateKnowledgeResponse.builder()
                 .productId(product.getId())
-                .updatedAt(product.getUpdatedAt().format(ISO_FMT))
+                .updatedAt(DateTimeUtils.formatUtc(product.getUpdatedAt()))
                 .build();
     }
 
@@ -603,7 +603,7 @@ public class KnowledgeService {
                         "type", item.getType(),
                         "evidence", nullToEmpty(item.getEvidence()),
                         "impact", nullToEmpty(item.getImpact()))),
-                "AI 진단 판단 근거를 담당자 승인으로 지식화");
+                "진단 판단 근거를 담당자 승인으로 지식화");
 
         return KnowledgeLoopActionResponse.builder()
                 .itemId(item.getId())
@@ -651,7 +651,7 @@ public class KnowledgeService {
                 .previousValue(logEntry.getPreviousValue())
                 .newValue(logEntry.getNewValue())
                 .reason(logEntry.getReason())
-                .changedAt(logEntry.getChangedAt().format(ISO_FMT))
+                .changedAt(DateTimeUtils.formatUtc(logEntry.getChangedAt()))
                 .build()).collect(Collectors.toList());
 
         return KnowledgeLogsResponse.builder()
