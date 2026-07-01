@@ -88,11 +88,13 @@ public class DiagnosisService {
         List<DiagnosisSummary> summaries = runs.stream().map(run -> {
             String productId = run.getProduct() != null ? run.getProduct().getId() : null;
             String productName = resolveProductName(run);
+            String hsCode = resolveHsCode(run);
 
             return DiagnosisSummary.builder()
                     .id(run.getId())
                     .productId(productId)
                     .productName(productName)
+                    .hsCode(hsCode)
                     .targetCountry(run.getTargetCountry())
                     .status(run.getStatus().name())
                     .createdAt(run.getCreatedAt().format(ISO_FMT))
@@ -521,6 +523,22 @@ public class DiagnosisService {
                 Map<String, String> map = objectMapper.readValue(run.getInputData(),
                         new TypeReference<Map<String, String>>() {});
                 return map.getOrDefault("productName", "");
+            } catch (Exception e) {
+                return "";
+            }
+        }
+        return "";
+    }
+
+    private String resolveHsCode(DiagnosisRun run) {
+        if (run.getProduct() != null) {
+            return run.getProduct().getHsCode();
+        }
+        if (run.getInputData() != null) {
+            try {
+                Map<String, String> map = objectMapper.readValue(run.getInputData(),
+                        new TypeReference<Map<String, String>>() {});
+                return map.getOrDefault("hsCode", "");
             } catch (Exception e) {
                 return "";
             }

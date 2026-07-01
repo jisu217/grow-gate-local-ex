@@ -26,7 +26,7 @@ const MOCK_STAGES = {
 }
 
 // 진단 이력 목록 항목 매핑 (백엔드 요약 응답 → FE 카드 형태)
-// 백엔드 목록 응답에 없는 hsCode/diagnosisScore/summary는 null 처리.
+// 백엔드 목록 응답에 없는 diagnosisScore/summary는 null 처리.
 function mapDiagnosisSummary(d) {
   return {
     id: d.id,
@@ -37,7 +37,7 @@ function mapDiagnosisSummary(d) {
     missingFields: null,
     evidenceSources: null,
     productName: d.productName,
-    hsCode: '',
+    hsCode: d.hsCode ?? '',
     targetMarket: d.targetCountry,
     status: d.status,
     requestedAt: d.createdAt,
