@@ -603,7 +603,7 @@ public class KnowledgeService {
                         "type", item.getType(),
                         "evidence", nullToEmpty(item.getEvidence()),
                         "impact", nullToEmpty(item.getImpact()))),
-                "AI 진단 판단 근거를 담당자 승인으로 지식화");
+                "진단 판단 근거를 담당자 승인으로 지식화");
 
         return KnowledgeLoopActionResponse.builder()
                 .itemId(item.getId())

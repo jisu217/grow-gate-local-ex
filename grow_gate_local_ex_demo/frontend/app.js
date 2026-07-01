@@ -1038,9 +1038,9 @@ function buildLocalMlPredictions(request, markets, regulations, recalls, patents
   ];
   return [
     {
-      model_name: "XGBoost Export Success Classifier",
-      model_type: "XGBClassifier",
-      target: "90일 파일럿 수출 실행 가능성",
+      model_name: "Rule-traced Export Readiness Scorer",
+      model_type: "RuleScore",
+      target: "90일 파일럿 수출 패키지 준비도",
       value: round(success, 1),
       unit: "%",
       confidence: 0.82,
@@ -1048,8 +1048,8 @@ function buildLocalMlPredictions(request, markets, regulations, recalls, patents
       feature_importance: baseImportance,
     },
     {
-      model_name: "XGBoost Certification Lead-time Regressor",
-      model_type: "XGBRegressor",
+      model_name: "Rule-traced Certification Lead-time Estimator",
+      model_type: "RuleEstimator",
       target: "인증·시험 리드타임 추정",
       value: Math.round(lead),
       unit: "days",
@@ -1058,18 +1058,18 @@ function buildLocalMlPredictions(request, markets, regulations, recalls, patents
       feature_importance: baseImportance,
     },
     {
-      model_name: "XGBoost Support Fit Classifier",
-      model_type: "XGBClassifier",
-      target: "지원사업 선정 적합 확률",
+      model_name: "Rule-traced Support Priority Scorer",
+      model_type: "RuleScore",
+      target: "지원사업 신청 우선순위 점수",
       value: round(supportProb, 1),
       unit: "%",
       confidence: 0.8,
-      interpretation: "인증 갭, 지역 제조기업 태그, 지원사업 매칭 점수로 신청 우선순위를 예측합니다.",
+      interpretation: "인증 갭, 지역 제조기업 태그, 지원사업 매칭 점수로 신청 우선순위를 정렬합니다.",
       feature_importance: baseImportance,
     },
     {
-      model_name: "XGBoost Risk Reserve Regressor",
-      model_type: "XGBRegressor",
+      model_name: "Rule-traced Risk Reserve Estimator",
+      model_type: "RuleEstimator",
       target: "시험·보완 예비비율 추정",
       value: round(reserve, 1),
       unit: "%",
@@ -1516,7 +1516,7 @@ function buildLocalAiSearchResponse(query, scope, result) {
     .slice(0, 5);
   const results = [
     {
-      title: `${result.request.product_name} AI 진단 요약`,
+      title: `${result.request.product_name} 준비도 진단 요약`,
       result_type: "analysis",
       source_type: "local_analysis",
       summary: `준비도 ${result.readiness_score}/100, 규제 ${(result.regulations || []).length}건, 리콜 ${(result.recalls || []).length}건`,

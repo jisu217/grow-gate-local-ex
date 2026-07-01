@@ -47,7 +47,7 @@ function toMypageProduct(product) {
       ? [{ task: '진단 완료 상태 확인하기', due: '30' }]
       : missingCount > 0
       ? [{ task: '제품 지식 보완하기', due: '30' }]
-      : [{ task: 'AI 진단 실행하기', due: '30' }],
+      : [{ task: '준비도 진단 실행하기', due: '30' }],
     kn: product.knowledgeStatus === 'valid' ? 100 : missingCount > 0 ? 60 : 30,
     miss: missingCount > 0 ? `누락 정보 ${missingCount}건` : '기본 정보 저장됨',
     reports: [],
@@ -158,7 +158,7 @@ export async function updateMypageProduct(id, { name, hs, country, description, 
   return { id, name, hs, country, description, category }
 }
 
-// AI 진단 다시 실행 — 실제 진단 생성 API로 연결
+// 수출 준비도 진단 다시 실행 — 실제 진단 생성 API로 연결
 export async function rerunDiagnosis(productId, targetCountry) {
   return apiFetch('/diagnosis', {
     method: 'POST',

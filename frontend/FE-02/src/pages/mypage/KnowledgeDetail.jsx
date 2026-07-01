@@ -147,7 +147,7 @@ export default function KnowledgeDetail() {
 
             {product.missingFields?.length > 0 && (
               <div className={styles.missingList}>
-                <div className={styles.missingTitle}>누락 항목 — AI 진단 정확도에 영향</div>
+                <div className={styles.missingTitle}>누락 항목 — 진단 신뢰도에 영향</div>
                 {product.missingFields.map((f) => (
                   <div key={f} className={styles.missingItem}>{f}</div>
                 ))}

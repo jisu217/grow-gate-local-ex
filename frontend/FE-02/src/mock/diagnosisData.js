@@ -110,12 +110,12 @@ export const S02_CONNECTORS = [
   { no: '05', nm: '수출바우처·해외규격인증·지역TP 지원사업 공고', meta: 'support_program · S02 / S07 / S08 / S09' },
 ]
 
-// S03 예측
+// S03 준비도 점수 fallback
 export const S03_PREDICTIONS = [
-  { head: 'XGBClassifier', acc: '82%', title: '90일 파일럿 수출 실행 가능성', value: '95.3', unit: '%',    bar: 95, desc: '시장성·규제압력·문서 준비도를 종합해 90일 내 파일럿 수출 패키지 완성 가능성을 추정합니다.' },
-  { head: 'XGBRegressor',  acc: '78%', title: '인증·시험 리드타임 추정',       value: '49',   unit: 'days', bar: 55, desc: '긴급 규제 수·배터리 여부·문서 준비도를 기준으로 시험기관 상담부터 보완 완료까지 기간을 추정합니다.' },
-  { head: 'XGBClassifier', acc: '80%', title: '지원사업 선정 적합 확률',       value: '84.8', unit: '%',    bar: 85, desc: '인증 갭·지역 제조기업 태그·지원사업 매칭 점수로 신청 우선순위를 예측합니다.' },
-  { head: 'XGBRegressor',  acc: '74%', title: '시험·보완 예비비율 추정',       value: '13.6', unit: '%',    bar: 30, desc: '리콜·FTO·규제 위험을 반영해 시험 실패·라벨 보완·회피설계 상담에 필요한 예비비율을 추정합니다.' },
+  { head: 'Rule', acc: 'trace', title: '90일 파일럿 수출 준비도', value: '95.3', unit: '점',    bar: 95, desc: '시장성·규제압력·문서 준비도를 종합해 실행 준비도를 추정합니다.' },
+  { head: 'Rule',  acc: 'trace', title: '인증·시험 리드타임 추정',       value: '49',   unit: 'days', bar: 55, desc: '긴급 규제 수·배터리 여부·문서 준비도를 기준으로 시험기관 상담부터 보완 완료까지 기간을 추정합니다.' },
+  { head: 'Rule', acc: 'trace', title: '지원사업 신청 우선순위',       value: '84.8', unit: '점',    bar: 85, desc: '인증 갭·지역 제조기업 태그·지원사업 매칭 점수로 신청 우선순위를 정렬합니다.' },
+  { head: 'Rule',  acc: 'trace', title: '시험·보완 예비비율 추정',       value: '13.6', unit: '%',    bar: 30, desc: '리콜·FTO·규제 위험을 반영해 시험 실패·라벨 보완·회피설계 상담에 필요한 예비비율을 추정합니다.' },
 ]
 export const S03_FEATURES = [
   { label: '시장성 점수', value: 96 },

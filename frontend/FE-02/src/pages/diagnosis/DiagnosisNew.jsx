@@ -252,7 +252,7 @@ export default function DiagnosisNew() {
             {submitError && <div className={styles.fieldError}>{submitError}</div>}
 
             <button className={styles.submitBtn} onClick={handleSubmit} disabled={submitting}>
-              {submitting ? '진단 요청 중…' : 'AI 진단 시작 →'}
+              {submitting ? '진단 요청 중…' : '수출 준비도 진단 시작 →'}
             </button>
           </div>
         </div>

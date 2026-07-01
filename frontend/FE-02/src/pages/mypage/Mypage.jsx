@@ -108,7 +108,7 @@ export default function Mypage() {
     }
   }
 
-  // AI 진단 다시 실행
+  // 수출 준비도 진단 다시 실행
   async function rerun() {
     if (!current) return
     setRerunLoading(true)
@@ -136,7 +136,7 @@ export default function Mypage() {
           <Link to="/" className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></Link>
           <div className={styles.navLinks}>
             <Link to="/">홈</Link>
-            <Link to="/diagnosis">AI 진단</Link>
+            <Link to="/diagnosis">준비도 진단</Link>
             <Link to="/mypage" className={styles.active}>마이페이지</Link>
           </div>
           <div className={styles.navCta}>
@@ -177,7 +177,7 @@ export default function Mypage() {
                 onClick={() => current.runId && navigate(`/diagnosis/${current.runId}`)}
                 role={current.runId ? 'button' : undefined}
               >
-                <div className={styles.ctitle}>최근 AI 진단 결과 {current.runId && <span className={styles.goHint}>· 클릭하면 진단 결과로 →</span>}</div>
+                <div className={styles.ctitle}>최근 준비도 진단 결과 {current.runId && <span className={styles.goHint}>· 클릭하면 진단 결과로 →</span>}</div>
                 <div className={styles.big}>
                   {current.score != null ? current.score : '—'}<span className={styles.u}>/100</span>
                 </div>
@@ -243,7 +243,7 @@ export default function Mypage() {
                 disabled={rerunLoading}
               >
                 <span className={styles.sp} />
-                <span className={styles.ar}>↻</span>&nbsp;이 제품 AI 진단 다시 실행
+                <span className={styles.ar}>↻</span>&nbsp;이 제품 준비도 진단 다시 실행
               </button>
             </div>
           </>

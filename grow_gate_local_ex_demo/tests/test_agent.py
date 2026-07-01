@@ -119,9 +119,9 @@ def test_target_company_context_endpoint_exposes_rag_prompt_harness():
     assert payload["harness_report"]["overall_score"] >= 80
 
 
-def test_ai_diagnosis_tab_uses_workspace3_step_ui():
+def test_readiness_diagnosis_tab_uses_workspace3_step_ui():
     html = (Path(__file__).resolve().parents[1] / "frontend" / "workspace.html").read_text(encoding="utf-8")
-    assert "GROW-GATE Local EX · AI 진단" in html
+    assert "GROW-GATE Local EX · 준비도 진단" in html
     assert 'id="stageWrap"' in html
     assert "const STEPS=[" in html
     assert "S04 READINESS SCORING LAB" in html

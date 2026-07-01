@@ -115,7 +115,7 @@ class AISearchService:
         )
         results = [
             AISearchResultItem(
-                title=f"{request['product_name']} AI 진단 요약",
+                title=f"{request['product_name']} 준비도 진단 요약",
                 result_type="analysis",
                 source_type="agent_analysis",
                 summary=summary,
@@ -123,7 +123,7 @@ class AISearchService:
                 metadata={
                     "readiness_score": analysis["readiness_score"],
                     "target_market": request["target_market"],
-                    "rank_reason": "제품 입력값과 AI 진단 요약을 기준으로 기본 문맥 결과를 우선 노출",
+                    "rank_reason": "제품 입력값과 준비도 진단 요약을 기준으로 기본 문맥 결과를 우선 노출",
                 },
             )
         ]
@@ -259,8 +259,8 @@ class AISearchService:
         if request.scope == "data_catalog":
             return f"{product} 기준 데이터 출처 {len(data_sources)}건을 찾았습니다. 감지 의도는 {intent_text}이며, 상위 후보는 {top_titles}입니다."
         if request.scope == "global":
-            return f"{product} 관련 AI 진단, RAG 근거, 공공데이터 출처를 통합 검색했습니다. 감지 의도는 {intent_text}이며, 상위 결과는 {top_titles}입니다."
-        return f"{product} AI 진단 문맥에서 근거 {len(evidence)}건을 찾았습니다. 감지 의도는 {intent_text}이며, 상위 결과는 {top_titles}입니다."
+            return f"{product} 관련 준비도 진단, 근거 문서, 공공데이터 출처를 통합 검색했습니다. 감지 의도는 {intent_text}이며, 상위 결과는 {top_titles}입니다."
+        return f"{product} 준비도 진단 문맥에서 근거 {len(evidence)}건을 찾았습니다. 감지 의도는 {intent_text}이며, 상위 결과는 {top_titles}입니다."
 
     def _actions(self, scope: str, has_sources: bool, profile: Dict[str, Any], results: Sequence[AISearchResultItem]) -> List[AISuggestedAction]:
         actions = [

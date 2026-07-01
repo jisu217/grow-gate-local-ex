@@ -305,7 +305,7 @@ function mapSourceStage(stageData) {
 
 function sourceTypeLabel(sourceType, usedFor) {
   const suffix = usedFor ? ` · ${usedFor}` : ''
-  if (sourceType === 'live') return `실시간 공공데이터${suffix}`
+  if (sourceType === 'live') return `live 공공데이터 수집 record${suffix}`
   if (sourceType === 'cache') return `캐시 공공데이터${suffix}`
   if (sourceType === 'fallback') return `수집 실패/fallback${suffix}`
   if (sourceType === 'heuristic') return `규칙 엔진${suffix}`
