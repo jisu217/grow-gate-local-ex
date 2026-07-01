@@ -27,6 +27,15 @@ npm run build
 ./scripts/verify-local.sh
 ```
 
+`verify-local.sh` now also runs `scripts/check-risk-gates.sh`. The risk gate fails fast when a change reintroduces one of the presentation risks:
+
+- public data disabled by default
+- S04-S07 frontend mock stage data wired into the diagnosis service
+- missing report download error handling
+- access token persistence in localStorage
+- public-data global run/record queries
+- production smoke test missing CORS, cookie auth, stage card, or public-data checks
+
 ## Production Smoke Test
 
 ```bash
@@ -34,3 +43,15 @@ BASE_URL=http://3.36.60.121 ./scripts/smoke-prod.sh
 ```
 
 The smoke script checks health, unauthenticated 401, signup/login, `/api/users/me`, product create, diagnosis create/polling, sources, PDF report download, and public-data run counts.
+
+Optional stricter checks:
+
+```bash
+SMOKE_CORS_ORIGIN=https://your-domain.example \
+SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true \
+BASE_URL=https://your-domain.example \
+./scripts/smoke-prod.sh
+```
+
+- `SMOKE_CORS_ORIGIN` verifies the deployed API CORS preflight headers for browser API calls.
+- `SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true` fails if the run records no live public-data success. Use it only on the presentation server after API keys and operation endpoints are configured.

@@ -119,6 +119,27 @@ class PublicDataCollectionServiceTest {
         verify(connector, never()).collect(any(PublicDataRequest.class));
     }
 
+    @Test
+    void getRecentRunsScopesPersonalUsersToOwnPublicDataRuns() {
+        PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
+        PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        MembershipRepository membershipRepository = mock(MembershipRepository.class);
+        User user = user("user-1");
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(runRepository.findTop20ByRequestedBy_IdInOrderByStartedAtDesc(List.of("user-1")))
+                .thenReturn(List.of());
+
+        PublicDataCollectionService service = service(
+                List.of(), runRepository, recordRepository, userRepository, membershipRepository);
+
+        List<PublicDataCollectionRun> runs = service.getRecentRuns("user-1");
+
+        assertThat(runs).isEmpty();
+        verify(runRepository).findTop20ByRequestedBy_IdInOrderByStartedAtDesc(List.of("user-1"));
+    }
+
     private PublicDataCollectionService service(List<PublicDataConnector> connectors,
                                                 PublicDataCollectionRunRepository runRepository,
                                                 PublicDataRecordRepository recordRepository,
