@@ -19,7 +19,7 @@
 
 ## 1. Key Screens
 
-| 홈 | 수출 준비도 진단 결과 |
+| 홈 | 수출 Gate 판단 결과 |
 | :--- | :--- |
 | ![홈 화면](docs/screenshot-home.png) | ![진단 결과 화면](docs/screenshot-diagnosis.png) |
 
@@ -81,13 +81,13 @@ src/
 ├── mock/                       # 개발용 fallback 데이터 (VITE_ENABLE_MOCK=true에서만 조회 실패 대체)
 │   ├── auth.js                 # 로그인 상태 (isLoggedIn, role, accountType)
 │   ├── roles.js                # 역할별 허용 액션 테이블
-│   ├── diagnosisSteps.js       # 진단 단계 정의 (UI 전용)
-│   ├── diagnosisData.js        # S00~S10 진단 결과 데이터
-│   ├── diagnosisListData.js    # 진단 이력 목록 데이터
+│   ├── diagnosisSteps.js       # Gate 판단 단계 정의 (UI 전용)
+│   ├── diagnosisData.js        # S00~S10 fallback 데이터
+│   ├── diagnosisListData.js    # Gate 판단 이력 fallback 데이터
 │   └── productData.js          # 제품 지식 데이터
 │
 ├── services/                   # API 추상화 계층
-│   ├── diagnosisService.js     # 진단 관련 (목록 조회, 결과 조회, 실행)
+│   ├── diagnosisService.js     # Gate 판단 관련 (목록 조회, 결과 조회, 실행)
 │   └── productService.js       # 제품 지식 관련 (조회, 저장, 생성)
 │
 ├── hooks/
@@ -101,7 +101,7 @@ src/
 │
 └── pages/
     ├── auth/                   # Home, Login, Signup, SignupPersonal, SignupCompany
-    ├── diagnosis/              # DiagnosisList, DiagnosisNew, DiagnosisResult, DiagnosisSources
+    ├── diagnosis/              # Gate 판단 목록, 입력, 결과, 출처 화면
     └── mypage/                 # Mypage, Knowledge, KnowledgeNew, KnowledgeDetail, KnowledgeEdit
 ```
 

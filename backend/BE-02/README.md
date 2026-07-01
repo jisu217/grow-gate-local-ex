@@ -21,7 +21,7 @@
 | 언어 | Java 17 |
 | DB | MySQL 8.0 |
 | ORM | Spring Data JPA (Hibernate) |
-| 인증 | JWT (jjwt 0.11.5) |
+| 인증 | JWT + HttpOnly cookie + CSRF double-submit |
 | 빌드 | Gradle 8.13 (Wrapper 포함) |
  
 ---
@@ -94,6 +94,8 @@ export PUBLIC_DATA_ENABLED=true
 KOTRA, Safety Korea, KIPRIS, 수출바우처 기본 URL은 공식 카탈로그/신청 페이지입니다. `PUBLIC_DATA_ENABLED=true`가 기본값이지만 이 URL이 그대로면 HTML 상세 페이지를 API 응답으로 저장하지 않고 `fallback` record에 "operation endpoint 필요" 사유를 남깁니다. 활용신청 후 발급 화면의 실제 요청 URL을 각 `*_API_URL`에 넣으면 `live` source trace로 전환됩니다.
 
 등록 제품의 HS Code/대상국 기준 public data cache는 매일 `PUBLIC_DATA_DAILY_REFRESH_CRON`에 따라 갱신됩니다. 로그인 사용자는 `POST /api/public-data/daily-refresh`로 본인 제품 대상 refresh를 수동 실행할 수 있습니다.
+
+Gate 판단 결과는 `gateDecision`, `confidencePanel`, `riskItems`, `actionRoadmap`, `evidenceSources`, `inputTrace`를 함께 저장합니다. `gateDecision.status`는 `GO`, `CONDITIONAL_GO`, `HOLD`, `STOP` 중 하나이며, `actionRoadmap`은 `thisWeek`, `beforeQuote`, `beforeShipment` 업무 bucket으로 내려갑니다.
 
 ---
 

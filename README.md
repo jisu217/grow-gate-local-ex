@@ -3,10 +3,11 @@
 > 지역 제조기업을 위한 바이어 문의 기반 수출 Gate 판단 서비스.
 > 제출용 메인 앱은 React FE-02 + Spring Boot BE-02이며, 제품·HS Code·대상국·바이어 요구사항·제품 지식과 공공데이터 출처 신호를 GO/CONDITIONAL GO/HOLD/STOP 판단과 업무 보드로 연결합니다.
 
-![Python](https://img.shields.io/badge/Python-3.12-3776AB)
-![FastAPI](https://img.shields.io/badge/FastAPI-local%20API-009688)
+![Java](https://img.shields.io/badge/Java-17-007396)
+![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-6DB33F)
+![React](https://img.shields.io/badge/React-18-61DAFB)
 ![Public Data](https://img.shields.io/badge/Public%20Data-KCS%20%7C%20KOTRA%20%7C%20KATS%20%7C%20KIPRIS-blue)
-![Status](https://img.shields.io/badge/Prototype-demo-green)
+![Status](https://img.shields.io/badge/Submission-Gate%20Decision-green)
 
 ---
 
@@ -207,8 +208,12 @@ flowchart LR
   A --> S["Spring Diagnosis API"]
   K["Product Knowledge DB<br/>certs, FTO, buyers, sources"] --> S
   C["Public Data Source Signals"] --> S
+  S --> G["Gate Decision<br/>GO / CONDITIONAL GO / HOLD / STOP"]
   S --> E["Market / Regulation / Recall / FTO / Support Scores"]
-  E --> F["30·60·90 Roadmap + Source Trace"]
+  S --> R["Risk Work Items<br/>owner, evidence, due date, next action"]
+  E --> F["This Week / Before Quote / Before Shipment Board"]
+  C --> T["Source Trace<br/>live, cache, fallback, heuristic, metricSummary, decisionImpact"]
+  S --> W["Self-loop Wiki<br/>manager-approved knowledge candidates"]
   D["FastAPI/HTML Demo"] -. optional prototype .-> C
 ```
 
@@ -217,25 +222,30 @@ flowchart LR
 ## 9. Repository Layout
 
 ```text
-grow_gate_local_ex_demo/
-├─ backend/
-│  ├─ app.py                  # FastAPI API, public-data endpoints, guarded Git bridge
-│  ├─ agents.py               # Planner/Data/Market/Regulation/Recall/FTO/Support agents
-│  ├─ public_data_pipeline.py # seed/live collection and normalization
-│  ├─ ml_models.py            # scoring and prediction layer
-│  └─ schemas.py              # Pydantic contracts
-├─ data/
-│  ├─ public_data_sources.json
-│  └─ sample_datasets.json
-├─ docs/
-│  └─ architecture.md
-├─ frontend/
-│  ├─ team.html
-│  ├─ code-gate.html
-│  ├─ team.js
-│  └─ styles.css
-└─ tests/
-   └─ test_agent.py
+backend/BE-02/
+├─ src/main/java/com/growgate/diagnosis/
+│  ├─ service/DiagnosisAsyncProcessor.java   # Gate 판단, scoring, source trace, report memo
+│  ├─ dto/CreateDiagnosisRequest.java        # 제품 + 바이어 문의 입력 계약
+│  └─ dto/DiagnosisDetailResponse.java       # gateDecision, confidencePanel, actionRoadmap
+├─ src/main/java/com/growgate/publicdata/
+│  ├─ service/PublicDataCollectionService.java
+│  └─ service/PublicDataDailyRefreshService.java
+└─ src/main/resources/application.yml
+
+frontend/FE-02/
+├─ src/pages/auth/Home.jsx                   # Before/After와 Gate Decision 첫 화면
+├─ src/pages/diagnosis/DiagnosisNew.jsx      # 제품 + 바이어 문의 입력
+├─ src/pages/diagnosis/DiagnosisResult.jsx   # Gate 판단 결과 뷰어
+├─ src/components/diagnosis/GateDecisionHero.jsx
+├─ src/components/diagnosis/S08ExecBoard.jsx # 이번 주/견적 전/출하 전 업무 보드
+└─ src/services/diagnosisService.js          # BE response mapper
+
+scripts/
+├─ check-risk-gates.sh                       # 제출 리스크 CI gate
+├─ verify-local.sh                           # 로컬 재현 검증
+└─ smoke-prod.sh                             # 배포 서버 smoke test
+
+grow_gate_local_ex_demo/                     # FastAPI/HTML 보조 프로토타입
 ```
 
 ---
@@ -243,14 +253,15 @@ grow_gate_local_ex_demo/
 ## 10. Verification
 
 ```bash
-cd grow_gate_local_ex_demo
-.venv312/bin/python -m pytest
+./scripts/check-risk-gates.sh
+cd backend/BE-02 && ./gradlew test --no-daemon
+cd frontend/FE-02 && npm run test:mappers && npm run build
 ```
 
-Expected:
+배포 서버 smoke test:
 
-```text
-1 passed
+```bash
+BASE_URL=https://your-domain.example ./scripts/smoke-prod.sh
 ```
 
 ---
@@ -261,19 +272,23 @@ Expected:
 - 제품: 리튬이온 배터리팩
 - HS Code: 850760
 - 대상국: Germany / EU
-- 핵심 규제: UN38.3, IEC 62133, CE/LVD/EMC, EU Battery Passport
+- 바이어 문의: CE, UN38.3 보유 여부와 4주 내 샘플 출하 가능성 확인
+- 핵심 Gate: 견적 전 인증/FTO/리콜 source trace와 제출 문서 확인
+- 산출물: Gate Decision, confidence panel, 이번 주/견적 전/출하 전 업무 보드, 바이어 대응 메모
 
 ---
 
 ## 12. Security Notes
 
-This is a local prototype. The code includes guardrails for demo safety:
+제출용 메인 앱은 다음 보안 기본값을 적용합니다.
 
-- CORS is restricted to known local origins.
-- live public-data collection requires `GROW_GATE_ENABLE_LIVE_COLLECTION=1`.
-- Git write operations require explicit env enablement and a local token.
-- Frontend rendering escapes dynamic text before inserting HTML.
-- GitHub credentials are never stored by the app.
+- JWT access token은 HttpOnly cookie 경로를 사용하고, legacy localStorage token 저장을 CI risk gate에서 차단합니다.
+- Cookie 인증 요청은 `X-GG-CSRF` double-submit header를 사용합니다.
+- CORS origin은 환경변수로 제한합니다.
+- 공공데이터 run/record 조회는 user/company scope로 제한합니다.
+- 공공 API/LLM key는 환경변수 또는 secret manager로만 주입하고 repository에 저장하지 않습니다.
+- fallback 공공데이터는 `sourceType=fallback`으로 표시되며 점수를 올리지 않습니다.
+- `scripts/check-risk-gates.sh`가 실제 구현보다 앞서는 예측 모델 표현, S04~S07 mock 회귀, scope 누락, smoke test 누락을 차단합니다.
 
 ---
 
