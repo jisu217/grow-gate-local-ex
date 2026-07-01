@@ -8,6 +8,9 @@ import jakarta.validation.constraints.Size;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 
+import java.time.LocalDate;
+import java.util.List;
+
 @Getter
 @NoArgsConstructor
 public class CreateDiagnosisRequest {
@@ -33,5 +36,21 @@ public class CreateDiagnosisRequest {
 
         @Size(max = 2000, message = "제품 설명은 2000자 이하여야 합니다.")
         private String description;
+
+        @Size(max = 1000, message = "바이어 문의 내용은 1000자 이하여야 합니다.")
+        private String buyerRequest;
+
+        private LocalDate buyerDeadline;
+
+        private LocalDate expectedShipmentDate;
+
+        private List<@Size(max = 80, message = "요구 인증명은 80자 이하여야 합니다.") String> requestedCertifications;
+
+        private List<@Size(max = 80, message = "보유 문서명은 80자 이하여야 합니다.") String> currentDocuments;
+
+        @Size(max = 40, message = "수출 경험 값은 40자 이하여야 합니다.")
+        private String exportExperience;
+
+        private Long budgetLimitKrw;
     }
 }

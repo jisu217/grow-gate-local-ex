@@ -62,6 +62,9 @@
 /* 입력 필드 목록 */
 .fields { display: flex; flex-direction: column; gap: 18px; }
 
+/* 2열 입력 묶음 */
+.inlineGrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+
 /* 개별 필드 */
 .field {}
 
@@ -176,6 +179,7 @@
 /* 반응형: 1단 레이아웃 */
 @media (max-width: 720px) {
   .layout { grid-template-columns: 1fr; }
+  .inlineGrid { grid-template-columns: 1fr; }
   .rail { position: static; }
   .sheet { padding: 24px 20px 20px; }
   .pickMetaRow,

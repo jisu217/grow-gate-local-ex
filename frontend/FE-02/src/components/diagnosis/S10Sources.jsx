@@ -27,6 +27,9 @@ export default function S10Sources({ pipes }) {
 
             <div className="pipe-count">{pipe.count}</div>
             <div className="pipe-lbl">{pipe.label}</div>
+            {pipe.metricSummary && (
+              <div className="pipe-lbl">metric · {pipe.metricSummary}</div>
+            )}
 
             <span className={`status-chip ${chipType}`}>{statusText}</span>
           </div>

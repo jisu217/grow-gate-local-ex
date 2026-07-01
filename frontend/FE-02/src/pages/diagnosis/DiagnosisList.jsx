@@ -4,7 +4,7 @@ import styles from './DiagnosisList.module.css'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
 import { getDiagnosisList } from '../../services/diagnosisService.js'
 
-// 진단 상태 → 레이블 맵
+// Gate 판단 상태 → 레이블 맵
 const STATUS_MAP = {
   done:    { label: '완료',    cls: styles.done    },
   pending: { label: '분석 중', cls: styles.pending },
@@ -15,7 +15,7 @@ const STATUS_MAP = {
 // 한 페이지에 보여줄 진단 이력 수
 const ITEMS_PER_PAGE = 5
 
-// 진단 이력 목록 페이지 컴포넌트
+// Gate 판단 이력 목록 페이지 컴포넌트
 export default function DiagnosisList() {
   const navigate = useNavigate()
   const [list, setList] = useState([])
@@ -38,19 +38,19 @@ export default function DiagnosisList() {
       <div className={styles.wrap}>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>수출 준비도 진단 이력</h1>
-          <p className={styles.sub}>요청한 진단 목록과 근거 기반 점검 결과를 확인하세요.</p>
+          <h1 className={styles.title}>수출 Gate 판단 이력</h1>
+          <p className={styles.sub}>요청한 제품·바이어 문의별 Gate 판단과 근거 기반 점검 결과를 확인하세요.</p>
         </div>
         {/* 빈 화면에는 아래 전용 CTA가 있으므로 목록이 있을 때만 헤더 버튼 노출 */}
         {!(pageState === 'ok' && list.length === 0) && (
           <button className={styles.newBtn} onClick={() => navigate('/diagnosis/new')}>
-            + 새 진단 시작
+            + 새 Gate 판단
           </button>
         )}
       </div>
 
       {pageState === 'loading' && (
-        <StatusMessage type="loading" message="공공데이터와 제품 지식을 분석 중입니다." />
+        <StatusMessage type="loading" message="공공데이터와 제품 지식을 대조 중입니다." />
       )}
       {pageState === 'error' && (
         <StatusMessage type="error" message="현재 진단을 불러오지 못했습니다. 잠시 후 다시 시도해주세요." />
@@ -62,17 +62,17 @@ export default function DiagnosisList() {
               <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-2M9 5a2 2 0 0 0 2 2h2a2 2 0 0 0 2-2M9 5a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2m-6 9 2 2 4-4" />
             </svg>
           </div>
-          <h3 className={styles.emptyTitle}>아직 진단한 제품이 없어요</h3>
+          <h3 className={styles.emptyTitle}>아직 Gate 판단한 제품이 없어요</h3>
           <p className={styles.emptyDesc}>
-            제품을 등록하면 첫 AI 진단이 여기서 시작됩니다. 아래 3단계면 충분해요.
+            제품과 바이어 문의를 등록하면 첫 Gate 판단이 여기서 시작됩니다. 아래 3단계면 충분해요.
           </p>
           <div className={styles.steps}>
             <span className={styles.step}><b>1</b> 제품 등록</span>
-            <span className={styles.step}><b>2</b> 대상국 선택</span>
-            <span className={styles.step}><b>3</b> 진단 실행</span>
+            <span className={styles.step}><b>2</b> 바이어 문의 입력</span>
+            <span className={styles.step}><b>3</b> Gate 판단</span>
           </div>
           <button className={styles.emptyCta} onClick={() => navigate('/diagnosis/new')}>
-            제품 등록하고 진단 시작 →
+            제품 등록하고 Gate 판단 →
           </button>
         </div>
       )}
@@ -81,6 +81,9 @@ export default function DiagnosisList() {
         <div className={styles.list}>
           {pagedList.map((diag) => {
             const status = STATUS_MAP[diag.status] ?? { label: diag.status ?? '알 수 없음', cls: styles.pending }
+            const overallScore = typeof diag.diagnosisScore === 'number'
+              ? diag.diagnosisScore
+              : diag.diagnosisScore?.overall
             return (
               <div
                 key={diag.id}
@@ -95,8 +98,8 @@ export default function DiagnosisList() {
                     </div>
                   </div>
                   <div className={styles.cardRight}>
-                    {diag.diagnosisScore !== null && (
-                      <div className={styles.score}>{diag.diagnosisScore.overall}<span>/100</span></div>
+                    {overallScore != null && (
+                      <div className={styles.score}>{overallScore}<span>/100</span></div>
                     )}
                     <span className={`${styles.badge} ${status.cls}`}>{status.label}</span>
                   </div>
@@ -115,9 +118,9 @@ export default function DiagnosisList() {
                     ))}
                   </div>
                 ) : ['pending', 'running'].includes(diag.status) ? (
-                  <div className={styles.summaryPending}>근거 수집과 점수 산식 계산이 진행 중입니다…</div>
+                  <div className={styles.summaryPending}>공공데이터와 제품 지식을 대조 중입니다…</div>
                 ) : diag.status === 'failed' ? (
-                  <div className={styles.summaryFailed}>분석에 실패했습니다. 다시 시도해 주세요.</div>
+                  <div className={styles.summaryFailed}>Gate 판단에 실패했습니다. 다시 시도해 주세요.</div>
                 ) : null}
               </div>
             )

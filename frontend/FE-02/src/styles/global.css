@@ -237,6 +237,45 @@ body {
   color: var(--blue);
 }
 
+.gate-hero {
+  border: 1px solid var(--line);
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: var(--shadow);
+  padding: 22px 24px;
+  margin: 0 0 18px;
+}
+.gate-hero.go { border-color: #bfe6d2; background: #f4fbf7; }
+.gate-hero.conditional-go { border-color: var(--blue-line); background: #f7faff; }
+.gate-hero.hold { border-color: #f3e2bf; background: #fffaf0; }
+.gate-hero.stop { border-color: #f6d3cf; background: #fff7f6; }
+.gate-main { display: flex; flex-direction: column; gap: 6px; margin-bottom: 18px; }
+.gate-label {
+  font-family: var(--en);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--slate-2);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+}
+.gate-status { font-size: 30px; font-weight: 800; color: var(--navy); }
+.gate-main p { font-size: 14px; color: var(--slate); max-width: 780px; }
+.gate-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+.gate-grid div {
+  min-height: 96px;
+  border: 1px solid rgba(185,197,219,.75);
+  border-radius: 12px;
+  background: rgba(255,255,255,.78);
+  padding: 14px;
+}
+.gate-grid span,
+.gate-fix span { display: block; font-size: 12px; font-weight: 800; color: var(--slate-2); margin-bottom: 8px; }
+.gate-grid b { display: block; font-size: 15px; color: var(--ink); line-height: 1.35; }
+.gate-grid small { display: block; margin-top: 6px; font-size: 12px; color: var(--slate); }
+.gate-fix { margin-top: 14px; border-top: 1px solid rgba(185,197,219,.75); padding-top: 14px; }
+.gate-fix ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; padding-left: 18px; }
+.gate-fix li { font-size: 13px; color: var(--ink); }
+
 .memo {
   border: 1px solid var(--blue-line);
   background: var(--blue-soft);
@@ -844,6 +883,12 @@ body {
 .status-chip.req  { color: #b42318; border-color: #f3b8b0; background: #fff1f0; }
 
 @media (max-width: 1100px) {
+  .gate-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .gate-fix ul {
+    grid-template-columns: 1fr;
+  }
   .pred-grid, .recall-grid, .market-grid3, .exec-cols, .pipe-grid {
     grid-template-columns: repeat(2, 1fr);
   }
@@ -856,4 +901,5 @@ body {
 @media (max-width: 760px) {
   .app { grid-template-columns: var(--sb-collapsed) 1fr; }
   .kpi-row { grid-template-columns: 1fr; }
+  .gate-grid { grid-template-columns: 1fr; }
 }

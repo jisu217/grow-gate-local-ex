@@ -235,17 +235,17 @@ export async function getProducts() {
 
 인증서/FTO/바이어요구사항/지식출처 등록·수정·삭제 엔드포인트(`/api/products/{productId}/certifications` 등)는 백엔드와 서비스 함수가 구현되어 있습니다. 화면별 버튼 노출 범위는 `KnowledgeEdit`/`KnowledgeDetail` UX에 맞춰 단계적으로 연결합니다. 자세한 경로는 `backend/BE-02/README.md` 4번 섹션 참고.
 
-### 진단
+### 수출 Gate 판단
 
 > 연동 완료 (`apiFetch` 베이스: 기본 `/api`, `VITE_API_URL` 설정 시 `${VITE_API_URL}/api`). 제출 기본값에서는 실패 시 error state로 전파합니다.
-> 상세 화면은 기존 단계형 UI를 유지하되, 세션/점수/리스크/로드맵/출처는 Spring 진단 응답으로 덮어씁니다.
+> 상세 화면은 기존 단계형 UI를 유지하되, 세션/점수/Gate 판단/리스크/업무 보드/출처는 Spring 응답으로 덮어씁니다.
 
 | 메서드 | 경로 | 설명 | 서비스 함수 |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/diagnosis` | 진단 이력 목록 조회 | `getDiagnosisList()` |
-| `POST` | `/api/diagnosis` | 새 진단 실행 요청 | `runDiagnosis(payload)` |
-| `GET` | `/api/diagnosis/:id` | 진단 결과 상세 조회 | `getDiagnosisResult(id)` |
-| `GET` | `/api/diagnosis/:id/sources` | 진단 출처 데이터 조회 | `getDiagnosisSources(id)` |
+| `GET` | `/api/diagnosis` | Gate 판단 이력 목록 조회 | `getDiagnosisList()` |
+| `POST` | `/api/diagnosis` | 제품·바이어 문의 기반 새 Gate 판단 요청 | `runDiagnosis(payload)` |
+| `GET` | `/api/diagnosis/:id` | Gate 판단 결과 상세 조회 | `getDiagnosisResult(id)` |
+| `GET` | `/api/diagnosis/:id/sources` | 판단 출처 데이터 조회 | `getDiagnosisSources(id)` |
 
 > 화면 라우트(`/mypage/knowledge`, `/diagnosis` 등)는 [§5 Routing](#5-routing)의 UI 경로로 위 표의 `/api/...` 경로와는 별개. 화면 라우트는 유지, 실제 백엔드 호출만 `/api` 경로로 연결.
 
@@ -261,12 +261,15 @@ export async function getProducts() {
 - [ ] 로그인 상태 유지 (LocalStorage / AuthContext)
 - [x] 마이페이지 사용자 정보 API 연동
 
-### 진단
+### 수출 Gate 판단
 
 - [x] 새 진단 제출 시 실제 API 호출 및 반환 id로 이동
-- [ ] 진단 진행 상태 폴링 / WebSocket 실시간 업데이트
+- [x] 판단 진행 상태 폴링
 - [x] "저장된 제품 지식 불러오기" 버튼 동작 연결
-- [ ] 진단 저장·삭제 기능
+- [x] 바이어 문의, 회신 마감, 요구 인증, 보유 문서, 출하 예정일 입력
+- [x] 결과 상단 GO/CONDITIONAL GO/HOLD/STOP Gate 판단 표시
+- [x] 이번 주/견적 전/출하 전 업무 보드 표시
+- [ ] 판단 저장·삭제 기능
 
 ### 제품 지식
 

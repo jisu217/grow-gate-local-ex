@@ -88,8 +88,8 @@ export default function DiagnosisDetail() {
       <div className={styles.wrap}>
         <button className={styles.back} onClick={() => navigate('/mypage')}>← 마이페이지</button>
         <div className={styles.empty}>
-          <p className={styles.emptyText}>아직 이 제품의 AI 진단 결과가 없어요.<br />먼저 진단을 실행하면 점수 근거를 볼 수 있어요.</p>
-          <button className={styles.emptyBtn} onClick={() => navigate('/diagnosis/new')}>진단 시작하기 →</button>
+          <p className={styles.emptyText}>아직 이 제품의 Gate 판단 결과가 없어요.<br />먼저 판단을 실행하면 점수 근거를 볼 수 있어요.</p>
+          <button className={styles.emptyBtn} onClick={() => navigate('/diagnosis/new')}>Gate 판단 시작하기 →</button>
         </div>
       </div>
     )
@@ -204,15 +204,15 @@ export default function DiagnosisDetail() {
       <div className={styles.more}>
         <div className={styles.moreT}>
           상세 근거가 더 궁금하다면
-          <span>리스크별 판단 이유와 출처를 전체 AI 진단에서 볼 수 있어요.</span>
+          <span>리스크별 판단 이유와 출처를 전체 Gate 판단에서 볼 수 있어요.</span>
         </div>
         <button className={styles.moreBtn} onClick={() => navigate(`/diagnosis/${runId}`)}>
-          AI 진단 전체 결과 보기 →
+          Gate 판단 전체 결과 보기 →
         </button>
       </div>
 
       <p className={styles.disclaimer}>
-        2026 산업통상부 공공데이터 활용 공모전 · 본 결과는 공공데이터 기반 AI 분석이며 최종 판단은 전문가와 함께 하십시오.
+        2026 산업통상부 공공데이터 활용 공모전 · 본 결과는 공공데이터 수집 신호와 규칙 기반 Gate 판단이며 최종 판단은 전문가와 함께 하십시오.
       </p>
     </div>
   )

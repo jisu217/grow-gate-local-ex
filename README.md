@@ -1,7 +1,7 @@
 # GROW-GATE Local EX
 
-> 지역 제조기업을 위한 수출 규제·인증 실행 진단 서비스.
-> 제출용 메인 앱은 React FE-02 + Spring Boot BE-02이며, 제품·HS Code·대상국·제품 지식과 공공데이터 출처 신호를 수출 준비도와 30·60·90일 실행계획으로 연결합니다.
+> 지역 제조기업을 위한 바이어 문의 기반 수출 Gate 판단 서비스.
+> 제출용 메인 앱은 React FE-02 + Spring Boot BE-02이며, 제품·HS Code·대상국·바이어 요구사항·제품 지식과 공공데이터 출처 신호를 GO/CONDITIONAL GO/HOLD/STOP 판단과 업무 보드로 연결합니다.
 
 ![Python](https://img.shields.io/badge/Python-3.12-3776AB)
 ![FastAPI](https://img.shields.io/badge/FastAPI-local%20API-009688)
@@ -40,7 +40,7 @@
 
 심사 대응 기준 문서는 [docs/top15-resolution-2026-07-01.md](docs/top15-resolution-2026-07-01.md)입니다. 15개 치명 항목의 처리 상태, code reference, 남은 상용화 과제를 이 문서에 고정했습니다.
 
-| 홈 | 수출 준비도 진단 결과 |
+| 홈 | 수출 Gate 판단 결과 |
 | :--- | :--- |
 | ![홈 화면](docs/screenshot-home.png) | ![진단 결과 화면](docs/screenshot-diagnosis.png) |
 
@@ -54,9 +54,9 @@
 - 유사 리콜 위험은 무엇인가
 - 특허/FTO 리스크는 어디부터 봐야 하는가
 - 지원사업으로 어떤 비용을 줄일 수 있는가
-- 오늘부터 30일, 60일, 90일 동안 무엇을 해야 하는가
+- 견적 전, 출하 전 어떤 근거와 문서를 확보해야 하는가
 
-GROW-GATE Local EX는 이 질문을 공공데이터 기반 실행 보드로 바꿉니다.
+GROW-GATE Local EX는 이 질문을 바이어 회신 가능한 Gate 판단과 담당자 업무 보드로 바꿉니다.
 
 ---
 
@@ -64,12 +64,12 @@ GROW-GATE Local EX는 이 질문을 공공데이터 기반 실행 보드로 바�
 
 | 영역 | 기능 |
 | :--- | :--- |
-| 진단 실행 | 기업·제품·HS Code·대상국을 입력하면 Spring API가 실제 진단 run을 생성하고 결과 id로 이동 |
+| Gate 판단 실행 | 기업·제품·HS Code·대상국·바이어 문의를 입력하면 Spring API가 실제 판단 run을 생성하고 결과 id로 이동 |
 | 규칙 기반 스코어링 | HS Code, 대상국, 인증 만료, FTO 위험, 바이어 요구사항, 지식 신뢰도, 출처 수를 점수에 반영 |
 | 공공데이터 근거 추적 | 관세청, KOTRA, Safety Korea, KIPRIS, 지원사업의 live/cache/fallback 수집 상태와 metric 기반 contribution을 `sourceId`, `matchedKey`, `usedFor`, `confidenceAdjustedContribution`으로 반환 |
-| BM25-lite 근거 검색 | 제품 지식, 인증, FTO, 바이어 요구, 공공데이터 record를 chunk화하고 BM25-lite top-k를 `ragRetrieval.topK`에 저장 |
+| self-loop wiki 근거화 | 제품 지식, 인증, FTO, 바이어 요구, 공공데이터 record를 chunk화하고 담당자 승인 지식화 후보를 다음 판단 context에 재사용 |
 | Agent loop | Spring `AgentLoop`가 plan, tool call, observation, verifier, retry, fallback, complete task를 기록 |
-| 실행 로드맵 | 30·60·90일 단위로 담당자, 산출물, 시험·인증 태스크를 정리 |
+| Gate 업무 보드 | 이번 주, 견적 전, 출하 전 단위로 담당자, 산출물, 시험·인증 태스크를 정리 |
 | 팀 운영실 | 데이터 활용도, 부족 데이터, 역할자별 기획 완성도, 입상 가능성, 개선 액션을 점수화 |
 | 코드 게이트 | 리뷰 체크리스트, 커밋 전 확인, 로컬 Git 커밋, GitHub push 가이드를 제공 |
 
@@ -87,7 +87,7 @@ GROW-GATE Local EX는 이 질문을 공공데이터 기반 실행 보드로 바�
 
 현재 제출용 Spring 앱은 `PUBLIC_DATA_ENABLED=true`가 기본값입니다. API key와 실제 operation endpoint가 있으면 live 공공 API를 호출하고, key가 없거나 호출이 실패하면 `public_data_collection_runs`, `public_data_records`에 fallback 사유를 저장합니다. 공식 카탈로그/신청 페이지 URL은 출처 추적용 기본값으로 보존하되, HTML 상세 페이지를 API 응답으로 저장하지 않도록 fallback 처리합니다. 메인 진단 결과에는 `live`, `cache`, `fallback`, `heuristic`, `agent` sourceType과 confidence-adjusted 점수 기여도, provider별 metric signal이 표시됩니다.
 
-벡터형 대규모 검색 또는 성과 확률 산출이라고 주장하지 않습니다. 제출 서버의 현재 구현은 DB 지식과 공공데이터 record를 chunk화한 뒤 BM25-lite top-k 근거를 남기는 방식입니다. 대규모 문서 검색은 pgvector/Redis 등으로 교체 가능한 후속 과제입니다.
+벡터형 대규모 RAG 검색 또는 성과 확률 산출이라고 주장하지 않습니다. 제출 서버의 현재 구현은 DB 지식과 공공데이터 record를 chunk화한 뒤 담당자가 승인한 self-loop wiki 항목을 다음 판단 context에 재사용하는 방식입니다. 대규모 문서 검색은 pgvector/Redis 등으로 교체 가능한 후속 과제입니다.
 
 ---
 
@@ -96,9 +96,9 @@ GROW-GATE Local EX는 이 질문을 공공데이터 기반 실행 보드로 바�
 ```text
 grow_gate_local_ex_demo/frontend/
 ├─ index.html       # 홈
-├─ workspace.html   # 준비도 진단 워크스페이스
+├─ workspace.html   # Gate 판단 워크스페이스
 ├─ data.html        # 공공데이터 파이프라인
-├─ roadmap.html     # 30·60·90일 실행 로드맵
+├─ roadmap.html     # Gate 업무 보드
 ├─ team.html        # 팀 운영실
 └─ code-gate.html   # 코드 리뷰·커밋 게이트
 ```

@@ -7,7 +7,7 @@ export default function Topbar({ currentStepName }) {
     <div className={styles.topbar}>
 
       <div className={styles.crumb}>
-        수출 준비도 진단 · <b>{currentStepName}</b>
+        수출 Gate 판단 · <b>{currentStepName}</b>
       </div>
 
       <div className={styles.search}>

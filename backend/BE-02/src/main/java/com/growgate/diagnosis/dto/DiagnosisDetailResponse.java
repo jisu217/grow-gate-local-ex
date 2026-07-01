@@ -26,6 +26,9 @@ public class DiagnosisDetailResponse {
     @Builder
     public static class ResultData {
         private DiagnosisScore diagnosisScore;
+        private GateDecision gateDecision;
+        private ImpactEstimate impactEstimate;
+        private ConfidencePanel confidencePanel;
         private String summary;
         private List<RiskItem> riskItems;
         private ActionRoadmap actionRoadmap;
@@ -37,6 +40,40 @@ public class DiagnosisDetailResponse {
         private String errorType;
         private String errorMessage;
         private String failedAt;
+    }
+
+    @Getter
+    @Builder
+    public static class GateDecision {
+        private String status;
+        private String label;
+        private String oneLineReason;
+        private String allowedNextStep;
+        private String blockedStep;
+        private String buyerReplyGuidance;
+        private List<String> mustFixBeforeQuote;
+    }
+
+    @Getter
+    @Builder
+    public static class ImpactEstimate {
+        private int timeSavedHours;
+        private int delayRiskDays;
+        private long avoidableCostKrw;
+        private long supportFundingOpportunityKrw;
+        private String explanation;
+    }
+
+    @Getter
+    @Builder
+    public static class ConfidencePanel {
+        private String level;
+        private int liveSourceCount;
+        private int cacheSourceCount;
+        private int fallbackSourceCount;
+        private List<String> missingEvidence;
+        private boolean humanReviewRequired;
+        private String reviewReason;
     }
 
     @Getter
@@ -53,8 +90,18 @@ public class DiagnosisDetailResponse {
     @Getter
     @Builder
     public static class RiskItem {
+        private String riskId;
+        private String category;
         private String level;
         private String label;
+        private String severity;
+        private String probability;
+        private String businessImpact;
+        private String requiredEvidence;
+        private String ownerRole;
+        private String deadline;
+        private String nextAction;
+        private List<String> sourceIds;
     }
 
     @Getter
@@ -63,6 +110,21 @@ public class DiagnosisDetailResponse {
         private int d30;
         private int d60;
         private int d90;
+        private List<ActionItem> thisWeek;
+        private List<ActionItem> beforeQuote;
+        private List<ActionItem> beforeShipment;
+    }
+
+    @Getter
+    @Builder
+    public static class ActionItem {
+        private String title;
+        private String owner;
+        private String output;
+        private String dueDate;
+        private String reason;
+        private String blockedIfNotDone;
+        private List<String> sourceIds;
     }
 
     @Getter

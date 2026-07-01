@@ -48,6 +48,25 @@ if search_quiet 'MOCK_STAGES|S04_MARKETS|S05_REGULATIONS|S06_RECALLS|S07_PATENTS
 fi
 pass "S04-S07 diagnosis service mapping is backend-driven"
 
+if search_quiet 'XGBoost|xgboost|ML 예측|AI 진단' "$ROOT_DIR/frontend/FE-02/src"; then
+  fail "main frontend must use defensible Gate/rule-scoring language, not XGBoost/AI diagnosis claims"
+fi
+search_quiet 'GateDecisionHero' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisResult.jsx" \
+  || fail "diagnosis result must show gate decision before detailed stages"
+search_quiet 'gateDecision' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "backend result must include gateDecision"
+search_quiet 'buyerRequest' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisNew.jsx" \
+  || fail "diagnosis input must capture buyer inquiry context"
+search_quiet 'buyerRequest' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/dto/CreateDiagnosisRequest.java" \
+  || fail "backend diagnosis request must accept buyer inquiry context"
+search_quiet 'Before / After' "$ROOT_DIR/frontend/FE-02/src/pages/auth/Home.jsx" \
+  || fail "home must explain before/after differentiation"
+search_quiet 'thisWeek|beforeQuote|beforeShipment' "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
+  || fail "frontend roadmap mapper must use Gate action buckets"
+search_quiet 'metricSummary|decisionImpact' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "public-data source entries must include metric summary and decision impact"
+pass "Gate decision, buyer context, and defensible wording are wired"
+
 search_quiet 'reportError|try \{|catch \(err\)' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisResult.jsx" \
   || fail "DiagnosisResult must surface report download errors"
 pass "report download has visible error handling"

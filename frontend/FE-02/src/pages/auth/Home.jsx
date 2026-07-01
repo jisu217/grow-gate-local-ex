@@ -8,9 +8,9 @@ const PARTNERS = ['관세청', 'KOTRA', 'KTL', 'SafetyKorea', 'KIPRIS', '기업�
 // 기능 소개
 const FEATURES = [
   {
-    no: '01', icon: '01', title: '한 번의 진단',
-    desc: '제품 정보, HS Code, 대상국을 기준으로 수출 준비도·규제 매칭·리콜·특허 위험을 한 화면에서 점검합니다.',
-    link: '진단 시작',
+    no: '01', icon: '01', title: '한 번의 Gate 판단',
+    desc: '제품 정보, HS Code, 대상국, 바이어 문의를 기준으로 견적 전 진행 가능 여부를 한 화면에서 점검합니다.',
+    link: 'Gate 판단',
   },
   {
     no: '02', icon: '02', title: '근거가 보이는 데이터',
@@ -18,9 +18,9 @@ const FEATURES = [
     link: '데이터 보기',
   },
   {
-    no: '03', icon: '03', title: '30·60·90일 할 일',
-    desc: '국내·인증·해외에서 담당자가 언제 무엇을 해야 하는지, 산출물까지 일정별로 받습니다.',
-    link: '로드맵 열기',
+    no: '03', icon: '03', title: 'Gate 통과 할 일',
+    desc: '이번 주, 견적 전, 출하 전 담당자가 무엇을 확인해야 하는지 산출물 단위로 받습니다.',
+    link: '업무 보드',
   },
 ]
 
@@ -28,8 +28,8 @@ const FEATURES = [
 const STATS = [
   { v: '5', u: '개', l: '공공데이터 provider 상태 추적' },
   { v: '6', u: '축', l: '시장·규제·리콜·FTO·지원 점수' },
-  { v: '100', u: '%', l: '출처 trace 포함 진단 결과' },
-  { v: '90', u: '일', l: '실행 로드맵 자동 생성' },
+  { v: '100', u: '%', l: '출처 trace 포함 Gate 판단' },
+  { v: '3', u: '단계', l: '이번 주·견적 전·출하 전 업무화' },
 ]
 
 const READINESS = [
@@ -37,6 +37,12 @@ const READINESS = [
   { k: '서비스 구현', v: 'React 메인 화면에서 Spring 진단 생성·상태 갱신·결과 리포트 흐름 연결' },
   { k: '운영 근거', v: 'JWT 검증, 권한 검사, audit pagination, soft delete, retry/backoff 반영' },
   { k: '제출 산출물', v: '변경사항·평가 대응·미완료 범위를 공개 문서로 분리 정리' },
+]
+
+const BEFORE_AFTER = [
+  { before: '담당자가 포털을 따로 열어 HS Code, 리콜, 특허, 지원사업을 수작업 확인', after: '제품·바이어 문의 기준으로 live/cache/fallback 출처와 규칙 근거를 한 결과에 연결' },
+  { before: '점수는 나오지만 견적을 보내도 되는지 판단하기 어려움', after: 'GO / CONDITIONAL GO / HOLD / STOP으로 견적 전 Gate를 먼저 제시' },
+  { before: '자료 누락을 알게 되어도 담당자별 다음 행동이 모호함', after: '이번 주·견적 전·출하 전 업무, 산출물, 담당 역할을 함께 생성' },
 ]
 
 // 수출 네트워크 SVG 맵 컴포넌트
@@ -109,13 +115,13 @@ export default function Home() {
 
           <p className={styles.lead}>
             제품명과 HS Code를 입력하면 공공데이터 수집 상태, 제품 지식, 인증·특허·리콜 신호를 연결해
-            <b style={{color:'var(--blue)'}}> 점수·근거·30/60/90일 실행계획</b>으로 정리합니다.
+            <b style={{color:'var(--blue)'}}> Gate 판단·근거·업무 보드</b>로 정리합니다.
           </p>
 
           {/* CTA — 시작 동선은 '진단 시작'(제품 입력) 하나로 통일 */}
           <div className={styles.heroCta}>
             <button className={`${styles.btn} ${styles.primary}`} onClick={() => navigate('/diagnosis/new')}>
-              제품 등록하고 진단 시작 →
+              제품 등록하고 Gate 판단 →
             </button>
             <button className={`${styles.btn} ${styles.ghost}`} onClick={() => navigate('/diagnosis')}>
               내 진단 이력 보기
@@ -156,6 +162,25 @@ export default function Home() {
           </div>
         </section>
 
+        <section className={styles.compareSec}>
+          <div className={styles.secEyebrow}>Before / After</div>
+          <h2 className={styles.secH2}>기존 체크리스트와 다른 점</h2>
+          <div className={styles.compareGrid}>
+            {BEFORE_AFTER.map((row) => (
+              <div key={row.before} className={styles.compareRow}>
+                <div>
+                  <span>Before</span>
+                  <p>{row.before}</p>
+                </div>
+                <div>
+                  <span>After</span>
+                  <p>{row.after}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
         {/* 통계 섹션 */}
         <section className={styles.statsSec}>
           <div className={styles.stats}>
@@ -171,12 +196,12 @@ export default function Home() {
         {/* CTA 배너 */}
         <section className={styles.ctaBand}>
           <h2 className={styles.ctaBandH2}>막막한 수출 준비,<br />오늘 첫 단추부터.</h2>
-          <p className={styles.ctaBandP}>제품명과 HS Code만 있으면 됩니다. 5분 뒤, 손에 잡히는 실행 리포트가 됩니다.</p>
+          <p className={styles.ctaBandP}>제품명, HS Code, 바이어 문의만 있으면 됩니다. 견적 전 확인할 Gate와 업무 보드가 나옵니다.</p>
           <button
             className={`${styles.btn} ${styles.ctaBandBtn}`}
             onClick={() => navigate('/diagnosis/new')}
           >
-            3분 만에 진단 시작 →
+            Gate 판단 시작 →
           </button>
         </section>
 
@@ -184,9 +209,9 @@ export default function Home() {
         <footer className={styles.footer}>
           <div className={styles.fBrand}>GROW-GATE <span style={{color:'var(--blue)'}}>Local EX</span></div>
           <div className={styles.fLinks}>
-            <a href="/diagnosis">수출 준비도 진단</a>
+            <a href="/diagnosis">수출 Gate 판단</a>
             <a href="#">데이터</a>
-            <a href="#">실행 로드맵</a>
+            <a href="#">업무 보드</a>
             <a href="#">문서</a>
           </div>
           <div className={styles.fNote}>

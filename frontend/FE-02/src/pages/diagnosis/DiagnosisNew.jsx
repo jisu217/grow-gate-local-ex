@@ -16,6 +16,13 @@ function normalizeHsCode(value) {
   return String(value ?? '').replace(/[^\d]/g, '')
 }
 
+function splitList(value) {
+  return String(value ?? '')
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean)
+}
+
 // 신규 진단 입력 페이지 컴포넌트
 export default function DiagnosisNew() {
   const navigate = useNavigate()
@@ -25,6 +32,13 @@ export default function DiagnosisNew() {
     hsCode: '',
     targetCountry: '',
     description: '',
+    buyerRequest: '',
+    buyerDeadline: '',
+    expectedShipmentDate: '',
+    requestedCertifications: '',
+    currentDocuments: '',
+    exportExperience: '',
+    budgetLimitKrw: '',
   })
 
   const [errors, setErrors] = useState({})
@@ -97,6 +111,13 @@ export default function DiagnosisNew() {
       hsCode: p.hs,
       targetCountry: p.country,
       description: p.description ?? '',
+      buyerRequest: formData.buyerRequest,
+      buyerDeadline: formData.buyerDeadline,
+      expectedShipmentDate: formData.expectedShipmentDate,
+      requestedCertifications: formData.requestedCertifications,
+      currentDocuments: formData.currentDocuments,
+      exportExperience: formData.exportExperience,
+      budgetLimitKrw: formData.budgetLimitKrw,
     })
     setSelectedId(p.id)
     setErrors({})
@@ -151,6 +172,13 @@ export default function DiagnosisNew() {
         hsCode,
         targetCountry,
         description: formData.description.trim(),
+        buyerRequest: formData.buyerRequest.trim(),
+        buyerDeadline: formData.buyerDeadline || null,
+        expectedShipmentDate: formData.expectedShipmentDate || null,
+        requestedCertifications: splitList(formData.requestedCertifications),
+        currentDocuments: splitList(formData.currentDocuments),
+        exportExperience: formData.exportExperience.trim(),
+        budgetLimitKrw: formData.budgetLimitKrw ? Number(formData.budgetLimitKrw) : null,
       })
       navigate(`/diagnosis/${result.id}`)
     } catch (err) {
@@ -170,8 +198,8 @@ export default function DiagnosisNew() {
         <div className={styles.formArea}>
           <div className={styles.formCard}>
             <div className={styles.formEyebrow}>S01 INPUT</div>
-            <h2 className={styles.formTitle}>제품 정보 입력</h2>
-            <p className={styles.formDesc}>진단할 제품과 기업 정보를 입력하세요.</p>
+            <h2 className={styles.formTitle}>수출 문의 등록</h2>
+            <p className={styles.formDesc}>제품 정보와 바이어 요구사항을 입력하면 견적 전 Gate 판단으로 정리합니다.</p>
 
             <div className={styles.fields}>
               <div className={styles.field}>
@@ -225,6 +253,92 @@ export default function DiagnosisNew() {
                   rows={4}
                 />
               </div>
+              <div className={styles.field}>
+                <label className={styles.label} htmlFor="buyerRequest">바이어 문의 원문</label>
+                <textarea
+                  id="buyerRequest"
+                  className={styles.textarea}
+                  name="buyerRequest"
+                  value={formData.buyerRequest}
+                  onChange={handleChange}
+                  placeholder="예: 독일 바이어가 CE, UN38.3 보유 여부와 4주 내 샘플 출하 가능 여부를 문의"
+                  rows={4}
+                />
+              </div>
+              <div className={styles.inlineGrid}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="buyerDeadline">회신 마감일</label>
+                  <input
+                    id="buyerDeadline"
+                    className={styles.input}
+                    name="buyerDeadline"
+                    type="date"
+                    value={formData.buyerDeadline}
+                    onChange={handleChange}
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="expectedShipmentDate">예상 출하일</label>
+                  <input
+                    id="expectedShipmentDate"
+                    className={styles.input}
+                    name="expectedShipmentDate"
+                    type="date"
+                    value={formData.expectedShipmentDate}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+              <div className={styles.inlineGrid}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="requestedCertifications">요구 인증</label>
+                  <input
+                    id="requestedCertifications"
+                    className={styles.input}
+                    name="requestedCertifications"
+                    value={formData.requestedCertifications}
+                    onChange={handleChange}
+                    placeholder="예: CE, UN38.3, IEC62133"
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="currentDocuments">현재 보유 문서</label>
+                  <input
+                    id="currentDocuments"
+                    className={styles.input}
+                    name="currentDocuments"
+                    value={formData.currentDocuments}
+                    onChange={handleChange}
+                    placeholder="예: KC 인증서, 시험성적서"
+                  />
+                </div>
+              </div>
+              <div className={styles.inlineGrid}>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="exportExperience">수출 경험</label>
+                  <input
+                    id="exportExperience"
+                    className={styles.input}
+                    name="exportExperience"
+                    value={formData.exportExperience}
+                    onChange={handleChange}
+                    placeholder="예: 첫 수출 / EU 납품 경험 있음"
+                  />
+                </div>
+                <div className={styles.field}>
+                  <label className={styles.label} htmlFor="budgetLimitKrw">검토 가능 예산</label>
+                  <input
+                    id="budgetLimitKrw"
+                    className={styles.input}
+                    name="budgetLimitKrw"
+                    type="number"
+                    min="0"
+                    value={formData.budgetLimitKrw}
+                    onChange={handleChange}
+                    placeholder="예: 5000000"
+                  />
+                </div>
+              </div>
             </div>
 
             <div className={styles.knowledgeBtn}>
@@ -252,7 +366,7 @@ export default function DiagnosisNew() {
             {submitError && <div className={styles.fieldError}>{submitError}</div>}
 
             <button className={styles.submitBtn} onClick={handleSubmit} disabled={submitting}>
-              {submitting ? '진단 요청 중…' : '수출 준비도 진단 시작 →'}
+              {submitting ? 'Gate 판단 요청 중…' : '수출 Gate 판단 시작 →'}
             </button>
           </div>
         </div>

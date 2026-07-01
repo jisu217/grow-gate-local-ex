@@ -83,6 +83,7 @@ public class DiagnosisAsyncProcessor {
             String hsCode = normalizeHsCode(product != null ? product.getHsCode() : stringValue(inputData.get("hsCode")));
             String description = product != null ? product.getDescription() : stringValue(inputData.get("description"));
             String targetCountry = normalizeCountry(run.getTargetCountry());
+            Map<String, Object> buyerContext = buildBuyerContext(inputData, buyersFromInput(inputData));
 
             ProductKnowledge knowledge = product != null
                     ? knowledgeRepository.findByProductId(product.getId()).orElse(null)
@@ -156,8 +157,8 @@ public class DiagnosisAsyncProcessor {
                     1,
                     Map.of("riskItems", List.of(), "actionRoadmap", Map.of()),
                     () -> {
-                        List<Map<String, String>> risks = buildRiskItems(certs, ftoItems, knowledge, buyers, hsCode);
-                        Map<String, Object> roadmap = buildRoadmap(risks, certs, ftoItems, buyers, knowledgeSources);
+                        List<Map<String, Object>> risks = buildRiskItems(certs, ftoItems, knowledge, buyers, hsCode, buyerContext, sources);
+                        Map<String, Object> roadmap = buildActionPlan(risks, certs, ftoItems, buyers, knowledgeSources, buyerContext);
                         return Map.of("riskItems", risks, "actionRoadmap", roadmap);
                     },
                     result -> result != null && result.get("riskItems") instanceof List<?> risks && !risks.isEmpty()
@@ -165,9 +166,13 @@ public class DiagnosisAsyncProcessor {
                             : AgentVerification.fail("risk planner did not produce risk items")
             );
             @SuppressWarnings("unchecked")
-            List<Map<String, String>> riskItems = (List<Map<String, String>>) planningResult.get("riskItems");
+            List<Map<String, Object>> riskItems = (List<Map<String, Object>>) planningResult.get("riskItems");
             @SuppressWarnings("unchecked")
             Map<String, Object> actionRoadmap = (Map<String, Object>) planningResult.get("actionRoadmap");
+            Map<String, Object> confidencePanel = buildConfidencePanel(sources);
+            Map<String, Object> gateDecision = buildGateDecision(overall, market, regulation, recall, fto, support,
+                    riskItems, confidencePanel, buyerContext);
+            Map<String, Object> impactEstimate = buildImpactEstimate(riskItems, actionRoadmap, buyerContext, support);
             Map<String, Object> agentRequest = buildAgentRequest(run, productName, hsCode, description, targetCountry, certs);
             Optional<Map<String, Object>> agentResult = agentLoop.runTool(
                     "fastapi_analyze",
@@ -258,6 +263,9 @@ public class DiagnosisAsyncProcessor {
                     "fto", fto,
                     "support", support
             ));
+            resultMap.put("gateDecision", gateDecision);
+            resultMap.put("impactEstimate", impactEstimate);
+            resultMap.put("confidencePanel", confidencePanel);
             resultMap.put("summary", buildSummary(productName, hsCode, targetCountry, overall, riskItems));
             resultMap.put("evidenceSources", sources.stream()
                     .map(source -> stringValue(source.get("provider")))
@@ -289,14 +297,21 @@ public class DiagnosisAsyncProcessor {
             ));
             resultMap.put("knowledgeLoopSuggestions", loopSuggestions);
             resultMap.put("publicDataCollectionRunId", publicDataResult.getRun().getId());
-            resultMap.put("inputTrace", Map.of(
-                    "productName", nullToEmpty(productName),
-                    "hsCode", nullToEmpty(hsCode),
-                    "targetCountry", targetCountry,
-                    "knowledgeSourceCount", knowledgeSources.size(),
-                    "certificationCount", certs.size(),
-                    "buyerRequirementCount", buyers.size()
-            ));
+            Map<String, Object> inputTrace = new LinkedHashMap<>();
+            inputTrace.put("productName", nullToEmpty(productName));
+            inputTrace.put("hsCode", nullToEmpty(hsCode));
+            inputTrace.put("targetCountry", targetCountry);
+            inputTrace.put("buyerRequest", stringValue(buyerContext.get("buyerRequest")));
+            inputTrace.put("buyerDeadline", stringValue(buyerContext.get("buyerDeadline")));
+            inputTrace.put("expectedShipmentDate", stringValue(buyerContext.get("expectedShipmentDate")));
+            inputTrace.put("requestedCertifications", buyerContext.getOrDefault("requestedCertifications", List.of()));
+            inputTrace.put("currentDocuments", buyerContext.getOrDefault("currentDocuments", List.of()));
+            inputTrace.put("exportExperience", stringValue(buyerContext.get("exportExperience")));
+            inputTrace.put("budgetLimitKrw", buyerContext.getOrDefault("budgetLimitKrw", 0));
+            inputTrace.put("knowledgeSourceCount", knowledgeSources.size());
+            inputTrace.put("certificationCount", certs.size());
+            inputTrace.put("buyerRequirementCount", buyers.size());
+            resultMap.put("inputTrace", inputTrace);
 
             run.setResult(objectMapper.writeValueAsString(resultMap));
             updateStatus(run, DiagnosisStatus.done);
@@ -382,6 +397,8 @@ public class DiagnosisAsyncProcessor {
                 source.put("metrics", metrics);
                 source.put("scoreInputs", metrics);
             }
+            source.put("metricSummary", publicDataMetricSummary(record, normalizedPayload));
+            source.put("decisionImpact", publicDataDecisionImpact(record, adjustedContribution));
             source.put("scoreFormula", normalizedPayload.getOrDefault("scoreFormula",
                     "scoreContribution = provider metric contribution adjusted by confidence"));
             source.put("reason", record.isFallbackUsed()
@@ -419,6 +436,31 @@ public class DiagnosisAsyncProcessor {
             case KIPRIS_FTO -> "KIPRIS Plus 특허/FTO live/cache 수집";
             case BIZINFO_SUPPORT -> "기업마당 지원사업 live/cache 수집";
         };
+    }
+
+    private String publicDataMetricSummary(PublicDataRecord record, Map<String, Object> normalizedPayload) {
+        Object summary = normalizedPayload.get("metricSummary");
+        if (summary instanceof String text && !text.isBlank()) return text;
+        Object metrics = normalizedPayload.get("metrics");
+        if (metrics instanceof Map<?, ?> metricMap && !metricMap.isEmpty()) {
+            return metricMap.entrySet().stream()
+                    .limit(4)
+                    .map(entry -> entry.getKey() + "=" + entry.getValue())
+                    .reduce((left, right) -> left + ", " + right)
+                    .orElse("metric record 없음");
+        }
+        return record.isFallbackUsed()
+                ? "fallback record: live metric 미확보"
+                : "live/cache record 수집됨, provider parser metric 확인 필요";
+    }
+
+    private String publicDataDecisionImpact(PublicDataRecord record, int adjustedContribution) {
+        if (record.isFallbackUsed()) {
+            return "fallback은 점수를 올리지 않고 confidence 하락 및 담당자 확인 항목으로만 반영됩니다.";
+        }
+        String direction = adjustedContribution > 0 ? "상향" : adjustedContribution < 0 ? "하향" : "중립";
+        return record.getProvider().name() + " " + record.getUsedFor()
+                + " metric이 Gate 판단에 " + direction + " 기여(" + adjustedContribution + "점)했습니다.";
     }
 
     private Map<String, Object> buildAgentRequest(DiagnosisRun run, String productName, String hsCode,
@@ -636,7 +678,7 @@ public class DiagnosisAsyncProcessor {
 
     private Map<String, Object> buildStageCards(String productName, String hsCode, String targetCountry,
                                                 int overall, int market, int regulation, int recall,
-                                                int fto, int support, List<Map<String, String>> risks,
+                                                int fto, int support, List<Map<String, Object>> risks,
                                                 Map<String, Object> roadmap,
                                                 List<Map<String, Object>> sources,
                                                 Map<String, Object> agentResult,
@@ -731,11 +773,11 @@ public class DiagnosisAsyncProcessor {
     }
 
     private List<Map<String, Object>> buildRecallStageCard(int recall, List<Map<String, Object>> sources,
-                                                           List<Map<String, String>> risks) {
+                                                           List<Map<String, Object>> risks) {
         String riskClass = recall >= 75 ? "l" : recall >= 60 ? "m" : "h";
         String badge = recall >= 75 ? "저위험" : recall >= 60 ? "중위험" : "고위험";
         int publicCount = sourceCount(sources, "recall", "live", "cache");
-        String topRisk = risks.isEmpty() ? "출처 최신성 점검" : risks.get(0).get("label");
+        String topRisk = risks.isEmpty() ? "출처 최신성 점검" : stringValue(risks.get(0).get("label"));
         return List.of(
                 Map.of(
                         "riskClass", riskClass,
@@ -771,7 +813,7 @@ public class DiagnosisAsyncProcessor {
     }
 
     private List<Map<String, Object>> buildKnowledgeLoopSuggestions(AgentInferenceResult llmResult,
-                                                                    List<Map<String, String>> risks,
+                                                                    List<Map<String, Object>> risks,
                                                                     List<Map<String, Object>> sources,
                                                                     String productName,
                                                                     String hsCode,
@@ -784,7 +826,7 @@ public class DiagnosisAsyncProcessor {
         }
 
         List<Map<String, Object>> suggestions = new ArrayList<>();
-        String topRisk = risks.isEmpty() ? "출처 최신성 점검" : risks.get(0).get("label");
+        String topRisk = risks.isEmpty() ? "출처 최신성 점검" : stringValue(risks.get(0).get("label"));
         suggestions.add(Map.of(
                 "type", "risk_evidence",
                 "title", "반복 진단 리스크: " + topRisk,
@@ -843,26 +885,43 @@ public class DiagnosisAsyncProcessor {
     @SuppressWarnings("unchecked")
     private String extractReportMarkdown(Map<String, Object> reportResult, String productName, String hsCode,
                                          String targetCountry, int overall,
-                                         List<Map<String, String>> risks,
+                                         List<Map<String, Object>> risks,
                                          Map<String, Object> roadmap) {
         if (reportResult != null && reportResult.get("markdown") instanceof String markdown && !markdown.isBlank()) {
             return markdown;
         }
-        String topRisk = risks.isEmpty() ? "출처 최신성 점검" : risks.get(0).get("label");
-        return "# GROW-GATE Local EX 수출 준비도 리포트\n\n"
+        String topRisk = risks.isEmpty() ? "출처 최신성 점검" : stringValue(risks.get(0).get("label"));
+        String firstAction = risks.isEmpty() ? "공공데이터 source trace 최신성을 확인하십시오." : stringValue(risks.get(0).get("nextAction"));
+        return "# GROW-GATE Local EX 바이어 대응 메모\n\n"
                 + "- 제품: " + (nullToEmpty(productName).isBlank() ? "입력 제품" : productName) + "\n"
                 + "- HS Code: " + (nullToEmpty(hsCode).isBlank() ? "미등록" : hsCode) + "\n"
                 + "- 대상국: " + targetCountry + "\n"
-                + "- 준비도 점수: " + overall + "/100\n\n"
-                + "## 핵심 요약\n"
-                + topRisk + "을 우선 보완해야 합니다.\n\n"
-                + "## 30/60/90일 실행량\n"
-                + "- 30일: " + roadmap.getOrDefault("d30", 0) + "개 핵심 태스크\n"
-                + "- 60일: " + roadmap.getOrDefault("d60", 0) + "개 보완 태스크\n"
-                + "- 90일: " + roadmap.getOrDefault("d90", 0) + "개 확장 태스크\n\n"
+                + "- Gate 판단 점수: " + overall + "/100\n\n"
+                + "## 바이어에게 보낼 1차 회신 초안\n"
+                + "현재 제품의 인증·리콜·FTO·공공데이터 근거를 확인 중입니다. "
+                + "견적과 납기 확정 전 `" + topRisk + "` 항목을 우선 점검하고, 확인 결과와 보완 자료를 함께 회신드리겠습니다.\n\n"
+                + "## 담당자 즉시 할 일\n"
+                + "- 이번 주: " + actionTitles(roadmap, "thisWeek") + "\n"
+                + "- 견적 전: " + actionTitles(roadmap, "beforeQuote") + "\n"
+                + "- 출하 전: " + actionTitles(roadmap, "beforeShipment") + "\n\n"
+                + "## 우선 보완 근거\n"
+                + topRisk + " 때문에 `" + firstAction + "` 조치가 필요합니다.\n\n"
                 + "## 유의사항\n"
-                + "- 본 리포트는 등록 제품 지식과 공공데이터 출처 신호 기반 진단입니다.\n"
+                + "- 본 메모는 등록 제품 지식과 공공데이터 출처 신호 기반 Gate 판단입니다.\n"
                 + "- 최종 인증·특허 판단은 전문가 검토가 필요합니다.\n";
+    }
+
+    private String actionTitles(Map<String, Object> roadmap, String key) {
+        Object value = roadmap.get(key);
+        if (!(value instanceof List<?> list) || list.isEmpty()) return "담당자 확인 항목 없음";
+        return list.stream()
+                .filter(Map.class::isInstance)
+                .map(Map.class::cast)
+                .map(item -> stringValue(item.get("title")))
+                .filter(title -> !title.isBlank())
+                .limit(3)
+                .reduce((left, right) -> left + " / " + right)
+                .orElse("담당자 확인 항목 없음");
     }
 
     private int scoreMarket(String hsCode, String targetCountry, List<Map<String, Object>> sources) {
@@ -973,10 +1032,11 @@ public class DiagnosisAsyncProcessor {
         return clamp(score + contribution);
     }
 
-    private List<Map<String, String>> buildRiskItems(List<Certification> certs, List<Fto> ftoItems,
+    private List<Map<String, Object>> buildRiskItems(List<Certification> certs, List<Fto> ftoItems,
                                                      ProductKnowledge knowledge, List<BuyerRequirement> buyers,
-                                                     String hsCode) {
-        List<Map<String, String>> risks = new ArrayList<>();
+                                                     String hsCode, Map<String, Object> buyerContext,
+                                                     List<Map<String, Object>> sources) {
+        List<Map<String, Object>> risks = new ArrayList<>();
         LocalDate today = LocalDate.now();
         boolean hasExpired = certs.stream().anyMatch(cert ->
                 cert.getExpiresAt() != null && cert.getExpiresAt().isBefore(today));
@@ -985,19 +1045,226 @@ public class DiagnosisAsyncProcessor {
                         && ChronoUnit.DAYS.between(today, cert.getExpiresAt()) <= 90);
         boolean hasHighFto = ftoItems.stream().anyMatch(fto -> fto.getRiskLevel() == RiskLevel.high);
 
-        if (hasHighFto) risks.add(Map.of("level", "high", "label", "대상국 FTO 고위험 항목 보완 필요"));
-        if (hasExpired) risks.add(Map.of("level", "high", "label", "만료된 인증서가 있어 규제 제출 전 갱신 필요"));
-        if (hasExpiring) risks.add(Map.of("level", "medium", "label", "90일 이내 만료 예정 인증서 확인 필요"));
-        if (ftoItems.isEmpty()) risks.add(Map.of("level", "medium", "label", "FTO 검토 근거가 등록되지 않음"));
-        if (buyers.isEmpty()) risks.add(Map.of("level", "medium", "label", "바이어 요구사항이 없어 실행 적합도 신뢰도 낮음"));
+        String deadline = defaultString(buyerContext.get("buyerDeadline"), LocalDate.now().plusDays(7).toString());
+        if (hasHighFto) risks.add(risk("R-FTO-001", "FTO", "high", "대상국 FTO 고위험 항목 보완 필요",
+                "HIGH", "MEDIUM", "특허 회피 검토 전 견적 확정 시 법적 분쟁 가능", "FTO 검토 메모",
+                "대표/외부 변리사", deadline, "BMS·방열·구조 키워드로 FTO 1차 검색", List.of("RULE-FTO")));
+        if (hasExpired) risks.add(risk("R-CERT-001", "CERTIFICATION", "high", "만료된 인증서가 있어 규제 제출 전 갱신 필요",
+                "HIGH", "HIGH", "샘플 발송 또는 통관 서류 제출 전 반려 가능", "갱신된 인증서 PDF",
+                "품질 담당자", deadline, "만료 인증서 갱신 일정과 시험기관 견적 확인", List.of("RULE-REGULATION")));
+        if (hasExpiring) risks.add(risk("R-CERT-002", "CERTIFICATION", "medium", "90일 이내 만료 예정 인증서 확인 필요",
+                "MEDIUM", "MEDIUM", "견적 이후 납기 확정 단계에서 인증 갱신 지연 가능", "인증 만료일 검토표",
+                "품질 담당자", deadline, "만료 예정 인증서별 갱신 필요 여부 확인", List.of("RULE-REGULATION")));
+        if (ftoItems.isEmpty()) risks.add(risk("R-FTO-002", "FTO", "medium", "FTO 검토 근거가 등록되지 않음",
+                "MEDIUM", "MEDIUM", "특허 위험을 확인하지 못해 확정 견적 전 전문가 확인 필요", "FTO 1차 검색 결과",
+                "대표/외부 변리사", deadline, "KIPRIS 키워드와 경쟁사명을 기준으로 1차 검색", List.of("RULE-FTO", "KIPRIS_FTO")));
+        if (buyers.isEmpty() && stringValue(buyerContext.get("buyerRequest")).isBlank()) risks.add(risk("R-BUYER-001", "BUYER_REQUIREMENT", "medium", "바이어 문의·요구사항이 없어 판단 신뢰도 낮음",
+                "MEDIUM", "HIGH", "요구 인증과 회신 마감이 없으면 실행 우선순위가 일반화됨", "바이어 문의 원문",
+                "해외영업", deadline, "바이어 요구 인증, 견적 마감일, 샘플 요청 여부 입력", List.of("USER_INPUT")));
         if (knowledge == null || knowledge.getTrustGrade() == null) {
-            risks.add(Map.of("level", "medium", "label", "제품 지식 신뢰 등급이 미등록 상태"));
+            risks.add(risk("R-KNOWLEDGE-001", "PRODUCT_KNOWLEDGE", "medium", "제품 지식 신뢰 등급이 미등록 상태",
+                    "MEDIUM", "MEDIUM", "제품 설명과 보유 문서가 부족하면 공공데이터 매칭 근거가 약해짐", "제품 설명서/BOM",
+                    "제품 담당자", deadline, "제품 설명서와 주요 인증/시험성적서 지식화", List.of("USER_INPUT")));
         }
         if (startsWithAny(hsCode, "8507")) {
-            risks.add(Map.of("level", "medium", "label", "배터리 품목군은 운송·안전 인증 증빙 강화 필요"));
+            risks.add(risk("R-SAFETY-001", "SAFETY_RECALL", "medium", "배터리 품목군은 운송·안전 인증 증빙 강화 필요",
+                    "MEDIUM", "MEDIUM", "UN38.3 등 운송시험 미확인 시 샘플 발송 전 3주 이상 지연 가능", "UN38.3 시험성적서",
+                    "품질 담당자", deadline, "UN38.3/IEC62133 보유 여부와 시험기관 견적 확인", List.of("SAFETY_RECALL", "RULE-RECALL")));
         }
-        if (risks.isEmpty()) risks.add(Map.of("level", "low", "label", "치명 위험은 낮으나 출처 최신성 점검 필요"));
+        long fallbackCount = sources.stream().filter(source -> "fallback".equals(source.get("sourceType"))).count();
+        if (fallbackCount > 0) {
+            risks.add(risk("R-SOURCE-001", "SOURCE_CONFIDENCE", "medium", "일부 공공데이터가 fallback 상태라 담당자 확인 필요",
+                    "MEDIUM", "MEDIUM", "live 근거 부족 시 판단 신뢰도가 낮아져 전문가 확인이 필요", "공식 API endpoint/key 또는 담당자 보유 근거",
+                    "데이터 담당자", deadline, "fallback provider의 API key/operation endpoint 또는 보유 문서 보강", List.of("PUBLIC_DATA")));
+        }
+        if (risks.isEmpty()) risks.add(risk("R-LOW-001", "SOURCE_CONFIDENCE", "low", "치명 위험은 낮으나 출처 최신성 점검 필요",
+                "LOW", "LOW", "최종 견적 전 source trace 최신성만 확인하면 진행 가능", "최신 공공데이터 source trace",
+                "해외영업", deadline, "견적 전 source trace와 바이어 요구사항 최종 확인", List.of("PUBLIC_DATA", "RULE_ENGINE")));
         return risks;
+    }
+
+    private Map<String, Object> buildBuyerContext(Map<String, Object> inputData, List<String> buyerRequirements) {
+        Map<String, Object> context = new LinkedHashMap<>();
+        context.put("buyerRequest", stringValue(inputData.get("buyerRequest")));
+        context.put("buyerDeadline", stringValue(inputData.get("buyerDeadline")));
+        context.put("expectedShipmentDate", stringValue(inputData.get("expectedShipmentDate")));
+        context.put("requestedCertifications", stringList(inputData.get("requestedCertifications")));
+        context.put("currentDocuments", stringList(inputData.get("currentDocuments")));
+        context.put("exportExperience", stringValue(inputData.get("exportExperience")));
+        context.put("budgetLimitKrw", inputData.get("budgetLimitKrw") instanceof Number number ? number.longValue() : 0L);
+        context.put("buyerRequirementHints", buyerRequirements);
+        return context;
+    }
+
+    private List<String> buyersFromInput(Map<String, Object> inputData) {
+        List<String> values = new ArrayList<>();
+        String buyerRequest = stringValue(inputData.get("buyerRequest"));
+        if (!buyerRequest.isBlank()) values.add(buyerRequest);
+        values.addAll(stringList(inputData.get("requestedCertifications")));
+        return values;
+    }
+
+    private Map<String, Object> buildGateDecision(int overall, int market, int regulation, int recall, int fto,
+                                                  int support, List<Map<String, Object>> risks,
+                                                  Map<String, Object> confidencePanel,
+                                                  Map<String, Object> buyerContext) {
+        long highRiskCount = risks.stream()
+                .filter(risk -> "high".equals(risk.get("level")) || "HIGH".equals(risk.get("severity")))
+                .count();
+        int fallbackCount = confidencePanel.get("fallbackSourceCount") instanceof Number number ? number.intValue() : 0;
+        String status;
+        if (fto < 45 || regulation < 40 || highRiskCount >= 2) status = "STOP";
+        else if (regulation < 55 || recall < 55 || fallbackCount >= 3) status = "HOLD";
+        else if (overall >= 75 && highRiskCount == 0 && fallbackCount <= 1) status = "GO";
+        else status = "CONDITIONAL_GO";
+
+        String label = switch (status) {
+            case "GO" -> "진행 가능";
+            case "HOLD" -> "보류";
+            case "STOP" -> "중단 후 보완";
+            default -> "조건부 진행";
+        };
+        String topRisk = risks.isEmpty() ? "출처 최신성 점검" : stringValue(risks.get(0).get("label"));
+        List<String> mustFix = risks.stream()
+                .filter(risk -> !"low".equals(risk.get("level")))
+                .map(risk -> stringValue(risk.get("nextAction")))
+                .filter(value -> !value.isBlank())
+                .distinct()
+                .limit(5)
+                .toList();
+        String buyerRequest = stringValue(buyerContext.get("buyerRequest"));
+        String reply = buyerRequest.isBlank()
+                ? "바이어 요구사항을 먼저 확인한 뒤 인증/FTO 보완 상태를 기준으로 견적 가능 여부를 회신하십시오."
+                : "현재 제품 공급 가능성을 검토 중이며, 인증·FTO·출하 가능 일정 확인 후 견적과 납기를 확정하겠다고 회신하십시오.";
+
+        return Map.of(
+                "status", status,
+                "label", label,
+                "oneLineReason", topRisk + " 때문에 견적 확정 전 Gate 확인이 필요합니다.",
+                "allowedNextStep", status.equals("STOP") ? "보완 근거 확보 후 재진단" : "바이어에게 검토 중 회신 및 필수 증빙 확인",
+                "blockedStep", status.equals("GO") ? "없음" : "가격·납기 확정 견적 발송",
+                "buyerReplyGuidance", reply,
+                "mustFixBeforeQuote", mustFix.isEmpty() ? List.of("공공데이터 source trace 최신성 확인") : mustFix
+        );
+    }
+
+    private Map<String, Object> buildImpactEstimate(List<Map<String, Object>> risks,
+                                                    Map<String, Object> actionRoadmap,
+                                                    Map<String, Object> buyerContext,
+                                                    int supportScore) {
+        long high = risks.stream().filter(risk -> "high".equals(risk.get("level"))).count();
+        long medium = risks.stream().filter(risk -> "medium".equals(risk.get("level"))).count();
+        int actionCount = actionSize(actionRoadmap, "thisWeek") + actionSize(actionRoadmap, "beforeQuote");
+        int delayRiskDays = (int) Math.max(7, high * 21 + medium * 7);
+        long budget = buyerContext.get("budgetLimitKrw") instanceof Number number ? number.longValue() : 0L;
+        long avoidableCost = Math.max(1_500_000L, high * 2_000_000L + medium * 700_000L + budget / 4);
+        long supportOpportunity = supportScore >= 65 ? 10_000_000L : 3_000_000L;
+        return Map.of(
+                "timeSavedHours", Math.max(3, actionCount * 2),
+                "delayRiskDays", delayRiskDays,
+                "avoidableCostKrw", avoidableCost,
+                "supportFundingOpportunityKrw", supportOpportunity,
+                "explanation", "인증/FTO/리콜 red flag를 견적 전 확인해 자료 탐색 시간과 샘플·통관 지연 가능성을 줄이는 규칙 기반 추정입니다."
+        );
+    }
+
+    private Map<String, Object> buildConfidencePanel(List<Map<String, Object>> sources) {
+        int live = sourceTypeCount(sources, "live");
+        int cache = sourceTypeCount(sources, "cache");
+        int fallback = sourceTypeCount(sources, "fallback");
+        List<String> missing = new ArrayList<>();
+        if (fallback > 0) missing.add("일부 공공데이터 provider가 fallback 상태입니다.");
+        if (live + cache < 2) missing.add("live/cache 공공데이터 근거가 2개 미만입니다.");
+        boolean humanReview = fallback > 0 || live + cache < 2;
+        String level = humanReview ? fallback >= 3 ? "LOW" : "MEDIUM" : "HIGH";
+        return Map.of(
+                "level", level,
+                "liveSourceCount", live,
+                "cacheSourceCount", cache,
+                "fallbackSourceCount", fallback,
+                "missingEvidence", missing,
+                "humanReviewRequired", humanReview,
+                "reviewReason", humanReview
+                        ? "fallback 또는 근거 부족 항목은 담당자/전문가 확인 후 견적 확정이 필요합니다."
+                        : "live/cache 근거가 충분해 1차 Gate 판단 신뢰도가 높습니다."
+        );
+    }
+
+    private Map<String, Object> risk(String riskId, String category, String level, String label,
+                                     String severity, String probability, String businessImpact,
+                                     String requiredEvidence, String ownerRole, String deadline,
+                                     String nextAction, List<String> sourceIds) {
+        Map<String, Object> risk = new LinkedHashMap<>();
+        risk.put("riskId", riskId);
+        risk.put("category", category);
+        risk.put("level", level);
+        risk.put("label", label);
+        risk.put("severity", severity);
+        risk.put("probability", probability);
+        risk.put("businessImpact", businessImpact);
+        risk.put("requiredEvidence", requiredEvidence);
+        risk.put("ownerRole", ownerRole);
+        risk.put("deadline", deadline);
+        risk.put("nextAction", nextAction);
+        risk.put("sourceIds", sourceIds);
+        return risk;
+    }
+
+    private List<Map<String, Object>> actionItems(List<Map<String, Object>> risks, String bucket, int limit) {
+        return risks.stream()
+                .filter(risk -> !"low".equals(risk.get("level")) || "beforeShipment".equals(bucket))
+                .limit(limit)
+                .map(risk -> Map.of(
+                        "title", stringValue(risk.get("nextAction")),
+                        "owner", stringValue(risk.get("ownerRole")),
+                        "output", stringValue(risk.get("requiredEvidence")),
+                        "dueDate", stringValue(risk.get("deadline")),
+                        "reason", stringValue(risk.get("businessImpact")),
+                        "blockedIfNotDone", "beforeQuote".equals(bucket) ? "견적 확정 불가" : "Gate 판단 신뢰도 하락",
+                        "sourceIds", risk.getOrDefault("sourceIds", List.of())
+                ))
+                .toList();
+    }
+
+    private List<Map<String, Object>> beforeShipmentActions(Map<String, Object> buyerContext,
+                                                            List<Map<String, Object>> risks) {
+        String dueDate = defaultString(buyerContext.get("expectedShipmentDate"), LocalDate.now().plusDays(30).toString());
+        List<Map<String, Object>> actions = new ArrayList<>();
+        actions.add(Map.of(
+                "title", "출하 전 인증·시험성적서 패키지 확인",
+                "owner", "품질 담당자",
+                "output", "바이어 제출 문서 ZIP",
+                "dueDate", dueDate,
+                "reason", "출하 직전 문서 누락으로 샘플 반려가 발생하지 않도록 확인",
+                "blockedIfNotDone", "샘플/초도물량 발송 보류",
+                "sourceIds", List.of("USER_INPUT", "RULE_ENGINE")
+        ));
+        if (risks.stream().anyMatch(risk -> "SOURCE_CONFIDENCE".equals(risk.get("category")))) {
+            actions.add(Map.of(
+                    "title", "fallback 공공데이터 provider 재수집",
+                    "owner", "데이터 담당자",
+                    "output", "live/cache source trace",
+                    "dueDate", dueDate,
+                    "reason", "출하 전 최신 official source로 판단 근거 보강",
+                    "blockedIfNotDone", "전문가 확인 필요",
+                    "sourceIds", List.of("PUBLIC_DATA")
+            ));
+        }
+        return actions;
+    }
+
+    private int sourceTypeCount(List<Map<String, Object>> sources, String sourceType) {
+        return (int) sources.stream().filter(source -> sourceType.equals(source.get("sourceType"))).count();
+    }
+
+    private int actionSize(Map<String, Object> roadmap, String key) {
+        Object value = roadmap.get(key);
+        return value instanceof List<?> list ? list.size() : 0;
+    }
+
+    private List<String> stringList(Object value) {
+        if (!(value instanceof List<?> list)) return List.of();
+        return list.stream().map(this::stringValue).filter(item -> !item.isBlank()).toList();
     }
 
     private Map<String, Object> buildScoringRubric() {
@@ -1019,22 +1286,25 @@ public class DiagnosisAsyncProcessor {
         );
     }
 
-    private Map<String, Object> buildRoadmap(List<Map<String, String>> risks, List<Certification> certs,
+    private Map<String, Object> buildActionPlan(List<Map<String, Object>> risks, List<Certification> certs,
                                              List<Fto> ftoItems, List<BuyerRequirement> buyers,
-                                             List<KnowledgeSource> sources) {
+                                             List<KnowledgeSource> sources, Map<String, Object> buyerContext) {
         int high = (int) risks.stream().filter(risk -> "high".equals(risk.get("level"))).count();
         int medium = (int) risks.stream().filter(risk -> "medium".equals(risk.get("level"))).count();
         return Map.of(
                 "d30", Math.max(2, high + (certs.isEmpty() ? 1 : 0) + (ftoItems.isEmpty() ? 1 : 0)),
                 "d60", Math.max(2, medium + (buyers.isEmpty() ? 1 : 0)),
-                "d90", Math.max(2, sources.isEmpty() ? 4 : 2)
+                "d90", Math.max(2, sources.isEmpty() ? 4 : 2),
+                "thisWeek", actionItems(risks, "thisWeek", 3),
+                "beforeQuote", actionItems(risks, "beforeQuote", 3),
+                "beforeShipment", beforeShipmentActions(buyerContext, risks)
         );
     }
 
     private String buildSummary(String productName, String hsCode, String targetCountry, int overall,
-                                List<Map<String, String>> risks) {
-        String topRisk = risks.isEmpty() ? "출처 최신성 점검" : risks.get(0).get("label");
-        return String.format("%s(HS %s)의 %s 진단 점수는 %d점입니다. 주요 보완 항목은 %s입니다.",
+                                List<Map<String, Object>> risks) {
+        String topRisk = risks.isEmpty() ? "출처 최신성 점검" : stringValue(risks.get(0).get("label"));
+        return String.format("%s(HS %s)의 %s 수출 Gate 판단 점수는 %d점입니다. 주요 보완 항목은 %s입니다.",
                 nullToEmpty(productName).isBlank() ? "입력 제품" : productName,
                 nullToEmpty(hsCode).isBlank() ? "미등록" : hsCode,
                 targetCountry,

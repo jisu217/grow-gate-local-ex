@@ -7,9 +7,13 @@ import com.growgate.common.DateTimeUtils;
 import com.growgate.diagnosis.dto.CreateDiagnosisRequest;
 import com.growgate.diagnosis.dto.CreateDiagnosisResponse;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse;
+import com.growgate.diagnosis.dto.DiagnosisDetailResponse.ActionItem;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse.ActionRoadmap;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse.CertSnapshot;
+import com.growgate.diagnosis.dto.DiagnosisDetailResponse.ConfidencePanel;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse.DiagnosisScore;
+import com.growgate.diagnosis.dto.DiagnosisDetailResponse.GateDecision;
+import com.growgate.diagnosis.dto.DiagnosisDetailResponse.ImpactEstimate;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse.KnowledgeSnapshot;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse.ResultData;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse.RiskItem;
@@ -110,9 +114,6 @@ public class DiagnosisService {
         if (request.getProductId() == null && request.getInputData() == null) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "productId 또는 inputData 중 하나는 필수입니다.");
         }
-        if (request.getProductId() != null && request.getInputData() != null) {
-            throw new BusinessException(ErrorCode.INVALID_REQUEST, "productId와 inputData는 동시에 보낼 수 없습니다.");
-        }
 
         User user = findUser(userId);
         requireDiagnosisPermission(user);
@@ -123,6 +124,9 @@ public class DiagnosisService {
 
         if (request.getProductId() != null) {
             product = findProductByUser(user, request.getProductId());
+            if (request.getInputData() != null) {
+                inputDataJson = serializeInputData(request.getInputData());
+            }
             knowledgeSnapshotJson = buildKnowledgeSnapshot(request.getProductId());
         } else {
             inputDataJson = serializeInputData(request.getInputData());
@@ -170,6 +174,9 @@ public class DiagnosisService {
 
                 resultData = ResultData.builder()
                         .diagnosisScore(score)
+                        .gateDecision(parseGateDecision(resultMap))
+                        .impactEstimate(parseImpactEstimate(resultMap))
+                        .confidencePanel(parseConfidencePanel(resultMap))
                         .summary(summary)
                         .riskItems(riskItems)
                         .actionRoadmap(actionRoadmap)
@@ -419,10 +426,17 @@ public class DiagnosisService {
     private String serializeInputData(CreateDiagnosisRequest.InputData inputData) {
         if (inputData == null) return null;
         try {
-            Map<String, String> map = new HashMap<>();
+            Map<String, Object> map = new HashMap<>();
             map.put("productName", inputData.getProductName());
             map.put("hsCode", inputData.getHsCode());
             map.put("description", inputData.getDescription());
+            map.put("buyerRequest", inputData.getBuyerRequest());
+            map.put("buyerDeadline", inputData.getBuyerDeadline() == null ? null : inputData.getBuyerDeadline().toString());
+            map.put("expectedShipmentDate", inputData.getExpectedShipmentDate() == null ? null : inputData.getExpectedShipmentDate().toString());
+            map.put("requestedCertifications", inputData.getRequestedCertifications() == null ? List.of() : inputData.getRequestedCertifications());
+            map.put("currentDocuments", inputData.getCurrentDocuments() == null ? List.of() : inputData.getCurrentDocuments());
+            map.put("exportExperience", inputData.getExportExperience());
+            map.put("budgetLimitKrw", inputData.getBudgetLimitKrw());
             return objectMapper.writeValueAsString(map);
         } catch (Exception e) {
             return null;
@@ -436,6 +450,11 @@ public class DiagnosisService {
             snapshot.put("productName", inputData.getProductName());
             snapshot.put("hsCode", inputData.getHsCode());
             snapshot.put("targetCountry", targetCountry);
+            snapshot.put("buyerRequest", inputData.getBuyerRequest());
+            snapshot.put("buyerDeadline", inputData.getBuyerDeadline() == null ? null : inputData.getBuyerDeadline().toString());
+            snapshot.put("expectedShipmentDate", inputData.getExpectedShipmentDate() == null ? null : inputData.getExpectedShipmentDate().toString());
+            snapshot.put("requestedCertifications", inputData.getRequestedCertifications() == null ? List.of() : inputData.getRequestedCertifications());
+            snapshot.put("currentDocuments", inputData.getCurrentDocuments() == null ? List.of() : inputData.getCurrentDocuments());
             snapshot.put("trustGrade", null);
             snapshot.put("sourceType", "direct_input");
             snapshot.put("certifications", List.of());
@@ -498,8 +517,18 @@ public class DiagnosisService {
             if (item instanceof Map) {
                 Map<String, Object> m = (Map<String, Object>) item;
                 items.add(RiskItem.builder()
-                        .level((String) m.get("level"))
-                        .label((String) m.get("label"))
+                        .riskId(asString(m.get("riskId")))
+                        .category(asString(m.get("category")))
+                        .level(asString(m.get("level")))
+                        .label(asString(m.get("label")))
+                        .severity(asString(m.getOrDefault("severity", m.get("level"))))
+                        .probability(asString(m.get("probability")))
+                        .businessImpact(asString(m.get("businessImpact")))
+                        .requiredEvidence(asString(m.get("requiredEvidence")))
+                        .ownerRole(asString(m.get("ownerRole")))
+                        .deadline(asString(m.get("deadline")))
+                        .nextAction(asString(m.get("nextAction")))
+                        .sourceIds(parseStringList(m, "sourceIds"))
                         .build());
             }
         }
@@ -530,7 +559,78 @@ public class DiagnosisService {
                 .d30(m.containsKey("d30") ? ((Number) m.get("d30")).intValue() : 0)
                 .d60(m.containsKey("d60") ? ((Number) m.get("d60")).intValue() : 0)
                 .d90(m.containsKey("d90") ? ((Number) m.get("d90")).intValue() : 0)
+                .thisWeek(parseActionItems(m, "thisWeek"))
+                .beforeQuote(parseActionItems(m, "beforeQuote"))
+                .beforeShipment(parseActionItems(m, "beforeShipment"))
                 .build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private GateDecision parseGateDecision(Map<String, Object> resultMap) {
+        Object obj = resultMap.get("gateDecision");
+        if (!(obj instanceof Map)) return null;
+        Map<String, Object> m = (Map<String, Object>) obj;
+        return GateDecision.builder()
+                .status(asString(m.get("status")))
+                .label(asString(m.get("label")))
+                .oneLineReason(asString(m.get("oneLineReason")))
+                .allowedNextStep(asString(m.get("allowedNextStep")))
+                .blockedStep(asString(m.get("blockedStep")))
+                .buyerReplyGuidance(asString(m.get("buyerReplyGuidance")))
+                .mustFixBeforeQuote(parseStringList(m, "mustFixBeforeQuote"))
+                .build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private ImpactEstimate parseImpactEstimate(Map<String, Object> resultMap) {
+        Object obj = resultMap.get("impactEstimate");
+        if (!(obj instanceof Map)) return null;
+        Map<String, Object> m = (Map<String, Object>) obj;
+        return ImpactEstimate.builder()
+                .timeSavedHours(asInteger(m.get("timeSavedHours")) == null ? 0 : asInteger(m.get("timeSavedHours")))
+                .delayRiskDays(asInteger(m.get("delayRiskDays")) == null ? 0 : asInteger(m.get("delayRiskDays")))
+                .avoidableCostKrw(asLong(m.get("avoidableCostKrw")))
+                .supportFundingOpportunityKrw(asLong(m.get("supportFundingOpportunityKrw")))
+                .explanation(asString(m.get("explanation")))
+                .build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private ConfidencePanel parseConfidencePanel(Map<String, Object> resultMap) {
+        Object obj = resultMap.get("confidencePanel");
+        if (!(obj instanceof Map)) return null;
+        Map<String, Object> m = (Map<String, Object>) obj;
+        return ConfidencePanel.builder()
+                .level(asString(m.get("level")))
+                .liveSourceCount(asInteger(m.get("liveSourceCount")) == null ? 0 : asInteger(m.get("liveSourceCount")))
+                .cacheSourceCount(asInteger(m.get("cacheSourceCount")) == null ? 0 : asInteger(m.get("cacheSourceCount")))
+                .fallbackSourceCount(asInteger(m.get("fallbackSourceCount")) == null ? 0 : asInteger(m.get("fallbackSourceCount")))
+                .missingEvidence(parseStringList(m, "missingEvidence"))
+                .humanReviewRequired(Boolean.TRUE.equals(m.get("humanReviewRequired")))
+                .reviewReason(asString(m.get("reviewReason")))
+                .build();
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<ActionItem> parseActionItems(Map<String, Object> map, String key) {
+        Object obj = map.get(key);
+        if (!(obj instanceof List)) return List.of();
+        List<ActionItem> items = new ArrayList<>();
+        for (Object raw : (List<?>) obj) {
+            if (raw instanceof Map) {
+                Map<String, Object> m = (Map<String, Object>) raw;
+                items.add(ActionItem.builder()
+                        .title(asString(m.get("title")))
+                        .owner(asString(m.get("owner")))
+                        .output(asString(m.get("output")))
+                        .dueDate(asString(m.get("dueDate")))
+                        .reason(asString(m.get("reason")))
+                        .blockedIfNotDone(asString(m.get("blockedIfNotDone")))
+                        .sourceIds(parseStringList(m, "sourceIds"))
+                        .build());
+            }
+        }
+        return items;
     }
 
     @SuppressWarnings("unchecked")
@@ -553,9 +653,9 @@ public class DiagnosisService {
         }
         if (run.getInputData() != null) {
             try {
-                Map<String, String> map = objectMapper.readValue(run.getInputData(),
-                        new TypeReference<Map<String, String>>() {});
-                return map.getOrDefault("productName", "");
+                Map<String, Object> map = objectMapper.readValue(run.getInputData(),
+                        new TypeReference<Map<String, Object>>() {});
+                return asString(map.getOrDefault("productName", ""));
             } catch (Exception e) {
                 return "";
             }
@@ -569,9 +669,9 @@ public class DiagnosisService {
         }
         if (run.getInputData() != null) {
             try {
-                Map<String, String> map = objectMapper.readValue(run.getInputData(),
-                        new TypeReference<Map<String, String>>() {});
-                return map.getOrDefault("hsCode", "");
+                Map<String, Object> map = objectMapper.readValue(run.getInputData(),
+                        new TypeReference<Map<String, Object>>() {});
+                return asString(map.getOrDefault("hsCode", ""));
             } catch (Exception e) {
                 return "";
             }
@@ -594,6 +694,10 @@ public class DiagnosisService {
 
     private Double asDouble(Object value) {
         return value instanceof Number ? ((Number) value).doubleValue() : null;
+    }
+
+    private Long asLong(Object value) {
+        return value instanceof Number ? ((Number) value).longValue() : 0L;
     }
 
     private Boolean asBoolean(Object value) {

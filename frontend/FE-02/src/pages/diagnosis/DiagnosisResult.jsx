@@ -6,6 +6,7 @@ import Topbar  from '../../components/layout/Topbar.jsx'
 import KpiRow  from '../../components/layout/KpiRow.jsx'
 import Pager   from '../../components/ui/Pager.jsx'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
+import GateDecisionHero from '../../components/diagnosis/GateDecisionHero.jsx'
 
 import S00Overview   from '../../components/diagnosis/S00Overview.jsx'
 import S01Input      from '../../components/diagnosis/S01Input.jsx'
@@ -123,7 +124,7 @@ export default function DiagnosisResult() {
     <div className="app">
       <div className="content">
         <div className="scroll">
-          <StatusMessage type="loading" message="공공데이터와 제품 지식을 분석 중입니다." />
+          <StatusMessage type="loading" message="공공데이터와 제품 지식을 대조 중입니다." />
         </div>
       </div>
     </div>
@@ -167,9 +168,14 @@ export default function DiagnosisResult() {
 
         <div className="scroll" ref={scrollRef}>
           <KpiRow kpiData={result.kpiData} />
+          <GateDecisionHero
+            gateDecision={result.session.gateDecision}
+            impactEstimate={result.session.impactEstimate}
+            confidencePanel={result.session.confidencePanel}
+          />
 
           {['pending', 'running'].includes(String(result.session?.status ?? '').toLowerCase()) && (
-            <StatusMessage type="loading" message="진단이 진행 중입니다. 완료되면 이 화면이 자동으로 갱신됩니다." />
+            <StatusMessage type="loading" message="공공데이터와 제품 지식을 대조 중입니다. 완료되면 이 화면이 자동으로 갱신됩니다." />
           )}
           {reportError && <StatusMessage type="error" message={reportError} />}
 

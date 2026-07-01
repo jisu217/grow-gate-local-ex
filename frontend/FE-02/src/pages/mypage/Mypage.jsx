@@ -137,7 +137,7 @@ export default function Mypage() {
     }
   }
 
-  // 수출 준비도 진단 다시 실행
+  // 수출 Gate 판단 다시 실행
   async function rerun() {
     if (!current) return
     setRerunLoading(true)
@@ -190,7 +190,7 @@ export default function Mypage() {
                 onClick={() => navigate(`/mypage/diagnosis/${current.id}`)}
                 role="button"
               >
-                <div className={styles.ctitle}>최근 AI 진단 결과 <span className={styles.goHint}>· 왜 이 점수인지 보기 →</span></div>
+                <div className={styles.ctitle}>최근 Gate 판단 결과 <span className={styles.goHint}>· 왜 이 점수인지 보기 →</span></div>
                 <div className={styles.big}>
                   {current.score != null ? current.score : '—'}<span className={styles.u}>/100</span>
                 </div>
@@ -345,7 +345,7 @@ export default function Mypage() {
         <footer className={styles.footer}>
           <div className={styles.fBrand}>GROW-GATE <span className={styles.ex}>Local EX</span></div>
           <div className={styles.fNote}>
-            2026 산업통상부 공공데이터 활용 공모전 · 본 결과는 공공데이터 기반 AI 분석이며 최종 판단은 전문가와 함께 하십시오.
+            2026 산업통상부 공공데이터 활용 공모전 · 본 결과는 공공데이터 수집 신호와 규칙 기반 Gate 판단이며 최종 판단은 전문가와 함께 하십시오.
           </div>
         </footer>
       </div>
@@ -405,7 +405,7 @@ export default function Mypage() {
           <h3>제품을 삭제할까요?</h3>
           <div className={styles.desc}>
             <b>{deleteTarget?.name}</b> 제품을 목록에서 삭제합니다.<br />
-            지금까지의 <b>AI 진단 이력과 감사 로그는 그대로 보존</b>돼요.
+            지금까지의 <b>Gate 판단 이력과 감사 로그는 그대로 보존</b>돼요.
           </div>
           <div className={styles.foot}>
             <button className={styles.cancel} onClick={() => setDeleteTarget(null)} disabled={deleting}>취소</button>

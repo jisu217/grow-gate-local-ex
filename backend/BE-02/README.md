@@ -254,15 +254,15 @@ BE-02/
 | `POST` | `/api/products/{productId}/knowledge/loop-items/{itemId}/accept` | 지식화 후보를 담당자 승인 후 지식 출처로 반영 | owner, admin, editor |
 | `POST` | `/api/products/{productId}/knowledge/loop-items/{itemId}/dismiss` | 지식화 후보 제외 | owner, admin, editor |
 
-### 진단
+### 수출 Gate 판단
 
 | 메서드 | 경로 | 설명 | 필요 역할 |
 | :--- | :--- | :--- | :--- |
-| `GET` | `/api/diagnosis` | 진단 이력 목록 조회 | 전체 |
-| `POST` | `/api/diagnosis` | 새 진단 실행 (같은 회사 소유 제품이면 누가 등록했든 가능) | owner, admin, editor |
-| `GET` | `/api/diagnosis/{diagnosisId}` | 진단 결과 상세 조회 | 전체 |
-| `GET` | `/api/diagnosis/{diagnosisId}/sources` | 진단 출처 데이터 조회 (`sourceId`, `provider`, `matchedKey`, `usedFor`, `scoreContribution`, `fallbackUsed`) | 전체 |
-| `GET` | `/api/diagnosis/{diagnosisId}/report` | 진단 리포트 Markdown 다운로드 payload | 전체 |
+| `GET` | `/api/diagnosis` | Gate 판단 이력 목록 조회 | 전체 |
+| `POST` | `/api/diagnosis` | 새 Gate 판단 실행. `productId`와 바이어 문의 `inputData`를 함께 보내면 저장 제품 지식과 문의 맥락을 함께 사용 | owner, admin, editor |
+| `GET` | `/api/diagnosis/{diagnosisId}` | Gate 판단 결과 상세 조회 (`gateDecision`, `confidencePanel`, `actionRoadmap` 포함) | 전체 |
+| `GET` | `/api/diagnosis/{diagnosisId}/sources` | 판단 출처 데이터 조회 (`sourceId`, `provider`, `sourceType`, `metricSummary`, `decisionImpact`, `scoreContribution`, `fallbackUsed`) | 전체 |
+| `GET` | `/api/diagnosis/{diagnosisId}/report` | 바이어 대응 메모 Markdown 다운로드 payload | 전체 |
 
 ### Gemini/OpenRouter 추론 Agent
 

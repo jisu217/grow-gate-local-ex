@@ -84,6 +84,9 @@ export function mapDiagnosisDetail(d, evidenceSources) {
     diagnosisScore,
     riskItems: d.result?.riskItems ?? CURRENT_SESSION.riskItems,
     actionRoadmap: d.result?.actionRoadmap ?? CURRENT_SESSION.actionRoadmap,
+    gateDecision: d.result?.gateDecision ?? null,
+    impactEstimate: d.result?.impactEstimate ?? null,
+    confidencePanel: d.result?.confidencePanel ?? null,
     agentTrace: d.result?.agentTrace ?? null,
     reportMarkdown: d.result?.reportMarkdown ?? '',
     reportFastApiUsed: Boolean(d.result?.reportFastApiUsed),
@@ -254,13 +257,25 @@ function mapFtoSupportStage(stageData) {
 
 function mapRoadmapStage(stageData) {
   if (!stageData) return S08_EXEC
-  const buckets = [
-    { key: 'd30', day: '30', label: '필수 보완', tag: 'D30' },
-    { key: 'd60', day: '60', label: '증빙 확장', tag: 'D60' },
-    { key: 'd90', day: '90', label: '시장 실행', tag: 'D90' },
+  const workflowBuckets = [
+    { key: 'thisWeek', day: '이번 주', label: '즉시 보완', tag: 'NOW' },
+    { key: 'beforeQuote', day: '견적 전', label: '확정 전 필수', tag: 'QUOTE' },
+    { key: 'beforeShipment', day: '출하 전', label: '문서 패키지', tag: 'SHIP' },
   ]
-  return buckets.map((bucket) => {
-    const count = Number(stageData[bucket.key] ?? 2)
+  if (workflowBuckets.some((bucket) => Array.isArray(stageData[bucket.key]))) {
+    return workflowBuckets.map((bucket) => ({
+      day: bucket.day,
+      label: bucket.label,
+      tasks: normalizeActionItems(stageData[bucket.key], bucket.tag),
+    }))
+  }
+  const legacyBuckets = [
+    { key: 'd30', day: '30일', label: '필수 보완', tag: 'D30' },
+    { key: 'd60', day: '60일', label: '증빙 확장', tag: 'D60' },
+    { key: 'd90', day: '90일', label: '시장 실행', tag: 'D90' },
+  ]
+  return legacyBuckets.map((bucket) => {
+    const count = Number(stageData[bucket.key] ?? 1)
     return {
       day: bucket.day,
       label: bucket.label,
@@ -272,6 +287,28 @@ function mapRoadmapStage(stageData) {
       })),
     }
   })
+}
+
+function normalizeActionItems(items, tag) {
+  if (!Array.isArray(items) || items.length === 0) {
+    return [{
+      tag,
+      title: '담당자 확인 항목 없음',
+      who: '수출 담당자',
+      output: 'source trace 확인',
+      reason: '백엔드 stageCards에 업무 항목이 없습니다.',
+      urgent: false,
+    }]
+  }
+  return items.map((item, index) => ({
+    tag,
+    title: item.title ?? `업무 항목 ${index + 1}`,
+    who: item.owner ?? item.who ?? '수출 담당자',
+    output: item.output ?? '',
+    dueDate: item.dueDate ?? '',
+    reason: item.reason ?? item.blockedIfNotDone ?? '',
+    urgent: tag === 'NOW' || String(item.blockedIfNotDone ?? '').includes('불가'),
+  }))
 }
 
 function mapReportStage(stageData, diagnosisScore, summary) {
@@ -299,7 +336,8 @@ function mapSourceStage(stageData) {
   return stageData.map((item) => ({
     source: item.sourceType === 'heuristic' ? '규칙 엔진' : item.provider ?? item.datasetName ?? item.field ?? 'Source',
     count: item.scoreContribution != null ? `${item.scoreContribution > 0 ? '+' : ''}${item.scoreContribution}` : '0',
-    label: sourceTypeLabel(item.sourceType, item.usedFor ?? item.field),
+    label: item.decisionImpact ?? sourceTypeLabel(item.sourceType, item.usedFor ?? item.field),
+    metricSummary: item.metricSummary ?? item.reason ?? '',
     status: item.sourceType ?? (item.fallbackUsed ? 'fallback' : 'live'),
   }))
 }
@@ -384,6 +422,23 @@ export async function runDiagnosis(payload) {
       productName: payload.productName,
       hsCode: payload.hsCode,
       description: payload.description,
+      buyerRequest: payload.buyerRequest,
+      buyerDeadline: payload.buyerDeadline,
+      expectedShipmentDate: payload.expectedShipmentDate,
+      requestedCertifications: payload.requestedCertifications,
+      currentDocuments: payload.currentDocuments,
+      exportExperience: payload.exportExperience,
+      budgetLimitKrw: payload.budgetLimitKrw,
+    }
+  } else {
+    body.inputData = {
+      buyerRequest: payload.buyerRequest,
+      buyerDeadline: payload.buyerDeadline,
+      expectedShipmentDate: payload.expectedShipmentDate,
+      requestedCertifications: payload.requestedCertifications,
+      currentDocuments: payload.currentDocuments,
+      exportExperience: payload.exportExperience,
+      budgetLimitKrw: payload.budgetLimitKrw,
     }
   }
 
