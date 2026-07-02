@@ -569,6 +569,8 @@ function sourceTypeLabel(sourceType, usedFor) {
   if (sourceType === 'cache') return `캐시 공공데이터${suffix}`
   if (sourceType === 'fallback') return `수집 실패/fallback${suffix}`
   if (sourceType === 'crawl') return `안전 크롤링 공개 웹${suffix}`
+  if (sourceType === 'external_feed') return `수출 뉴스·보고서 feed${suffix}`
+  if (sourceType === 'seed') return `seed demo 데이터${suffix}`
   if (sourceType === 'heuristic') return `규칙 엔진${suffix}`
   if (sourceType === 'agent') return `workflow trace${suffix}`
   if (sourceType === 'user_input') return `담당자 입력${suffix}`
@@ -658,6 +660,8 @@ export async function runDiagnosis(payload) {
       productName: payload.productName,
       hsCode: payload.hsCode,
       description: payload.description,
+      region: payload.region,
+      industry: payload.industry,
       buyerRequest: payload.buyerRequest,
       buyerDeadline: payload.buyerDeadline,
       expectedShipmentDate: payload.expectedShipmentDate,

@@ -84,6 +84,8 @@ public class DiagnosisAsyncProcessor {
             String description = product != null ? product.getDescription() : stringValue(inputData.get("description"));
             String targetCountry = normalizeCountry(run.getTargetCountry());
             Map<String, Object> buyerContext = buildBuyerContext(inputData, buyersFromInput(inputData));
+            Map<String, Object> regionalIndustryProfile = buildRegionalIndustryProfile(run, inputData, hsCode, productName);
+            Map<String, Object> buyerRequestTrace = buildBuyerRequestTrace(buyerContext);
 
             ProductKnowledge knowledge = product != null
                     ? knowledgeRepository.findByProductId(product.getId()).orElse(null)
@@ -101,6 +103,8 @@ public class DiagnosisAsyncProcessor {
 
             AgentLoop agentLoop = AgentLoop.start(run.getId(), productName, hsCode, targetCountry);
             List<Map<String, Object>> sources = new ArrayList<>();
+            addRegionalIndustrySource(sources, regionalIndustryProfile);
+            addBuyerRequestTraceSource(sources, buyerRequestTrace);
             PublicDataCollectionResult publicDataResult = agentLoop.runTool(
                     "collect_public_data",
                     "PublicDataCollectionService.collectForDiagnosis",
@@ -116,7 +120,7 @@ public class DiagnosisAsyncProcessor {
             addPublicDataSources(sources, publicDataResult.getRecords());
             Map<String, Object> workerRequest = buildWorkerRequest(run, product, productName, hsCode, description,
                     targetCountry, publicDataResult.getRecords(), knowledgeSources, certs, ftoItems, buyers,
-                    acceptedLoopItems);
+                    acceptedLoopItems, regionalIndustryProfile, buyerRequestTrace);
             Optional<Map<String, Object>> workerResult = agentLoop.runTool(
                     "python_data_ai_engine",
                     "Python Worker /worker/diagnosis-v1",
@@ -139,7 +143,8 @@ public class DiagnosisAsyncProcessor {
                         int regulationScore = scoreRegulation(hsCode, targetCountry, certs, sources);
                         int recallScore = scoreRecall(hsCode, description, sources);
                         int ftoScore = scoreFto(ftoItems, targetCountry, sources);
-                        int supportScore = scoreSupport(knowledge, buyers, knowledgeSources, targetCountry, sources);
+                        int supportScore = scoreSupport(knowledge, buyers, knowledgeSources, targetCountry, sources,
+                                regionalIndustryProfile);
                         marketScore = applyPublicDataContribution(marketScore, publicDataResult.getRecords(), "market");
                         regulationScore = applyPublicDataContribution(regulationScore, publicDataResult.getRecords(), "regulation");
                         recallScore = applyPublicDataContribution(recallScore, publicDataResult.getRecords(), "recall");
@@ -187,7 +192,8 @@ public class DiagnosisAsyncProcessor {
             Map<String, Object> gateDecision = buildGateDecision(overall, market, regulation, recall, fto, support,
                     riskItems, confidencePanel, buyerContext);
             Map<String, Object> impactEstimate = buildImpactEstimate(riskItems, actionRoadmap, buyerContext, support);
-            Map<String, Object> agentRequest = buildAgentRequest(run, productName, hsCode, description, targetCountry, certs);
+            Map<String, Object> agentRequest = buildAgentRequest(run, productName, hsCode, description, targetCountry,
+                    certs, regionalIndustryProfile, buyerRequestTrace);
             Optional<Map<String, Object>> agentResult = agentLoop.runTool(
                     "fastapi_analyze",
                     "FastAPI /analyze",
@@ -291,6 +297,8 @@ public class DiagnosisAsyncProcessor {
             resultMap.put("actionRoadmap", actionRoadmap);
             resultMap.put("sources", sources);
             resultMap.put("sourceTrustSummary", buildSourceTrustSummary(run, sources));
+            resultMap.put("regionalIndustryProfile", regionalIndustryProfile);
+            resultMap.put("buyerRequestTrace", buyerRequestTrace);
             resultMap.put("scoreContributionLedger", buildScoreContributionLedger(sources));
             resultMap.put("agentTrace", agentLoop.toTrace(agentResult.isPresent(), reportResult.isPresent(), llmResult));
             Map<String, Object> springEvidenceRetrieval = Map.of(
@@ -346,6 +354,8 @@ public class DiagnosisAsyncProcessor {
             inputTrace.put("productName", nullToEmpty(productName));
             inputTrace.put("hsCode", nullToEmpty(hsCode));
             inputTrace.put("targetCountry", targetCountry);
+            inputTrace.put("region", regionalIndustryProfile.get("region"));
+            inputTrace.put("industry", regionalIndustryProfile.get("industry"));
             inputTrace.put("buyerRequest", stringValue(buyerContext.get("buyerRequest")));
             inputTrace.put("buyerDeadline", stringValue(buyerContext.get("buyerDeadline")));
             inputTrace.put("expectedShipmentDate", stringValue(buyerContext.get("expectedShipmentDate")));
@@ -467,6 +477,11 @@ public class DiagnosisAsyncProcessor {
         long cacheCount = sources.stream().filter(source -> "cache".equals(source.get("sourceType"))).count();
         long fallbackCount = sources.stream().filter(source -> "fallback".equals(source.get("sourceType"))).count();
         long crawlCount = sources.stream().filter(source -> "crawl".equals(source.get("sourceType"))).count();
+        long externalFeedCount = sources.stream().filter(source -> "external_feed".equals(source.get("sourceType"))).count();
+        long seedCount = sources.stream().filter(source -> "seed".equals(source.get("sourceType"))).count();
+        long officialAttemptCount = liveCount + cacheCount + fallbackCount;
+        double liveSuccessRate = officialAttemptCount == 0 ? 0.0
+                : Math.round(((liveCount + cacheCount) / (double) officialAttemptCount) * 1000.0) / 1000.0;
         long motieContribution = sources.stream()
                 .filter(source -> Boolean.TRUE.equals(source.get("motieRelated")))
                 .mapToLong(source -> source.get("scoreContribution") instanceof Number number ? number.longValue() : 0)
@@ -477,24 +492,121 @@ public class DiagnosisAsyncProcessor {
                 .distinct()
                 .limit(12)
                 .toList();
-        return Map.of(
-                "diagnosisId", run.getId(),
-                "createdAt", run.getCreatedAt() != null ? run.getCreatedAt().atOffset(ZoneOffset.UTC).toString() : "",
-                "collectionRunIds", sources.stream()
-                        .map(source -> stringValue(source.get("collectionRunId")))
-                        .filter(value -> !value.isBlank())
-                        .distinct()
-                        .toList(),
-                "liveCount", liveCount,
-                "cacheCount", cacheCount,
-                "fallbackCount", fallbackCount,
-                "crawlCount", crawlCount,
-                "sourceIds", sourceIds,
-                "motieRelatedContribution", motieContribution,
-                "motieRelatedSummary", motieContribution == 0
-                        ? "산업부 관련 출처 contribution 없음 또는 확인 대기"
-                        : "산업부 관련 출처가 Gate 판단에 " + (motieContribution > 0 ? "+" : "") + motieContribution + "점 기여"
-        );
+        List<String> collectedAt = sources.stream()
+                .map(source -> stringValue(source.get("fetchedAt")).isBlank()
+                        ? stringValue(source.get("retrievedAt")) : stringValue(source.get("fetchedAt")))
+                .filter(value -> !value.isBlank())
+                .sorted()
+                .toList();
+        List<String> periodStarts = sources.stream()
+                .map(source -> stringValue(source.get("sourcePeriodStart")))
+                .filter(value -> !value.isBlank())
+                .sorted()
+                .toList();
+        List<String> periodEnds = sources.stream()
+                .map(source -> stringValue(source.get("sourcePeriodEnd")))
+                .filter(value -> !value.isBlank())
+                .sorted()
+                .toList();
+
+        Map<String, Object> summary = new LinkedHashMap<>();
+        summary.put("diagnosisId", run.getId());
+        summary.put("createdAt", run.getCreatedAt() != null ? run.getCreatedAt().atOffset(ZoneOffset.UTC).toString() : "");
+        summary.put("collectionRunIds", sources.stream()
+                .map(source -> stringValue(source.get("collectionRunId")))
+                .filter(value -> !value.isBlank())
+                .distinct()
+                .toList());
+        summary.put("liveCount", liveCount);
+        summary.put("cacheCount", cacheCount);
+        summary.put("fallbackCount", fallbackCount);
+        summary.put("crawlCount", crawlCount);
+        summary.put("externalFeedCount", externalFeedCount);
+        summary.put("seedCount", seedCount);
+        summary.put("liveSuccessRate", liveSuccessRate);
+        summary.put("lastCollectedAt", collectedAt.isEmpty() ? "" : collectedAt.get(collectedAt.size() - 1));
+        summary.put("sourcePeriodStart", periodStarts.isEmpty() ? "" : periodStarts.get(0));
+        summary.put("sourcePeriodEnd", periodEnds.isEmpty() ? "" : periodEnds.get(periodEnds.size() - 1));
+        summary.put("sourcePeriod", periodStarts.isEmpty() || periodEnds.isEmpty()
+                ? "source period 확인 대기"
+                : periodStarts.get(0) + " ~ " + periodEnds.get(periodEnds.size() - 1));
+        summary.put("providerHealth", buildProviderHealth(sources));
+        summary.put("sourceIds", sourceIds);
+        summary.put("motieRelatedContribution", motieContribution);
+        summary.put("motieRelatedSummary", motieContribution == 0
+                ? "산업부 관련 출처 contribution 없음 또는 확인 대기"
+                : "산업부 관련 출처가 Gate 판단에 " + (motieContribution > 0 ? "+" : "") + motieContribution + "점 기여");
+        summary.put("retryPayload", retryPayload(run));
+        return summary;
+    }
+
+    private List<Map<String, Object>> buildProviderHealth(List<Map<String, Object>> sources) {
+        Map<String, List<Map<String, Object>>> byProvider = new LinkedHashMap<>();
+        for (Map<String, Object> source : sources) {
+            String provider = stringValue(source.get("provider"));
+            if (provider.isBlank()) continue;
+            byProvider.computeIfAbsent(provider, ignored -> new ArrayList<>()).add(source);
+        }
+        List<Map<String, Object>> health = new ArrayList<>();
+        byProvider.forEach((provider, items) -> {
+            int live = sourceTypeCount(items, "live");
+            int cache = sourceTypeCount(items, "cache");
+            int fallback = sourceTypeCount(items, "fallback");
+            int crawl = sourceTypeCount(items, "crawl");
+            int externalFeed = sourceTypeCount(items, "external_feed");
+            List<String> fetched = items.stream().map(item -> stringValue(item.get("fetchedAt")))
+                    .map(value -> value.isBlank() ? "" : value)
+                    .filter(value -> !value.isBlank()).sorted().toList();
+            if (fetched.isEmpty()) {
+                fetched = items.stream().map(item -> stringValue(item.get("retrievedAt")))
+                    .filter(value -> !value.isBlank()).sorted().toList();
+            }
+            List<String> periodStart = items.stream().map(item -> stringValue(item.get("sourcePeriodStart")))
+                    .filter(value -> !value.isBlank()).sorted().toList();
+            List<String> periodEnd = items.stream().map(item -> stringValue(item.get("sourcePeriodEnd")))
+                    .filter(value -> !value.isBlank()).sorted().toList();
+            String failureReason = items.stream()
+                    .map(item -> stringValue(item.get("errorMessage")).isBlank()
+                            ? stringValue(item.get("reason")) : stringValue(item.get("errorMessage")))
+                    .filter(value -> !value.isBlank())
+                    .findFirst()
+                    .orElse("");
+            Map<String, Object> row = new LinkedHashMap<>();
+            row.put("provider", provider);
+            row.put("liveCount", live);
+            row.put("cacheCount", cache);
+            row.put("fallbackCount", fallback);
+            row.put("crawlCount", crawl);
+            row.put("externalFeedCount", externalFeed);
+            row.put("lastCollectedAt", fetched.isEmpty() ? "" : fetched.get(fetched.size() - 1));
+            row.put("sourcePeriodStart", periodStart.isEmpty() ? "" : periodStart.get(0));
+            row.put("sourcePeriodEnd", periodEnd.isEmpty() ? "" : periodEnd.get(periodEnd.size() - 1));
+            row.put("failureReason", failureReason);
+            row.put("status", fallback > 0 && live + cache + crawl + externalFeed == 0 ? "fallback"
+                    : fallback > 0 ? "partial"
+                    : live > 0 ? "live"
+                    : cache > 0 ? "cache"
+                    : externalFeed > 0 ? "external_feed"
+                    : crawl > 0 ? "crawl" : "no_record");
+            health.add(row);
+        });
+        return health;
+    }
+
+    private Map<String, Object> retryPayload(DiagnosisRun run) {
+        Product product = run.getProduct();
+        Map<String, Object> payload = new LinkedHashMap<>();
+        if (product != null) {
+            payload.put("hsCode", nullToEmpty(product.getHsCode()).replaceAll("[^0-9]", ""));
+            payload.put("targetCountry", run.getTargetCountry());
+            payload.put("productName", product.getName());
+        } else {
+            Map<String, Object> input = parseObjectMap(run.getInputData());
+            payload.put("hsCode", nullToEmpty(stringValue(input.get("hsCode"))).replaceAll("[^0-9]", ""));
+            payload.put("targetCountry", run.getTargetCountry());
+            payload.put("productName", stringValue(input.getOrDefault("productName", input.getOrDefault("name", ""))));
+        }
+        return payload;
     }
 
     private List<Map<String, Object>> buildScoreContributionLedger(List<Map<String, Object>> sources) {
@@ -548,6 +660,7 @@ public class DiagnosisAsyncProcessor {
             case KIPRIS_FTO -> "KIPRIS Plus 특허/FTO live/cache 수집";
             case BIZINFO_SUPPORT -> "기업마당 지원사업 live/cache 수집";
             case MOTIE_WEB_CRAWL -> "산업부 공개 웹 안전 크롤링 수집";
+            case EXPORT_EVIDENCE_FEED -> "수출 뉴스·보고서 RSS/API feed 수집";
         };
     }
 
@@ -584,11 +697,14 @@ public class DiagnosisAsyncProcessor {
 
     private Map<String, Object> buildAgentRequest(DiagnosisRun run, String productName, String hsCode,
                                                   String description, String targetCountry,
-                                                  List<Certification> certs) {
+                                                  List<Certification> certs,
+                                                  Map<String, Object> regionalIndustryProfile,
+                                                  Map<String, Object> buyerRequestTrace) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("company_name", run.getCompany() != null ? run.getCompany().getName() : "개인 사업자");
-        payload.put("region", "지역 미입력");
-        payload.put("industry", run.getCompany() != null ? nullToEmpty(run.getCompany().getIndustry()) : "제조");
+        payload.put("region", regionalIndustryProfile.getOrDefault("region", "지역 미입력"));
+        payload.put("industry", regionalIndustryProfile.getOrDefault("industry",
+                run.getCompany() != null ? nullToEmpty(run.getCompany().getIndustry()) : "제조"));
         payload.put("product_name", nullToEmpty(productName).isBlank() ? "입력 제품" : productName);
         payload.put("hs_code", nullToEmpty(hsCode).isBlank() ? "000000" : hsCode);
         payload.put("target_market", targetCountry);
@@ -603,6 +719,8 @@ public class DiagnosisAsyncProcessor {
         payload.put("has_test_report", !certs.isEmpty());
         payload.put("has_label_draft", false);
         payload.put("notes", nullToEmpty(description));
+        payload.put("regional_industry_profile", regionalIndustryProfile);
+        payload.put("buyer_request_trace", buyerRequestTrace);
         return payload;
     }
 
@@ -613,7 +731,9 @@ public class DiagnosisAsyncProcessor {
                                                    List<Certification> certs,
                                                    List<Fto> ftoItems,
                                                    List<BuyerRequirement> buyers,
-                                                   List<KnowledgeLoopItem> acceptedLoopItems) {
+                                                   List<KnowledgeLoopItem> acceptedLoopItems,
+                                                   Map<String, Object> regionalIndustryProfile,
+                                                   Map<String, Object> buyerRequestTrace) {
         Map<String, Object> payload = new LinkedHashMap<>();
         payload.put("diagnosisId", run.getId());
         payload.put("userId", run.getUser() != null ? run.getUser().getId() : null);
@@ -623,6 +743,8 @@ public class DiagnosisAsyncProcessor {
                 "productName", nullToEmpty(productName).isBlank() ? "입력 제품" : productName,
                 "hsCode", nullToEmpty(hsCode),
                 "targetCountry", targetCountry,
+                "region", regionalIndustryProfile.getOrDefault("region", ""),
+                "industry", regionalIndustryProfile.getOrDefault("industry", ""),
                 "descriptionPresent", !nullToEmpty(description).isBlank()
         ));
         payload.put("knowledgeSnapshot", Map.of(
@@ -632,6 +754,8 @@ public class DiagnosisAsyncProcessor {
                 "buyerRequirementCount", buyers.size(),
                 "acceptedLoopItemCount", acceptedLoopItems.size()
         ));
+        payload.put("regionalIndustryProfile", regionalIndustryProfile);
+        payload.put("buyerRequestTrace", buyerRequestTrace);
         payload.put("publicDataRecords", records.stream()
                 .map(this::workerRecord)
                 .toList());
@@ -1249,7 +1373,8 @@ public class DiagnosisAsyncProcessor {
 
     private int scoreSupport(ProductKnowledge knowledge, List<BuyerRequirement> buyers,
                              List<KnowledgeSource> knowledgeSources, String targetCountry,
-                             List<Map<String, Object>> sources) {
+                             List<Map<String, Object>> sources,
+                             Map<String, Object> regionalIndustryProfile) {
         int score = 58;
         int contribution = 0;
         if (knowledge != null && knowledge.getTrustGrade() == TrustGrade.high) contribution += 12;
@@ -1257,12 +1382,151 @@ public class DiagnosisAsyncProcessor {
         else contribution -= 6;
         contribution += Math.min(12, buyers.size() * 6);
         contribution += Math.min(10, knowledgeSources.size() * 3);
+        contribution += regionalIndustryProfile.get("scoreContribution") instanceof Number number
+                ? number.intValue() : 0;
 
         sources.add(source("support", "RULE-SUPPORT-" + targetCountry,
                 "RULE_ENGINE", "로컬 지식·바이어·출처 기반 지원 적합도 휴리스틱", "",
                 "country=" + targetCountry + ";buyerCount=" + buyers.size(), "support", contribution,
-                knowledgeSources.isEmpty(), "지식 출처 수, 바이어 요구사항, 신뢰 등급을 실행 가능성에 반영"));
+                knowledgeSources.isEmpty(), "지식 출처 수, 바이어 요구사항, 신뢰 등급, 지역 산업 매칭을 실행 가능성에 반영"));
         return clamp(score + contribution);
+    }
+
+    private Map<String, Object> buildRegionalIndustryProfile(DiagnosisRun run, Map<String, Object> inputData,
+                                                             String hsCode, String productName) {
+        String region = firstNonBlank(stringValue(inputData.get("region")), "지역 미입력");
+        String industry = firstNonBlank(stringValue(inputData.get("industry")),
+                run.getCompany() != null ? nullToEmpty(run.getCompany().getIndustry()) : "제조");
+        String regionKey = normalizeRegionKey(region);
+        String text = (industry + " " + productName + " " + hsCode).toLowerCase();
+
+        Map<String, Object> profile = new LinkedHashMap<>();
+        List<String> supportOrgs = new ArrayList<>();
+        List<String> matchedSignals = new ArrayList<>();
+        String cluster = "지역 산업 매칭 미확인";
+        String leadingIndustry = "제조 일반";
+        int contribution = 0;
+
+        if (regionKey.contains("경남") || regionKey.contains("창원") || regionKey.contains("김해")) {
+            supportOrgs.addAll(List.of("경남테크노파크", "창원산업진흥원", "KOTRA 경남지원단"));
+            cluster = "창원 국가산단·경남 기계/미래모빌리티";
+            if (containsAny(text, "battery", "배터리", "8507", "전기전자", "모빌리티", "기계")) {
+                leadingIndustry = "미래모빌리티·기계·전기전자";
+                matchedSignals.add("region=경남, hs/industry=배터리·전기전자·기계");
+                contribution = 8;
+            } else contribution = 3;
+        } else if (regionKey.contains("부산")) {
+            supportOrgs.addAll(List.of("부산테크노파크", "부산경제진흥원", "KOTRA 부산지원단"));
+            cluster = "부산 물류·해양·소부장";
+            if (containsAny(text, "물류", "해양", "기계", "전기전자", "부품")) {
+                leadingIndustry = "해양/물류/소부장";
+                matchedSignals.add("region=부산, industry=해양·물류·소부장");
+                contribution = 7;
+            } else contribution = 3;
+        } else if (regionKey.contains("울산")) {
+            supportOrgs.addAll(List.of("울산테크노파크", "울산경제일자리진흥원"));
+            cluster = "울산 화학·이차전지·모빌리티";
+            if (containsAny(text, "battery", "배터리", "화학", "자동차", "모빌리티", "8507")) {
+                leadingIndustry = "이차전지·화학·모빌리티";
+                matchedSignals.add("region=울산, hs/industry=이차전지·화학·모빌리티");
+                contribution = 8;
+            } else contribution = 3;
+        } else if (regionKey.contains("대구") || regionKey.contains("경북")) {
+            supportOrgs.addAll(List.of("대구테크노파크", "경북테크노파크"));
+            cluster = "대구경북 로봇·전기전자·의료";
+            if (containsAny(text, "로봇", "전기전자", "의료", "센서", "부품")) {
+                leadingIndustry = "로봇·전기전자·의료";
+                matchedSignals.add("region=대구경북, industry=로봇·전기전자·의료");
+                contribution = 7;
+            } else contribution = 3;
+        } else if (regionKey.contains("광주") || regionKey.contains("전남")) {
+            supportOrgs.addAll(List.of("광주테크노파크", "전남테크노파크"));
+            cluster = "광주전남 미래차·에너지";
+            if (containsAny(text, "자동차", "모빌리티", "에너지", "battery", "배터리", "8507")) {
+                leadingIndustry = "미래차·에너지";
+                matchedSignals.add("region=광주전남, hs/industry=미래차·에너지");
+                contribution = 7;
+            } else contribution = 3;
+        } else {
+            supportOrgs.addAll(List.of("지역테크노파크", "KOTRA 지방지원단", "중소벤처기업진흥공단 지역본부"));
+            contribution = "지역 미입력".equals(region) ? -2 : 2;
+            matchedSignals.add("region 입력 기반 일반 지역지원기관 후보");
+        }
+
+        profile.put("region", region);
+        profile.put("industry", industry);
+        profile.put("regionKey", regionKey);
+        profile.put("cluster", cluster);
+        profile.put("leadingIndustry", leadingIndustry);
+        profile.put("supportOrgs", supportOrgs);
+        profile.put("matchedSignals", matchedSignals);
+        profile.put("scoreContribution", contribution);
+        profile.put("confidence", contribution >= 7 ? 0.72 : contribution > 0 ? 0.52 : 0.25);
+        profile.put("evidencePolicy", "지역/업종/HS deterministic matching. 공식 지역지원사업 API가 연결되면 live source로 보강");
+        return profile;
+    }
+
+    private void addRegionalIndustrySource(List<Map<String, Object>> sources, Map<String, Object> profile) {
+        int contribution = profile.get("scoreContribution") instanceof Number number ? number.intValue() : 0;
+        Map<String, Object> source = source("local_industry",
+                "RULE-LOCAL-INDUSTRY-" + normalizeRegionKey(stringValue(profile.get("region"))),
+                "RULE_ENGINE", "지역 주력산업·지원기관 매칭 규칙", "",
+                "region=" + stringValue(profile.get("region")) + ";industry=" + stringValue(profile.get("industry")),
+                "support", contribution, contribution <= 0,
+                "지역, 업종, HS Code 기반으로 지역 주력산업과 지원기관 후보를 매칭");
+        source.put("metrics", Map.of(
+                "region", profile.get("region"),
+                "industry", profile.get("industry"),
+                "cluster", profile.get("cluster"),
+                "leadingIndustry", profile.get("leadingIndustry"),
+                "supportOrgCount", profile.get("supportOrgs") instanceof List<?> list ? list.size() : 0
+        ));
+        source.put("metricSummary", stringValue(profile.get("region")) + " · " + stringValue(profile.get("leadingIndustry"))
+                + " · contribution " + contribution);
+        source.put("decisionImpact", "지역 산업 매칭이 support Gate에 "
+                + (contribution > 0 ? "+" : "") + contribution + "점 반영됩니다.");
+        sources.add(source);
+    }
+
+    private Map<String, Object> buildBuyerRequestTrace(Map<String, Object> buyerContext) {
+        String buyerRequest = stringValue(buyerContext.get("buyerRequest"));
+        String joined = (buyerRequest + " "
+                + String.join(" ", stringList(buyerContext.get("requestedCertifications"))) + " "
+                + String.join(" ", stringList(buyerContext.get("buyerRequirementHints")))).toLowerCase();
+        List<Map<String, Object>> impacts = new ArrayList<>();
+        if (containsAny(joined, "ce", "rohs", "reach", "iec", "un38.3", "인증", "시험성적")) {
+            impacts.add(Map.of("dimension", "regulation", "keyword", "certification", "impact", "요구 인증을 규제 보완 과제로 반영"));
+        }
+        if (containsAny(joined, "recall", "리콜", "safety", "안전", "화재", "과열")) {
+            impacts.add(Map.of("dimension", "recall", "keyword", "safety", "impact", "안전/리콜 키워드를 위해 위험 확인 과제로 반영"));
+        }
+        if (containsAny(joined, "fto", "patent", "특허", "침해", "회피")) {
+            impacts.add(Map.of("dimension", "fto", "keyword", "patent", "impact", "특허/FTO 키워드를 견적 전 검토 과제로 반영"));
+        }
+        if (containsAny(joined, "sample", "샘플", "납기", "주", "deadline", "견적", "budget", "예산")) {
+            impacts.add(Map.of("dimension", "support", "keyword", "execution", "impact", "회신/샘플/예산 조건을 실행 보드 우선순위에 반영"));
+        }
+        Map<String, Object> trace = new LinkedHashMap<>();
+        trace.put("buyerRequestPresent", !buyerRequest.isBlank());
+        trace.put("impactCount", impacts.size());
+        trace.put("impacts", impacts);
+        trace.put("sourceIds", impacts.isEmpty() ? List.of("USER_INPUT") : List.of("USER-BUYER-REQUEST", "RULE-REGULATION", "RULE-FTO", "RULE-RECALL"));
+        trace.put("summary", impacts.isEmpty()
+                ? "바이어 문의 키워드가 없어 일반 Gate 판단으로 처리"
+                : "바이어 문의 키워드가 " + impacts.size() + "개 판단 축에 연결됨");
+        return trace;
+    }
+
+    private void addBuyerRequestTraceSource(List<Map<String, Object>> sources, Map<String, Object> trace) {
+        if (!Boolean.TRUE.equals(trace.get("buyerRequestPresent"))) return;
+        int impactCount = trace.get("impactCount") instanceof Number number ? number.intValue() : 0;
+        Map<String, Object> source = source("buyer_request", "USER-BUYER-REQUEST", "USER_INPUT",
+                "바이어 문의 기반 판단 trace", "", "buyerRequest=provided", "support",
+                0, impactCount == 0, stringValue(trace.get("summary")));
+        source.put("metrics", Map.of("impactCount", impactCount, "impacts", trace.getOrDefault("impacts", List.of())));
+        source.put("metricSummary", stringValue(trace.get("summary")));
+        source.put("decisionImpact", "바이어 문의는 점수 자체보다 risk/action roadmap의 우선순위를 조정합니다.");
+        sources.add(source);
     }
 
     private List<Map<String, Object>> buildRiskItems(List<Certification> certs, List<Fto> ftoItems,
@@ -1321,6 +1585,8 @@ public class DiagnosisAsyncProcessor {
         context.put("buyerRequest", stringValue(inputData.get("buyerRequest")));
         context.put("buyerDeadline", stringValue(inputData.get("buyerDeadline")));
         context.put("expectedShipmentDate", stringValue(inputData.get("expectedShipmentDate")));
+        context.put("region", stringValue(inputData.get("region")));
+        context.put("industry", stringValue(inputData.get("industry")));
         context.put("requestedCertifications", stringList(inputData.get("requestedCertifications")));
         context.put("currentDocuments", stringList(inputData.get("currentDocuments")));
         context.put("exportExperience", stringValue(inputData.get("exportExperience")));
@@ -1599,6 +1865,7 @@ public class DiagnosisAsyncProcessor {
 
     private String timelineStatus(String sourceType) {
         if ("live".equals(sourceType) || "cache".equals(sourceType)) return "evidence_bound";
+        if ("external_feed".equals(sourceType) || "crawl".equals(sourceType)) return "context_bound";
         if ("heuristic".equals(sourceType)) return "rule_bound";
         if ("fallback".equals(sourceType)) return "needs_live_evidence";
         return "trace_only";
@@ -1607,6 +1874,8 @@ public class DiagnosisAsyncProcessor {
     private double sourceConfidenceFromType(String sourceType) {
         if ("live".equals(sourceType)) return 0.85;
         if ("cache".equals(sourceType)) return 0.70;
+        if ("external_feed".equals(sourceType)) return 0.55;
+        if ("crawl".equals(sourceType)) return 0.50;
         if ("heuristic".equals(sourceType)) return 0.45;
         if ("fallback".equals(sourceType)) return 0.20;
         return 0.50;
@@ -1660,14 +1929,15 @@ public class DiagnosisAsyncProcessor {
     }
 
     private String sourceType(PublicDataRecord record) {
-        if (record.isCacheHit()) return "cache";
         if (record.isFallbackUsed()) return "fallback";
+        if (record.isCacheHit()) return "cache";
         if (record.getSourceType() != null && !record.getSourceType().isBlank()) return record.getSourceType();
         return "live";
     }
 
     private String sourceType(String provider, String field) {
         if ("RULE_ENGINE".equals(provider)) return "heuristic";
+        if ("USER_INPUT".equals(provider)) return "user_input";
         if ("agent".equals(field)) return "agent";
         return "internal";
     }
@@ -1742,6 +2012,22 @@ public class DiagnosisAsyncProcessor {
             if (safe.startsWith(prefix)) return true;
         }
         return false;
+    }
+
+    private boolean containsAny(String value, String... needles) {
+        String safe = nullToEmpty(value).toLowerCase();
+        for (String needle : needles) {
+            if (!nullToEmpty(needle).isBlank() && safe.contains(needle.toLowerCase())) return true;
+        }
+        return false;
+    }
+
+    private String firstNonBlank(String first, String fallback) {
+        return nullToEmpty(first).isBlank() ? nullToEmpty(fallback) : first;
+    }
+
+    private String normalizeRegionKey(String value) {
+        return nullToEmpty(value).trim().toLowerCase().replaceAll("\\s+", "");
     }
 
     private boolean countryMatches(String value, String normalizedCountry) {

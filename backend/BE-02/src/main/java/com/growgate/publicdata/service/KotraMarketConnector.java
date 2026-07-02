@@ -58,6 +58,17 @@ public class KotraMarketConnector extends AbstractPublicDataConnector {
     }
 
     @Override
+    protected Map<String, String> fieldMapping() {
+        return Map.of(
+                "marketArticleCount", "items[]/data[]/list[] article objects",
+                "countryMentions", "country/countryName/nation/title/body text",
+                "productMentions", "keyword/productName/title/body text",
+                "yoyGrowthPct", "growthPct/growth/marketGrowth/증가율 numeric field",
+                "recordCount", "provider response article count"
+        );
+    }
+
+    @Override
     protected PublicDataSignal extractSignal(PublicDataRequest request, String rawPayload, boolean fallbackUsed) {
         JsonNode root = readTree(rawPayload);
         int articleCount = Math.max(maxArraySize(root), Math.max(0, objectCount(root) - 1));

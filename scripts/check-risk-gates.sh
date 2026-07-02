@@ -42,6 +42,11 @@ require_file "docs/pdf-rendering-strategy-2026-07-02.md"
 require_file "docs/presentation-evidence-pack-2026-07-02.md"
 require_file "docs/security-csrf-rate-limit-threat-model-2026-07-03.md"
 require_file "scripts/verify-fresh-db.sh"
+require_file "backend/BE-02/src/test/resources/publicdata/kotra-market-sample-live-response.json"
+require_file "backend/BE-02/src/test/resources/publicdata/safety-recall-sample-live-response.json"
+require_file "backend/BE-02/src/test/resources/publicdata/kipris-fto-sample-live-response.json"
+require_file "backend/BE-02/src/test/resources/publicdata/bizinfo-support-sample-live-response.json"
+require_file "backend/BE-02/src/test/resources/publicdata/export-evidence-feed-sample.xml"
 
 grep -q 'scripts/check-risk-gates.sh' "$ROOT_DIR/.github/workflows/ci.yml" \
   || fail "CI must run scripts/check-risk-gates.sh"
@@ -137,10 +142,16 @@ search_quiet 'sourceTrustSummary' "$ROOT_DIR/backend/BE-02/src/main/java/com/gro
   || fail "diagnosis result must expose sourceTrustSummary"
 search_quiet 'scoreContributionLedger' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
   || fail "diagnosis result must expose scoreContributionLedger"
+search_quiet 'liveSuccessRate|providerHealth|lastCollectedAt|sourcePeriod' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "sourceTrustSummary must expose freshness, period, live success rate, and provider health"
 search_quiet 'SourceTrustBar' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisResult.jsx" \
   || fail "diagnosis result must render SourceTrustBar near the top"
-search_quiet 'Score contribution ledger' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/S10Sources.jsx" \
+search_quiet 'Score contribution.*waterfall|waterfall.*ledger' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/S10Sources.jsx" \
   || fail "S10 must render score contribution ledger"
+search_quiet 'collectPublicData' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisResult.jsx" \
+  || fail "public data retry button must call the real collect API"
+search_quiet 'failureReason|Provider health' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/S10Sources.jsx" \
+  || fail "S10 must show provider failure reason and health"
 search_quiet '/worker/diagnosis-v1' "$ROOT_DIR/grow_gate_local_ex_demo/backend/app.py" \
   || fail "Python worker diagnosis contract endpoint must exist"
 search_quiet 'workerDiagnosis' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/FastApiAgentClient.java" \
@@ -257,9 +268,25 @@ search_quiet '@Scheduled' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/pu
   || fail "daily public-data refresh must run on a schedule"
 search_quiet '/daily-refresh|refreshDaily' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/controller/PublicDataController.java" \
   || fail "public-data controller must expose manual daily refresh endpoint"
+search_quiet '/health|getHealth' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/controller/PublicDataController.java" \
+  || fail "public-data controller must expose health endpoint for live MOTIE evidence"
+search_quiet 'motieVerifiedOperationLiveCount|motieRelatedScoreContribution|motieLiveEvidenceReady' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataCollectionService.java" \
+  || fail "public-data health must separate MOTIE live operation evidence and contribution"
 grep -q 'daily-refresh:' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml" \
   || fail "public-data daily refresh settings must be configurable"
 pass "daily public-data refresh pipeline is wired"
+
+search_quiet 'ProviderSchemaNormalizationTest' "$ROOT_DIR/backend/BE-02/src/test/java/com/growgate/publicdata/service/ProviderSchemaNormalizationTest.java" \
+  || fail "provider schema normalization tests must exist"
+search_quiet 'fieldMapping' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service" \
+  || fail "provider connectors must expose field mapping metadata"
+search_quiet 'guardedScoreContribution' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataCollectionService.java" \
+  || fail "public data storage must clamp fallback contribution"
+search_quiet 'ClampsFallbackPositiveContribution' "$ROOT_DIR/backend/BE-02/src/test/java/com/growgate/publicdata/service/PublicDataCollectionServiceTest.java" \
+  || fail "fallback positive contribution guard must have a regression test"
+grep -q 'seed-demo-not-live' "$ROOT_DIR/database/mysql/init/02_seed.sql" \
+  || fail "seed diagnosis result must be watermarked as non-live demo data"
+pass "provider schema normalization and fallback contribution guards are tested"
 
 search_quiet 'MotieWebCrawlConnector' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/MotieWebCrawlConnector.java" \
   || fail "safe public web crawl connector must exist"
@@ -272,6 +299,16 @@ search_quiet 'EMAIL_REDACTED|PHONE_REDACTED|REDACTED' "$ROOT_DIR/backend/BE-02/s
 search_quiet 'sourceType === '\''crawl'\''' "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
   || fail "frontend source mapper must label crawl sourceType separately"
 pass "safe public web crawl path is opt-in, allowlisted, masked, and source-typed"
+
+search_quiet 'ExportEvidenceFeedConnector' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/ExportEvidenceFeedConnector.java" \
+  || fail "export news/report feed connector must exist"
+grep -q 'export-evidence:' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml" \
+  || fail "export evidence feed connector must be configurable"
+search_quiet 'sourceType === '\''external_feed'\''' "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
+  || fail "frontend source mapper must label external feed sourceType separately"
+grep -q 'PUBLIC_DATA_EXPORT_EVIDENCE_URLS' "$ROOT_DIR/.env.example.presentation" \
+  || fail "presentation env must document export evidence feed URLs"
+pass "export news/report RSS/API feed collection is opt-in and source-typed"
 
 grep -q 'SMOKE_CORS_ORIGIN' "$ROOT_DIR/scripts/smoke-prod.sh" \
   || fail "smoke-prod must support CORS preflight checks"
@@ -310,5 +347,15 @@ grep -q 'font embedding' "$ROOT_DIR/docs/pdf-rendering-strategy-2026-07-02.md" \
 grep -q 'Source Trust Bar screenshot' "$ROOT_DIR/docs/presentation-evidence-pack-2026-07-02.md" \
   || fail "presentation evidence pack must require Source Trust Bar screenshot"
 pass "evidence pack documents presentation env, field mapping, and judge defense"
+
+search_quiet 'regionalIndustryProfile|buildRegionalIndustryProfile|지역 주력산업' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "diagnosis processor must score/trace regional industry matching"
+search_quiet 'buyerRequestTrace|buildBuyerRequestTrace|USER-BUYER-REQUEST' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "diagnosis processor must trace buyer request impact"
+search_quiet 'region: payload.region|industry: payload.industry' "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
+  || fail "frontend diagnosis request must send region and industry"
+search_quiet '기업 지역|지역 업종' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisNew.jsx" \
+  || fail "diagnosis input must capture regional manufacturing context"
+pass "regional industry and buyer-request trace are wired"
 
 pass "all risk gates passed"

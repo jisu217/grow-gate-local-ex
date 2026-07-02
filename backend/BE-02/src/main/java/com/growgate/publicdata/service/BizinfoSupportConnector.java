@@ -58,6 +58,16 @@ public class BizinfoSupportConnector extends AbstractPublicDataConnector {
     }
 
     @Override
+    protected Map<String, String> fieldMapping() {
+        return Map.of(
+                "supportProgramCount", "programs[]/items[]/data[] 지원사업 objects",
+                "openProgramSignalCount", "접수/모집/공고/open/apply/신청 status text",
+                "exportKeywordCount", "수출/export/해외/인증/바우처 title/body text",
+                "recordCount", "provider response support program count"
+        );
+    }
+
+    @Override
     protected PublicDataSignal extractSignal(PublicDataRequest request, String rawPayload, boolean fallbackUsed) {
         JsonNode root = readTree(rawPayload);
         int programCount = Math.max(maxArraySize(root), Math.max(0, objectCount(root) - 1));

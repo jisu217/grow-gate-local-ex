@@ -6,7 +6,8 @@ public enum PublicDataProvider {
     SAFETY_RECALL("국가기술표준원/SafetyKorea", "산업통상자원부", "MOTIE", "recall", 24),
     KIPRIS_FTO("특허청/KIPRIS", "특허청", "OTHER_GOV", "fto", 72),
     BIZINFO_SUPPORT("기업마당/수출지원", "중소벤처기업부 등", "OTHER_GOV", "support", 24),
-    MOTIE_WEB_CRAWL("산업통상자원부 공개 웹", "산업통상자원부", "MOTIE", "regulation", 24);
+    MOTIE_WEB_CRAWL("산업통상자원부 공개 웹", "산업통상자원부", "MOTIE", "regulation", 24),
+    EXPORT_EVIDENCE_FEED("수출 뉴스·보고서 feed", "공개 RSS/API", "EXTERNAL_EVIDENCE", "market", 12);
 
     private final String agency;
     private final String ministry;

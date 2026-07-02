@@ -33,6 +33,8 @@ export default function DiagnosisNew() {
 
   // 이번 수출 건 판단 정보 (제품 정보는 선택한 제품에서 가져옴)
   const [formData, setFormData] = useState({
+    region: '',
+    industry: '',
     buyerRequest: '',
     buyerDeadline: '',
     expectedShipmentDate: '',
@@ -164,6 +166,8 @@ export default function DiagnosisNew() {
         hsCode: normalizeHsCode(selectedProduct.hs),
         targetCountry: normalizeTargetCountry(selectedProduct.country),
         description: selectedProduct.description ?? '',
+        region: formData.region.trim(),
+        industry: formData.industry.trim(),
         buyerRequest: formData.buyerRequest.trim(),
         buyerDeadline: formData.buyerDeadline || null,
         expectedShipmentDate: formData.expectedShipmentDate || null,
@@ -264,6 +268,18 @@ export default function DiagnosisNew() {
                   </div>
                 </div>
                 <div className={styles.fields}>
+                  <div className={styles.inlineGrid}>
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="region">기업 지역</label>
+                      <input id="region" className={styles.input} name="region"
+                        value={formData.region} onChange={handleChange} placeholder="예: 경남 / 창원 / 부산" />
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="industry">지역 업종</label>
+                      <input id="industry" className={styles.input} name="industry"
+                        value={formData.industry} onChange={handleChange} placeholder="예: 전기전자 · 배터리" />
+                    </div>
+                  </div>
                   <div className={styles.field}>
                     <label className={styles.label} htmlFor="buyerRequest">바이어 문의 원문</label>
                     <textarea

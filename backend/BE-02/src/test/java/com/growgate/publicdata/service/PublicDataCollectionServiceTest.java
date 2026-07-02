@@ -120,6 +120,55 @@ class PublicDataCollectionServiceTest {
     }
 
     @Test
+    void collectForDiagnosisClampsFallbackPositiveContributionBeforePersisting() {
+        PublicDataConnector connector = mock(PublicDataConnector.class);
+        when(connector.provider()).thenReturn(PublicDataProvider.KOTRA_MARKET);
+        when(connector.usedFor()).thenReturn("market");
+        when(connector.requestKey(any(PublicDataRequest.class))).thenReturn("KOTRA_MARKET:DE:Battery pack");
+        when(connector.collect(any(PublicDataRequest.class))).thenReturn(PublicDataConnectorResult.builder()
+                .provider(PublicDataProvider.KOTRA_MARKET)
+                .endpoint("https://api.example.test/kotra")
+                .requestKey("KOTRA_MARKET:DE:Battery pack")
+                .hsCode("850760")
+                .targetCountry("DE")
+                .matchedKey("hsCode=850760;country=DE")
+                .usedFor("market")
+                .rawPayload("{\"fallback\":true}")
+                .normalizedPayload(Map.of("metrics", Map.of("recordCount", 0), "scoreContribution", 9))
+                .scoreContribution(9)
+                .confidence(0.0)
+                .sourceType("fallback")
+                .fallbackUsed(true)
+                .errorMessage("forced fallback")
+                .build());
+
+        PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
+        PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        MembershipRepository membershipRepository = mock(MembershipRepository.class);
+        User user = user("user-1");
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(runRepository.save(any(PublicDataCollectionRun.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.save(any(PublicDataRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.findTopByProviderAndRequestKeyAndExpiresAtAfterOrderByFetchedAtDesc(
+                eq(PublicDataProvider.KOTRA_MARKET), eq("KOTRA_MARKET:DE:Battery pack"), any(LocalDateTime.class)))
+                .thenReturn(Optional.empty());
+
+        PublicDataCollectionService service = service(
+                List.of(connector), runRepository, recordRepository, userRepository, membershipRepository);
+        ReflectionTestUtils.setField(service, "enabled", true);
+        ReflectionTestUtils.setField(service, "cacheTtlHours", 24L);
+
+        PublicDataCollectionResult result = service.collectForDiagnosis(
+                "diagnosis-1", "user-1", "850760", "DE", "Battery pack");
+
+        assertThat(result.getRecords()).hasSize(1);
+        assertThat(result.getRecords().get(0).isFallbackUsed()).isTrue();
+        assertThat(result.getRecords().get(0).getScoreContribution()).isLessThanOrEqualTo(0);
+    }
+
+    @Test
     void getRecentRunsScopesPersonalUsersToOwnPublicDataRuns() {
         PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
         PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
@@ -138,6 +187,41 @@ class PublicDataCollectionServiceTest {
 
         assertThat(runs).isEmpty();
         verify(runRepository).findTop20ByRequestedBy_IdInOrderByStartedAtDesc(List.of("user-1"));
+    }
+
+    @Test
+    void getHealthSeparatesMotieLiveOperationEvidenceFromOtherGovRecords() {
+        PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
+        PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        MembershipRepository membershipRepository = mock(MembershipRepository.class);
+        User user = user("user-1");
+        PublicDataCollectionRun run = PublicDataCollectionRun.builder()
+                .id("run-1")
+                .requestedBy(user)
+                .startedAt(LocalDateTime.now())
+                .build();
+
+        PublicDataRecord kotra = liveRecord(PublicDataProvider.KOTRA_MARKET, "market", 5);
+        PublicDataRecord safety = liveRecord(PublicDataProvider.SAFETY_RECALL, "recall", -3);
+        PublicDataRecord kcs = liveRecord(PublicDataProvider.KCS_TRADE, "market", 8);
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(runRepository.findTop20ByRequestedBy_IdInOrderByStartedAtDesc(List.of("user-1")))
+                .thenReturn(List.of(run));
+        when(recordRepository.findTop50ByRun_RequestedBy_IdInOrderByFetchedAtDesc(List.of("user-1")))
+                .thenReturn(List.of(kotra, safety, kcs));
+
+        PublicDataCollectionService service = service(
+                List.of(), runRepository, recordRepository, userRepository, membershipRepository);
+
+        Map<String, Object> health = service.getHealth("user-1");
+
+        assertThat(health.get("motieRelatedRecordCount")).isEqualTo(2);
+        assertThat(health.get("motieRelatedLiveOrCacheCount")).isEqualTo(2);
+        assertThat(health.get("motieVerifiedOperationLiveCount")).isEqualTo(2);
+        assertThat(health.get("motieRelatedScoreContribution")).isEqualTo(2);
+        assertThat(health.get("motieLiveEvidenceReady")).isEqualTo(true);
     }
 
     private PublicDataCollectionService service(List<PublicDataConnector> connectors,
@@ -162,6 +246,27 @@ class PublicDataCollectionServiceTest {
                 .passwordHash("encoded")
                 .name("테스트 사용자")
                 .userType(UserType.personal)
+                .build();
+    }
+
+    private PublicDataRecord liveRecord(PublicDataProvider provider, String usedFor, int contribution) {
+        return PublicDataRecord.builder()
+                .provider(provider)
+                .endpoint("https://api.example.test/" + provider.name())
+                .requestKey(provider.name() + ":request")
+                .hsCode("850760")
+                .targetCountry("DE")
+                .matchedKey("hsCode=850760;country=DE")
+                .usedFor(usedFor)
+                .rawPayload("{\"items\":[]}")
+                .normalizedPayload("{\"collectionEvidence\":{\"operationEndpoint\":true,\"apiKeyConfigured\":true}}")
+                .scoreContribution(contribution)
+                .confidence(0.8)
+                .sourceType("live")
+                .fallbackUsed(false)
+                .cacheHit(false)
+                .fetchedAt(LocalDateTime.now())
+                .expiresAt(LocalDateTime.now().plusHours(24))
                 .build();
     }
 }

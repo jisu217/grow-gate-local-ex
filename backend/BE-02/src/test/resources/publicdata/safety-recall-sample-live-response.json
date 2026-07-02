@@ -1,0 +1,16 @@
+{
+  "items": [
+    {
+      "productName": "Battery pack",
+      "country": "DE",
+      "recallReason": "overheat fire risk",
+      "recallDate": "2026-05-20"
+    },
+    {
+      "productName": "Battery pack charger",
+      "country": "DE",
+      "recallReason": "리콜 과열 결함",
+      "recallDate": "2026-06-02"
+    }
+  ]
+}

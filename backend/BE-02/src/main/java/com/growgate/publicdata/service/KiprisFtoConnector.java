@@ -58,6 +58,16 @@ public class KiprisFtoConnector extends AbstractPublicDataConnector {
     }
 
     @Override
+    protected Map<String, String> fieldMapping() {
+        return Map.of(
+                "patentCount", "patents[]/items[]/data[] patent objects",
+                "claimsCount", "claimCount/claims/청구항수 numeric fields",
+                "productMentions", "keyword/productName/title/abstract/claim text",
+                "recordCount", "provider response patent result count"
+        );
+    }
+
+    @Override
     protected PublicDataSignal extractSignal(PublicDataRequest request, String rawPayload, boolean fallbackUsed) {
         JsonNode root = readTree(rawPayload);
         int patentCount = Math.max(maxArraySize(root), Math.max(0, objectCount(root) - 1));

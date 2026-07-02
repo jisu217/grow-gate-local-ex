@@ -162,7 +162,7 @@ VALUES
     '55555555-5555-5555-5555-555555555555',
     NULL,
     '{"productName":"리튬이온 배터리팩","certifications":["KC 안전확인","UN38.3 운송시험"],"trustGrade":"high"}',
-    '{"summary":"EU 수출 준비도는 양호하나 CE/RoHS/REACH 문서 보완이 필요합니다.","diagnosisScore":{"market":82,"regulation":74,"recall":69,"fto":63,"support":78,"overall":73},"riskItems":[{"type":"regulation","level":"medium","message":"CE 적합성 문서 보완 필요"}],"actionRoadmap":{"days30":["CE/RoHS/REACH 갭 분석"],"days60":["시험기관 견적 및 샘플 제출"],"days90":["영문 기술문서 패키지 제출"]},"evidenceSources":["Safety Korea","KOTRA","KIPRIS"]}',
+    '{"demoWatermark":"seed-demo-not-live","summary":"seed demo 결과입니다. 발표/제출 검증에서는 새 진단을 실행해 live/cache/fallback source trace를 확인해야 합니다.","diagnosisScore":{"market":82,"regulation":74,"recall":69,"fto":63,"support":78,"overall":73},"riskItems":[{"type":"regulation","level":"medium","message":"CE 적합성 문서 보완 필요"}],"actionRoadmap":{"days30":["CE/RoHS/REACH 갭 분석"],"days60":["시험기관 견적 및 샘플 제출"],"days90":["영문 기술문서 패키지 제출"]},"sourceTrustSummary":{"seedCount":1,"liveCount":0,"cacheCount":0,"fallbackCount":0,"motieRelatedSummary":"seed demo 결과 - live 공공데이터로 해석하지 않음"},"evidenceSources":["seed:Safety Korea","seed:KOTRA","seed:KIPRIS"]}',
     'done',
     'Germany / EU',
     NOW(6)

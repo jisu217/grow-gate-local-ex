@@ -35,6 +35,12 @@ public class CreateDiagnosisRequest {
         @Size(max = 2000, message = "제품 설명은 2000자 이하여야 합니다.")
         private String description;
 
+        @Size(max = 80, message = "지역은 80자 이하여야 합니다.")
+        private String region;
+
+        @Size(max = 120, message = "업종은 120자 이하여야 합니다.")
+        private String industry;
+
         @Size(max = 1000, message = "바이어 문의 내용은 1000자 이하여야 합니다.")
         private String buyerRequest;
 

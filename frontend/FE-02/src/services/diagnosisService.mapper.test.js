@@ -87,7 +87,43 @@ const detail = {
       liveCount: 1,
       cacheCount: 0,
       fallbackCount: 1,
+      externalFeedCount: 1,
+      liveSuccessRate: 0.5,
+      lastCollectedAt: '2026-07-03T09:00:00Z',
+      sourcePeriod: '2026-06-01 ~ 2026-06-30',
+      retryPayload: {
+        hsCode: '850760',
+        targetCountry: 'DE',
+        productName: '리튬이온 배터리팩',
+      },
+      providerHealth: [{
+        provider: 'KCS_TRADE',
+        liveCount: 1,
+        cacheCount: 0,
+        fallbackCount: 0,
+        status: 'live',
+      }, {
+        provider: 'SAFETY_RECALL',
+        liveCount: 0,
+        cacheCount: 0,
+        fallbackCount: 1,
+        status: 'fallback',
+        failureReason: 'API key is not configured',
+      }],
     },
+    scoreContributionLedger: [{
+      sourceId: 'KCS_TRADE:850760:DE',
+      provider: 'KCS_TRADE',
+      usedFor: 'market',
+      sourceType: 'live',
+      rawMetric: { exportAmountUsd: 45678 },
+      normalizedMetric: { exportAmountUsd: 45678, yoyGrowthPct: 12.4 },
+      rawContribution: 9,
+      confidence: 0.82,
+      adjustedContribution: 7,
+      finalScoreDelta: 7,
+      metricSummary: 'exportAmountUsd=45678, yoyGrowthPct=12.4',
+    }],
   },
 }
 
@@ -108,11 +144,15 @@ assert.equal(mapped.stages.s08[0].tasks[0].title, 'UN38.3 보유 여부 확인')
 assert.equal(mapped.session.evidenceRetrieval.mode, 'source-bound-evidence-search')
 assert.equal(mapped.session.exportKnowledgeTimeline[0].eventType, 'EXPORT_METRIC_SIGNAL')
 assert.equal(mapped.session.evidenceGuardrails.verdict, 'pass')
+assert.equal(mapped.session.sourceTrustSummary.liveSuccessRate, 0.5)
+assert.equal(mapped.session.sourceTrustSummary.providerHealth[1].failureReason, 'API key is not configured')
 assert.equal(mapped.stages.s10.pipes[0].source, 'KCS_TRADE')
 assert.equal(mapped.stages.s10.pipes[0].status, 'live')
 assert.equal(mapped.stages.s10.pipes[0].metricSummary, 'exportAmountUsd=45678')
 assert.equal(mapped.stages.s10.evidenceRetrieval.topK[0].sourceId, 'KCS_TRADE-1')
 assert.equal(mapped.stages.s10.timeline[0].scoreImpact, 9)
+assert.equal(mapped.stages.s10.ledger[0].rawMetric.exportAmountUsd, 45678)
+assert.equal(mapped.stages.s10.ledger[0].finalScoreDelta, 7)
 
 const decisionBrief = buildDecisionBrief(mapped.session, mapped.stages)
 assert.equal(decisionBrief.fallbackReviewRequired, true)

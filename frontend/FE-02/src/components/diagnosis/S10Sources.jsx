@@ -1,13 +1,16 @@
 // S10 데이터 출처 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 
-export default function S10Sources({ data }) {
+export default function S10Sources({ data, sourceTrustSummary, onRetry, retryStatus }) {
   const pipes = Array.isArray(data) ? data : data?.pipes ?? []
   const timeline = Array.isArray(data?.timeline) ? data.timeline : []
   const retrieval = data?.evidenceRetrieval ?? null
   const guardrails = data?.guardrails ?? null
   const ledger = Array.isArray(data?.ledger) ? data.ledger : []
   const topK = Array.isArray(retrieval?.topK) ? retrieval.topK : []
+  const providerHealth = Array.isArray(sourceTrustSummary?.providerHealth) ? sourceTrustSummary.providerHealth : []
+  const liveCount = Number(sourceTrustSummary?.liveCount ?? 0)
+  const cacheCount = Number(sourceTrustSummary?.cacheCount ?? 0)
 
   return (
     <DiagnosisStage
@@ -22,12 +25,14 @@ export default function S10Sources({ data }) {
           const statusText = status === 'live' ? 'Live'
             : status === 'cache' ? 'Cache'
             : status === 'crawl' ? 'Crawl'
+              : status === 'external_feed' ? 'Feed'
+                : status === 'seed' ? 'Seed'
               : status === 'heuristic' ? 'Rule'
                 : status === 'agent' ? 'Trace'
                   : status === 'user_input' ? 'User'
                     : 'Fallback'
           const chipType = status === 'live' || status === 'cache' ? 'ok'
-            : status === 'crawl' || status === 'heuristic' || status === 'agent' || status === 'user_input' ? 'warn'
+            : status === 'crawl' || status === 'external_feed' || status === 'heuristic' || status === 'agent' || status === 'user_input' ? 'warn'
               : 'req'
           return (
           <div key={pipe.source} className="pipe-card">
@@ -81,24 +86,53 @@ export default function S10Sources({ data }) {
         </section>
       </div>
 
+      <div className="source-health-panel">
+        <div>
+          <div className="pipe-source">Provider health & retry</div>
+          <div className="pipe-lbl">
+            lastCollectedAt {sourceTrustSummary?.lastCollectedAt || '-'} · sourcePeriod {sourceTrustSummary?.sourcePeriod || '확인 대기'} · liveSuccessRate {Math.round(Number(sourceTrustSummary?.liveSuccessRate ?? 0) * 100)}%
+          </div>
+          {liveCount + cacheCount === 0 && (
+            <div className="pipe-lbl req-text">live/cache 공공데이터 0건 - fallback 원인 확인 후 재수집이 필요합니다.</div>
+          )}
+        </div>
+        <button type="button" className="secondary-btn" onClick={onRetry} disabled={!onRetry || retryStatus === 'running'}>
+          {retryStatus === 'running' ? '재수집 중' : '공공데이터 재수집'}
+        </button>
+        {retryStatus && retryStatus !== 'running' && <div className="pipe-lbl">{retryStatus}</div>}
+        <div className="provider-health-list">
+          {providerHealth.length === 0 ? (
+            <div className="pipe-lbl">provider health 대기</div>
+          ) : providerHealth.map((provider) => (
+            <div key={provider.provider} className={`provider-health-row ${provider.status}`}>
+              <strong>{provider.provider}</strong>
+              <span>L{provider.liveCount ?? 0} / C{provider.cacheCount ?? 0} / F{provider.fallbackCount ?? 0} / Feed{provider.externalFeedCount ?? 0}</span>
+              <span>{provider.lastCollectedAt || '-'}</span>
+              <span>{provider.failureReason || 'failure 없음'}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+
       <div style={{ marginTop: 18 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 8 }}>Score contribution ledger</div>
+        <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 8 }}>Score contribution waterfall ledger</div>
         <div className="ledger-table-wrap">
           <table className="ledger-table">
             <thead>
               <tr>
                 <th>Source</th>
-                <th>Metric</th>
-                <th>Raw</th>
+                <th>Raw metric</th>
+                <th>Normalized metric</th>
+                <th>Raw contribution</th>
                 <th>Confidence</th>
-                <th>Adjusted</th>
-                <th>Final</th>
+                <th>Adjusted contribution</th>
+                <th>Final score delta</th>
               </tr>
             </thead>
             <tbody>
               {ledger.length === 0 ? (
                 <tr>
-                  <td colSpan="6">ledger 대기 - backend scoreContributionLedger가 없습니다.</td>
+                  <td colSpan="7">ledger 대기 - backend scoreContributionLedger가 없습니다.</td>
                 </tr>
               ) : ledger.slice(0, 10).map((row) => (
                 <tr key={`${row.sourceId}-${row.usedFor}`}>
@@ -106,6 +140,7 @@ export default function S10Sources({ data }) {
                     <strong>{row.provider}</strong>
                     <span>{row.sourceType} · {row.usedFor}</span>
                   </td>
+                  <td>{compactMetric(row.rawMetric)}</td>
                   <td>{row.metricSummary || compactMetric(row.normalizedMetric)}</td>
                   <td>{formatDelta(row.rawContribution)}</td>
                   <td>{formatConfidence(row.confidence)}</td>

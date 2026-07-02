@@ -24,6 +24,7 @@ import S10Sources    from '../../components/diagnosis/S10Sources.jsx'
 
 import { DIAGNOSIS_STEPS } from '../../mock/diagnosisSteps.js'
 import { getDiagnosisReport, getDiagnosisResult } from '../../services/diagnosisService.js'
+import { collectPublicData } from '../../services/publicDataService.js'
 
 // 진단 결과 뷰어 페이지 컴포넌트
 export default function DiagnosisResult() {
@@ -39,6 +40,7 @@ export default function DiagnosisResult() {
   const [currentStep, setCurrentStep] = useState(initialStep)
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [reportError, setReportError] = useState('')
+  const [retryStatus, setRetryStatus] = useState('')
 
   const scrollRef = useRef(null)
 
@@ -99,7 +101,7 @@ export default function DiagnosisResult() {
       case 7:  return <S07FtoSupport key={key} patents={stages.s07.patents} supports={stages.s07.supports} />
       case 8:  return <S08ExecBoard  key={key} execData={stages.s08} />
       case 9:  return <S09Report     key={key} scoreBars={stages.s09.scoreBars} summary={stages.s09.summary} onDownload={downloadReport} fastApiUsed={result.session.reportFastApiUsed} />
-      case 10: return <S10Sources    key={key} data={stages.s10} />
+      case 10: return <S10Sources    key={key} data={stages.s10} sourceTrustSummary={result.session.sourceTrustSummary} onRetry={retryPublicData} retryStatus={retryStatus} />
       default: return null
     }
   }
@@ -119,6 +121,22 @@ export default function DiagnosisResult() {
       window.URL.revokeObjectURL(url)
     } catch (err) {
       setReportError(err.message || '리포트 다운로드에 실패했습니다. 잠시 후 다시 시도해주세요.')
+    }
+  }
+
+  const retryPublicData = async () => {
+    const payload = result?.session?.sourceTrustSummary?.retryPayload ?? {}
+    if (!payload.hsCode || !payload.targetCountry || !payload.productName) {
+      setRetryStatus('재수집 입력값 부족')
+      return
+    }
+    setRetryStatus('running')
+    try {
+      const response = await collectPublicData(payload)
+      const runId = response?.run?.id || response?.runId || 'created'
+      setRetryStatus(`재수집 run 생성: ${runId}`)
+    } catch (err) {
+      setRetryStatus(err.message || '재수집 실패')
     }
   }
 
@@ -177,7 +195,7 @@ export default function DiagnosisResult() {
             sourceTrustSummary={result.session.sourceTrustSummary}
           />
           <DecisionBrief session={result.session} stages={result.stages} />
-          <SourceTrustBar summary={result.session.sourceTrustSummary} />
+          <SourceTrustBar summary={result.session.sourceTrustSummary} onRetry={retryPublicData} retryStatus={retryStatus} />
 
           {['pending', 'running'].includes(String(result.session?.status ?? '').toLowerCase()) && (
             <StatusMessage type="loading" message="공공데이터와 제품 지식을 대조 중입니다. 완료되면 이 화면이 자동으로 갱신됩니다." />

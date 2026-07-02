@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>GrowGate export evidence sample</title>
+    <item>
+      <title>Germany battery pack export certification report</title>
+      <link>https://dream.kotra.or.kr/sample/battery-pack</link>
+      <pubDate>2026-06-30</pubDate>
+      <description>Battery pack export and certification issues in Germany trade market.</description>
+    </item>
+    <item>
+      <title>EU customs and trade update</title>
+      <link>https://www.kotra.or.kr/sample/eu-trade</link>
+      <pubDate>2026-06-20</pubDate>
+      <description>Export customs report for Korean suppliers.</description>
+    </item>
+  </channel>
+</rss>

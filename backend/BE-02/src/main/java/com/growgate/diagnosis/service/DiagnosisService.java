@@ -426,6 +426,8 @@ public class DiagnosisService {
             snapshot.put("description", firstNonBlank(
                     inputData != null ? inputData.getDescription() : null,
                     product.getDescription()));
+            snapshot.put("region", inputData != null ? inputData.getRegion() : null);
+            snapshot.put("industry", inputData != null ? inputData.getIndustry() : null);
             snapshot.put("buyerRequest", inputData != null ? inputData.getBuyerRequest() : null);
             snapshot.put("buyerDeadline", inputData != null && inputData.getBuyerDeadline() != null
                     ? inputData.getBuyerDeadline().toString() : null);
@@ -459,6 +461,8 @@ public class DiagnosisService {
                     product != null ? product.getHsCode() : null));
             map.put("description", firstNonBlank(inputData != null ? inputData.getDescription() : null,
                     product != null ? product.getDescription() : null));
+            map.put("region", inputData != null ? inputData.getRegion() : null);
+            map.put("industry", inputData != null ? inputData.getIndustry() : null);
             map.put("buyerRequest", inputData != null ? inputData.getBuyerRequest() : null);
             map.put("buyerDeadline", inputData == null || inputData.getBuyerDeadline() == null ? null : inputData.getBuyerDeadline().toString());
             map.put("expectedShipmentDate", inputData == null || inputData.getExpectedShipmentDate() == null ? null : inputData.getExpectedShipmentDate().toString());
@@ -479,6 +483,8 @@ public class DiagnosisService {
             snapshot.put("productName", inputData.getProductName());
             snapshot.put("hsCode", inputData.getHsCode());
             snapshot.put("targetCountry", targetCountry);
+            snapshot.put("region", inputData.getRegion());
+            snapshot.put("industry", inputData.getIndustry());
             snapshot.put("buyerRequest", inputData.getBuyerRequest());
             snapshot.put("buyerDeadline", inputData.getBuyerDeadline() == null ? null : inputData.getBuyerDeadline().toString());
             snapshot.put("expectedShipmentDate", inputData.getExpectedShipmentDate() == null ? null : inputData.getExpectedShipmentDate().toString());

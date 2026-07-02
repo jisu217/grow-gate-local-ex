@@ -12,8 +12,11 @@ import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Locale;
 import java.util.OptionalDouble;
@@ -25,6 +28,7 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
 
     private static final Pattern SECRET_QUERY_PARAM = Pattern.compile(
             "(?i)([?&](?:serviceKey|servicekey|apiKey|apikey|key|token|access_token|client_secret)=)([^&\\s]+)");
+    private static final Pattern ISO_DATE = Pattern.compile("\\b20\\d{2}[-./]\\d{1,2}[-./]\\d{1,2}\\b");
     private static final String REDACTED = "[REDACTED]";
 
     private final RestTemplate restTemplate;
@@ -49,7 +53,7 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
                 if (value != null && !value.isBlank()) builder.queryParam(key, value);
             });
             builder.queryParam("serviceKey", apiKey);
-            URI uri = builder.build(true).toUri();
+            URI uri = builder.build().encode().toUri();
             String body = restTemplate.getForObject(uri, String.class);
             return success(request, endpoint, apiKey, body);
         } catch (IllegalArgumentException | RestClientException e) {
@@ -127,10 +131,16 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
         PublicDataSignal signal = extractSignal(request, rawPayload, fallbackUsed);
         normalized.put("metrics", signal.getMetrics());
         normalized.put("metricSchema", signal.getMetrics().keySet());
+        normalized.put("fieldMapping", fieldMapping());
         normalized.put("scoreContribution", signal.getScoreContribution());
         normalized.put("confidence", signal.getConfidence());
+        addSourcePeriod(normalized, rawPayload);
         normalized.put("scoreFormula", "scoreContribution is calculated from provider-specific metrics; diagnosis uses confidence-adjusted contribution");
         return normalized;
+    }
+
+    protected Map<String, String> fieldMapping() {
+        return Map.of("recordCount", "provider response item/row/object count");
     }
 
     protected Map<String, Object> collectionEvidence(String endpoint, String apiKey, boolean fallbackUsed, String reason) {
@@ -295,6 +305,28 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
         int xmlItemHints = countMatches(body, "<(?:item|row|record)\\b", 200);
         if (xmlItemHints > 0) return xmlItemHints;
         return Math.max(0, jsonObjectHints - 1);
+    }
+
+    private void addSourcePeriod(Map<String, Object> normalized, String rawPayload) {
+        List<String> dates = extractDateTokens(rawPayload);
+        if (dates.isEmpty()) return;
+        dates.sort(Comparator.naturalOrder());
+        String start = dates.get(0);
+        String end = dates.get(dates.size() - 1);
+        normalized.put("sourcePeriodStart", start);
+        normalized.put("sourcePeriodEnd", end);
+        normalized.put("sourcePeriod", start.equals(end) ? start : start + " ~ " + end);
+        normalized.put("lastPublishedAt", end);
+    }
+
+    private List<String> extractDateTokens(String rawPayload) {
+        if (rawPayload == null || rawPayload.isBlank()) return List.of();
+        java.util.regex.Matcher matcher = ISO_DATE.matcher(rawPayload);
+        List<String> dates = new ArrayList<>();
+        while (matcher.find() && dates.size() < 100) {
+            dates.add(matcher.group().replace('.', '-').replace('/', '-'));
+        }
+        return dates;
     }
 
     private int countMatches(String body, String regex, int limit) {

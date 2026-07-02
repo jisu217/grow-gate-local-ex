@@ -58,6 +58,15 @@ public class SafetyRecallConnector extends AbstractPublicDataConnector {
     }
 
     @Override
+    protected Map<String, String> fieldMapping() {
+        return Map.of(
+                "recallCount", "recall/리콜/위해/부적합/결함 records or keywords",
+                "highRiskCount", "fire/burn/overheat/explosion/화재/과열/폭발/감전 risk text",
+                "recordCount", "provider response recall item count"
+        );
+    }
+
+    @Override
     protected PublicDataSignal extractSignal(PublicDataRequest request, String rawPayload, boolean fallbackUsed) {
         JsonNode root = readTree(rawPayload);
         int recordCount = Math.max(maxArraySize(root), Math.max(0, objectCount(root) - 1));

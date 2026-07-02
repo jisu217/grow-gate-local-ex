@@ -160,6 +160,62 @@ public class PublicDataCollectionService {
                 .build();
     }
 
+    @Transactional(readOnly = true)
+    public Map<String, Object> getHealth(String userId) {
+        List<String> scopeUserIds = scopeUserIds(userId);
+        List<PublicDataCollectionRun> runs = runRepository.findTop20ByRequestedBy_IdInOrderByStartedAtDesc(scopeUserIds);
+        List<PublicDataRecord> records = recordRepository.findTop50ByRun_RequestedBy_IdInOrderByFetchedAtDesc(scopeUserIds);
+        int totalRecords = records.size();
+        int liveCount = (int) records.stream().filter(record -> "live".equals(sourceType(record))).count();
+        int cacheCount = (int) records.stream().filter(record -> "cache".equals(sourceType(record))).count();
+        int fallbackCount = (int) records.stream().filter(record -> "fallback".equals(sourceType(record))).count();
+        int motieRelatedRecords = (int) records.stream().filter(record -> record.getProvider().motieRelated()).count();
+        int motieLiveOrCache = (int) records.stream()
+                .filter(record -> record.getProvider().motieRelated())
+                .filter(record -> "live".equals(sourceType(record)) || "cache".equals(sourceType(record)))
+                .count();
+        int motieVerifiedOperationLive = (int) records.stream()
+                .filter(record -> record.getProvider().motieRelated())
+                .filter(record -> "live".equals(sourceType(record)) || "cache".equals(sourceType(record)))
+                .filter(record -> evidenceBoolean(record, "operationEndpoint"))
+                .count();
+        int motieFallbackCount = (int) records.stream()
+                .filter(record -> record.getProvider().motieRelated())
+                .filter(record -> "fallback".equals(sourceType(record)))
+                .count();
+        int motieScoreContribution = records.stream()
+                .filter(record -> record.getProvider().motieRelated())
+                .filter(record -> "live".equals(sourceType(record)) || "cache".equals(sourceType(record)))
+                .map(PublicDataRecord::getScoreContribution)
+                .filter(value -> value != null)
+                .mapToInt(Integer::intValue)
+                .sum();
+
+        Map<String, Object> health = new LinkedHashMap<>();
+        health.put("scope", "current-user-or-company");
+        health.put("runCount", runs.size());
+        health.put("recordCount", totalRecords);
+        health.put("liveCount", liveCount);
+        health.put("cacheCount", cacheCount);
+        health.put("fallbackCount", fallbackCount);
+        health.put("liveOrCacheRatio", ratio(liveCount + cacheCount, Math.max(1, totalRecords)));
+        health.put("motieRelatedRecordCount", motieRelatedRecords);
+        health.put("motieRelatedLiveOrCacheCount", motieLiveOrCache);
+        health.put("motieVerifiedOperationLiveCount", motieVerifiedOperationLive);
+        health.put("motieRelatedFallbackCount", motieFallbackCount);
+        health.put("motieRelatedScoreContribution", motieScoreContribution);
+        health.put("motieRelatedRatio", ratio(motieRelatedRecords, Math.max(1, totalRecords)));
+        health.put("motieLiveEvidenceReady", motieVerifiedOperationLive >= 2);
+        health.put("latestRunId", runs.isEmpty() ? null : runs.get(0).getId());
+        health.put("newestFetchedAt", records.stream().map(PublicDataRecord::getFetchedAt)
+                .filter(value -> value != null).max(LocalDateTime::compareTo).map(DateTimeUtils::formatUtc).orElse(null));
+        health.put("providers", providerStatuses(records));
+        health.put("presentationAnswer", "MOTIE-related live/cache records="
+                + motieLiveOrCache + ", verified operation endpoint records=" + motieVerifiedOperationLive
+                + ", score contribution=" + motieScoreContribution);
+        return health;
+    }
+
     public PublicDataCollectionResult collectManual(String userId, String hsCode, String targetCountry, String productName) {
         if (userRepository.findById(userId).isEmpty()) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "사용자를 찾을 수 없습니다.");
@@ -239,7 +295,7 @@ public class PublicDataCollectionService {
                 .usedFor(result.getUsedFor())
                 .rawPayload(result.getRawPayload())
                 .normalizedPayload(toJson(result.getNormalizedPayload()))
-                .scoreContribution(result.getScoreContribution())
+                .scoreContribution(guardedScoreContribution(result.getScoreContribution(), result.isFallbackUsed(), result.getSourceType()))
                 .confidence(result.getConfidence())
                 .sourceType(result.getSourceType() == null ? result.isFallbackUsed() ? "fallback" : "live" : result.getSourceType())
                 .fallbackUsed(result.isFallbackUsed())
@@ -262,7 +318,7 @@ public class PublicDataCollectionService {
                 .usedFor(cached.getUsedFor())
                 .rawPayload(cached.getRawPayload())
                 .normalizedPayload(cached.getNormalizedPayload())
-                .scoreContribution(cached.getScoreContribution())
+                .scoreContribution(guardedScoreContribution(cached.getScoreContribution(), cached.isFallbackUsed(), cached.getSourceType()))
                 .confidence(cached.getConfidence())
                 .sourceType("cache")
                 .fallbackUsed(cached.isFallbackUsed())
@@ -271,6 +327,19 @@ public class PublicDataCollectionService {
                 .fetchedAt(LocalDateTime.now())
                 .expiresAt(cached.getExpiresAt())
                 .build();
+    }
+
+    private int guardedScoreContribution(Integer scoreContribution, boolean fallbackUsed, String sourceType) {
+        int value = scoreContribution == null ? 0 : scoreContribution;
+        if (fallbackUsed || "fallback".equals(sourceType)) return Math.min(value, 0);
+        return value;
+    }
+
+    private String sourceType(PublicDataRecord record) {
+        if (record.isFallbackUsed() || "fallback".equals(record.getSourceType())) return "fallback";
+        if (record.isCacheHit() || "cache".equals(record.getSourceType())) return "cache";
+        if (record.getSourceType() != null && !record.getSourceType().isBlank()) return record.getSourceType();
+        return "live";
     }
 
     private PublicDataCollectionStatus resolveStatus(int successCount, int fallbackCount) {

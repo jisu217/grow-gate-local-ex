@@ -61,6 +61,16 @@ public class KcsTradeConnector extends AbstractPublicDataConnector {
     }
 
     @Override
+    protected Map<String, String> fieldMapping() {
+        return Map.of(
+                "importAmountUsd", "importAmountUsd/import_amount_usd/impDlr/importDlr/importAmount/수입금액",
+                "exportAmountUsd", "exportAmountUsd/export_amount_usd/expDlr/exportDlr/exportAmount/수출금액",
+                "yoyGrowthPct", "yoyGrowthPct/yoy_growth_pct/growthPct/growth/증가율",
+                "recordCount", "items[]/data[]/row[] monthly trade records"
+        );
+    }
+
+    @Override
     protected PublicDataSignal extractSignal(PublicDataRequest request, String rawPayload, boolean fallbackUsed) {
         JsonNode root = readTree(rawPayload);
         double importAmountUsd = sumNumericFields(root,

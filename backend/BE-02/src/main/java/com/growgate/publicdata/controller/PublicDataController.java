@@ -23,6 +23,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.Map;
+
 @RestController
 @RequestMapping("/api/public-data")
 @RequiredArgsConstructor
@@ -70,6 +72,12 @@ public class PublicDataController {
     public ResponseEntity<PublicDataDashboardResponse> getDashboard(
             @AuthenticationPrincipal UserDetails userDetails) {
         return ResponseEntity.ok(collectionService.getDashboard(userDetails.getUsername()));
+    }
+
+    @GetMapping("/health")
+    public ResponseEntity<Map<String, Object>> getHealth(
+            @AuthenticationPrincipal UserDetails userDetails) {
+        return ResponseEntity.ok(collectionService.getHealth(userDetails.getUsername()));
     }
 
     @PostMapping("/daily-refresh")
