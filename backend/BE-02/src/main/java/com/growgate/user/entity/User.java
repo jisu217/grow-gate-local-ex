@@ -64,4 +64,11 @@ public class User {
         this.name = name;
         this.updatedAt = LocalDateTime.now();
     }
+
+    public void updateDemoCredentials(String name, String passwordHash) {
+        this.name = name;
+        this.passwordHash = passwordHash;
+        this.userType = UserType.company;
+        this.updatedAt = LocalDateTime.now();
+    }
 }

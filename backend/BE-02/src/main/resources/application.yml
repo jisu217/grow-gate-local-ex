@@ -48,6 +48,11 @@ app:
       app-title: ${APP_AGENT_OPENROUTER_APP_TITLE:GrowGate Local EX}
   auth:
     cookie-secure: ${APP_AUTH_COOKIE_SECURE:false}
+  demo-admin:
+    enabled: ${APP_DEMO_ADMIN_ENABLED:true}
+    email: ${APP_DEMO_ADMIN_EMAIL:admin@growgate.com}
+    name: ${APP_DEMO_ADMIN_NAME:김지용}
+    password-hash: ${APP_DEMO_ADMIN_PASSWORD_HASH:$2y$10$5BlFP36IjiTq20fBl/kkP.tbeQDqStrGae.empkMuMzCmfWDiXQlW}
   google-sso:
     enabled: ${GOOGLE_SSO_ENABLED:false}
     client-id: ${GOOGLE_SSO_CLIENT_ID:}

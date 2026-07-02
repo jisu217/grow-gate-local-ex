@@ -45,8 +45,12 @@ export default function SignupCompany() {
         consentPolicyVersion: CONSENT_POLICY_VERSION,
       })
       navigate('/login')
-    } catch {
-      setError('회원가입에 실패했습니다. 입력 정보를 확인해주세요.')
+    } catch (err) {
+      if (err.status === 409) {
+        setError('이미 가입된 이메일 또는 사업자번호입니다. 로그인하거나 다른 정보를 입력해주세요.')
+      } else {
+        setError(err.message || '회원가입에 실패했습니다. 입력 정보를 확인해주세요.')
+      }
     } finally {
       setSubmitting(false)
     }

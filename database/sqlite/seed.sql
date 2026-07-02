@@ -10,15 +10,27 @@ ON CONFLICT(id) DO UPDATE SET
 
 INSERT INTO users (id, email, password_hash, name, user_type, created_at, updated_at)
 VALUES
+  ('22222222-2222-2222-2222-222222222223', 'admin@growgate.com', '$2y$10$5BlFP36IjiTq20fBl/kkP.tbeQDqStrGae.empkMuMzCmfWDiXQlW', '김지용', 'company', datetime('now'), datetime('now')),
   ('22222222-2222-2222-2222-222222222222', 'owner@growgate.local', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '김대표', 'company', datetime('now'), datetime('now')),
   ('33333333-3333-3333-3333-333333333333', 'viewer@growgate.local', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '박담당', 'company', datetime('now'), datetime('now'))
 ON CONFLICT(id) DO UPDATE SET
+  password_hash = excluded.password_hash,
   name = excluded.name,
   user_type = excluded.user_type,
   updated_at = datetime('now');
 
+INSERT INTO user_consent_records (id, user_id, policy_version, terms_accepted, privacy_accepted, marketing_accepted, accepted_at, source)
+VALUES
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', '22222222-2222-2222-2222-222222222223', '2026-07-privacy-v1', 1, 1, 0, datetime('now'), 'seed-demo-not-live')
+ON CONFLICT(id) DO UPDATE SET
+  policy_version = excluded.policy_version,
+  terms_accepted = excluded.terms_accepted,
+  privacy_accepted = excluded.privacy_accepted,
+  marketing_accepted = excluded.marketing_accepted;
+
 INSERT INTO memberships (id, user_id, company_id, role, created_at)
 VALUES
+  ('44444444-4444-4444-4444-444444444440', '22222222-2222-2222-2222-222222222223', '11111111-1111-1111-1111-111111111111', 'owner', datetime('now')),
   ('44444444-4444-4444-4444-444444444441', '22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'owner', datetime('now')),
   ('44444444-4444-4444-4444-444444444442', '33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', 'viewer', datetime('now'))
 ON CONFLICT(id) DO UPDATE SET

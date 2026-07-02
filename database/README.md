@@ -102,10 +102,11 @@ Seed users are included for DB-level testing:
 
 | Email | Role | Note |
 | :--- | :--- | :--- |
+| `admin@growgate.com` | `owner` | presentation/demo admin for the sample company |
 | `owner@growgate.local` | `owner` | owns sample company and product |
 | `viewer@growgate.local` | `viewer` | read-only sample member |
 
-The seeded password hash is a bcrypt test hash for `password`. Use it only for local development.
+The presentation admin password is `growgateadmin`. The backend also upserts this account on startup while `APP_DEMO_ADMIN_ENABLED=true`, so existing demo DB volumes can recover the login without a full reset. Set `APP_DEMO_ADMIN_ENABLED=false` outside local/demo environments. The legacy local seed users still use the bcrypt test hash for `password`. Use these accounts only for local development and demo reset environments.
 
 ## Resetting MySQL
 

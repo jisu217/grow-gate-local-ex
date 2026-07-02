@@ -12,15 +12,27 @@ ON DUPLICATE KEY UPDATE
 
 INSERT INTO users (id, email, password_hash, name, user_type, created_at, updated_at)
 VALUES
+  ('22222222-2222-2222-2222-222222222223', 'admin@growgate.com', '$2y$10$5BlFP36IjiTq20fBl/kkP.tbeQDqStrGae.empkMuMzCmfWDiXQlW', '김지용', 'company', NOW(6), NOW(6)),
   ('22222222-2222-2222-2222-222222222222', 'owner@growgate.local', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '김대표', 'company', NOW(6), NOW(6)),
   ('33333333-3333-3333-3333-333333333333', 'viewer@growgate.local', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', '박담당', 'company', NOW(6), NOW(6))
 ON DUPLICATE KEY UPDATE
+  password_hash = VALUES(password_hash),
   name = VALUES(name),
   user_type = VALUES(user_type),
   updated_at = NOW(6);
 
+INSERT INTO user_consent_records (id, user_id, policy_version, terms_accepted, privacy_accepted, marketing_accepted, accepted_at, source)
+VALUES
+  ('bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbb1', '22222222-2222-2222-2222-222222222223', '2026-07-privacy-v1', TRUE, TRUE, FALSE, NOW(6), 'seed-demo-not-live')
+ON DUPLICATE KEY UPDATE
+  policy_version = VALUES(policy_version),
+  terms_accepted = VALUES(terms_accepted),
+  privacy_accepted = VALUES(privacy_accepted),
+  marketing_accepted = VALUES(marketing_accepted);
+
 INSERT INTO memberships (id, user_id, company_id, role, created_at)
 VALUES
+  ('44444444-4444-4444-4444-444444444440', '22222222-2222-2222-2222-222222222223', '11111111-1111-1111-1111-111111111111', 'owner', NOW(6)),
   ('44444444-4444-4444-4444-444444444441', '22222222-2222-2222-2222-222222222222', '11111111-1111-1111-1111-111111111111', 'owner', NOW(6)),
   ('44444444-4444-4444-4444-444444444442', '33333333-3333-3333-3333-333333333333', '11111111-1111-1111-1111-111111111111', 'viewer', NOW(6))
 ON DUPLICATE KEY UPDATE
