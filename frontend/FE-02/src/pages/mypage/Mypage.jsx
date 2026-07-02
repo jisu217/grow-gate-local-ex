@@ -5,7 +5,6 @@ import {
   getMypageOverview,
   getMypageProducts,
   createMypageProduct,
-  updateMypageProduct,
   deleteMypageProduct,
   rerunDiagnosis,
 } from '../../services/mypageService.js'
@@ -13,6 +12,9 @@ import { COUNTRY_OPTIONS, normalizeTargetCountry } from '../../utils/country.js'
 
 // 내 제품 관리 목록: 한 페이지에 보여줄 제품 수
 const PRODUCTS_PER_PAGE = 5
+
+// 제품 카테고리 (제품 수정 페이지와 동일 목록)
+const CATEGORIES = ['전기전자', '전자부품', '기계·장비', '화학·소재', '식품·의료', '기타']
 
 // 마이페이지 — 수출 준비 상태 대시보드
 export default function Mypage() {
@@ -25,8 +27,7 @@ export default function Mypage() {
 
   // 제품 추가 모달 상태
   const [modalOpen, setModalOpen] = useState(false)
-  const [editingId, setEditingId] = useState(null)
-  const [form, setForm] = useState({ name: '', hs: '', country: 'DE' })
+  const [form, setForm] = useState({ name: '', hs: '', country: 'DE', category: CATEGORIES[0], description: '' })
 
   // 제품 삭제 확인 모달 대상 (null이면 닫힘)
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -71,18 +72,15 @@ export default function Mypage() {
   const safePage = Math.min(productPage, pageCount - 1)
   const pagedProducts = products.slice(safePage * PRODUCTS_PER_PAGE, safePage * PRODUCTS_PER_PAGE + PRODUCTS_PER_PAGE)
 
-  // 제품 추가 모달 열기/닫기
-  function openAdd() {
-    setEditingId(null)
-    setForm({ name: '', hs: '', country: 'DE' })
-    setSaveError('')
-    setModalOpen(true)
+  // 제품 선택 → 위 대시보드를 그 제품으로 전환 (상단 드롭다운과 동기화)
+  function selectProduct(id) {
+    setSelectedId(id)
+    document.querySelector(`.${styles.slabel}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' })
   }
-  function openEdit(id) {
-    const p = products.find((x) => x.id === id)
-    if (!p) return
-    setEditingId(id)
-    setForm({ name: p.name, hs: p.hs, country: normalizeTargetCountry(p.country) })
+
+  // 제품 추가 모달 열기/닫기 (기본 정보 수정은 '제품 정보' 상세 페이지에서)
+  function openAdd() {
+    setForm({ name: '', hs: '', country: 'DE', category: CATEGORIES[0], description: '' })
     setSaveError('')
     setModalOpen(true)
   }
@@ -95,16 +93,25 @@ export default function Mypage() {
     const country = normalizeTargetCountry(form.country)
     if (!name || !hs) { alert('제품명과 HS Code를 입력해주세요.'); return }
 
+    // 중복 등록 방지 (제품명 + HS Code + 대상국이 같으면 막음)
+    const dup = products.find((p) =>
+      p.name.trim().toLowerCase() === name.toLowerCase() &&
+      String(p.hs).replace(/\D/g, '') === hs.replace(/\D/g, '') &&
+      normalizeTargetCountry(p.country) === country
+    )
+    if (dup) {
+      setSaveError(`이미 같은 제품이 등록돼 있어요 (${dup.name} · HS ${dup.hs} · ${dup.country}). 중복 등록은 막습니다.`)
+      return
+    }
+
     try {
-      if (editingId) {
-        await updateMypageProduct(editingId, { name, hs, country })
-        setProducts((prev) => prev.map((p) =>
-          p.id === editingId ? { ...p, name, hs, country } : p))
-      } else {
-        const created = await createMypageProduct({ name, hs, country })
-        setProducts((prev) => [...prev, created])
-        setSelectedId(created.id)
-      }
+      const created = await createMypageProduct({
+        name, hs, country,
+        category: form.category,
+        description: form.description.trim(),
+      })
+      setProducts((prev) => [...prev, created])
+      setSelectedId(created.id)
       closeModal()
     } catch (err) {
       setSaveError(err.message || '제품 저장에 실패했습니다. 입력값과 서버 상태를 확인해주세요.')
@@ -276,21 +283,27 @@ export default function Mypage() {
           </div>
           <div className={styles.plist}>
             {pagedProducts.map((p) => (
-              <div key={p.id} className={`${styles.prow} ${p.id === selectedId ? styles.cur : ''}`}>
+              <div
+                key={p.id}
+                className={`${styles.prow} ${p.id === selectedId ? styles.cur : ''}`}
+                onClick={() => selectProduct(p.id)}
+                role="button"
+                title="클릭하면 이 제품으로 전환됩니다"
+              >
                 <div>
                   <div className={styles.pn}>{p.name}</div>
                   <div className={styles.pmeta}>HS {p.hs} · {p.country} 수출</div>
                 </div>
                 <span className={`${styles.badge} ${p.id === selectedId ? styles.badgeCur : ''}`}>
-                  {p.id === selectedId ? '지금 보는 제품' : '제품'}
+                  {p.id === selectedId ? '지금 보는 제품' : '클릭해 전환'}
                 </span>
                 {p.score != null
                   ? <span className={styles.sc}>{p.score}<span className={styles.scU}>점</span></span>
                   : <span className={`${styles.sc} ${styles.scNone}`}>미진단</span>}
                 <div className={styles.acts}>
-                  <button className={styles.ab} onClick={() => openEdit(p.id)}>수정</button>
-                  <button className={`${styles.ab} ${styles.abDanger}`} onClick={() => askDelete(p.id)}>삭제</button>
-                  <button className={`${styles.ab} ${styles.abPrimary}`} onClick={() => navigate(`/mypage/diagnosis/${p.id}`)}>보기</button>
+                  <button className={`${styles.ab} ${styles.abPrimary}`} onClick={(e) => { e.stopPropagation(); navigate(`/mypage/diagnosis/${p.id}`) }}>판단 근거</button>
+                  <button className={styles.ab} onClick={(e) => { e.stopPropagation(); navigate(`/mypage/knowledge/${p.id}`) }}>제품 정보</button>
+                  <button className={`${styles.ab} ${styles.abDanger}`} onClick={(e) => { e.stopPropagation(); askDelete(p.id) }}>삭제</button>
                 </div>
               </div>
             ))}
@@ -356,7 +369,7 @@ export default function Mypage() {
         onClick={(e) => { if (e.target === e.currentTarget) closeModal() }}
       >
         <div className={styles.sheet}>
-          <h3>{editingId ? '제품 수정' : '제품 추가'}</h3>
+          <h3>제품 추가</h3>
           <div className={styles.desc}>
             제품명·HS Code·수출 대상국을 입력하면 마이페이지와 진단 입력에 반영됩니다.
           </div>
@@ -380,18 +393,25 @@ export default function Mypage() {
               {COUNTRY_OPTIONS.map((c) => <option key={c}>{c}</option>)}
             </select>
           </div>
+          <div className={styles.field}>
+            <label>카테고리</label>
+            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className={styles.field}>
+            <label>제품 설명</label>
+            <textarea
+              rows={3}
+              placeholder="제품의 주요 특성·용도·인증 현황 등"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
+          </div>
           {saveError && <div className={styles.modalError}>{saveError}</div>}
-          {editingId && (
-            <button
-              className={styles.knLink}
-              onClick={() => { closeModal(); navigate('/mypage/knowledge') }}
-            >
-              📦 제품 지식(인증서·FTO·바이어 요구사항)은 여기서 관리 →
-            </button>
-          )}
           <div className={styles.foot}>
             <button className={styles.cancel} onClick={closeModal}>취소</button>
-            <button className={styles.save} onClick={saveProduct}>{editingId ? '수정' : '추가'}</button>
+            <button className={styles.save} onClick={saveProduct}>추가</button>
           </div>
         </div>
       </div>

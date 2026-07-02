@@ -4,6 +4,7 @@ import styles from './KnowledgeForm.module.css'
 import { usePermission } from '../../hooks/usePermission.js'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
 import { getProductKnowledge, saveProductKnowledge } from '../../services/productService.js'
+import { COUNTRY_OPTIONS, normalizeTargetCountry } from '../../utils/country.js'
 
 const CATEGORIES = ['전기전자', '전자부품', '기계·장비', '화학·소재', '식품·의료', '기타']
 
@@ -13,7 +14,7 @@ export default function KnowledgeEdit() {
   const navigate = useNavigate()
   const { can } = usePermission()
 
-  const [form, setForm] = useState({ productName: '', category: '', description: '' })
+  const [form, setForm] = useState({ productName: '', hsCode: '', targetCountry: 'DE', category: '', description: '' })
   const [pageState, setPageState] = useState('loading')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -22,7 +23,13 @@ export default function KnowledgeEdit() {
     setPageState('loading')
     getProductKnowledge(productId)
       .then((data) => {
-        setForm({ productName: data.name, category: data.category, description: data.description })
+        setForm({
+          productName: data.name,
+          hsCode: data.hsCode ?? '',
+          targetCountry: normalizeTargetCountry(data.targetCountry),
+          category: data.category,
+          description: data.description,
+        })
         setPageState('ok')
       })
       .catch(() => setPageState('error'))
@@ -62,10 +69,18 @@ export default function KnowledgeEdit() {
 
   // 수정 저장 처리
   const handleSave = async () => {
+    const hsCode = form.hsCode.trim()
+    if (!form.productName.trim()) { setError('제품명은 필수입니다.'); return }
+    if (!/^\d{6,10}$/.test(hsCode)) { setError('HS Code는 숫자 6~10자리로 입력해주세요.'); return }
+
     setSaving(true)
     setError('')
     try {
-      await saveProductKnowledge(productId, form)
+      await saveProductKnowledge(productId, {
+        ...form,
+        hsCode,
+        targetCountry: normalizeTargetCountry(form.targetCountry),
+      })
       navigate(`/mypage/knowledge/${productId}`)
     } catch {
       setError('저장에 실패했습니다. 잠시 후 다시 시도해주세요.')
@@ -90,6 +105,34 @@ export default function KnowledgeEdit() {
             value={form.productName}
             onChange={handleChange}
           />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="edit-hsCode">HS Code *</label>
+          <input
+            id="edit-hsCode"
+            className={styles.input}
+            name="hsCode"
+            value={form.hsCode}
+            onChange={handleChange}
+            placeholder="예: 850760"
+            inputMode="numeric"
+          />
+        </div>
+
+        <div className={styles.field}>
+          <label className={styles.label} htmlFor="edit-targetCountry">수출 대상국</label>
+          <select
+            id="edit-targetCountry"
+            className={styles.input}
+            name="targetCountry"
+            value={form.targetCountry}
+            onChange={handleChange}
+          >
+            {COUNTRY_OPTIONS.map((c) => (
+              <option key={c} value={c}>{c}</option>
+            ))}
+          </select>
         </div>
 
         <div className={styles.field}>

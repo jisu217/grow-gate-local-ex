@@ -57,7 +57,7 @@
 .formTitle { font-size: 26px; font-weight: 700; color: var(--navy); margin: 8px 0 4px; }
 
 /* 폼 설명 */
-.formDesc { font-size: 14px; color: var(--slate); margin-bottom: 24px; }
+.formDesc { font-size: 14px; color: var(--slate); margin-bottom: 24px; line-height: 1.6; word-break: keep-all; }
 
 /* 입력 필드 목록 */
 .fields { display: flex; flex-direction: column; gap: 18px; }
@@ -186,3 +186,53 @@
   .pickPaginationRow { align-items: flex-start; flex-direction: column; }
   .pickPager { flex-wrap: wrap; }
 }
+
+/* ===== 제품 선택/요약 (B-3: 판단 입력 = 제품 선택 + 이번 건 정보) ===== */
+.sectionLabel { font-size: 13.5px; font-weight: 700; color: var(--navy); margin: 24px 0 12px; }
+.sectionLabel:first-of-type { margin-top: 10px; }
+
+.productPick { border: 1px dashed var(--blue-line); border-radius: 14px; padding: 20px; background: #fafcff; }
+.pickPrompt { font-size: 14px; color: var(--slate); margin-bottom: 14px; line-height: 1.5; }
+.pickBtns { display: flex; gap: 10px; flex-wrap: wrap; }
+.primaryOutlineBtn { font-family: inherit; font-size: 14px; font-weight: 700; color: #fff; background: var(--blue); border: none; padding: 11px 18px; border-radius: 11px; cursor: pointer; transition: .15s; }
+.primaryOutlineBtn:hover:not(:disabled) { background: #2559e0; }
+.primaryOutlineBtn:disabled { opacity: .5; cursor: default; }
+.pickEmptyHint { margin-top: 12px; font-size: 13px; color: var(--slate-2); }
+
+.productSummary { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; border: 1.5px solid var(--blue); background: #f4f8ff; border-radius: 14px; padding: 18px 20px; flex-wrap: wrap; }
+.psName { font-size: 16px; font-weight: 800; color: var(--navy); }
+.psMeta { font-size: 13px; color: var(--slate); margin-top: 4px; }
+.psDesc { font-size: 13px; color: var(--slate); margin-top: 8px; max-width: 520px; line-height: 1.5; }
+.psActions { display: flex; flex-direction: column; gap: 8px; align-items: flex-end; }
+.linkBtn { font-family: inherit; font-size: 13px; font-weight: 600; color: var(--blue); background: none; border: none; cursor: pointer; padding: 0; }
+.linkBtn:hover { text-decoration: underline; }
+
+.sheetSave { font-family: inherit; font-size: 14px; font-weight: 700; color: #fff; background: var(--blue); border: none; padding: 11px 22px; border-radius: 11px; cursor: pointer; }
+.sheetSave:hover:not(:disabled) { background: #2559e0; }
+.sheetSave:disabled { opacity: .6; cursor: default; }
+
+/* 제품 카드 인라인 선택 (B-3 휑함 개선) */
+.productGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; margin-bottom: 12px; }
+.productCard { text-align: left; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; cursor: pointer; transition: .15s; }
+.productCard:hover { border-color: var(--blue); background: #f4f8ff; transform: translateY(-1px); }
+.pcName { font-size: 14.5px; font-weight: 700; color: var(--navy); }
+.pcMeta { font-size: 12.5px; color: var(--slate); margin-top: 4px; }
+.productAddCard { display: flex; align-items: center; justify-content: center; background: #fafcff; border: 1px dashed var(--blue-line); border-radius: 12px; padding: 14px 16px; cursor: pointer; color: var(--blue); font-weight: 700; font-size: 14px; transition: .15s; }
+.productAddCard:hover { background: var(--blue-soft); border-color: var(--blue); }
+.pickEmptyState { text-align: center; padding: 20px 12px; }
+.pickEmptyState p { font-size: 14px; color: var(--slate); margin-bottom: 16px; line-height: 1.6; }
+.stepPreview { border: 1px dashed var(--line); border-radius: 12px; padding: 18px 20px; color: var(--slate-2); font-size: 13.5px; background: #fafbfd; line-height: 1.5; }
+
+/* 단계 헤더 (번호 배지 + 제목 + 설명) — 가이드형 느낌 */
+.stepHead { display: flex; align-items: center; gap: 12px; margin: 28px 0 14px; }
+.stepHead:first-of-type { margin-top: 8px; }
+.stepNum { width: 28px; height: 28px; border-radius: 50%; background: var(--blue); color: #fff; font-family: var(--en); font-weight: 800; font-size: 14px; display: grid; place-items: center; flex-shrink: 0; box-shadow: 0 4px 10px rgba(47,107,255,.28); }
+.stepNumMuted { background: #d5dcec; color: #fff; box-shadow: none; }
+.stepTitle { font-size: 16px; font-weight: 800; color: var(--navy); letter-spacing: -.01em; }
+.stepSub { font-size: 12.5px; color: var(--slate); margin-top: 2px; }
+
+/* 제품 선택 필드 (드롭다운형 — 제품 많아도 피커로 감당) */
+.productSelectRow { display: flex; gap: 10px; align-items: stretch; flex-wrap: wrap; }
+.selectField { flex: 1; min-width: 220px; display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; cursor: pointer; font-family: var(--kr); font-size: 14.5px; color: var(--slate); transition: .15s; }
+.selectField:hover { border-color: var(--blue); background: #f4f8ff; }
+.selectChevron { color: var(--slate-2); font-size: 12px; }
