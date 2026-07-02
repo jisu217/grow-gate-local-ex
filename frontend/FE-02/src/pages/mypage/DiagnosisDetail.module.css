@@ -47,29 +47,21 @@
 .legend { margin-top: 22px; padding-top: 18px; border-top: 1px solid #F1F4F9; display: flex; gap: 18px; flex-wrap: wrap; font-size: 12px; color: #64748B; }
 .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: middle; }
 
-/* 근거 데이터 (영역 → 공공데이터 출처) */
-.srcCard { margin-top: 18px; background: #fff; border: 1px solid #E9EDF3; border-radius: 16px; padding: 20px 24px; }
-.srcTitle { font-size: 14px; font-weight: 700; color: #1E293B; margin-bottom: 14px; }
-.srcRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #F1F4F9; }
+/* 4. 근거 데이터 (영역 → 공공데이터 출처) */
+.srcCard { background: #fff; border: 1px solid #E9EDF3; border-radius: 18px; padding: 6px 22px; }
+.srcRow { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 14px 0; border-top: 1px solid #F1F4F9; }
 .srcRow:first-of-type { border-top: none; }
-.srcArea { font-size: 13px; font-weight: 600; color: #334155; }
-.srcName { font-size: 12.5px; font-weight: 500; color: #64748B; }
+.srcArea { font-size: 14px; font-weight: 800; color: #1E293B; flex-shrink: 0; }
+.srcName { font-size: 12.5px; font-weight: 500; color: #64748B; text-align: right; line-height: 1.5; }
 
-/* 점수 올리는 법 */
-.improve { margin-top: 18px; background: #fff; border: 1px solid #E9EDF3; border-radius: 16px; padding: 22px 24px; }
-.improveTitle { font-size: 14px; font-weight: 700; color: #1E293B; }
-.improveDesc { font-size: 13px; color: #64748B; margin: 6px 0 14px; }
-.docs { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
-.doc { font-size: 12.5px; font-weight: 600; color: #475569; background: #F1F4F9; padding: 6px 12px; border-radius: 999px; }
-.improveLink { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 700; color: #3B5BFE; text-decoration: none; }
-.improveLink:hover { text-decoration: underline; }
-
-/* 전체 진단 링크 */
-.more { margin-top: 18px; display: flex; justify-content: space-between; align-items: center; background: #fff; border: 1px solid #E9EDF3; border-radius: 16px; padding: 18px 24px; flex-wrap: wrap; gap: 12px; }
-.moreT { font-size: 14px; font-weight: 600; }
-.moreT span { display: block; font-size: 12px; color: #94A3B8; font-weight: 400; margin-top: 2px; }
-.moreBtn { font-family: inherit; font-size: 13px; font-weight: 700; color: #fff; background: #3B5BFE; border: none; padding: 11px 18px; border-radius: 11px; cursor: pointer; }
-.moreBtn:hover { background: #2947e8; }
+/* 5·6. 다음 단계 (2-카드) */
+.nextGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.nextCard { display: flex; flex-direction: column; text-align: left; background: #fff; border: 1px solid #E9EDF3; border-radius: 18px; padding: 20px 22px; text-decoration: none; cursor: pointer; font-family: inherit; transition: border-color .15s ease, transform .15s ease; }
+.nextCard:hover { border-color: #CBD5E1; transform: translateY(-2px); }
+.nextCardTitle { font-size: 15px; font-weight: 800; color: #1E293B; }
+.nextCardDesc { font-size: 12.5px; line-height: 1.55; color: #64748B; margin: 8px 0 16px; flex: 1; }
+.nextCardArr { font-size: 13px; font-weight: 700; color: #334155; }
+.nextCard:hover .nextCardArr { color: #1E293B; }
 
 .disclaimer { text-align: center; font-size: 12px; color: #94A3B8; margin-top: 12px; line-height: 1.6; }
 
@@ -77,3 +69,38 @@
   .big { font-size: 50px; }
   .row { grid-template-columns: 130px 1fr 48px; gap: 10px; }
 }
+
+/* ===== 판단 근거·보완 우선순위 개편 ===== */
+/* 1. 현재 판단 요약 */
+.summaryCard { background: #fff; border: 1px solid #E9EDF3; border-radius: 20px; padding: 26px 28px; }
+.gateRow { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+.gateBadge { display: inline-flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 800; padding: 11px 20px; border-radius: 14px; }
+.gateGo { background: #E3F7EF; color: #0E805D; }
+.gateCond { background: #FDF3DC; color: #9A6800; }
+.gateNo { background: #FCECE8; color: #B23A28; }
+.refScore { font-size: 13px; color: #94A3B8; font-weight: 600; }
+.refScore b { color: #475569; font-size: 15px; }
+.gateReason { margin-top: 14px; font-size: 15px; line-height: 1.6; color: #334155; }
+
+/* 2. 가장 먼저 고칠 것 */
+.firstFix { margin-top: 18px; background: #fff; border: 1.5px solid #F1A100; border-radius: 18px; padding: 22px 24px; }
+.firstFixTitle { font-size: 14px; font-weight: 800; color: #9A6800; display: flex; align-items: center; gap: 7px; }
+.firstFixList { margin-top: 14px; display: flex; flex-direction: column; gap: 10px; }
+.firstFixItem { display: flex; gap: 11px; align-items: flex-start; font-size: 14.5px; color: #1E293B; line-height: 1.5; }
+.firstFixNum { flex-shrink: 0; width: 22px; height: 22px; border-radius: 50%; background: #F1A100; color: #fff; font-size: 12px; font-weight: 800; display: grid; place-items: center; margin-top: 1px; }
+
+/* 3. 영역별 보완 우선순위 (카드) */
+.sectionHead { margin: 26px 0 14px; font-size: 15px; font-weight: 800; color: #1E293B; }
+.sectionHead .hint { font-size: 12px; font-weight: 500; color: #94A3B8; margin-left: 8px; }
+.priorityGrid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; }
+.priorityCard { background: #fff; border: 1px solid #E9EDF3; border-radius: 16px; padding: 16px 18px; }
+.priorityCard.high { border-color: #f4b8ab; background: #fdf6f4; }
+.pcTop { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.pcLabel { font-size: 14.5px; font-weight: 800; color: #1E293B; }
+.pcBadge { font-size: 11.5px; font-weight: 700; padding: 3px 10px; border-radius: 999px; }
+.pcHigh { background: #FCECE8; color: #B23A28; }
+.pcMed { background: #FDF3DC; color: #9A6800; }
+.pcOk { background: #E3F7EF; color: #0E805D; }
+.pcTrack { height: 7px; background: #EEF1F6; border-radius: 999px; overflow: hidden; margin-top: 12px; }
+.pcFill { height: 100%; border-radius: 999px; transition: width 1s ease; }
+.pcScore { font-size: 11.5px; color: #94A3B8; margin-top: 7px; font-weight: 600; }
