@@ -13,7 +13,7 @@ export default function S10Sources({ data }) {
     <DiagnosisStage
       eyebrow="S10 EVIDENCE WORKFLOW"
       title="출처, 근거 검색, 지식화 타임라인"
-      right={<button className="s-btn">파이프라인 실행</button>}
+      description="재수집은 제품/진단 생성 또는 관리자 public-data refresh에서 수행되며, 이 화면은 결과 근거를 읽기 전용으로 검증합니다."
     >
 
       <div className="pipe-grid">

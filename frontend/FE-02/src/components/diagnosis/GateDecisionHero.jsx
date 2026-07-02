@@ -1,9 +1,10 @@
-export default function GateDecisionHero({ gateDecision, impactEstimate, confidencePanel }) {
+export default function GateDecisionHero({ gateDecision, impactEstimate, confidencePanel, sourceTrustSummary }) {
   if (!gateDecision) return null
 
   const status = gateDecision.status ?? 'CONDITIONAL_GO'
   const className = `gate-hero ${status.toLowerCase().replaceAll('_', '-')}`
   const mustFix = Array.isArray(gateDecision.mustFixBeforeQuote) ? gateDecision.mustFixBeforeQuote : []
+  const fallbackCount = Number(sourceTrustSummary?.fallbackCount ?? confidencePanel?.fallbackSourceCount ?? 0)
 
   return (
     <section className={className}>
@@ -12,6 +13,12 @@ export default function GateDecisionHero({ gateDecision, impactEstimate, confide
         <div className="gate-status">{gateDecision.label ?? status}</div>
         <p>{gateDecision.oneLineReason ?? '견적 확정 전 source trace와 담당자 근거 확인이 필요합니다.'}</p>
       </div>
+
+      {fallbackCount > 0 && (
+        <div className="gate-warning">
+          공공데이터 일부가 fallback입니다. 바이어 회신 또는 견적 확정 전 담당자 검토가 필요합니다.
+        </div>
+      )}
 
       <div className="gate-grid">
         <div>
