@@ -85,9 +85,9 @@ export default function Knowledge() {
               <div className={styles.updated}>최근 수정 {p.updatedAt}</div>
               <button
                 className={styles.diagBtn}
-                onClick={(e) => { e.stopPropagation(); navigate('/diagnosis/new') }}
+                onClick={(e) => { e.stopPropagation(); navigate(`/diagnosis/new?productId=${p.id}`) }}
               >
-                준비도 진단에 반영 →
+                이 제품으로 판단하기 →
               </button>
             </div>
           ))}

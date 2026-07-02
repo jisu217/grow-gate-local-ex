@@ -1,12 +1,13 @@
 import { useState, useEffect, useMemo } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import styles from './DiagnosisNew.module.css'
 import { getMypageProducts, createMypageProduct } from '../../services/mypageService.js'
 import { runDiagnosis } from '../../services/diagnosisService.js'
-import { normalizeTargetCountry } from '../../utils/country.js'
+import { COUNTRY_OPTIONS, normalizeTargetCountry } from '../../utils/country.js'
 
 const PICKER_PAGE_SIZE = 5
 const PICKER_PAGE_WINDOW = 5
+const CATEGORIES = ['전기전자', '전자부품', '기계·장비', '화학·소재', '식품·의료', '기타']
 
 function normalizeSearchValue(value) {
   return String(value ?? '').toLowerCase().replace(/\s+/g, '')
@@ -23,15 +24,15 @@ function splitList(value) {
     .filter(Boolean)
 }
 
-// 신규 진단 입력 페이지 컴포넌트
+// 수출 문의 판단 입력 페이지
+// 제품 정보는 마이페이지에서만 입력·관리하고, 여기서는 "등록된 제품 선택 + 이번 건 판단 정보"만 받는다.
 export default function DiagnosisNew() {
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const preselectId = searchParams.get('productId') // 제품 맥락에서 진입 시 자동 선택할 제품
 
+  // 이번 수출 건 판단 정보 (제품 정보는 선택한 제품에서 가져옴)
   const [formData, setFormData] = useState({
-    productName: '',
-    hsCode: '',
-    targetCountry: '',
-    description: '',
     buyerRequest: '',
     buyerDeadline: '',
     expectedShipmentDate: '',
@@ -41,45 +42,46 @@ export default function DiagnosisNew() {
     budgetLimitKrw: '',
   })
 
-  const [errors, setErrors] = useState({})
   const [submitError, setSubmitError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   const [pickerLoadError, setPickerLoadError] = useState('')
 
-  // 저장된 제품 불러오기 모달
-  const [pickerOpen, setPickerOpen] = useState(false)
   const [savedProducts, setSavedProducts] = useState([])
   const [selectedId, setSelectedId] = useState(null)
+  const selectedProduct = savedProducts.find((p) => p.id === selectedId) ?? null
+
+  // 제품 선택 피커
+  const [pickerOpen, setPickerOpen] = useState(false)
   const [pickerKeyword, setPickerKeyword] = useState('')
   const [pickerPage, setPickerPage] = useState(1)
 
-  // 직접 입력한 제품을 마이페이지에도 저장할지 (기본 켜짐)
-  const [saveToMypage, setSaveToMypage] = useState(true)
+  // 새 제품 등록 모달 (마이페이지 등록 흐름을 그대로 재사용 → 중복 경로 없음)
+  const [addOpen, setAddOpen] = useState(false)
+  const [addForm, setAddForm] = useState({ name: '', hs: '', country: 'DE', category: CATEGORIES[0], description: '' })
+  const [addError, setAddError] = useState('')
+  const [adding, setAdding] = useState(false)
 
-  // 마이페이지에 저장한 제품 목록 로드
+  // 마이페이지에 저장한 제품 목록 로드 (+ 제품 맥락 진입 시 자동 선택)
   useEffect(() => {
     getMypageProducts()
       .then((products) => {
         setSavedProducts(products)
         setPickerLoadError('')
+        if (preselectId && products.some((p) => p.id === preselectId)) {
+          setSelectedId(preselectId)
+        }
       })
       .catch((err) => {
         setSavedProducts([])
         setPickerLoadError(err.message || '저장된 제품을 불러오지 못했습니다. 로그인 상태와 서버 연결을 확인해주세요.')
       })
-  }, [])
+  }, [preselectId])
 
   const filteredProducts = useMemo(() => {
     const keyword = normalizeSearchValue(pickerKeyword)
     if (!keyword) return savedProducts
-
     return savedProducts.filter((product) => {
-      const haystack = normalizeSearchValue([
-        product.name,
-        product.hs,
-        product.country,
-        product.description,
-      ].join(' '))
+      const haystack = normalizeSearchValue([product.name, product.hs, product.country, product.description].join(' '))
       return haystack.includes(keyword)
     })
   }, [pickerKeyword, savedProducts])
@@ -91,87 +93,77 @@ export default function DiagnosisNew() {
   const shouldShowPagination = filteredProducts.length > PICKER_PAGE_SIZE
   const visiblePickerPages = useMemo(() => {
     if (!shouldShowPagination) return []
-
     const windowStart = Math.floor((safePickerPage - 1) / PICKER_PAGE_WINDOW) * PICKER_PAGE_WINDOW + 1
     const windowEnd = Math.min(windowStart + PICKER_PAGE_WINDOW - 1, pickerTotalPages)
     return Array.from({ length: windowEnd - windowStart + 1 }, (_, index) => windowStart + index)
   }, [safePickerPage, pickerTotalPages, shouldShowPagination])
 
-  // 입력값 변경 처리
+  // 이번 건 판단 정보 입력값 변경
   const handleChange = (e) => {
     setFormData((prev) => ({ ...prev, [e.target.name]: e.target.value }))
-    if (errors[e.target.name]) setErrors((prev) => ({ ...prev, [e.target.name]: '' }))
     if (submitError) setSubmitError('')
   }
 
-  // 저장된 제품 선택 → 입력값 자동 채움
-  const pickProduct = (p) => {
-    setFormData({
-      productName: p.name,
-      hsCode: p.hs,
-      targetCountry: p.country,
-      description: p.description ?? '',
-      buyerRequest: formData.buyerRequest,
-      buyerDeadline: formData.buyerDeadline,
-      expectedShipmentDate: formData.expectedShipmentDate,
-      requestedCertifications: formData.requestedCertifications,
-      currentDocuments: formData.currentDocuments,
-      exportExperience: formData.exportExperience,
-      budgetLimitKrw: formData.budgetLimitKrw,
-    })
-    setSelectedId(p.id)
-    setErrors({})
-    setPickerOpen(false)
+  const openPicker = () => { setPickerKeyword(''); setPickerPage(1); setPickerOpen(true) }
+  const pickProduct = (p) => { setSelectedId(p.id); setPickerOpen(false); setSubmitError('') }
+  const handlePickerSearch = (e) => { setPickerKeyword(e.target.value); setPickerPage(1) }
+
+  // 새 제품 등록 (createMypageProduct = 마이페이지와 동일한 유일 생성 경로) → 등록 후 자동 선택
+  const openAdd = () => {
+    setAddForm({ name: '', hs: '', country: 'DE', category: CATEGORIES[0], description: '' })
+    setAddError('')
+    setAddOpen(true)
+  }
+  const submitAddProduct = async () => {
+    const name = addForm.name.trim()
+    const hs = normalizeHsCode(addForm.hs)
+    const country = normalizeTargetCountry(addForm.country)
+    if (!name) { setAddError('제품명을 입력해주세요.'); return }
+    if (!/^\d{6,10}$/.test(hs)) { setAddError('HS Code는 숫자 6~10자리로 입력해주세요.'); return }
+
+    // 중복 등록 방지 — 같은 제품이 이미 있으면 만들지 않고 그 제품을 선택
+    const dup = savedProducts.find((p) =>
+      p.name.trim().toLowerCase() === name.toLowerCase() &&
+      normalizeHsCode(p.hs) === hs &&
+      normalizeTargetCountry(p.country) === country
+    )
+    if (dup) {
+      setAddError(`이미 등록된 제품이에요 (${dup.name} · HS ${dup.hs} · ${dup.country}). "취소" 후 저장된 제품에서 선택하세요.`)
+      return
+    }
+
+    setAdding(true)
+    setAddError('')
+    try {
+      const created = await createMypageProduct({
+        name, hs,
+        country: normalizeTargetCountry(addForm.country),
+        category: addForm.category,
+        description: addForm.description.trim(),
+      })
+      setSavedProducts((prev) => [...prev, created])
+      setSelectedId(created.id)
+      setAddOpen(false)
+    } catch (err) {
+      setAddError(err.message || '제품 등록에 실패했습니다. 잠시 후 다시 시도해주세요.')
+    } finally {
+      setAdding(false)
+    }
   }
 
-  const openPicker = () => {
-    setPickerKeyword('')
-    setPickerPage(1)
-    setPickerOpen(true)
-  }
-
-  const handlePickerSearch = (e) => {
-    setPickerKeyword(e.target.value)
-    setPickerPage(1)
-  }
-
-  // 진단 시작 제출 처리
+  // Gate 판단 시작 — 선택된 제품 + 이번 건 판단 정보로 진단 실행
   const handleSubmit = async () => {
-    const next = {}
-    const hsCode = normalizeHsCode(formData.hsCode)
-    const targetCountry = normalizeTargetCountry(formData.targetCountry)
-    const productName = formData.productName.trim()
-
-    if (!productName) next.productName = '제품명을 입력해주세요.'
-    if (!hsCode) next.hsCode = 'HS Code를 입력해주세요.'
-    else if (!/^\d{6,10}$/.test(hsCode)) next.hsCode = 'HS Code는 숫자 6~10자리로 입력해주세요.'
-    if (!formData.targetCountry.trim()) next.targetCountry = '대상 국가를 입력해주세요.'
-    if (Object.keys(next).length) { setErrors(next); return }
+    if (!selectedProduct) { setSubmitError('판단할 제품을 선택하거나 새로 등록해주세요.'); return }
 
     setSubmitting(true)
     setSubmitError('')
-    let createdProduct = null
-
     try {
-      let productId = selectedId
-      if (saveToMypage && !productId) {
-        const created = await createMypageProduct({
-          name: productName,
-          hs: hsCode,
-          country: targetCountry,
-          description: formData.description.trim(),
-        })
-        productId = created.id
-        createdProduct = created
-        setSavedProducts((prev) => prev.some((product) => product.id === created.id) ? prev : [...prev, created])
-      }
-
       const result = await runDiagnosis({
-        productId,
-        productName,
-        hsCode,
-        targetCountry,
-        description: formData.description.trim(),
+        productId: selectedProduct.id,
+        productName: selectedProduct.name,
+        hsCode: normalizeHsCode(selectedProduct.hs),
+        targetCountry: normalizeTargetCountry(selectedProduct.country),
+        description: selectedProduct.description ?? '',
         buyerRequest: formData.buyerRequest.trim(),
         buyerDeadline: formData.buyerDeadline || null,
         expectedShipmentDate: formData.expectedShipmentDate || null,
@@ -182,10 +174,7 @@ export default function DiagnosisNew() {
       })
       navigate(`/diagnosis/${result.id}`)
     } catch (err) {
-      const savedNotice = createdProduct
-        ? `제품 "${createdProduct.name}"은 마이페이지에 저장됐지만 진단 생성이 실패했습니다. 저장된 제품을 선택해 다시 실행할 수 있습니다. `
-        : ''
-      setSubmitError(savedNotice + (err.message || '진단 실행에 실패했습니다. 입력값과 서버 상태를 확인해주세요.'))
+      setSubmitError(err.message || '진단 실행에 실패했습니다. 입력값과 서버 상태를 확인해주세요.')
     } finally {
       setSubmitting(false)
     }
@@ -194,205 +183,163 @@ export default function DiagnosisNew() {
   return (
     <div className={styles.wrap}>
       <div className={styles.layout}>
-
         <div className={styles.formArea}>
           <div className={styles.formCard}>
             <div className={styles.formEyebrow}>S01 INPUT</div>
-            <h2 className={styles.formTitle}>수출 문의 등록</h2>
-            <p className={styles.formDesc}>제품 정보와 바이어 요구사항을 입력하면 견적 전 Gate 판단으로 정리합니다.</p>
+            <h2 className={styles.formTitle}>수출 문의 판단</h2>
+            <p className={styles.formDesc}>
+              등록된 제품을 선택하고, 이번 수출 문의(바이어 요구사항)를 입력하면 견적 전 Gate 판단으로 정리합니다.
+              제품 정보는 마이페이지에서 관리됩니다.
+            </p>
 
-            <div className={styles.fields}>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="productName">제품명 *</label>
-                <input
-                  id="productName"
-                  className={`${styles.input} ${errors.productName ? styles.inputError : ''}`}
-                  name="productName"
-                  value={formData.productName}
-                  onChange={handleChange}
-                  placeholder="예: 리튬이온 배터리팩"
-                  aria-describedby={errors.productName ? 'productName-error' : undefined}
-                />
-                {errors.productName && <span id="productName-error" className={styles.fieldError}>{errors.productName}</span>}
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="hsCode">HS Code *</label>
-                <input
-                  id="hsCode"
-                  className={`${styles.input} ${errors.hsCode ? styles.inputError : ''}`}
-                  name="hsCode"
-                  value={formData.hsCode}
-                  onChange={handleChange}
-                  placeholder="예: 850760"
-                  aria-describedby={errors.hsCode ? 'hsCode-error' : undefined}
-                />
-                {errors.hsCode && <span id="hsCode-error" className={styles.fieldError}>{errors.hsCode}</span>}
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="targetCountry">대상국 *</label>
-                <input
-                  id="targetCountry"
-                  className={`${styles.input} ${errors.targetCountry ? styles.inputError : ''}`}
-                  name="targetCountry"
-                  value={formData.targetCountry}
-                  onChange={handleChange}
-                  placeholder="예: 독일 / EU"
-                  aria-describedby={errors.targetCountry ? 'targetCountry-error' : undefined}
-                />
-                {errors.targetCountry && <span id="targetCountry-error" className={styles.fieldError}>{errors.targetCountry}</span>}
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="description">제품 설명</label>
-                <textarea
-                  id="description"
-                  className={styles.textarea}
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  placeholder="제품의 주요 특성, 용도, 인증 현황 등을 입력하세요."
-                  rows={4}
-                />
-              </div>
-              <div className={styles.field}>
-                <label className={styles.label} htmlFor="buyerRequest">바이어 문의 원문</label>
-                <textarea
-                  id="buyerRequest"
-                  className={styles.textarea}
-                  name="buyerRequest"
-                  value={formData.buyerRequest}
-                  onChange={handleChange}
-                  placeholder="예: 독일 바이어가 CE, UN38.3 보유 여부와 4주 내 샘플 출하 가능 여부를 문의"
-                  rows={4}
-                />
-              </div>
-              <div className={styles.inlineGrid}>
-                <div className={styles.field}>
-                  <label className={styles.label} htmlFor="buyerDeadline">회신 마감일</label>
-                  <input
-                    id="buyerDeadline"
-                    className={styles.input}
-                    name="buyerDeadline"
-                    type="date"
-                    value={formData.buyerDeadline}
-                    onChange={handleChange}
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label className={styles.label} htmlFor="expectedShipmentDate">예상 출하일</label>
-                  <input
-                    id="expectedShipmentDate"
-                    className={styles.input}
-                    name="expectedShipmentDate"
-                    type="date"
-                    value={formData.expectedShipmentDate}
-                    onChange={handleChange}
-                  />
-                </div>
-              </div>
-              <div className={styles.inlineGrid}>
-                <div className={styles.field}>
-                  <label className={styles.label} htmlFor="requestedCertifications">요구 인증</label>
-                  <input
-                    id="requestedCertifications"
-                    className={styles.input}
-                    name="requestedCertifications"
-                    value={formData.requestedCertifications}
-                    onChange={handleChange}
-                    placeholder="예: CE, UN38.3, IEC62133"
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label className={styles.label} htmlFor="currentDocuments">현재 보유 문서</label>
-                  <input
-                    id="currentDocuments"
-                    className={styles.input}
-                    name="currentDocuments"
-                    value={formData.currentDocuments}
-                    onChange={handleChange}
-                    placeholder="예: KC 인증서, 시험성적서"
-                  />
-                </div>
-              </div>
-              <div className={styles.inlineGrid}>
-                <div className={styles.field}>
-                  <label className={styles.label} htmlFor="exportExperience">수출 경험</label>
-                  <input
-                    id="exportExperience"
-                    className={styles.input}
-                    name="exportExperience"
-                    value={formData.exportExperience}
-                    onChange={handleChange}
-                    placeholder="예: 첫 수출 / EU 납품 경험 있음"
-                  />
-                </div>
-                <div className={styles.field}>
-                  <label className={styles.label} htmlFor="budgetLimitKrw">검토 가능 예산</label>
-                  <input
-                    id="budgetLimitKrw"
-                    className={styles.input}
-                    name="budgetLimitKrw"
-                    type="number"
-                    min="0"
-                    value={formData.budgetLimitKrw}
-                    onChange={handleChange}
-                    placeholder="예: 5000000"
-                  />
-                </div>
+            {/* ① 판단할 제품 */}
+            <div className={styles.stepHead}>
+              <span className={styles.stepNum}>1</span>
+              <div>
+                <div className={styles.stepTitle}>판단할 제품</div>
+                <div className={styles.stepSub}>이번 수출 건에 쓸 제품을 선택하세요</div>
               </div>
             </div>
-
-            <div className={styles.knowledgeBtn}>
-              <button className={styles.outlineBtn} onClick={openPicker}>
-                📂 저장된 제품 지식 불러오기
-              </button>
-              <span className={styles.knowledgeHint}>
-                {selectedId
-                  ? '✓ 저장된 제품을 불러왔습니다. 필요하면 입력값을 수정하세요.'
-                  : '마이페이지에 등록된 제품 지식을 선택하면 입력값이 자동으로 채워집니다.'}
-              </span>
-            </div>
-
-            {!selectedId && (
-              <label className={styles.saveCheck}>
-                <input
-                  type="checkbox"
-                  checked={saveToMypage}
-                  onChange={(e) => setSaveToMypage(e.target.checked)}
-                />
-                <span>이 제품을 <b>내 제품(마이페이지)</b>에도 저장</span>
-              </label>
+            {selectedProduct ? (
+              <div className={styles.productSummary}>
+                <div>
+                  <div className={styles.psName}>{selectedProduct.name}</div>
+                  <div className={styles.psMeta}>
+                    HS {selectedProduct.hs} · {selectedProduct.country} 수출{selectedProduct.category ? ` · ${selectedProduct.category}` : ''}
+                  </div>
+                  {selectedProduct.description && <div className={styles.psDesc}>{selectedProduct.description}</div>}
+                </div>
+                <div className={styles.psActions}>
+                  <button className={styles.outlineBtn} onClick={() => setSelectedId(null)}>다른 제품 선택</button>
+                  <button className={styles.linkBtn} onClick={() => navigate(`/mypage/knowledge/${selectedProduct.id}/edit`)}>
+                    제품 정보 수정 →
+                  </button>
+                </div>
+              </div>
+            ) : savedProducts.length === 0 ? (
+              <div className={styles.productPick}>
+                {pickerLoadError && <div className={styles.fieldError}>{pickerLoadError}</div>}
+                <div className={styles.pickEmptyState}>
+                  <p>아직 등록된 제품이 없어요.<br />제품을 등록하면 판단을 시작할 수 있어요.</p>
+                  <button className={styles.primaryOutlineBtn} onClick={openAdd}>+ 새 제품 등록</button>
+                </div>
+              </div>
+            ) : (
+              <>
+                {pickerLoadError && <div className={styles.fieldError}>{pickerLoadError}</div>}
+                <div className={styles.productSelectRow}>
+                  <button className={styles.selectField} onClick={openPicker}>
+                    <span>저장된 제품 ({savedProducts.length}개)</span>
+                    <span className={styles.selectChevron}>▾</span>
+                  </button>
+                  <button className={styles.outlineBtn} onClick={openAdd}>+ 새 제품 등록</button>
+                </div>
+              </>
             )}
 
-            {submitError && <div className={styles.fieldError}>{submitError}</div>}
+            {/* ② 미리보기 (제품 선택 전 흐름 안내) */}
+            {!selectedProduct && (
+              <>
+                <div className={styles.stepHead}>
+                  <span className={`${styles.stepNum} ${styles.stepNumMuted}`}>2</span>
+                  <div>
+                    <div className={styles.stepTitle}>이번 수출 문의 정보</div>
+                    <div className={styles.stepSub}>제품을 선택하면 입력할 수 있어요</div>
+                  </div>
+                </div>
+                <div className={styles.stepPreview}>
+                  제품을 선택하면 바이어 문의 원문·회신 마감일·요구 인증·검토 예산 등 이번 건 정보를 입력하는 칸이 나타납니다.
+                </div>
+              </>
+            )}
 
-            <button className={styles.submitBtn} onClick={handleSubmit} disabled={submitting}>
-              {submitting ? 'Gate 판단 요청 중…' : '수출 Gate 판단 시작 →'}
-            </button>
+            {/* ② 이번 수출 문의 정보 (제품 선택 시에만) */}
+            {selectedProduct && (
+              <>
+                <div className={styles.stepHead}>
+                  <span className={styles.stepNum}>2</span>
+                  <div>
+                    <div className={styles.stepTitle}>이번 수출 문의 정보</div>
+                    <div className={styles.stepSub}>바이어 요구사항을 입력하면 견적 전 Gate 판단으로 정리합니다</div>
+                  </div>
+                </div>
+                <div className={styles.fields}>
+                  <div className={styles.field}>
+                    <label className={styles.label} htmlFor="buyerRequest">바이어 문의 원문</label>
+                    <textarea
+                      id="buyerRequest" className={styles.textarea} name="buyerRequest"
+                      value={formData.buyerRequest} onChange={handleChange}
+                      placeholder="예: 독일 바이어가 CE, UN38.3 보유 여부와 4주 내 샘플 출하 가능 여부를 문의"
+                      rows={4}
+                    />
+                  </div>
+                  <div className={styles.inlineGrid}>
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="buyerDeadline">회신 마감일</label>
+                      <input id="buyerDeadline" className={styles.input} name="buyerDeadline" type="date"
+                        value={formData.buyerDeadline} onChange={handleChange} />
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="expectedShipmentDate">예상 출하일</label>
+                      <input id="expectedShipmentDate" className={styles.input} name="expectedShipmentDate" type="date"
+                        value={formData.expectedShipmentDate} onChange={handleChange} />
+                    </div>
+                  </div>
+                  <div className={styles.inlineGrid}>
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="requestedCertifications">요구 인증</label>
+                      <input id="requestedCertifications" className={styles.input} name="requestedCertifications"
+                        value={formData.requestedCertifications} onChange={handleChange} placeholder="예: CE, UN38.3, IEC62133" />
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="currentDocuments">현재 보유 문서</label>
+                      <input id="currentDocuments" className={styles.input} name="currentDocuments"
+                        value={formData.currentDocuments} onChange={handleChange} placeholder="예: KC 인증서, 시험성적서" />
+                    </div>
+                  </div>
+                  <div className={styles.inlineGrid}>
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="exportExperience">수출 경험</label>
+                      <input id="exportExperience" className={styles.input} name="exportExperience"
+                        value={formData.exportExperience} onChange={handleChange} placeholder="예: 첫 수출 / EU 납품 경험 있음" />
+                    </div>
+                    <div className={styles.field}>
+                      <label className={styles.label} htmlFor="budgetLimitKrw">검토 가능 예산</label>
+                      <input id="budgetLimitKrw" className={styles.input} name="budgetLimitKrw" type="number" min="0"
+                        value={formData.budgetLimitKrw} onChange={handleChange} placeholder="예: 5000000" />
+                    </div>
+                  </div>
+                </div>
+
+                {submitError && <div className={styles.fieldError}>{submitError}</div>}
+
+                <button className={styles.submitBtn} onClick={handleSubmit} disabled={submitting}>
+                  {submitting ? 'Gate 판단 요청 중…' : '수출 Gate 판단 시작 →'}
+                </button>
+              </>
+            )}
+
+            {!selectedProduct && submitError && <div className={styles.fieldError}>{submitError}</div>}
           </div>
         </div>
       </div>
 
-      {/* 저장된 제품 불러오기 모달 */}
+      {/* 제품 선택 피커 모달 */}
       {pickerOpen && (
         <div className={styles.modal} onClick={(e) => { if (e.target === e.currentTarget) setPickerOpen(false) }}>
           <div className={styles.sheet}>
-            <h3 className={styles.sheetTitle}>저장된 제품 불러오기</h3>
-            <p className={styles.sheetDesc}>마이페이지에 등록한 제품을 선택하면 입력값이 자동으로 채워집니다.</p>
+            <h3 className={styles.sheetTitle}>제품 선택</h3>
+            <p className={styles.sheetDesc}>마이페이지에 등록한 제품 중에서 판단할 제품을 선택하세요.</p>
 
             <div className={styles.pickSearch}>
               <span className={styles.pickSearchIcon} aria-hidden="true">⌕</span>
               <input
-                className={styles.pickSearchInput}
-                type="search"
-                value={pickerKeyword}
-                onChange={handlePickerSearch}
-                placeholder="제품명, HS Code, 대상국 키워드로 검색"
-                aria-label="저장된 제품 검색"
+                className={styles.pickSearchInput} type="search"
+                value={pickerKeyword} onChange={handlePickerSearch}
+                placeholder="제품명, HS Code, 대상국 키워드로 검색" aria-label="저장된 제품 검색"
               />
               {pickerKeyword && (
-                <button className={styles.pickSearchClear} onClick={() => { setPickerKeyword(''); setPickerPage(1) }}>
-                  초기화
-                </button>
+                <button className={styles.pickSearchClear} onClick={() => { setPickerKeyword(''); setPickerPage(1) }}>초기화</button>
               )}
             </div>
 
@@ -402,16 +349,11 @@ export default function DiagnosisNew() {
             </div>
 
             <div className={styles.pickList}>
-              {pickerLoadError && (
-                <div className={styles.pickError}>{pickerLoadError}</div>
-              )}
               {savedProducts.length === 0 && (
                 <div className={styles.pickEmpty}>저장된 제품이 없습니다. 마이페이지에서 먼저 제품을 등록하세요.</div>
               )}
               {savedProducts.length > 0 && filteredProducts.length === 0 && (
-                <div className={styles.pickEmpty}>
-                  검색 결과가 없습니다. 제품명, HS Code, 대상국 또는 설명 키워드를 다시 입력해 주세요.
-                </div>
+                <div className={styles.pickEmpty}>검색 결과가 없습니다. 제품명, HS Code, 대상국 또는 설명 키워드를 다시 입력해 주세요.</div>
               )}
               {pagedProducts.map((p) => (
                 <button key={p.id} className={styles.pickItem} onClick={() => pickProduct(p)}>
@@ -431,36 +373,76 @@ export default function DiagnosisNew() {
                   {safePickerPage}/{pickerTotalPages}페이지 · 제품 {pickerStart + 1}-{Math.min(pickerStart + PICKER_PAGE_SIZE, filteredProducts.length)}번째 표시
                 </span>
                 <div className={styles.pickPager} aria-label="저장된 제품 페이지 이동">
-                  <button
-                    className={styles.pickPageButton}
-                    disabled={safePickerPage === 1}
-                    onClick={() => setPickerPage((page) => Math.max(1, page - 1))}
-                  >
-                    이전
-                  </button>
+                  <button className={styles.pickPageButton} disabled={safePickerPage === 1}
+                    onClick={() => setPickerPage((page) => Math.max(1, page - 1))}>이전</button>
                   {visiblePickerPages.map((page) => (
-                    <button
-                      key={page}
+                    <button key={page}
                       className={`${styles.pickPageButton} ${page === safePickerPage ? styles.activePage : ''}`}
-                      onClick={() => setPickerPage(page)}
-                      aria-current={page === safePickerPage ? 'page' : undefined}
-                    >
+                      onClick={() => setPickerPage(page)} aria-current={page === safePickerPage ? 'page' : undefined}>
                       {page}
                     </button>
                   ))}
-                  <button
-                    className={styles.pickPageButton}
-                    disabled={safePickerPage === pickerTotalPages}
-                    onClick={() => setPickerPage((page) => Math.min(pickerTotalPages, page + 1))}
-                  >
-                    다음
-                  </button>
+                  <button className={styles.pickPageButton} disabled={safePickerPage === pickerTotalPages}
+                    onClick={() => setPickerPage((page) => Math.min(pickerTotalPages, page + 1))}>다음</button>
                 </div>
               </div>
             )}
 
             <div className={styles.sheetFoot}>
+              <button className={styles.outlineBtn} onClick={() => { setPickerOpen(false); openAdd() }}>+ 새 제품 등록</button>
               <button className={styles.sheetCancel} onClick={() => setPickerOpen(false)}>닫기</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* 새 제품 등록 모달 (마이페이지 등록과 동일 경로) */}
+      {addOpen && (
+        <div className={styles.modal} onClick={(e) => { if (e.target === e.currentTarget && !adding) setAddOpen(false) }}>
+          <div className={styles.sheet}>
+            <h3 className={styles.sheetTitle}>새 제품 등록</h3>
+            <p className={styles.sheetDesc}>제품 정보는 마이페이지에 저장되고, 등록 후 이번 판단에 바로 선택됩니다.</p>
+
+            <div className={styles.field}>
+              <label className={styles.label}>제품명 *</label>
+              <input className={styles.input} value={addForm.name} placeholder="예: 리튬이온 배터리팩"
+                onChange={(e) => setAddForm({ ...addForm, name: e.target.value })} />
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>HS Code *</label>
+              <input className={styles.input} value={addForm.hs} placeholder="예: 850760" inputMode="numeric"
+                onChange={(e) => setAddForm({ ...addForm, hs: e.target.value })} />
+            </div>
+            <div className={styles.inlineGrid}>
+              <div className={styles.field}>
+                <label className={styles.label}>수출 대상국</label>
+                <select className={styles.input} value={addForm.country}
+                  onChange={(e) => setAddForm({ ...addForm, country: e.target.value })}>
+                  {COUNTRY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+              <div className={styles.field}>
+                <label className={styles.label}>카테고리</label>
+                <select className={styles.input} value={addForm.category}
+                  onChange={(e) => setAddForm({ ...addForm, category: e.target.value })}>
+                  {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </div>
+            <div className={styles.field}>
+              <label className={styles.label}>제품 설명</label>
+              <textarea className={styles.textarea} rows={3} value={addForm.description}
+                placeholder="제품의 주요 특성·용도·인증 현황 등"
+                onChange={(e) => setAddForm({ ...addForm, description: e.target.value })} />
+            </div>
+
+            {addError && <div className={styles.fieldError}>{addError}</div>}
+
+            <div className={styles.sheetFoot}>
+              <button className={styles.sheetCancel} onClick={() => setAddOpen(false)} disabled={adding}>취소</button>
+              <button className={styles.sheetSave} onClick={submitAddProduct} disabled={adding}>
+                {adding ? '등록 중…' : '등록하고 선택'}
+              </button>
             </div>
           </div>
         </div>

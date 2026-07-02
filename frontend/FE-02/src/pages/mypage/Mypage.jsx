@@ -13,6 +13,9 @@ import { COUNTRY_OPTIONS, normalizeTargetCountry } from '../../utils/country.js'
 // 내 제품 관리 목록: 한 페이지에 보여줄 제품 수
 const PRODUCTS_PER_PAGE = 5
 
+// 제품 카테고리 (제품 수정 페이지와 동일 목록)
+const CATEGORIES = ['전기전자', '전자부품', '기계·장비', '화학·소재', '식품·의료', '기타']
+
 // 마이페이지 — 수출 준비 상태 대시보드
 export default function Mypage() {
   const navigate = useNavigate()
@@ -24,7 +27,7 @@ export default function Mypage() {
 
   // 제품 추가 모달 상태
   const [modalOpen, setModalOpen] = useState(false)
-  const [form, setForm] = useState({ name: '', hs: '', country: 'DE' })
+  const [form, setForm] = useState({ name: '', hs: '', country: 'DE', category: CATEGORIES[0], description: '' })
 
   // 제품 삭제 확인 모달 대상 (null이면 닫힘)
   const [deleteTarget, setDeleteTarget] = useState(null)
@@ -77,7 +80,7 @@ export default function Mypage() {
 
   // 제품 추가 모달 열기/닫기 (기본 정보 수정은 '제품 정보' 상세 페이지에서)
   function openAdd() {
-    setForm({ name: '', hs: '', country: 'DE' })
+    setForm({ name: '', hs: '', country: 'DE', category: CATEGORIES[0], description: '' })
     setSaveError('')
     setModalOpen(true)
   }
@@ -90,8 +93,23 @@ export default function Mypage() {
     const country = normalizeTargetCountry(form.country)
     if (!name || !hs) { alert('제품명과 HS Code를 입력해주세요.'); return }
 
+    // 중복 등록 방지 (제품명 + HS Code + 대상국이 같으면 막음)
+    const dup = products.find((p) =>
+      p.name.trim().toLowerCase() === name.toLowerCase() &&
+      String(p.hs).replace(/\D/g, '') === hs.replace(/\D/g, '') &&
+      normalizeTargetCountry(p.country) === country
+    )
+    if (dup) {
+      setSaveError(`이미 같은 제품이 등록돼 있어요 (${dup.name} · HS ${dup.hs} · ${dup.country}). 중복 등록은 막습니다.`)
+      return
+    }
+
     try {
-      const created = await createMypageProduct({ name, hs, country })
+      const created = await createMypageProduct({
+        name, hs, country,
+        category: form.category,
+        description: form.description.trim(),
+      })
       setProducts((prev) => [...prev, created])
       setSelectedId(created.id)
       closeModal()
@@ -374,6 +392,21 @@ export default function Mypage() {
             <select value={form.country} onChange={(e) => setForm({ ...form, country: e.target.value })}>
               {COUNTRY_OPTIONS.map((c) => <option key={c}>{c}</option>)}
             </select>
+          </div>
+          <div className={styles.field}>
+            <label>카테고리</label>
+            <select value={form.category} onChange={(e) => setForm({ ...form, category: e.target.value })}>
+              {CATEGORIES.map((c) => <option key={c} value={c}>{c}</option>)}
+            </select>
+          </div>
+          <div className={styles.field}>
+            <label>제품 설명</label>
+            <textarea
+              rows={3}
+              placeholder="제품의 주요 특성·용도·인증 현황 등"
+              value={form.description}
+              onChange={(e) => setForm({ ...form, description: e.target.value })}
+            />
           </div>
           {saveError && <div className={styles.modalError}>{saveError}</div>}
           <div className={styles.foot}>
