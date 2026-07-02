@@ -17,6 +17,11 @@
 /* 텍스트 입력 */
 .input { width: 100%; font-family: var(--kr); font-size: 14px; background: #f9fafc; border: 1.5px solid var(--line); border-radius: 11px; padding: 11px 14px; outline: none; transition: .15s; }
 .input:focus { border-color: var(--blue); background: #fff; }
+.consentBox { display: grid; gap: 10px; margin: 6px 0 18px; padding: 14px; border: 1px solid var(--line); border-radius: 8px; background: #f9fafc; }
+.checkRow { display: grid; grid-template-columns: 18px 1fr; gap: 10px; align-items: start; color: var(--ink); font-size: 13px; line-height: 1.45; }
+.checkRow input { width: 16px; height: 16px; margin-top: 2px; accent-color: var(--blue); }
+.checkRow strong { display: block; font-weight: 700; }
+.checkRow small { display: block; margin-top: 2px; color: var(--slate); font-size: 12px; line-height: 1.45; }
 /* 제출 버튼 */
 .btn { display: block; width: 100%; margin-top: 24px; background: var(--blue); color: #fff; font-family: var(--kr); font-weight: 700; font-size: 15px; border: none; padding: 14px; border-radius: 12px; cursor: pointer; box-shadow: 0 8px 20px rgba(47,107,255,.3); }
 /* 하단 보조 링크 */

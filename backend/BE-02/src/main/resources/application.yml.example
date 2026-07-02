@@ -48,6 +48,9 @@ app:
       app-title: ${APP_AGENT_OPENROUTER_APP_TITLE:GrowGate Local EX}
   auth:
     cookie-secure: ${APP_AUTH_COOKIE_SECURE:false}
+  google-sso:
+    enabled: ${GOOGLE_SSO_ENABLED:false}
+    client-id: ${GOOGLE_SSO_CLIENT_ID:}
 
 public-data:
   enabled: ${PUBLIC_DATA_ENABLED:true}

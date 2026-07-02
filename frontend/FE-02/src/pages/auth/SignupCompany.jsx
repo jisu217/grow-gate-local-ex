@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import styles from './Auth.module.css'
 import { signup } from '../../services/authService.js'
+import { ConsentChecklist, CONSENT_POLICY_VERSION, initialConsentState } from './ConsentChecklist.jsx'
 
 // 입력 필드
 const FIELDS = [
@@ -17,6 +18,7 @@ const FIELDS = [
 export default function SignupCompany() {
   const navigate = useNavigate()
   const [form, setForm] = useState(Object.fromEntries(FIELDS.map(f => [f.key,''])))
+  const [consent, setConsent] = useState(initialConsentState)
   const [error, setError] = useState('')
   const [submitting, setSubmitting] = useState(false)
   // 입력값 변경 처리
@@ -25,6 +27,10 @@ export default function SignupCompany() {
   // 가입 제출 처리
   const handleSubmit = async () => {
     setError('')
+    if (!consent.termsAccepted || !consent.privacyAccepted) {
+      setError('필수 약관과 개인정보 수집·이용 동의가 필요합니다.')
+      return
+    }
     setSubmitting(true)
     try {
       await signup({
@@ -35,6 +41,8 @@ export default function SignupCompany() {
         companyName: form.companyName,
         businessNumber: form.businessNumber,
         industry: form.industry,
+        ...consent,
+        consentPolicyVersion: CONSENT_POLICY_VERSION,
       })
       navigate('/login')
     } catch {
@@ -55,6 +63,7 @@ export default function SignupCompany() {
             <input id={`signup-company-${f.key}`} className={styles.input} name={f.key} type={f.type||'text'} value={form[f.key]} onChange={handleChange} placeholder={f.placeholder} />
           </div>
         ))}
+        <ConsentChecklist value={consent} onChange={setConsent} />
         {error && <p className={styles.error}>{error}</p>}
         <button className={styles.btn} onClick={handleSubmit} disabled={submitting}>가입 완료</button>
       </div>

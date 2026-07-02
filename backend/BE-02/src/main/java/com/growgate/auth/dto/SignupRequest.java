@@ -2,6 +2,7 @@ package com.growgate.auth.dto;
 
 // 회원가입 요청 DTO (개인/기업 통합)
 import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
@@ -31,4 +32,14 @@ public class SignupRequest {
     private String companyName;
     private String businessNumber;
     private String industry;
+
+    @AssertTrue(message = "서비스 이용약관 동의는 필수입니다.")
+    private boolean termsAccepted;
+
+    @AssertTrue(message = "개인정보 수집·이용 동의는 필수입니다.")
+    private boolean privacyAccepted;
+
+    private boolean marketingAccepted;
+
+    private String consentPolicyVersion;
 }

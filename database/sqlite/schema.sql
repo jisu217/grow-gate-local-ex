@@ -19,6 +19,22 @@ CREATE TABLE IF NOT EXISTS users (
   updated_at TEXT NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS user_consent_records (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  policy_version TEXT NOT NULL,
+  terms_accepted INTEGER NOT NULL DEFAULT 0,
+  privacy_accepted INTEGER NOT NULL DEFAULT 0,
+  marketing_accepted INTEGER NOT NULL DEFAULT 0,
+  accepted_at TEXT NOT NULL,
+  withdrawn_at TEXT,
+  source TEXT NOT NULL DEFAULT 'signup',
+  FOREIGN KEY (user_id) REFERENCES users (id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_consent_user_accepted
+  ON user_consent_records (user_id, accepted_at);
+
 CREATE TABLE IF NOT EXISTS memberships (
   id TEXT PRIMARY KEY,
   user_id TEXT NOT NULL,

@@ -93,7 +93,7 @@ request GET "/health" "" "" "$LOG_DIR/health.json"
 request GET "/api/diagnosis" "" "" "$LOG_DIR/diagnosis-unauth.json"
 [[ "$(cat "$LOG_DIR/diagnosis-unauth.json.status")" == "401" ]] || fail "/api/diagnosis without token did not return 401"
 
-SIGNUP_BODY="{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\",\"name\":\"Smoke Tester\",\"type\":\"personal\"}"
+SIGNUP_BODY="{\"email\":\"$EMAIL\",\"password\":\"$PASSWORD\",\"name\":\"Smoke Tester\",\"type\":\"personal\",\"termsAccepted\":true,\"privacyAccepted\":true,\"marketingAccepted\":false,\"consentPolicyVersion\":\"2026-07-privacy-v1\"}"
 request POST "/api/auth/signup" "$SIGNUP_BODY" "" "$LOG_DIR/signup.json"
 [[ "$(cat "$LOG_DIR/signup.json.status")" =~ ^(200|201|409)$ ]] || fail "signup failed"
 

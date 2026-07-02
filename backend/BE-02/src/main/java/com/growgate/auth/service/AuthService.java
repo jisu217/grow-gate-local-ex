@@ -4,6 +4,8 @@ import com.growgate.auth.dto.LoginRequest;
 import com.growgate.auth.dto.LoginResponse;
 import com.growgate.auth.dto.SignupRequest;
 import com.growgate.auth.dto.SignupResponse;
+import com.growgate.auth.entity.UserConsentRecord;
+import com.growgate.auth.repository.UserConsentRecordRepository;
 import com.growgate.company.entity.Company;
 import com.growgate.company.repository.CompanyRepository;
 import com.growgate.exception.BusinessException;
@@ -33,6 +35,7 @@ public class AuthService {
     private final JwtTokenProvider jwtTokenProvider;
     private final TokenRevocationService tokenRevocationService;
     private final LoginAttemptRateLimiter loginAttemptRateLimiter;
+    private final UserConsentRecordRepository userConsentRecordRepository;
 
     @Transactional(readOnly = true)
     public LoginResponse login(LoginRequest request) {
@@ -88,6 +91,7 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
+        saveConsentRecord(user, request);
 
         return SignupResponse.builder()
                 .userId(user.getId())
@@ -124,6 +128,7 @@ public class AuthService {
                 .build();
 
         userRepository.save(user);
+        saveConsentRecord(user, request);
 
         Membership membership = Membership.builder()
                 .user(user)
@@ -144,6 +149,24 @@ public class AuthService {
 
     private boolean isBlank(String value) {
         return value == null || value.isBlank();
+    }
+
+    private void saveConsentRecord(User user, SignupRequest request) {
+        UserConsentRecord consentRecord = UserConsentRecord.builder()
+                .user(user)
+                .policyVersion(normalizePolicyVersion(request.getConsentPolicyVersion()))
+                .termsAccepted(request.isTermsAccepted())
+                .privacyAccepted(request.isPrivacyAccepted())
+                .marketingAccepted(request.isMarketingAccepted())
+                .source("signup")
+                .build();
+        userConsentRecordRepository.save(consentRecord);
+    }
+
+    private String normalizePolicyVersion(String value) {
+        if (value == null || value.isBlank()) return "2026-07-privacy-v1";
+        String trimmed = value.trim();
+        return trimmed.length() > 40 ? trimmed.substring(0, 40) : trimmed;
     }
 
     private String resolveBearerToken(String authorizationHeader) {

@@ -166,6 +166,28 @@ search_quiet 'X-GG-CSRF|gg_csrf_token' "$ROOT_DIR/frontend/FE-02/src/services/ap
   || fail "frontend API client must send CSRF header from cookie"
 pass "auth uses HttpOnly cookie path and avoids localStorage token persistence"
 
+search_quiet 'termsAccepted' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/auth/dto/SignupRequest.java" \
+  || fail "signup request must include required terms consent"
+search_quiet 'privacyAccepted' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/auth/dto/SignupRequest.java" \
+  || fail "signup request must include required privacy consent"
+search_quiet 'UserConsentRecord' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/auth" \
+  || fail "signup consent evidence must be persisted"
+grep -q 'user_consent_records' "$ROOT_DIR/backend/BE-02/src/main/resources/db/01_schema.sql" \
+  || fail "schema must include user_consent_records"
+grep -q 'user_consent_records' "$ROOT_DIR/database/mysql/migrations/2026-07-02_user_consent_records.sql" \
+  || fail "deployable MySQL migration for user_consent_records must exist"
+search_quiet 'ConsentChecklist' "$ROOT_DIR/frontend/FE-02/src/pages/auth" \
+  || fail "signup UI must require explicit consent selections"
+grep -q 'termsAccepted' "$ROOT_DIR/scripts/smoke-prod.sh" \
+  || fail "production smoke signup must include consent fields"
+grep -q 'termsAccepted' "$ROOT_DIR/scripts/setup-demo-scenario.sh" \
+  || fail "demo scenario signup must include consent fields"
+grep -q 'GOOGLE_SSO_ENABLED=false' "$ROOT_DIR/.env.example.presentation" \
+  || fail "Google SSO must be explicitly disabled by default in presentation env"
+grep -q 'Legal/Compliance Readiness' "$ROOT_DIR/docs/legal-compliance-readiness-2026-07-02.md" \
+  || fail "legal/compliance readiness document must exist"
+pass "signup consent and legal/compliance readiness are documented and gated"
+
 if search_quiet 'findTop20ByOrderByStartedAtDesc|findTop50ByOrderByFetchedAtDesc|findTop50ByHsCodeAndTargetCountryOrderByFetchedAtDesc' \
   "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataCollectionService.java"; then
   fail "public-data service must not use global recent run/record queries"

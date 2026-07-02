@@ -48,6 +48,22 @@ CREATE INDEX IF NOT EXISTS idx_public_data_records_scope_fetched
 CREATE INDEX IF NOT EXISTS idx_public_data_records_cache
     ON public_data_records (provider, request_key, expires_at DESC);
 
+CREATE TABLE IF NOT EXISTS user_consent_records (
+    id VARCHAR(36) PRIMARY KEY,
+    user_id VARCHAR(36) NOT NULL,
+    policy_version VARCHAR(40) NOT NULL,
+    terms_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    privacy_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    marketing_accepted BOOLEAN NOT NULL DEFAULT FALSE,
+    accepted_at TIMESTAMP NOT NULL,
+    withdrawn_at TIMESTAMP,
+    source VARCHAR(40) NOT NULL DEFAULT 'signup',
+    CONSTRAINT fk_user_consent_user FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_user_consent_user_accepted
+    ON user_consent_records (user_id, accepted_at);
+
 CREATE TABLE IF NOT EXISTS external_source_documents (
     id VARCHAR(36) PRIMARY KEY,
     diagnosis_id VARCHAR(36),

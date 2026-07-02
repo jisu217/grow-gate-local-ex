@@ -104,6 +104,10 @@ payloads = {
         "email": arg("email"),
         "password": arg("password"),
         "name": arg("name"),
+        "termsAccepted": True,
+        "privacyAccepted": True,
+        "marketingAccepted": False,
+        "consentPolicyVersion": "2026-07-privacy-v1",
     },
     "login": {
         "email": arg("email"),
