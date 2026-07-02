@@ -63,7 +63,6 @@ cp .env.example .env
 | `VITE_API_URL` | 백엔드 API 기본 URL. 비워두면 현재 origin의 `/api` 사용 | 비움 |
 | `VITE_API_TIMEOUT_MS` | API 요청 timeout | `15000` |
 | `VITE_API_RETRY_COUNT` | GET 요청 retry 횟수 | `2` |
-| `VITE_ENABLE_MOCK` | API 실패 시 mock fallback 허용 여부 | `false` |
 
 > Vite에서 브라우저에 노출되는 환경 변수는 `VITE_` 접두사 필수.  
 > 코드에서 `import.meta.env.VITE_API_URL`로 접근. 로컬 Spring을 직접 호출할 때만 `.env`에 `VITE_API_URL=http://localhost:8080`을 지정합니다.
@@ -78,13 +77,9 @@ src/
 ├── App.jsx                     # 라우트 전체 정의
 ├── styles/global.css           # CSS 변수 + 전역 스타일
 │
-├── mock/                       # 개발용 fallback 데이터 (VITE_ENABLE_MOCK=true에서만 조회 실패 대체)
-│   ├── auth.js                 # 로그인 상태 (isLoggedIn, role, accountType)
-│   ├── roles.js                # 역할별 허용 액션 테이블
-│   ├── diagnosisSteps.js       # Gate 판단 단계 정의 (UI 전용)
-│   ├── diagnosisData.js        # S00~S10 fallback 데이터
-│   ├── diagnosisListData.js    # Gate 판단 이력 fallback 데이터
-│   └── productData.js          # 제품 지식 데이터
+├── constants/                  # UI 상수. API fallback 데이터가 아님
+│   ├── diagnosisSteps.js       # Gate 판단 단계 정의
+│   └── permissions.js          # 서버 권한을 보조하는 UI 권한 테이블
 │
 ├── services/                   # API 추상화 계층
 │   ├── diagnosisService.js     # Gate 판단 관련 (목록 조회, 결과 조회, 실행)
@@ -162,45 +157,34 @@ if (can('knowledge:edit')) { ... }
 | :--- | :--- | :--- |
 | 컴포넌트 | PascalCase | `DiagnosisResult.jsx` |
 | CSS 모듈 | 컴포넌트명 동일 | `DiagnosisResult.module.css` |
-| 서비스·훅·목업 | camelCase | `diagnosisService.js` |
+| 서비스·훅 | camelCase | `diagnosisService.js` |
 | 상수 | UPPER_SNAKE_CASE | `DIAGNOSIS_STEPS` |
 
 ### 컴포넌트 패턴
 
 - 페이지 컴포넌트는 `pages/` 하위, 재사용 컴포넌트는 `components/` 하위로 분리
-- 데이터 조회는 반드시 `services/`를 통해 수행 (컴포넌트에서 `mock/` 직접 import 금지)
+- 데이터 조회는 반드시 `services/`를 통해 수행합니다.
+- 제출 앱에는 `src/mock` fallback 경로를 두지 않습니다. API 장애는 화면 error state로 노출해야 합니다.
 
 ---
 
 ## 8. Backend Integration Guide
 
-현재 `services/`는 Spring Boot `/api`를 기본 호출합니다. 제출/운영 기본값에서는 API 실패를 mock 성공으로 숨기지 않고 error state로 전파합니다. 개발 중 화면 확인이 필요할 때만 `.env`에 `VITE_ENABLE_MOCK=true`를 설정하면 조회 API에 한해 fallback이 동작합니다.
+현재 `services/`는 Spring Boot `/api`를 기본 호출합니다. 제출/운영 앱에서는 API 실패를 mock 성공으로 숨기지 않고 error state로 전파합니다. 과거 개발용 fixture는 레거시 백업 zip으로 분리되었고, 런타임 코드에서 import하지 않습니다.
 
 ```js
 // 기본: 실 API 호출, 실패 시 에러 전파
 export async function getProducts() {
-  try {
-    const res = await apiFetch('/products')
-    return res.products.map(mapProductSummary)
-  } catch (err) {
-    if (!ENABLE_MOCK) throw err
-    return PRODUCTS
-  }
+  const res = await apiFetch('/products')
+  return res.products.map(mapProductSummary)
 }
 ```
 
 > 공통 fetch 헬퍼는 `services/apiClient.js` 참고. `VITE_API_URL`이 비어 있으면 현재 origin의 `/api`를 사용하고, 값이 있으면 `${VITE_API_URL}/api`를 베이스로 씁니다.
 
-**개발용 mock 정리 대상**
+**레거시 fixture 정책**
 
-| 파일 | 처리 |
-| :--- | :--- |
-| `mock/productData.js` | `VITE_ENABLE_MOCK=true` 개발 fallback 외 사용 금지 |
-| `mock/diagnosisData.js` | 결과 단계 UI 기본 shape 유지용, 실제 점수/세션은 API 응답으로 덮어씀 |
-| `mock/diagnosisListData.js` | `VITE_ENABLE_MOCK=true` 개발 fallback 외 사용 금지 |
-| `mock/auth.js` | 사용하지 않음 |
-| `mock/roles.js` | UI 보조 권한 테이블, 서버 권한 검증을 대체하지 않음 |
-| `mock/diagnosisSteps.js` | UI 전용이므로 유지 가능 |
+과거 정적 데모와 mock fixture는 `artifacts/legacy-backups/legacy-demo-and-mock-backup-2026-07-03.zip`에만 보존합니다. 제출 zip에는 포함하지 않으며, `scripts/check-risk-gates.sh`가 `src/mock` 재도입과 서비스 계층의 mock fallback 코드를 차단합니다.
 
 ---
 

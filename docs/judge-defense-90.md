@@ -8,7 +8,7 @@ GROW-GATE는 "AI가 수출 성공률을 예측하는 서비스"가 아니라, �
 | --- | --- | --- |
 | E2E | `scripts/smoke-prod.sh`: signup/login/product/diagnosis/polling/sources/report | 시연 경로 수정 전 제출 금지 |
 | Live data | `SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true`에서 live success >= 1 | "실시간 공공데이터" 표현 금지 |
-| Mock isolation | `VITE_APP_MODE=presentation`, `VITE_ENABLE_MOCK=false`, risk gate 통과 | mock route는 데모 전용으로 설명 |
+| Mock isolation | `scripts/check-risk-gates.sh`: `src/mock`, service mock fallback, legacy static demo 없음 | mock/정적 데모가 보이면 제출 중지 |
 | Score trace | S10 source table과 `/api/diagnosis/{id}/sources` | 공공데이터 점수 반영 주장 축소 |
 | AI wording | `scripts/check-risk-gates.sh` 금지 표현 grep | 자율 AI/예측/RAG 표현 삭제 |
 | Responsibility | Confidence panel, HOLD/전문가 검토 badge | 법적 확정 판단 표현 금지 |

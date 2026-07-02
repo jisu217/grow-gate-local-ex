@@ -1,6 +1,6 @@
 // 역할 기반 권한 확인 훅
 import { getAuthUser } from '../services/authService.js'
-import { PERMISSIONS } from '../mock/roles.js'
+import { PERMISSIONS } from '../constants/permissions.js'
 
 export function usePermission() {
   const user = getAuthUser()

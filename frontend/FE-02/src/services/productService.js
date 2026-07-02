@@ -1,17 +1,6 @@
 // 제품 지식 서비스
 import { apiFetch } from './apiClient.js'
 
-const viteEnv = import.meta.env ?? {}
-const ENABLE_MOCK = viteEnv.VITE_ENABLE_MOCK === 'true'
-const APP_MODE = viteEnv.VITE_APP_MODE ?? ''
-const PRESENTATION_MODE = APP_MODE === 'presentation' || viteEnv.VITE_PRESENTATION_MODE === 'true'
-const MOCK_ALLOWED = ENABLE_MOCK && !PRESENTATION_MODE && !viteEnv.PROD
-
-async function loadProductMock() {
-  const mockPath = '/src/mock/productData.js'
-  return import(/* @vite-ignore */ mockPath)
-}
-
 // 백엔드 knowledgeStatus(snake_case) → FE 표시용 key 변환
 const STATUS_MAP = {
   valid: 'valid',
@@ -42,15 +31,8 @@ function mapProductSummary(p) {
 
 // 전체 제품 목록 조회
 export async function getProducts() {
-  try {
-    const res = await apiFetch('/products')
-    return res.products.map(mapProductSummary)
-  } catch (err) {
-    if (!MOCK_ALLOWED) throw err
-    console.warn('[productService] getProducts API 실패, VITE_ENABLE_MOCK=true라 mock으로 대체합니다.', err)
-    const { PRODUCTS } = await loadProductMock()
-    return PRODUCTS
-  }
+  const res = await apiFetch('/products')
+  return res.products.map(mapProductSummary)
 }
 
 // 제품 상세 매핑
@@ -108,17 +90,8 @@ function mapProductDetail(p) {
 
 // 특정 제품 지식 상세 조회
 export async function getProductKnowledge(productId) {
-  try {
-    const detail = await apiFetch(`/products/${productId}/knowledge`)
-    return mapProductDetail(detail)
-  } catch (err) {
-    if (!MOCK_ALLOWED) throw err
-    console.warn('[productService] getProductKnowledge API 실패, VITE_ENABLE_MOCK=true라 mock으로 대체합니다.', err)
-    const { PRODUCT_DETAILS } = await loadProductMock()
-    const product = PRODUCT_DETAILS[productId]
-    if (!product) throw new Error(`제품을 찾을 수 없습니다. (id: ${productId})`)
-    return product
-  }
+  const detail = await apiFetch(`/products/${productId}/knowledge`)
+  return mapProductDetail(detail)
 }
 
 // 제품 지식 저장 (쓰기 작업 — 조회와 달리 실패 시 mock 대체 없이 에러 그대로 전파)
@@ -160,21 +133,15 @@ export async function deleteProduct(productId) {
 
 // 변경 이력(Audit Log) 조회 — audit:view 권한 없는 계정은 백엔드가 403을 반환하므로 빈 배열로 대체
 export async function getProductAuditLogs(productId) {
-  try {
-    const res = await apiFetch(`/products/${productId}/audit-logs`)
-    return (res.logs ?? []).map((log) => ({
-      date: log.changedAt,
-      by: log.changedBy,
-      field: (log.changedFields ?? []).join(', '),
-      oldValue: log.previousValue,
-      newValue: log.newValue,
-      reason: log.reason,
-    }))
-  } catch (err) {
-    if (!MOCK_ALLOWED) throw err
-    console.warn('[productService] getProductAuditLogs API 실패, VITE_ENABLE_MOCK=true라 빈 배열로 대체합니다.', err)
-    return []
-  }
+  const res = await apiFetch(`/products/${productId}/audit-logs`)
+  return (res.logs ?? []).map((log) => ({
+    date: log.changedAt,
+    by: log.changedBy,
+    field: (log.changedFields ?? []).join(', '),
+    oldValue: log.previousValue,
+    newValue: log.newValue,
+    reason: log.reason,
+  }))
 }
 
 // 인증서 추가/수정/삭제 (쓰기 작업 — 실패 시 에러 그대로 전파)

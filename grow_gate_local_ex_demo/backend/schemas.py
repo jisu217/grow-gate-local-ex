@@ -98,13 +98,12 @@ class GitInitRequest(BaseModel):
 class GitCommitRequest(BaseModel):
     """Local Git commit request."""
 
-    message: str = Field(default="feat: add team operations dashboards", min_length=1, max_length=120)
+    message: str = Field(default="chore: update python worker evidence pipeline", min_length=1, max_length=120)
     include_paths: List[str] = Field(
         default_factory=lambda: [
             ".gitignore",
             "docs/superpowers",
             "grow_gate_local_ex_demo/backend",
-            "grow_gate_local_ex_demo/frontend",
             "grow_gate_local_ex_demo/tests",
             "grow_gate_local_ex_demo/README.md",
         ],

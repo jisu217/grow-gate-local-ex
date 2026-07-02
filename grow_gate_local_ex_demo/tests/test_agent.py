@@ -119,27 +119,50 @@ def test_target_company_context_endpoint_exposes_rag_prompt_harness():
     assert payload["harness_report"]["overall_score"] >= 80
 
 
-def test_readiness_diagnosis_tab_uses_workspace3_step_ui():
-    html = (Path(__file__).resolve().parents[1] / "frontend" / "workspace.html").read_text(encoding="utf-8")
-    assert "GROW-GATE Local EX · 준비도 진단" in html
-    assert 'id="stageWrap"' in html
-    assert "const STEPS=[" in html
-    assert "S04 READINESS SCORING LAB" in html
-    assert "S11 PUBLIC DATA PIPELINE" in html
-    assert 'href="index.html"' in html
-    assert 'href="roadmap.html"' in html
+def test_static_workspace_frontend_is_not_part_of_worker_package():
+    root = Path(__file__).resolve().parents[1]
+    assert not (root / "frontend" / "workspace.html").exists()
+    assert not (root / "frontend" / "data.html").exists()
+    assert (root / "backend" / "app.py").exists()
 
 
-def test_ai_diagnosis_login_and_agent_first_flow_copy():
-    html = (Path(__file__).resolve().parents[1] / "frontend" / "workspace.html").read_text(encoding="utf-8")
-    assert 'id="loginScreen"' in html
-    assert 'id="loginForm"' in html
-    assert "function handleLogin" in html
-    assert "이 단계의 데이터 정리와 진단 초안은 AI Agent 기반으로 생성됩니다" in html
-    assert "데이터 호출" not in html
-    assert "{no:'01',nm:'기업·제품 입력',aux:'Input'}" in html
-    assert "{no:'02',nm:'AI 예비진단',aux:'Agent Brief'}" in html
-    assert "{no:'03',nm:'근거 데이터 연계',aux:'Evidence'}" in html
+def test_worker_claim_verifier_rejects_unverifiable_agent_copy():
+    client = TestClient(app)
+    response = client.post(
+        "/worker/diagnosis-v1",
+        json={
+            "diagnosisId": "diag-claim-copy",
+            "productSnapshot": {
+                "productName": "전장 모듈",
+                "hsCode": "853710",
+                "targetCountry": "DE",
+            },
+            "candidateClaims": [
+                {"text": "source-1 기준 인증 검토 필요", "sourceId": "source-1"},
+                {"text": "FTO 문제 없음", "sourceId": "missing-source"},
+                {"text": "수출 성공률은 99%입니다.", "sourceId": "source-1"},
+            ],
+            "publicDataRecords": [
+                {
+                    "id": "source-1",
+                    "provider": "KOTRA_MARKET",
+                    "sourceType": "live",
+                    "usedFor": "market",
+                    "confidence": 0.75,
+                    "scoreContribution": 4,
+                    "metrics": {"recordCount": 1},
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    claim_verification = response.json()["claimVerification"]
+    accepted = [claim["text"] for claim in claim_verification["accepted"]]
+    rejected = [claim["text"] for claim in claim_verification["rejected"]]
+    assert accepted == ["source-1 기준 인증 검토 필요"]
+    assert any("FTO 문제 없음" in claim for claim in rejected)
+    assert any("99%" in claim for claim in rejected)
 
 
 def test_external_llm_disabled_returns_deterministic_fallback():
@@ -521,19 +544,11 @@ def test_agent_enriches_analysis_with_registered_product_knowledge(tmp_path, mon
     assert "AI Agent/RAG/ML 사전 지식" in feature_enrichment["explanation"]
 
 
-def test_product_knowledge_frontend_page_is_registered_in_navigation():
-    root = Path(__file__).resolve().parents[1] / "frontend"
-    html = (root / "product-knowledge.html").read_text(encoding="utf-8")
-    index = (root / "index.html").read_text(encoding="utf-8")
-    script = (root / "product-knowledge.js").read_text(encoding="utf-8")
+def test_legacy_static_frontend_is_removed_from_python_worker_package():
+    root = Path(__file__).resolve().parents[1]
 
-    assert "제품 지식 관리" in html
-    assert 'id="productKnowledgeForm"' in html
-    assert 'id="knowledgeList"' in html
-    assert "AI Agent와 ML 모델의 사전 지식" in html
-    assert 'href="product-knowledge.html"' in index
-    assert "fetch(`${API_BASE}/product-knowledge`" in script
-    assert "renderFeaturePreview" in script
+    assert not (root / "frontend").exists()
+    assert (root / "backend" / "worker_engine.py").exists()
 
 
 def test_rag_database_schema_exposes_supabase_pgvector_tables():
@@ -590,28 +605,14 @@ def test_ml_train_runs_airflow_ready_pipeline_and_records_history(tmp_path, monk
     assert latest["airflow_ready"] is True
 
 
-def test_frontend_copy_uses_korean_safe_wrapping_and_pipeline_controls():
-    root = Path(__file__).resolve().parents[1] / "frontend"
-    workspace = (root / "workspace.html").read_text(encoding="utf-8")
-    styles = (root / "styles.css").read_text(encoding="utf-8")
-    data_html = (root / "data.html").read_text(encoding="utf-8")
-    app_js = (root / "app.js").read_text(encoding="utf-8")
+def test_worker_schema_defaults_do_not_commit_static_frontend_paths():
+    root = Path(__file__).resolve().parents[1]
+    schemas = (root / "backend" / "schemas.py").read_text(encoding="utf-8")
 
-    assert "판단 기준이 됩니다." in workspace
-    assert "한글 줄바꿈 보호" in workspace
-    assert "word-break: keep-all" in workspace
-    assert "overflow-wrap: break-word" in workspace
-    assert "korean-copy-safe" in styles
-    assert "overflow-wrap: anywhere" not in styles[styles.index(".korean-copy-safe") : styles.index(".technical-wrap")]
-    assert "ML 재학습 실행" in data_html
-    assert "pipelineRunHistory" in data_html
-    assert "데모 DB 시드 생성" in data_html
-    assert "실사용 시뮬레이션 실행" in data_html
-    assert "demoSimulationReport" in data_html
-    assert "fetch(`${API_BASE}/ml/train`" in app_js
-    assert "fetch(`${API_BASE}/db/seed`" in app_js
-    assert "fetch(`${API_BASE}/simulation/run`" in app_js
-    assert "renderPipelineRunHistory" in app_js
+    assert "grow_gate_local_ex_demo/frontend" not in schemas
+    assert "frontend/workspace.html" not in schemas
+    assert "grow_gate_local_ex_demo/backend" in schemas
+    assert "grow_gate_local_ex_demo/tests" in schemas
 
 
 def test_local_demo_database_seeds_real_product_rag_and_pipeline_data(tmp_path, monkeypatch):

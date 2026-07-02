@@ -23,7 +23,7 @@
 | 진단 실행 | `AI 진단 시작` 클릭 시 `/diagnosis/diag-001`로 고정 이동 | 실제 `POST /api/diagnosis` 호출 후 반환된 `diagnosisId`로 이동 |
 | 진단 엔진 | Spring 결과가 항상 72점, 고정 출처, 고정 문구 | 입력·제품 지식·공공데이터 출처 신호 기반 규칙 점수 생성 |
 | 공공데이터 근거 | 출처명만 표시되고 점수 기여도 없음 | `sourceId`, `provider`, `matchedKey`, `usedFor`, `scoreContribution`, `fallbackUsed` 반환 |
-| mock fallback | API 실패 시 화면이 정상처럼 보임 | 기본값 `VITE_ENABLE_MOCK=false`, 실패 시 error state 전파 |
+| mock fallback | API 실패 시 화면이 정상처럼 보임 | 프론트 `src/mock`과 service mock fallback 제거, 실패 시 error state 전파 |
 | 권한 | 멤버십이 없으면 `admin`으로 처리 | 개인 계정은 본인 리소스 owner 상당, 회사 계정은 멤버십 없으면 거부 |
 | 제품 삭제 | FK 제약으로 감사 로그/진단 이력 삭제 실패 가능 | 물리 삭제 대신 `deleted_at`, `deleted_by` soft delete 적용 |
 | 입력 검증 | HS Code, 가입 유형, 사업자번호, URL 검증 부족 | DTO/service 검증 강화 |
@@ -58,7 +58,7 @@
   - 예: `독일`, `Germany`, `DE` -> `DE`
   - 예: `미국`, `USA`, `US` -> `US`
 
-### 3.2 mock fallback 격리
+### 3.2 mock fallback 제거
 
 변경 파일:
 
@@ -68,16 +68,16 @@
 
 수정 내용:
 
-- 조회 API 실패 시 mock으로 자동 대체하던 동작을 기본 비활성화
-- `VITE_ENABLE_MOCK=true`일 때만 개발용 fallback 허용
-- 제출 기본값은 `VITE_ENABLE_MOCK=false`
+- 조회 API 실패 시 mock으로 자동 대체하던 동작 제거
+- 과거 정적 데모와 mock fixture는 `artifacts/legacy-backups/legacy-demo-and-mock-backup-2026-07-03.zip`에만 보존
+- `scripts/check-risk-gates.sh`가 `frontend/FE-02/src/mock`, 서비스 계층 mock fallback, legacy standalone/static demo 재도입을 차단
 
 추가 환경변수:
 
 ```env
 VITE_API_URL=http://localhost:8080
 VITE_API_TIMEOUT_MS=15000
-VITE_ENABLE_MOCK=false
+VITE_API_RETRY_COUNT=2
 ```
 
 ### 3.3 API client 안정성 개선

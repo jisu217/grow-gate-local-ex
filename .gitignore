@@ -16,3 +16,4 @@ build/
 database/sqlite/*.db
 .gstack/
 **/.gradle-home/
+artifacts/submission/*.zip

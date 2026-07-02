@@ -8,6 +8,7 @@ merge into a diagnosis result when `APP_FASTAPI_ENABLED=true`.
 from __future__ import annotations
 
 import os
+import re
 from time import perf_counter
 from datetime import datetime, timezone
 from typing import Any, Dict, List
@@ -272,7 +273,7 @@ def _verify_candidate_claims(claims: List[Dict[str, Any]], records: List[Dict[st
     source_ids.discard("")
     accepted: List[Dict[str, Any]] = []
     rejected: List[Dict[str, Any]] = []
-    forbidden_phrases = ["문제 없음", "완전 안전", "100%", "보장", "확정"]
+    forbidden_phrases = ["문제 없음", "완전 안전", "100%", "보장", "확정", "성공률", "성공 가능"]
     for claim in claims:
         text = str(claim.get("text") or claim.get("claim") or "")
         source_id = str(claim.get("sourceId") or "")
@@ -281,6 +282,10 @@ def _verify_candidate_claims(claims: List[Dict[str, Any]], records: List[Dict[st
             reason = "missing_or_unknown_source_id"
         elif any(phrase in text for phrase in forbidden_phrases):
             reason = "overconfident_or_unsupported_wording"
+        elif re.search(r"\d+(?:\.\d+)?\s*%", text) and not any(
+            keyword in text for keyword in ["YoY", "yoy", "증가율", "성장률", "growth"]
+        ):
+            reason = "unsupported_numeric_claim"
         if reason:
             rejected.append({"text": text, "sourceId": source_id, "reason": reason})
         else:

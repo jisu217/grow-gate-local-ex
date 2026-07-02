@@ -22,7 +22,7 @@ import S08ExecBoard  from '../../components/diagnosis/S08ExecBoard.jsx'
 import S09Report     from '../../components/diagnosis/S09Report.jsx'
 import S10Sources    from '../../components/diagnosis/S10Sources.jsx'
 
-import { DIAGNOSIS_STEPS } from '../../mock/diagnosisSteps.js'
+import { DIAGNOSIS_STEPS } from '../../constants/diagnosisSteps.js'
 import { getDiagnosisReport, getDiagnosisResult } from '../../services/diagnosisService.js'
 import { collectPublicData } from '../../services/publicDataService.js'
 

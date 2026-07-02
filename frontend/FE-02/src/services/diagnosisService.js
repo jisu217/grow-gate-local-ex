@@ -1,13 +1,6 @@
 // 진단 서비스
 import { apiFetch } from './apiClient.js'
 
-const viteEnv = import.meta.env ?? {}
-const ENABLE_MOCK = viteEnv.VITE_ENABLE_MOCK === 'true'
-const APP_MODE = viteEnv.VITE_APP_MODE ?? ''
-const PRESENTATION_MODE = APP_MODE === 'presentation' || viteEnv.VITE_PRESENTATION_MODE === 'true'
-
-const MOCK_ALLOWED = ENABLE_MOCK && !PRESENTATION_MODE && !viteEnv.PROD
-
 const EMPTY_SCORE = {
   overall: 0,
   market: 0,
@@ -60,36 +53,6 @@ const EMPTY_METRICS = [
   { step: '03', label: 'Sources', score: 0 },
 ]
 
-async function loadDiagnosisListMock() {
-  const mockPath = '/src/mock/diagnosisListData.js'
-  const module = await import(/* @vite-ignore */ mockPath)
-  return module.DIAGNOSIS_LIST
-}
-
-async function loadDiagnosisMockFallback() {
-  const mockPath = '/src/mock/diagnosisData.js'
-  const module = await import(/* @vite-ignore */ mockPath)
-  const sessionKey = ['CURRENT', 'SESSION'].join('_')
-  const kpiKey = ['KPI', 'DATA'].join('_')
-  return {
-    session: module[sessionKey],
-    kpiData: module[kpiKey],
-    stages: {
-      s00: module.S00_OVERVIEW,
-      s01: module.S01_INPUT,
-      s02: module.S02_CONNECTORS,
-      s03: { predictions: module.S03_PREDICTIONS, features: module.S03_FEATURES },
-      s04: [],
-      s05: [],
-      s06: [],
-      s07: { patents: [], supports: [] },
-      s08: module.S08_EXEC,
-      s09: module.S09_SCORE_BARS,
-      s10: module.S10_PIPES,
-    },
-  }
-}
-
 // 진단 이력 목록 항목 매핑 (백엔드 요약 응답 → FE 카드 형태)
 // 백엔드 목록 응답에 없는 diagnosisScore/summary는 null 처리.
 function mapDiagnosisSummary(d) {
@@ -116,14 +79,8 @@ function mapDiagnosisSummary(d) {
 
 // 진단 이력 목록 조회
 export async function getDiagnosisList() {
-  try {
-    const res = await apiFetch('/diagnosis')
-    return res.diagnoses.map(mapDiagnosisSummary)
-  } catch (err) {
-    if (!MOCK_ALLOWED) throw err
-    console.warn('[diagnosisService] getDiagnosisList API 실패, VITE_ENABLE_MOCK=true라 mock으로 대체합니다.', err)
-    return loadDiagnosisListMock()
-  }
+  const res = await apiFetch('/diagnosis')
+  return res.diagnoses.map(mapDiagnosisSummary)
 }
 
 // 진단 결과 상세 매핑
@@ -610,17 +567,11 @@ function normalizeDiagnosisScore(score) {
 
 // 진단 근거/출처 조회 — 실패 시 null 반환(상세 응답의 result.evidenceSources로 대체됨)
 export async function getDiagnosisSources(id) {
-  try {
-    const res = await apiFetch(`/diagnosis/${id}/sources`)
-    return (res.sources ?? []).map((s) => {
-      const contribution = s.scoreContribution != null ? ` (${s.scoreContribution > 0 ? '+' : ''}${s.scoreContribution})` : ''
-      return `${s.provider ?? s.documentName ?? s.field}${contribution}`
-    })
-  } catch (err) {
-    if (!MOCK_ALLOWED) throw err
-    console.warn('[diagnosisService] getDiagnosisSources API 실패, VITE_ENABLE_MOCK=true라 상세 응답 출처로 대체합니다.', err)
-    return null
-  }
+  const res = await apiFetch(`/diagnosis/${id}/sources`)
+  return (res.sources ?? []).map((s) => {
+    const contribution = s.scoreContribution != null ? ` (${s.scoreContribution > 0 ? '+' : ''}${s.scoreContribution})` : ''
+    return `${s.provider ?? s.documentName ?? s.field}${contribution}`
+  })
 }
 
 export async function getDiagnosisSourceEntries(id) {
@@ -630,20 +581,14 @@ export async function getDiagnosisSourceEntries(id) {
 
 // 진단 결과 상세 조회
 export async function getDiagnosisResult(id) {
+  const detail = await apiFetch(`/diagnosis/${id}`)
+  let evidenceSources = null
   try {
-    const detail = await apiFetch(`/diagnosis/${id}`)
-    let evidenceSources = null
-    try {
-      evidenceSources = await getDiagnosisSources(id)
-    } catch {
-      evidenceSources = detail.result?.evidenceSources ?? null
-    }
-    return mapDiagnosisDetail(detail, evidenceSources)
-  } catch (err) {
-    if (!MOCK_ALLOWED) throw err
-    console.warn('[diagnosisService] getDiagnosisResult API 실패, VITE_ENABLE_MOCK=true라 mock으로 대체합니다.', err)
-    return loadDiagnosisMockFallback()
+    evidenceSources = await getDiagnosisSources(id)
+  } catch {
+    evidenceSources = detail.result?.evidenceSources ?? null
   }
+  return mapDiagnosisDetail(detail, evidenceSources)
 }
 
 export async function getDiagnosisReport(id) {

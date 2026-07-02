@@ -101,14 +101,15 @@ GROW-GATE Local EX는 이 질문을 바이어 회신 가능한 Gate 판단과 �
 
 ## 5. Screens
 
+제출 판단 대상 화면은 `frontend/FE-02` React 앱입니다. 과거 정적 HTML 데모와 개발용 mock fixture는 심사 혼동을 막기 위해 저장소의 실행 경로에서 제거했고, 복구가 필요한 경우에만 `artifacts/legacy-backups/legacy-demo-and-mock-backup-2026-07-03.zip`에서 확인합니다. 제출 zip 생성 스크립트는 이 백업 zip도 제외합니다.
+
 ```text
-grow_gate_local_ex_demo/frontend/
-├─ index.html       # 홈
-├─ workspace.html   # Gate 판단 워크스페이스
-├─ data.html        # 공공데이터 파이프라인
-├─ roadmap.html     # Gate 업무 보드
-├─ team.html        # 팀 운영실
-└─ code-gate.html   # 코드 리뷰·커밋 게이트
+frontend/FE-02/src/
+├─ pages/auth/Home.jsx                 # Before/After와 진입 화면
+├─ pages/diagnosis/DiagnosisNew.jsx    # 제품 + 바이어 문의 입력
+├─ pages/diagnosis/DiagnosisResult.jsx # Gate 판단, Source Trust Bar, stage cards
+├─ components/diagnosis/S10Sources.jsx # live/cache/fallback 출처와 contribution ledger
+└─ services/diagnosisService.js        # Spring API response mapper
 ```
 
 ---
@@ -140,22 +141,9 @@ Open:
 http://localhost:5173
 ```
 
-### 2. 보조 정적 데모 보기
+### 2. Python 데이터/AI Worker 실행
 
-아래 정적 데모는 레이아웃 보존용 보조 화면입니다. 제출 판단 대상은 `frontend/FE-02`와 `backend/BE-02` 메인 앱이며, root의 `GROW_GATE_Local_EX_standalone.html`에는 `LEGACY DEMO - DO NOT JUDGE AS PRODUCTION APP` 배너를 표시합니다.
-
-```bash
-cd grow_gate_local_ex_demo
-.venv312/bin/python -m http.server 8765
-```
-
-Open:
-
-```text
-http://127.0.0.1:8765/frontend/index.html
-```
-
-### 3. FastAPI 백엔드 실행
+`grow_gate_local_ex_demo`는 더 이상 정적 데모가 아니라 Spring 메인 앱이 선택적으로 호출하는 Python 데이터/AI worker입니다. 공공데이터 응답 정규화, evidence compile, source-bound claim verification, bounded planning/tool/verification/retry loop를 담당합니다.
 
 ```bash
 cd grow_gate_local_ex_demo
@@ -166,18 +154,10 @@ API:
 
 ```text
 GET  /health
-GET  /datasets
-GET  /pipeline/preview
-GET  /public-data/sources
-GET  /public-data/normalized
-POST /public-data/collect
-GET  /public-data/runs
-GET  /public-data/records
-POST /analyze
-POST /report
+POST /worker/diagnosis-v1
 ```
 
-Spring 메인 앱에서 FastAPI agent/report bridge를 함께 쓰려면 FastAPI를 먼저 실행한 뒤 Spring 환경변수에 아래 값을 추가합니다.
+Spring 메인 앱에서 Python worker bridge를 함께 쓰려면 worker를 먼저 실행한 뒤 Spring 환경변수에 아래 값을 추가합니다. worker가 꺼져 있어도 Spring의 rule scoring과 source-traced 결과는 동작합니다.
 
 ```bash
 export APP_FASTAPI_ENABLED=true
@@ -254,10 +234,11 @@ frontend/FE-02/
 
 scripts/
 ├─ check-risk-gates.sh                       # 제출 리스크 CI gate
+├─ package-submission.sh                     # 제출 zip 생성, legacy/demo/archive 제외
 ├─ verify-local.sh                           # 로컬 재현 검증
 └─ smoke-prod.sh                             # 배포 서버 smoke test
 
-grow_gate_local_ex_demo/                     # FastAPI/HTML 보조 프로토타입
+grow_gate_local_ex_demo/                     # Python 데이터/AI worker
 ```
 
 ---
@@ -266,6 +247,7 @@ grow_gate_local_ex_demo/                     # FastAPI/HTML 보조 프로토타�
 
 ```bash
 ./scripts/check-risk-gates.sh
+./scripts/package-submission.sh
 ./scripts/verify-fresh-db.sh
 cd backend/BE-02 && ./gradlew test --no-daemon
 cd frontend/FE-02 && npm run test:mappers && npm run build

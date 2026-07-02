@@ -18,9 +18,9 @@
 3. 보고서 산출물은 기본적으로 `Markdown 바이어 대응 메모`라고 표현한다.
    - PDF는 별도 endpoint와 smoke 검증이 있어도, 한국어 렌더링 QA 전에는 발표 기본 산출물로 주장하지 않는다.
 
-4. mock과 standalone demo는 dev/legacy 용도로 격리한다.
-   - `frontend/FE-02/src/mock/README.md`에 dev-only fixture 정책을 명시한다.
-   - `GROW_GATE_Local_EX_standalone.html`은 `LEGACY DEMO - DO NOT JUDGE AS PRODUCTION APP` 배너를 포함한다.
+4. mock과 standalone demo는 제출 실행 경로에서 제거한다.
+   - 과거 정적 데모와 fixture는 `artifacts/legacy-backups/legacy-demo-and-mock-backup-2026-07-03.zip`에만 보존한다.
+   - 제출 zip은 이 백업 zip과 legacy/static demo 경로를 제외한다.
 
 ## Guardrails
 
@@ -29,11 +29,10 @@
   - 첫 화면 `DecisionBrief` 누락
   - fallback 담당자 검토 경고 누락
   - 보고서 UI의 PDF 과장 표현
-  - standalone demo의 `AI Agent`, `수출 가능성 예측`, `성공 가능성` 과장 표현
+  - `frontend/FE-02/src/mock` 또는 legacy standalone/static demo 재도입
 
 ## Verification
 
 - `./scripts/check-risk-gates.sh`
 - `node frontend/FE-02/src/services/diagnosisService.mapper.test.js`
 - `cd frontend/FE-02 && npm run build`
-

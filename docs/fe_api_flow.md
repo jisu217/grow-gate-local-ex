@@ -1,7 +1,7 @@
 # FE-02 화면별 API 호출 흐름표 (F-1)
 
 > 담당: 한혜원 (FE) · 대상: `frontend/FE-02`
-> 목적: 어느 화면에서 어떤 API를 부르는지, 어디가 실제 API이고 어디가 mock fallback인지 한눈에 파악.
+> 목적: 어느 화면에서 어떤 API를 부르는지, API 실패가 어디서 사용자에게 노출되는지 한눈에 파악.
 > 기준 커밋: `main` 최신 (수출 Gate 판단 반영본)
 
 ---
@@ -12,7 +12,7 @@
 - **인증**: 로그인 시 `accessToken`을 **메모리**에 보관(`memoryAccessToken`) + 서버가 **HttpOnly 쿠키** 발급. `apiFetch`가 메모리 토큰을 `Authorization: Bearer`로 자동 첨부. localStorage에는 사용자 정보(`gg_auth_user`)만 저장.
   - ⚠️ 새로고침하면 메모리 토큰이 사라짐 → `ProtectedRoute`가 `getAccessToken()`(메모리)만 확인하므로 로그인으로 튕길 수 있음(별도 이슈).
 - **공통 fetch 특성**: 타임아웃 15s, GET 자동 재시도 2회(`apiClient`).
-- **mock 경계 스위치**: `VITE_ENABLE_MOCK === 'true'` 일 때만 조회 실패 시 mock으로 대체. **기본값 false → 실패는 그대로 에러로 전파(운영 안전).**
+- **mock 정책**: 제출 앱에는 `src/mock` fallback 경로가 없다. 조회 실패는 mock 성공으로 숨기지 않고 화면 error state 또는 상세 응답의 실제 출처 fallback으로만 표시한다.
 
 ---
 
@@ -38,21 +38,21 @@
 
 ---
 
-## 2. mock fallback 점검표
+## 2. API 실패 처리 점검표
 
-`VITE_ENABLE_MOCK=true`일 때만 조회 실패 시 mock 대체. 쓰기(생성/수정/삭제)는 **절대 mock 대체 안 함** = 실패가 사용자에게 보임.
+쓰기(생성/수정/삭제)는 실패가 사용자에게 보입니다. 조회 API도 개발용 mock으로 대체하지 않으며, 진단 상세의 sources 보조 조회만 상세 응답 안에 이미 포함된 실제 `result.evidenceSources`로 대체할 수 있습니다.
 
-| 함수 | 종류 | mock fallback | fallback 내용 |
+| 함수 | 종류 | 실패 처리 | 비고 |
 | :-- | :-- | :-- | :-- |
-| `diagnosisService.getDiagnosisList` | 조회 | ✅ (ENABLE_MOCK) | `DIAGNOSIS_LIST` |
-| `diagnosisService.getDiagnosisResult` | 조회 | ✅ (ENABLE_MOCK) | mock 세션/스테이지 |
-| `diagnosisService.getDiagnosisSources` | 조회 | ✅ (ENABLE_MOCK) | 상세 응답의 `evidenceSources`로 대체 |
+| `diagnosisService.getDiagnosisList` | 조회 | 에러 전파 | 목록 화면 error state |
+| `diagnosisService.getDiagnosisResult` | 조회 | 에러 전파 | 결과 화면 error/failed state |
+| `diagnosisService.getDiagnosisSources` | 보조 조회 | 상세 응답의 `evidenceSources`로 대체 가능 | mock 아님 |
 | `diagnosisService.getDiagnosisSourceEntries` | 조회 | ❌ | 에러 전파 |
 | `diagnosisService.getDiagnosisReport` | 조회 | ❌ | 에러 전파 |
 | `diagnosisService.runDiagnosis` | 쓰기 | ❌ | 에러 전파 |
-| `productService.getProducts` | 조회 | ✅ (ENABLE_MOCK) | `PRODUCTS` |
-| `productService.getProductKnowledge` | 조회 | ✅ (ENABLE_MOCK) | `PRODUCT_DETAILS` |
-| `productService.getProductAuditLogs` | 조회 | ✅ (ENABLE_MOCK) | 빈 배열(권한 없으면 정상적으로 빈 배열) |
+| `productService.getProducts` | 조회 | 에러 전파 | 제품 지식 화면 error state |
+| `productService.getProductKnowledge` | 조회 | 에러 전파 | 상세 화면 error state |
+| `productService.getProductAuditLogs` | 조회 | 에러 전파 | 403은 서버 권한 결과 |
 | `productService.saveProductKnowledge` | 쓰기 | ❌ (주석에 사유 명시) | 에러 전파 — mock 성공 둔갑 시 입력 유실 위험 |
 | `productService.createProduct` / `deleteProduct` / cert·fto·buyer CRUD | 쓰기 | ❌ | 에러 전파 |
 | `mypageService.getMypageOverview` | 조회 | ❌ | 에러 전파 |
@@ -63,10 +63,11 @@
 
 ---
 
-## 3. 실제 API vs mock 경계 (요약)
+## 3. 실제 API 경계 (요약)
 
-- **기본 상태(`VITE_ENABLE_MOCK=false`)**: 모든 API가 실제 백엔드(8080) 호출. 실패는 화면 에러로 노출 → 운영 안전.
-- **mock 대체가 켜지는 조건**: `.env`에 `VITE_ENABLE_MOCK=true` 설정 시에만, 그리고 **조회(GET) 함수 일부만** mock으로 대체.
+- 모든 API는 실제 Spring 백엔드를 호출한다. 실패는 화면 에러로 노출한다.
+- 과거 mock fixture와 정적 데모는 `artifacts/legacy-backups/legacy-demo-and-mock-backup-2026-07-03.zip`에만 보존한다.
+- `scripts/check-risk-gates.sh`는 `src/mock`, 서비스 계층 mock fallback, legacy standalone/static demo 재도입을 차단한다.
 - **쓰기 작업은 항상 실제 API**: 진단 실행/제품 생성·삭제·지식 저장은 mock으로 조용히 성공하지 않음.
 
 ---

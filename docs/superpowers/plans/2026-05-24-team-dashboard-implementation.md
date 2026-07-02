@@ -1,5 +1,7 @@
 # Team Dashboard Implementation Plan
 
+> Archive note, 2026-07-03: this plan describes the removed static frontend prototype. The judged app is now `frontend/FE-02`; the old `grow_gate_local_ex_demo/frontend` path is preserved only in `artifacts/legacy-backups/legacy-demo-and-mock-backup-2026-07-03.zip` and is excluded from submission packages.
+
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
 **Goal:** Add team-facing strategy and code-gate dashboards to the existing GROW-GATE Local EX static frontend.

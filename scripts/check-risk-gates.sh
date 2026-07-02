@@ -29,6 +29,7 @@ search_quiet() {
 
 require_file "scripts/smoke-prod.sh"
 require_file "scripts/verify-local.sh"
+require_file "scripts/package-submission.sh"
 require_file ".github/workflows/ci.yml"
 require_file "BUILD.md"
 require_file ".env.example.presentation"
@@ -76,12 +77,16 @@ if search_quiet 'MOCK_STAGES|S04_MARKETS|S05_REGULATIONS|S06_RECALLS|S07_PATENTS
 fi
 if search_quiet "import .*\\.\\./mock/" "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
   "$ROOT_DIR/frontend/FE-02/src/services/productService.js"; then
-  fail "presentation services must lazy-load mock data only in explicit dev mock mode"
+  fail "presentation services must not import mock data"
 fi
-search_quiet 'MOCK_ALLOWED.*!PRESENTATION_MODE.*!viteEnv\.PROD' "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
-  || fail "diagnosisService must block mock fallback in production/presentation mode"
-search_quiet 'MOCK_ALLOWED.*!PRESENTATION_MODE.*!viteEnv\.PROD' "$ROOT_DIR/frontend/FE-02/src/services/productService.js" \
-  || fail "productService must block mock fallback in production/presentation mode"
+if [[ -d "$ROOT_DIR/frontend/FE-02/src/mock" ]]; then
+  fail "frontend mock directory must be removed from the judged app"
+fi
+if search_quiet 'VITE_ENABLE_MOCK|MOCK_ALLOWED|loadDiagnosisMockFallback|diagnosisData|diagnosisListData|productData' \
+  "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
+  "$ROOT_DIR/frontend/FE-02/src/services/productService.js"; then
+  fail "frontend services must not contain mock fallback code"
+fi
 if [[ -d "$ROOT_DIR/frontend/FE-02/dist" ]] && search_quiet 'CURRENT_SESSION|KPI_DATA|diag-001|S04_MARKETS|S05_REGULATIONS|S06_RECALLS|S07_PATENTS|S07_SUPPORTS|경남 배터리테크' \
   "$ROOT_DIR/frontend/FE-02/dist"; then
   fail "presentation build artifact must not contain demo mock diagnosis data"
@@ -108,14 +113,24 @@ search_quiet 'fallback.*담당자 검토' "$ROOT_DIR/frontend/FE-02/src/componen
   || fail "Gate area must warn when fallback sources require owner review"
 search_quiet 'Markdown 메모 다운로드' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/S09Report.jsx" \
   || fail "report UI must describe the default customer artifact as Markdown, not ambiguous PDF"
-require_file "frontend/FE-02/src/mock/README.md"
-search_quiet 'Dev-only Fixtures' "$ROOT_DIR/frontend/FE-02/src/mock/README.md" \
-  || fail "mock fixtures must be documented as dev-only"
-search_quiet 'LEGACY DEMO - DO NOT JUDGE AS PRODUCTION APP' "$ROOT_DIR/GROW_GATE_Local_EX_standalone.html" \
-  || fail "standalone static demo must be clearly marked as legacy and not production evidence"
-if search_quiet 'AI Agent|수출 가능성 예측|성공 가능성' "$ROOT_DIR/GROW_GATE_Local_EX_standalone.html"; then
-  fail "standalone legacy demo must not use overclaim wording"
+if [[ -f "$ROOT_DIR/GROW_GATE_Local_EX_standalone.html" || -d "$ROOT_DIR/grow_gate_local_ex_demo/frontend" ]]; then
+  fail "legacy standalone/static demo must be removed from the judged repository tree"
 fi
+if ! compgen -G "$ROOT_DIR/artifacts/legacy-backups/legacy-demo-and-mock-backup-*.zip" >/dev/null; then
+  fail "legacy demo/mock backup zip must exist under artifacts/legacy-backups"
+fi
+grep -q 'artifacts/legacy-backups/\*' "$ROOT_DIR/scripts/package-submission.sh" \
+  || fail "submission package script must exclude legacy backup archives"
+grep -q '\*.zip' "$ROOT_DIR/scripts/package-submission.sh" \
+  || fail "submission package script must exclude zip archives from the submission zip"
+grep -q '\*/\.env' "$ROOT_DIR/scripts/package-submission.sh" \
+  || fail "submission package script must exclude local .env files"
+grep -q '\.venv-aws/\*' "$ROOT_DIR/scripts/package-submission.sh" \
+  || fail "submission package script must exclude local AWS CLI virtualenv"
+grep -q '\.gstack/\*' "$ROOT_DIR/scripts/package-submission.sh" \
+  || fail "submission package script must exclude local gstack state"
+grep -q 'growgate-submission-' "$ROOT_DIR/scripts/package-submission.sh" \
+  || fail "submission package script must create a dated growgate submission zip"
 search_quiet 'GateDecisionHero' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisResult.jsx" \
   || fail "diagnosis result must show gate decision before detailed stages"
 search_quiet 'gateDecision' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \

@@ -84,7 +84,7 @@
 | `./scripts/check-risk-gates.sh` | 통과 |
 | `cd frontend/FE-02 && npm run test:mappers` | 통과 |
 | `cd frontend/FE-02 && npm run build` | 통과 |
-| `VITE_APP_MODE=presentation VITE_ENABLE_MOCK=false VITE_PRESENTATION_MODE=true npm run build` | 통과 |
+| `VITE_APP_MODE=presentation VITE_PRESENTATION_MODE=true npm run build` | 통과 |
 | presentation build mock/과장 표현 grep | mock key 및 `AI 지식화`, `추론 Agent` 미검출 |
 | `cd backend/BE-02 && ./gradlew test --no-daemon` | 통과 |
 | dev server HTTP smoke | `http://127.0.0.1:5174/diagnosis/diag-empty` 200 |

@@ -60,7 +60,7 @@
 | 완료 | SSH 22번이 전체 인터넷에 열려 있음 | Lightsail/UFW 모두 현재 관리자 공인 IP `/32`로 제한 완료 | 팀원 고정 IP가 추가되면 같은 방식으로 allowlist에 추가 |
 | P1 | 프론트가 JWT를 `localStorage`에 저장 | `frontend/FE-02/src/services/apiClient.js` | HttpOnly Secure SameSite cookie + CSRF token 구조로 전환 |
 | P2 | Spring Security에서 CSRF 비활성화 | `backend/BE-02/src/main/java/com/growgate/config/SecurityConfig.java` | cookie 기반 인증 전환 시 CSRF 재활성화 |
-| P2 | 데모/standalone HTML에 시연 계정 문자열 존재 | `grow_gate_local_ex_demo/frontend/workspace.html`, `GROW_GATE_Local_EX_standalone.html` | 공개 제출물에서 데모 계정은 "로컬 시연 전용"으로 유지하거나 제거 |
+| 완료 | 데모/standalone HTML에 시연 계정 문자열 존재 | 정적 demo와 mock fixture를 실행 경로에서 제거하고 `artifacts/legacy-backups/legacy-demo-and-mock-backup-2026-07-03.zip`에만 보존 | `scripts/package-submission.sh`와 risk gate로 제출 zip 제외 |
 | P2 | 로컬 DB seed에 알려진 bcrypt test hash 존재 | `database/mysql/init/02_seed.sql` | 운영 배포에서는 seed SQL 미적용 원칙 유지, README에 경고 추가 |
 | P3 | 공공 API endpoint 중 일부가 공식 카탈로그/신청 페이지 기본값 | docs와 `application.yml` | 승인된 operation endpoint 확보 후 환경변수로 교체 |
 

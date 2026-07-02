@@ -53,7 +53,7 @@
 | 2 | Spring 진단 결과가 하드코딩 | 완료 | 고정 `72` 점수 제거, 제품/HS/국가/인증/FTO/바이어/출처 기반 규칙 점수화 적용 |
 | 3 | React/Spring과 FastAPI 데모가 분리됨 | 부분 완료 | Spring에서 FastAPI `/analyze`, `/report` optional bridge를 추가. 단, FastAPI 운영 배포는 별도 |
 | 4 | 공공데이터가 알고리즘에 실제 반영되지 않음 | 부분 완료 | public data live/cache/fallback record와 domain signal을 수집해 source trace와 점수에 반영. 단, 일부 실제 API key/operation endpoint는 외부 발급 필요 |
-| 5 | mock/fallback이 실패를 숨김 | 완료 | `VITE_ENABLE_MOCK=false` 기본값으로 실패를 error state로 노출 |
+| 5 | mock/fallback이 실패를 숨김 | 완료 | 프론트 `src/mock`과 service mock fallback 제거. API 실패는 error state로 노출 |
 | 6 | 멤버십이 없으면 admin 처리 | 완료 | `orElse(UserRole.admin)` 제거, 개인 owner/회사 멤버십 기준으로 권한 정리 |
 | 7 | 제품 삭제가 FK를 깨뜨릴 수 있음 | 완료 | 물리 삭제 대신 `deleted_at`, `deleted_by` 기반 soft delete 적용 |
 | 8 | XGBoost가 synthetic data 기반 | 완료 | UI/문서에서 XGBoost 표현을 제거하고 `Rule rubric · LLM assisted`로 구현 수준에 맞춤. 실제 라벨 ML은 후속 과제로 유지 |
@@ -66,7 +66,7 @@
 | --- | --- | --- | --- |
 | `DiagnosisNew` | `runDiagnosis` 미호출, `diag-001` 고정 이동 | 완료 | 실제 API 호출, 결과 id 이동으로 변경 |
 | `DiagnosisNew` | 제품명/HS Code/대상국 검증 부족 | 완료 | 제품명 필수, HS 6~10자리 숫자, 대상국 alias 정규화 추가 |
-| `diagnosisService` | API 실패 시 mock fallback | 완료 | mock fallback은 `VITE_ENABLE_MOCK=true`일 때만 허용 |
+| `diagnosisService` | API 실패 시 mock fallback | 완료 | mock fallback 제거. sources 보조 조회 실패 시 상세 응답에 이미 포함된 실제 evidenceSources만 사용 |
 | `DiagnosisResult` | 없는 `diag-001`도 mock으로 정상 표시 가능 | 완료 | 기본 mock fallback 비활성화로 실제 실패가 드러나도록 변경 |
 | `DiagnosisResult` | 단계별 상세 결과가 실제 산출물인지 불명확 | 완료 | S00~S10을 backend stageCards 기반으로 매핑하고 S04~S07 mock 기본 주입 제거 |
 | `DiagnosisResult` | 진단 완료까지 자동 갱신 없음 | 완료 | `pending/running` 상태 polling 추가 |
