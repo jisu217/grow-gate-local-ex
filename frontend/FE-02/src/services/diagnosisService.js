@@ -546,12 +546,13 @@ export async function getDiagnosisReport(id) {
 
 // 새 진단 실행
 export async function runDiagnosis(payload) {
+  // productId 유무와 무관하게 백엔드 CreateDiagnosisRequest.InputData는
+  // productName·hsCode를 항상 @NotBlank로 요구하므로 항상 함께 보낸다.
+  // (기존엔 productId가 있으면 두 값을 빼서 "제품명/HS Code는 필수" 오류로 진단 생성이 실패했음)
   const body = {
     productId: payload.productId ?? null,
     targetCountry: payload.targetMarket ?? payload.targetCountry,
-  }
-  if (!body.productId) {
-    body.inputData = {
+    inputData: {
       productName: payload.productName,
       hsCode: payload.hsCode,
       description: payload.description,
@@ -562,17 +563,7 @@ export async function runDiagnosis(payload) {
       currentDocuments: payload.currentDocuments,
       exportExperience: payload.exportExperience,
       budgetLimitKrw: payload.budgetLimitKrw,
-    }
-  } else {
-    body.inputData = {
-      buyerRequest: payload.buyerRequest,
-      buyerDeadline: payload.buyerDeadline,
-      expectedShipmentDate: payload.expectedShipmentDate,
-      requestedCertifications: payload.requestedCertifications,
-      currentDocuments: payload.currentDocuments,
-      exportExperience: payload.exportExperience,
-      budgetLimitKrw: payload.budgetLimitKrw,
-    }
+    },
   }
 
   const res = await apiFetch('/diagnosis', { method: 'POST', body: JSON.stringify(body) })
