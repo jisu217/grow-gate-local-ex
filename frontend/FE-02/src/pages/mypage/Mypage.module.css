@@ -153,7 +153,7 @@
 .ppBtn:hover:not(:disabled) { border-color: var(--blue); color: var(--blue); background: #f4f8ff; }
 .ppBtn:disabled { opacity: .45; cursor: default; }
 .ppInfo { font-family: var(--en); font-size: 13px; font-weight: 700; color: var(--mute); min-width: 44px; text-align: center; }
-.prow { display: flex; align-items: center; gap: 16px; padding: 15px 18px; border: 1px solid var(--line); border-radius: 14px; transition: .15s; }
+.prow { display: flex; align-items: center; gap: 16px; padding: 15px 18px; border: 1px solid var(--line); border-radius: 14px; transition: .15s; cursor: pointer; }
 .prow:hover { border-color: #d6e3ff; background: #f9fbff; }
 .prow.cur { border-color: var(--blue); background: #f4f8ff; box-shadow: 0 0 0 1px var(--blue) inset; }
 .pn { font-size: 15px; font-weight: 700; color: var(--navy); }

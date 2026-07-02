@@ -52,11 +52,10 @@ export default function App() {
             <Route path="/mypage/knowledge"              element={<Knowledge />} />
             <Route path="/mypage/knowledge/:productId"   element={<KnowledgeDetail />} />
 
-            {/* 회사 계정 필요 */}
-            <Route element={<ProtectedRoute requireCompany />}>
-              <Route path="/mypage/knowledge/new"               element={<KnowledgeNew />} />
-              <Route path="/mypage/knowledge/:productId/edit"   element={<KnowledgeEdit />} />
-            </Route>
+            {/* 제품 등록·수정: 개인 계정(owner)도 백엔드가 허용하므로 회사 전용 제한 해제.
+                실제 권한(knowledge:create/edit)은 각 페이지의 can()이 담당 */}
+            <Route path="/mypage/knowledge/new"               element={<KnowledgeNew />} />
+            <Route path="/mypage/knowledge/:productId/edit"   element={<KnowledgeEdit />} />
 
           </Route>
         </Route>
