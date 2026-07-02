@@ -101,6 +101,107 @@ class ProductServiceTest {
     }
 
     @Test
+    void createSucceedsForAdminRoleWithinCompany() {
+        ReflectionTestUtils.setField(productService, "objectMapper", new ObjectMapper());
+
+        User user = user("user-2", UserType.company);
+        Company company = Company.builder().id("company-1").build();
+        Membership membership = Membership.builder().role(UserRole.admin).company(company).build();
+
+        when(userRepository.findById("user-2")).thenReturn(Optional.of(user));
+        when(membershipRepository.findFirstByUserId("user-2")).thenReturn(Optional.of(membership));
+        doAnswer(invocation -> {
+            Product product = invocation.getArgument(0);
+            ReflectionTestUtils.setField(product, "id", "product-2");
+            ReflectionTestUtils.setField(product, "createdAt", LocalDateTime.of(2026, 6, 21, 4, 0));
+            return product;
+        }).when(productRepository).save(any(Product.class));
+
+        CreateProductRequest request = new CreateProductRequest();
+        ReflectionTestUtils.setField(request, "name", "전력 모듈");
+
+        productService.create("user-2", request);
+
+        ArgumentCaptor<Product> captor = ArgumentCaptor.forClass(Product.class);
+        verify(productRepository).save(captor.capture());
+        assertThat(captor.getValue().getCompany()).isEqualTo(company);
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = UserRole.class, names = {"editor", "viewer"})
+    void createIsForbiddenForEditorAndViewerRoles(UserRole role) {
+        User user = user("user-3", UserType.company);
+        Company company = Company.builder().id("company-1").build();
+        Membership membership = Membership.builder().role(role).company(company).build();
+
+        when(userRepository.findById("user-3")).thenReturn(Optional.of(user));
+        when(membershipRepository.findFirstByUserId("user-3")).thenReturn(Optional.of(membership));
+
+        CreateProductRequest request = new CreateProductRequest();
+        ReflectionTestUtils.setField(request, "name", "전력 모듈");
+
+        assertThatThrownBy(() -> productService.create("user-3", request))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.FORBIDDEN);
+
+        verify(productRepository, never()).save(any());
+    }
+
+    @Test
+    void getListOnlyReturnsProductsOwnedByRequestingUserForPersonalAccount() {
+        User user = user("user-1", UserType.personal);
+        Product ownProduct = Product.builder()
+                .id("product-1")
+                .owner(user)
+                .name("BMS 모듈")
+                .updatedAt(LocalDateTime.of(2026, 6, 21, 4, 0))
+                .build();
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(membershipRepository.findFirstByUserId("user-1")).thenReturn(Optional.empty());
+        when(productRepository.findByOwnerIdAndDeletedAtIsNullOrderByUpdatedAtDesc("user-1")).thenReturn(List.of(ownProduct));
+        when(knowledgeRepository.findByProductIdIn(List.of("product-1"))).thenReturn(List.of());
+        when(certificationRepository.findByProductIdIn(List.of("product-1"))).thenReturn(List.of());
+        when(ftoRepository.findByProductIdIn(List.of("product-1"))).thenReturn(List.of());
+        when(buyerRequirementRepository.findByProductIdIn(List.of("product-1"))).thenReturn(List.of());
+
+        ProductListResponse response = productService.getList("user-1");
+
+        assertThat(response.getProducts()).extracting("productId").containsExactly("product-1");
+        verify(productRepository).findByOwnerIdAndDeletedAtIsNullOrderByUpdatedAtDesc("user-1");
+        verify(productRepository, never()).findByCompany_IdAndDeletedAtIsNullOrderByUpdatedAtDesc(any());
+    }
+
+    @Test
+    void getListOnlyReturnsProductsWithinRequestingUsersCompanyForCompanyAccount() {
+        User user = user("user-2", UserType.company);
+        Company company = Company.builder().id("company-1").build();
+        Membership membership = Membership.builder().role(UserRole.admin).company(company).build();
+        Product companyProduct = Product.builder()
+                .id("product-2")
+                .owner(user)
+                .company(company)
+                .name("전력 모듈")
+                .updatedAt(LocalDateTime.of(2026, 6, 21, 4, 0))
+                .build();
+
+        when(userRepository.findById("user-2")).thenReturn(Optional.of(user));
+        when(membershipRepository.findFirstByUserId("user-2")).thenReturn(Optional.of(membership));
+        when(productRepository.findByCompany_IdAndDeletedAtIsNullOrderByUpdatedAtDesc("company-1")).thenReturn(List.of(companyProduct));
+        when(knowledgeRepository.findByProductIdIn(List.of("product-2"))).thenReturn(List.of());
+        when(certificationRepository.findByProductIdIn(List.of("product-2"))).thenReturn(List.of());
+        when(ftoRepository.findByProductIdIn(List.of("product-2"))).thenReturn(List.of());
+        when(buyerRequirementRepository.findByProductIdIn(List.of("product-2"))).thenReturn(List.of());
+
+        ProductListResponse response = productService.getList("user-2");
+
+        assertThat(response.getProducts()).extracting("productId").containsExactly("product-2");
+        verify(productRepository).findByCompany_IdAndDeletedAtIsNullOrderByUpdatedAtDesc("company-1");
+        verify(productRepository, never()).findByOwnerIdAndDeletedAtIsNullOrderByUpdatedAtDesc(any());
+    }
+
+    @Test
     void getListReturnsOnlyPersonalUserProductsWithTradeFields() {
         User user = user("user-1", UserType.personal);
         Product product = Product.builder()
@@ -197,6 +298,44 @@ class ProductServiceTest {
                 .isEqualTo(ErrorCode.FORBIDDEN);
 
         verify(productRepository, never()).findByIdAndCompany_IdAndDeletedAtIsNull(any(), any());
+        verify(auditLogRepository, never()).save(any());
+        verify(productRepository, never()).save(any());
+    }
+
+    @Test
+    void deleteFailsWithNotFoundWhenProductIdBelongsToDifferentOwner() {
+        User user = user("user-1", UserType.personal);
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(membershipRepository.findFirstByUserId("user-1")).thenReturn(Optional.empty());
+        when(productRepository.findByIdAndOwnerIdAndDeletedAtIsNull("other-owner-product", "user-1"))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productService.delete("user-1", "other-owner-product"))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.NOT_FOUND);
+
+        verify(auditLogRepository, never()).save(any());
+        verify(productRepository, never()).save(any());
+    }
+
+    @Test
+    void deleteFailsWithNotFoundWhenProductIdBelongsToDifferentCompany() {
+        User user = user("user-2", UserType.company);
+        Company company = Company.builder().id("company-1").build();
+        Membership membership = Membership.builder().role(UserRole.admin).company(company).build();
+
+        when(userRepository.findById("user-2")).thenReturn(Optional.of(user));
+        when(membershipRepository.findFirstByUserId("user-2")).thenReturn(Optional.of(membership));
+        when(productRepository.findByIdAndCompany_IdAndDeletedAtIsNull("other-company-product", "company-1"))
+                .thenReturn(Optional.empty());
+
+        assertThatThrownBy(() -> productService.delete("user-2", "other-company-product"))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.NOT_FOUND);
+
         verify(auditLogRepository, never()).save(any());
         verify(productRepository, never()).save(any());
     }
