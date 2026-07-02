@@ -114,6 +114,9 @@ public class DiagnosisService {
         if (request.getProductId() == null && request.getInputData() == null) {
             throw new BusinessException(ErrorCode.INVALID_REQUEST, "productId 또는 inputData 중 하나는 필수입니다.");
         }
+        if (request.getProductId() == null) {
+            validateDirectInput(request.getInputData());
+        }
 
         User user = findUser(userId);
         requireDiagnosisPermission(user);
@@ -124,12 +127,10 @@ public class DiagnosisService {
 
         if (request.getProductId() != null) {
             product = findProductByUser(user, request.getProductId());
-            if (request.getInputData() != null) {
-                inputDataJson = serializeInputData(request.getInputData());
-            }
-            knowledgeSnapshotJson = buildKnowledgeSnapshot(request.getProductId());
+            inputDataJson = serializeInputData(request.getInputData(), product);
+            knowledgeSnapshotJson = buildKnowledgeSnapshot(product, request.getInputData(), request.getTargetCountry());
         } else {
-            inputDataJson = serializeInputData(request.getInputData());
+            inputDataJson = serializeInputData(request.getInputData(), null);
             knowledgeSnapshotJson = buildInputSnapshot(request.getInputData(), request.getTargetCountry());
         }
 
@@ -182,6 +183,9 @@ public class DiagnosisService {
                         .actionRoadmap(actionRoadmap)
                         .evidenceSources(evidenceSources)
                         .agentTrace(parseObjectMap(resultMap, "agentTrace"))
+                        .evidenceRetrieval(parseObjectMap(resultMap, "evidenceRetrieval"))
+                        .exportKnowledgeTimeline(parseMapList(resultMap, "exportKnowledgeTimeline"))
+                        .evidenceGuardrails(parseObjectMap(resultMap, "evidenceGuardrails"))
                         .stageCards(parseObjectMap(resultMap, "stageCards"))
                         .reportMarkdown(asString(resultMap.get("reportMarkdown")))
                         .reportFastApiUsed(Boolean.TRUE.equals(resultMap.get("reportFastApiUsed")))
@@ -377,6 +381,18 @@ public class DiagnosisService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "등록된 제품을 찾을 수 없습니다."));
     }
 
+    private void validateDirectInput(CreateDiagnosisRequest.InputData inputData) {
+        if (inputData == null) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "직접 입력 진단은 제품 정보가 필요합니다.");
+        }
+        if (isBlank(inputData.getProductName())) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "직접 입력 진단은 제품명이 필요합니다.");
+        }
+        if (isBlank(inputData.getHsCode()) || !inputData.getHsCode().matches("^\\d{6,10}$")) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "직접 입력 진단은 숫자 6~10자리 HS Code가 필요합니다.");
+        }
+    }
+
     private DiagnosisRun findDiagnosisRun(User user, String diagnosisId) {
         Company company = resolveCompany(user.getId());
         if (company != null) {
@@ -387,8 +403,9 @@ public class DiagnosisService {
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "진단 결과를 찾을 수 없습니다."));
     }
 
-    private String buildKnowledgeSnapshot(String productId) {
+    private String buildKnowledgeSnapshot(Product product, CreateDiagnosisRequest.InputData inputData, String targetCountry) {
         try {
+            String productId = product.getId();
             ProductKnowledge knowledge = knowledgeRepository.findByProductId(productId).orElse(null);
             List<Certification> certs = certificationRepository.findByProductId(productId);
             boolean hasFto = !ftoRepository.findByProductId(productId).isEmpty();
@@ -409,6 +426,25 @@ public class DiagnosisService {
             }).collect(Collectors.toList());
 
             Map<String, Object> snapshot = new HashMap<>();
+            snapshot.put("productName", firstNonBlank(
+                    inputData != null ? inputData.getProductName() : null,
+                    product.getName()));
+            snapshot.put("hsCode", firstNonBlank(
+                    inputData != null ? inputData.getHsCode() : null,
+                    product.getHsCode()));
+            snapshot.put("targetCountry", firstNonBlank(targetCountry, product.getTargetCountry()));
+            snapshot.put("description", firstNonBlank(
+                    inputData != null ? inputData.getDescription() : null,
+                    product.getDescription()));
+            snapshot.put("buyerRequest", inputData != null ? inputData.getBuyerRequest() : null);
+            snapshot.put("buyerDeadline", inputData != null && inputData.getBuyerDeadline() != null
+                    ? inputData.getBuyerDeadline().toString() : null);
+            snapshot.put("expectedShipmentDate", inputData != null && inputData.getExpectedShipmentDate() != null
+                    ? inputData.getExpectedShipmentDate().toString() : null);
+            snapshot.put("requestedCertifications", inputData != null && inputData.getRequestedCertifications() != null
+                    ? inputData.getRequestedCertifications() : List.of());
+            snapshot.put("currentDocuments", inputData != null && inputData.getCurrentDocuments() != null
+                    ? inputData.getCurrentDocuments() : List.of());
             snapshot.put("trustGrade", knowledge != null && knowledge.getTrustGrade() != null
                     ? knowledge.getTrustGrade().name() : null);
             snapshot.put("sourceType", knowledge != null ? knowledge.getSourceType() : null);
@@ -423,20 +459,23 @@ public class DiagnosisService {
         }
     }
 
-    private String serializeInputData(CreateDiagnosisRequest.InputData inputData) {
-        if (inputData == null) return null;
+    private String serializeInputData(CreateDiagnosisRequest.InputData inputData, Product product) {
+        if (inputData == null && product == null) return null;
         try {
             Map<String, Object> map = new HashMap<>();
-            map.put("productName", inputData.getProductName());
-            map.put("hsCode", inputData.getHsCode());
-            map.put("description", inputData.getDescription());
-            map.put("buyerRequest", inputData.getBuyerRequest());
-            map.put("buyerDeadline", inputData.getBuyerDeadline() == null ? null : inputData.getBuyerDeadline().toString());
-            map.put("expectedShipmentDate", inputData.getExpectedShipmentDate() == null ? null : inputData.getExpectedShipmentDate().toString());
-            map.put("requestedCertifications", inputData.getRequestedCertifications() == null ? List.of() : inputData.getRequestedCertifications());
-            map.put("currentDocuments", inputData.getCurrentDocuments() == null ? List.of() : inputData.getCurrentDocuments());
-            map.put("exportExperience", inputData.getExportExperience());
-            map.put("budgetLimitKrw", inputData.getBudgetLimitKrw());
+            map.put("productName", firstNonBlank(inputData != null ? inputData.getProductName() : null,
+                    product != null ? product.getName() : null));
+            map.put("hsCode", firstNonBlank(inputData != null ? inputData.getHsCode() : null,
+                    product != null ? product.getHsCode() : null));
+            map.put("description", firstNonBlank(inputData != null ? inputData.getDescription() : null,
+                    product != null ? product.getDescription() : null));
+            map.put("buyerRequest", inputData != null ? inputData.getBuyerRequest() : null);
+            map.put("buyerDeadline", inputData == null || inputData.getBuyerDeadline() == null ? null : inputData.getBuyerDeadline().toString());
+            map.put("expectedShipmentDate", inputData == null || inputData.getExpectedShipmentDate() == null ? null : inputData.getExpectedShipmentDate().toString());
+            map.put("requestedCertifications", inputData == null || inputData.getRequestedCertifications() == null ? List.of() : inputData.getRequestedCertifications());
+            map.put("currentDocuments", inputData == null || inputData.getCurrentDocuments() == null ? List.of() : inputData.getCurrentDocuments());
+            map.put("exportExperience", inputData != null ? inputData.getExportExperience() : null);
+            map.put("budgetLimitKrw", inputData != null ? inputData.getBudgetLimitKrw() : null);
             return objectMapper.writeValueAsString(map);
         } catch (Exception e) {
             return null;
@@ -647,6 +686,16 @@ public class DiagnosisService {
         return Map.of();
     }
 
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> parseMapList(Map<String, Object> resultMap, String key) {
+        Object obj = resultMap.get(key);
+        if (!(obj instanceof List<?> list)) return List.of();
+        return list.stream()
+                .filter(Map.class::isInstance)
+                .map(item -> (Map<String, Object>) item)
+                .toList();
+    }
+
     private String resolveProductName(DiagnosisRun run) {
         if (run.getProduct() != null) {
             return run.getProduct().getName();
@@ -686,6 +735,14 @@ public class DiagnosisService {
 
     private String asString(Object value) {
         return value == null ? null : String.valueOf(value);
+    }
+
+    private boolean isBlank(String value) {
+        return value == null || value.trim().isEmpty();
+    }
+
+    private String firstNonBlank(String primary, String fallback) {
+        return isBlank(primary) ? fallback : primary;
     }
 
     private Integer asInteger(Object value) {

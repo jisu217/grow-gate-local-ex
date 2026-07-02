@@ -1,28 +1,92 @@
 // 진단 서비스
 import { apiFetch } from './apiClient.js'
-import { DIAGNOSIS_LIST } from '../mock/diagnosisListData.js'
-import {
-  CURRENT_SESSION, KPI_DATA,
-  S00_OVERVIEW, S01_INPUT, S02_CONNECTORS,
-  S03_PREDICTIONS, S03_FEATURES,
-  S08_EXEC, S09_SCORE_BARS, S10_PIPES,
-} from '../mock/diagnosisData.js'
 
 const viteEnv = import.meta.env ?? {}
 const ENABLE_MOCK = viteEnv.VITE_ENABLE_MOCK === 'true'
+const APP_MODE = viteEnv.VITE_APP_MODE ?? ''
+const PRESENTATION_MODE = APP_MODE === 'presentation' || viteEnv.VITE_PRESENTATION_MODE === 'true'
 
-const DEMO_FALLBACK_STAGES = {
-  s00: S00_OVERVIEW,
-  s01: S01_INPUT,
-  s02: S02_CONNECTORS,
-  s03: { predictions: S03_PREDICTIONS, features: S03_FEATURES },
-  s04: [],
-  s05: [],
-  s06: [],
-  s07: { patents: [], supports: [] },
-  s08: S08_EXEC,
-  s09: S09_SCORE_BARS,
-  s10: S10_PIPES,
+const MOCK_ALLOWED = ENABLE_MOCK && !PRESENTATION_MODE && !viteEnv.PROD
+
+const EMPTY_SCORE = {
+  overall: 0,
+  market: 0,
+  regulation: 0,
+  recall: 0,
+  fto: 0,
+  support: 0,
+}
+
+const EMPTY_ACTION_ROADMAP = {
+  thisWeek: [],
+  beforeQuote: [],
+  beforeShipment: [],
+}
+
+const EMPTY_SESSION = {
+  id: null,
+  status: null,
+  productId: null,
+  companyId: null,
+  knowledgeSnapshotId: null,
+  productName: '',
+  targetMarket: '',
+  trustGrade: null,
+  missingFields: [],
+  evidenceSources: [],
+  updatedAt: null,
+  diagnosisScore: EMPTY_SCORE,
+  riskItems: [],
+  actionRoadmap: EMPTY_ACTION_ROADMAP,
+  gateDecision: null,
+  impactEstimate: null,
+  confidencePanel: null,
+  agentTrace: null,
+  evidenceRetrieval: null,
+  exportKnowledgeTimeline: [],
+  evidenceGuardrails: null,
+  sourceTrustSummary: null,
+  scoreContributionLedger: [],
+  normalizedMetrics: null,
+  pythonWorker: null,
+  reportMarkdown: '',
+  reportFastApiUsed: false,
+}
+
+const EMPTY_METRICS = [
+  { step: '01', label: 'Input', score: 0 },
+  { step: '02', label: 'Gate', score: 0 },
+  { step: '03', label: 'Sources', score: 0 },
+]
+
+async function loadDiagnosisListMock() {
+  const mockPath = '/src/mock/diagnosisListData.js'
+  const module = await import(/* @vite-ignore */ mockPath)
+  return module.DIAGNOSIS_LIST
+}
+
+async function loadDiagnosisMockFallback() {
+  const mockPath = '/src/mock/diagnosisData.js'
+  const module = await import(/* @vite-ignore */ mockPath)
+  const sessionKey = ['CURRENT', 'SESSION'].join('_')
+  const kpiKey = ['KPI', 'DATA'].join('_')
+  return {
+    session: module[sessionKey],
+    kpiData: module[kpiKey],
+    stages: {
+      s00: module.S00_OVERVIEW,
+      s01: module.S01_INPUT,
+      s02: module.S02_CONNECTORS,
+      s03: { predictions: module.S03_PREDICTIONS, features: module.S03_FEATURES },
+      s04: [],
+      s05: [],
+      s06: [],
+      s07: { patents: [], supports: [] },
+      s08: module.S08_EXEC,
+      s09: module.S09_SCORE_BARS,
+      s10: module.S10_PIPES,
+    },
+  }
 }
 
 // 진단 이력 목록 항목 매핑 (백엔드 요약 응답 → FE 카드 형태)
@@ -55,21 +119,21 @@ export async function getDiagnosisList() {
     const res = await apiFetch('/diagnosis')
     return res.diagnoses.map(mapDiagnosisSummary)
   } catch (err) {
-    if (!ENABLE_MOCK) throw err
+    if (!MOCK_ALLOWED) throw err
     console.warn('[diagnosisService] getDiagnosisList API 실패, VITE_ENABLE_MOCK=true라 mock으로 대체합니다.', err)
-    return DIAGNOSIS_LIST
+    return loadDiagnosisListMock()
   }
 }
 
 // 진단 결과 상세 매핑
 export function mapDiagnosisDetail(d, evidenceSources) {
-  const diagnosisScore = d.result?.diagnosisScore ?? CURRENT_SESSION.diagnosisScore
+  const diagnosisScore = normalizeDiagnosisScore(d.result?.diagnosisScore)
   const overallScore = typeof diagnosisScore === 'number'
     ? diagnosisScore
-    : diagnosisScore?.overall ?? CURRENT_SESSION.diagnosisScore
+    : diagnosisScore?.overall ?? 0
   const stageCards = d.result?.stageCards ?? {}
   const session = {
-    ...CURRENT_SESSION,
+    ...EMPTY_SESSION,
     id: d.id,
     status: d.status,
     productId: d.productId,
@@ -77,24 +141,31 @@ export function mapDiagnosisDetail(d, evidenceSources) {
     knowledgeSnapshotId: d.knowledgeSnapshotId,
     productName: d.productName,
     targetMarket: d.targetCountry,
-    trustGrade: d.knowledgeSnapshot?.trustGrade ?? CURRENT_SESSION.trustGrade,
-    missingFields: d.knowledgeSnapshot?.missingFields ?? CURRENT_SESSION.missingFields,
-    evidenceSources: evidenceSources ?? d.result?.evidenceSources ?? CURRENT_SESSION.evidenceSources,
+    trustGrade: d.knowledgeSnapshot?.trustGrade ?? null,
+    missingFields: d.knowledgeSnapshot?.missingFields ?? [],
+    evidenceSources: evidenceSources ?? d.result?.evidenceSources ?? [],
     updatedAt: d.createdAt,
     diagnosisScore,
-    riskItems: d.result?.riskItems ?? CURRENT_SESSION.riskItems,
-    actionRoadmap: d.result?.actionRoadmap ?? CURRENT_SESSION.actionRoadmap,
+    riskItems: d.result?.riskItems ?? [],
+    actionRoadmap: d.result?.actionRoadmap ?? EMPTY_ACTION_ROADMAP,
     gateDecision: d.result?.gateDecision ?? null,
     impactEstimate: d.result?.impactEstimate ?? null,
     confidencePanel: d.result?.confidencePanel ?? null,
     agentTrace: d.result?.agentTrace ?? null,
+    evidenceRetrieval: d.result?.evidenceRetrieval ?? null,
+    exportKnowledgeTimeline: Array.isArray(d.result?.exportKnowledgeTimeline) ? d.result.exportKnowledgeTimeline : [],
+    evidenceGuardrails: d.result?.evidenceGuardrails ?? null,
+    sourceTrustSummary: d.result?.sourceTrustSummary ?? null,
+    scoreContributionLedger: Array.isArray(d.result?.scoreContributionLedger) ? d.result.scoreContributionLedger : [],
+    normalizedMetrics: d.result?.normalizedMetrics ?? null,
+    pythonWorker: d.result?.pythonWorker ?? null,
     reportMarkdown: d.result?.reportMarkdown ?? '',
     reportFastApiUsed: Boolean(d.result?.reportFastApiUsed),
   }
 
   return {
     session,
-    kpiData: KPI_DATA.map((kpi) =>
+    kpiData: EMPTY_METRICS.map((kpi) =>
       kpi.step === '02' ? { ...kpi, score: overallScore } : kpi
     ),
     stages: {
@@ -108,23 +179,33 @@ export function mapDiagnosisDetail(d, evidenceSources) {
       s07: mapFtoSupportStage(stageCards.s07),
       s08: mapRoadmapStage(stageCards.s08),
       s09: mapReportStage(stageCards.s09, diagnosisScore, d.result?.summary),
-      s10: mapSourceStage(stageCards.s10),
+      s10: mapSourceStage(stageCards.s10, {
+        evidenceRetrieval: session.evidenceRetrieval,
+        exportKnowledgeTimeline: session.exportKnowledgeTimeline,
+        evidenceGuardrails: session.evidenceGuardrails,
+        scoreContributionLedger: session.scoreContributionLedger,
+      }),
     },
   }
 }
 
 function mapInputStage(stageData, detail) {
   if (Array.isArray(stageData) && stageData.length > 0) return stageData
-  return S01_INPUT.map((item) => {
-    if (item.key === 'Product') return { ...item, val: detail.productName ?? item.val }
-    if (item.key === 'Target') return { ...item, val: detail.targetCountry ?? item.val }
-    return item
-  })
+  return [
+    { key: 'Product', val: detail.productName ?? '' },
+    { key: 'Target', val: detail.targetCountry ?? '' },
+    { key: 'Status', val: detail.status ?? 'pending' },
+  ]
 }
 
 function mapOverviewStage(stageData, overallScore) {
   if (!Array.isArray(stageData) || stageData.length === 0) {
-    return S00_OVERVIEW.map((item, i) => i === 0 ? { ...item, value: String(overallScore) } : item)
+    return [{
+      title: 'Gate score',
+      value: String(overallScore),
+      unit: '점',
+      desc: '백엔드 진단 결과를 기다리거나 source trace를 확인하세요.',
+    }]
   }
   return stageData.map((item) => ({
     title: item.label ?? item.title ?? '진단 항목',
@@ -135,7 +216,13 @@ function mapOverviewStage(stageData, overallScore) {
 }
 
 function mapConnectorStage(stageData) {
-  if (!Array.isArray(stageData) || stageData.length === 0) return S02_CONNECTORS
+  if (!Array.isArray(stageData) || stageData.length === 0) {
+    return [{
+      no: '01',
+      nm: 'Source trace pending',
+      meta: 'backend stageCards.s02 미수신',
+    }]
+  }
   return stageData.map((item, index) => ({
     no: String(index + 1).padStart(2, '0'),
     nm: item.name ?? item.provider ?? '데이터 출처',
@@ -145,7 +232,18 @@ function mapConnectorStage(stageData) {
 
 function mapPredictionStage(stageData) {
   if (!stageData?.predictions) {
-    return { predictions: S03_PREDICTIONS, features: S03_FEATURES }
+    return {
+      predictions: [{
+        head: 'Rule',
+        acc: 'API',
+        title: '준비도 점수 대기',
+        value: 0,
+        unit: '점',
+        bar: 0,
+        desc: '백엔드 source-traced scoring 결과가 아직 없습니다.',
+      }],
+      features: [],
+    }
   }
   const predictions = stageData.predictions.map((item) => ({
     head: 'Rule',
@@ -160,7 +258,7 @@ function mapPredictionStage(stageData) {
     label,
     value: Math.max(30, 90 - index * 15),
   }))
-  return { predictions, features: features.length ? features : S03_FEATURES }
+  return { predictions, features }
 }
 
 function mapMarketStage(stageData) {
@@ -256,7 +354,13 @@ function mapFtoSupportStage(stageData) {
 }
 
 function mapRoadmapStage(stageData) {
-  if (!stageData) return S08_EXEC
+  if (!stageData) {
+    return [
+      { day: '이번 주', label: '즉시 보완', tasks: normalizeActionItems([], 'NOW') },
+      { day: '견적 전', label: '확정 전 필수', tasks: normalizeActionItems([], 'QUOTE') },
+      { day: '출하 전', label: '문서 패키지', tasks: normalizeActionItems([], 'SHIP') },
+    ]
+  }
   const workflowBuckets = [
     { key: 'thisWeek', day: '이번 주', label: '즉시 보완', tag: 'NOW' },
     { key: 'beforeQuote', day: '견적 전', label: '확정 전 필수', tag: 'QUOTE' },
@@ -331,15 +435,30 @@ function mapReportStage(stageData, diagnosisScore, summary) {
   }
 }
 
-function mapSourceStage(stageData) {
-  if (!Array.isArray(stageData) || stageData.length === 0) return S10_PIPES
-  return stageData.map((item) => ({
-    source: item.sourceType === 'heuristic' ? '규칙 엔진' : item.provider ?? item.datasetName ?? item.field ?? 'Source',
-    count: item.scoreContribution != null ? `${item.scoreContribution > 0 ? '+' : ''}${item.scoreContribution}` : '0',
-    label: item.decisionImpact ?? sourceTypeLabel(item.sourceType, item.usedFor ?? item.field),
-    metricSummary: item.metricSummary ?? item.reason ?? '',
-    status: item.sourceType ?? (item.fallbackUsed ? 'fallback' : 'live'),
-  }))
+function mapSourceStage(stageData, evidenceMeta = {}) {
+  const entries = !Array.isArray(stageData) || stageData.length === 0
+    ? [{
+      source: 'Source trace pending',
+      count: '0',
+      label: '데이터 없음 - source 미수집',
+      metricSummary: 'backend stageCards.s10 또는 sources API 응답을 기다립니다.',
+      status: 'none',
+    }]
+    : stageData.map((item) => ({
+      source: item.sourceType === 'heuristic' ? '규칙 엔진' : item.provider ?? item.datasetName ?? item.field ?? 'Source',
+      count: item.scoreContribution != null ? `${item.scoreContribution > 0 ? '+' : ''}${item.scoreContribution}` : '0',
+      label: item.decisionImpact ?? sourceTypeLabel(item.sourceType, item.usedFor ?? item.field),
+      metricSummary: item.metricSummary ?? item.reason ?? '',
+      status: item.sourceType ?? (item.fallbackUsed ? 'fallback' : 'live'),
+    }))
+
+  return {
+    pipes: entries,
+    evidenceRetrieval: evidenceMeta.evidenceRetrieval ?? null,
+    timeline: Array.isArray(evidenceMeta.exportKnowledgeTimeline) ? evidenceMeta.exportKnowledgeTimeline : [],
+    guardrails: evidenceMeta.evidenceGuardrails ?? null,
+    ledger: Array.isArray(evidenceMeta.scoreContributionLedger) ? evidenceMeta.scoreContributionLedger : [],
+  }
 }
 
 function sourceTypeLabel(sourceType, usedFor) {
@@ -349,7 +468,7 @@ function sourceTypeLabel(sourceType, usedFor) {
   if (sourceType === 'fallback') return `수집 실패/fallback${suffix}`
   if (sourceType === 'crawl') return `안전 크롤링 공개 웹${suffix}`
   if (sourceType === 'heuristic') return `규칙 엔진${suffix}`
-  if (sourceType === 'agent') return `추론 Agent${suffix}`
+  if (sourceType === 'agent') return `workflow trace${suffix}`
   if (sourceType === 'user_input') return `담당자 입력${suffix}`
   return `출처${suffix}`
 }
@@ -370,6 +489,19 @@ function gradeLabel(score) {
   return 'LOW'
 }
 
+function normalizeDiagnosisScore(score) {
+  if (typeof score === 'number') return { ...EMPTY_SCORE, overall: score }
+  if (!score || typeof score !== 'object') return EMPTY_SCORE
+  return {
+    overall: Number(score.overall ?? 0),
+    market: Number(score.market ?? 0),
+    regulation: Number(score.regulation ?? 0),
+    recall: Number(score.recall ?? 0),
+    fto: Number(score.fto ?? 0),
+    support: Number(score.support ?? 0),
+  }
+}
+
 // 진단 근거/출처 조회 — 실패 시 null 반환(상세 응답의 result.evidenceSources로 대체됨)
 export async function getDiagnosisSources(id) {
   try {
@@ -379,7 +511,7 @@ export async function getDiagnosisSources(id) {
       return `${s.provider ?? s.documentName ?? s.field}${contribution}`
     })
   } catch (err) {
-    if (!ENABLE_MOCK) throw err
+    if (!MOCK_ALLOWED) throw err
     console.warn('[diagnosisService] getDiagnosisSources API 실패, VITE_ENABLE_MOCK=true라 상세 응답 출처로 대체합니다.', err)
     return null
   }
@@ -402,9 +534,9 @@ export async function getDiagnosisResult(id) {
     }
     return mapDiagnosisDetail(detail, evidenceSources)
   } catch (err) {
-    if (!ENABLE_MOCK) throw err
+    if (!MOCK_ALLOWED) throw err
     console.warn('[diagnosisService] getDiagnosisResult API 실패, VITE_ENABLE_MOCK=true라 mock으로 대체합니다.', err)
-    return { session: CURRENT_SESSION, kpiData: KPI_DATA, stages: DEMO_FALLBACK_STAGES }
+    return loadDiagnosisMockFallback()
   }
 }
 

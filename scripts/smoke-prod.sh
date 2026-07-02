@@ -185,4 +185,54 @@ if require_live and success <= 0:
     raise SystemExit("SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true but no live public-data success was recorded")
 PY
 
+EVIDENCE_OUT="$LOG_DIR/live-public-data-smoke-evidence.json"
+python3 - "$LOG_DIR/diagnosis-detail.json" "$LOG_DIR/sources.json" "$LOG_DIR/public-dashboard.json" "$EVIDENCE_OUT" "$SMOKE_REQUIRE_LIVE_PUBLIC_DATA" <<'PY'
+import json, sys
+detail = json.load(open(sys.argv[1]))
+sources_payload = json.load(open(sys.argv[2]))
+dashboard = json.load(open(sys.argv[3]))
+out_path = sys.argv[4]
+require_live = sys.argv[5].lower() == "true"
+result = detail.get("result") or {}
+summary = result.get("sourceTrustSummary") or {}
+sources = sources_payload.get("sources") or result.get("sources") or []
+source_types = [s.get("sourceType") for s in sources]
+live_count = int(summary.get("liveCount") or source_types.count("live"))
+cache_count = int(summary.get("cacheCount") or source_types.count("cache"))
+fallback_count = int(summary.get("fallbackCount") or source_types.count("fallback"))
+source_ids = summary.get("sourceIds") or [s.get("sourceId") for s in sources if s.get("sourceId")]
+collection_run_ids = summary.get("collectionRunIds") or []
+if not collection_run_ids and result.get("publicDataCollectionRunId"):
+    collection_run_ids = [result.get("publicDataCollectionRunId")]
+evidence = {
+    "baseUrl": None,
+    "diagnosisId": detail.get("id"),
+    "status": detail.get("status"),
+    "collectionRunId": collection_run_ids[0] if collection_run_ids else result.get("publicDataCollectionRunId"),
+    "collectionRunIds": collection_run_ids,
+    "liveCount": live_count,
+    "cacheCount": cache_count,
+    "fallbackCount": fallback_count,
+    "dashboardSuccessCount": dashboard.get("successCount"),
+    "dashboardFallbackCount": dashboard.get("fallbackCount"),
+    "sourceIds": source_ids[:20],
+}
+with open(out_path, "w", encoding="utf-8") as f:
+    json.dump(evidence, f, ensure_ascii=False, indent=2)
+print("smokeEvidence=" + out_path)
+print(f"diagnosisId={evidence['diagnosisId']} collectionRunId={evidence['collectionRunId']} liveCount={live_count} cacheCount={cache_count} fallbackCount={fallback_count}")
+if require_live and live_count <= 0 and cache_count <= 0:
+    raise SystemExit("SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true but diagnosis sources have no live/cache records")
+if require_live and not evidence["collectionRunId"]:
+    raise SystemExit("SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true but collectionRunId was not captured")
+PY
+python3 - "$EVIDENCE_OUT" "$BASE_URL" <<'PY'
+import json, sys
+path, base_url = sys.argv[1], sys.argv[2]
+data = json.load(open(path))
+data["baseUrl"] = base_url
+with open(path, "w", encoding="utf-8") as f:
+    json.dump(data, f, ensure_ascii=False, indent=2)
+PY
+
 step "PASS: smoke completed. Logs: $LOG_FILE"

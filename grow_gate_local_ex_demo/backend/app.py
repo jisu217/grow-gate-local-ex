@@ -25,6 +25,7 @@ from .product_knowledge import ProductKnowledgeStore
 from .rag_database import rag_schema
 from .schemas import AISearchRequest, AISearchResponse, AnalysisResult, GitCommitRequest, GitInitRequest, ProductInput
 from .target_company import load_target_company_profile
+from .worker_engine import build_diagnosis_engine_result
 
 
 def _cors_origins() -> list[str]:
@@ -494,6 +495,12 @@ def git_push(request: Request, branch: str = Query(default="main", pattern=r"^[A
 def analyze(request: ProductInput) -> AnalysisResult:
     """Run the end-to-end AI Agent analysis."""
     return agent.analyze(request)
+
+
+@app.post("/worker/diagnosis-v1")
+def worker_diagnosis_v1(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Return contract-based data/AI artifacts for a Spring diagnosis run."""
+    return build_diagnosis_engine_result(payload)
 
 
 @app.post("/ai-search", response_model=AISearchResponse)

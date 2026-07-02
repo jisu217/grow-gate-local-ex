@@ -3,7 +3,7 @@ package com.growgate.diagnosis.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.agent.service.AgentInferenceService;
-import com.growgate.agent.service.AgentRagContextBuilder;
+import com.growgate.agent.service.EvidenceContextBuilder;
 import com.growgate.diagnosis.dto.CreateDiagnosisRequest;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse;
 import com.growgate.diagnosis.repository.DiagnosisRepository;
@@ -94,7 +94,7 @@ class DiagnosisFlowMergeTest {
                 mock(FastApiAgentClient.class),
                 mock(PublicDataCollectionService.class),
                 mock(AgentInferenceService.class),
-                mock(AgentRagContextBuilder.class),
+                mock(EvidenceContextBuilder.class),
                 mock(KnowledgeLoopItemRepository.class)
         );
     }

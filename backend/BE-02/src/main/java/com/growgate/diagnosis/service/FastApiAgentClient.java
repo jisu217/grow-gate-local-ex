@@ -39,6 +39,10 @@ public class FastApiAgentClient {
         return postForMap("/report", payload);
     }
 
+    public Optional<Map<String, Object>> workerDiagnosis(Map<String, Object> payload) {
+        return postForMap("/worker/diagnosis-v1", payload);
+    }
+
     private Optional<Map<String, Object>> postForMap(String path, Map<String, Object> payload) {
         if (!enabled) return Optional.empty();
 

@@ -29,6 +29,11 @@ app:
     base-url: ${APP_FASTAPI_BASE_URL:http://localhost:8000}
   agent:
     enabled: ${APP_AGENT_ENABLED:false}
+    budget:
+      max-daily-requests-per-user: ${APP_AGENT_MAX_DAILY_REQUESTS_PER_USER:30}
+      max-daily-requests-global: ${APP_AGENT_MAX_DAILY_REQUESTS_GLOBAL:300}
+      max-prompt-chars: ${APP_AGENT_MAX_PROMPT_CHARS:12000}
+      max-output-tokens: ${APP_AGENT_MAX_OUTPUT_TOKENS:1024}
     gemini:
       enabled: ${APP_AGENT_GEMINI_ENABLED:true}
       api-key: ${APP_AGENT_GEMINI_API_KEY:}

@@ -37,6 +37,9 @@ public class GeminiAgentProviderClient extends AbstractLlmAgentProviderClient {
     @Value("${app.agent.gemini.base-url:https://generativelanguage.googleapis.com/v1beta}")
     private String baseUrl;
 
+    @Value("${app.agent.budget.max-output-tokens:1024}")
+    private int maxOutputTokens;
+
     public GeminiAgentProviderClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(objectMapper);
         this.restTemplate = restTemplate;
@@ -64,10 +67,16 @@ public class GeminiAgentProviderClient extends AbstractLlmAgentProviderClient {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             headers.add("x-goog-api-key", apiKey);
-            Map<String, Object> body = Map.of("contents", List.of(Map.of(
-                    "role", "user",
-                    "parts", List.of(Map.of("text", buildPrompt(request)))
-            )));
+            Map<String, Object> body = Map.of(
+                    "contents", List.of(Map.of(
+                            "role", "user",
+                            "parts", List.of(Map.of("text", buildPrompt(request)))
+                    )),
+                    "generationConfig", Map.of(
+                            "temperature", 0.2,
+                            "maxOutputTokens", Math.max(256, maxOutputTokens)
+                    )
+            );
             Map<String, Object> response = restTemplate.postForObject(uri, new HttpEntity<>(body, headers), Map.class);
             String text = extractGeminiText(response);
             return Optional.of(parseTextResult(providerName(), model, text, System.currentTimeMillis() - started));

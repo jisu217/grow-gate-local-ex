@@ -16,12 +16,12 @@ import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-class AgentRagContextBuilderTest {
+class EvidenceContextBuilderTest {
 
     @Test
     @SuppressWarnings("unchecked")
     void buildIncludesKnowledgeSourcesAndAcceptedLoopItems() {
-        AgentRagContextBuilder builder = new AgentRagContextBuilder();
+        EvidenceContextBuilder builder = new EvidenceContextBuilder();
 
         Map<String, Object> context = builder.build(
                 ProductKnowledge.builder()
@@ -63,15 +63,16 @@ class AgentRagContextBuilderTest {
         assertThat(productKnowledge.get("trustGrade")).isEqualTo("high");
         assertThat(knowledgeSources).extracting(item -> item.get("documentName")).contains("EU label checklist");
         assertThat(loopItems).extracting(item -> item.get("title")).contains("Battery transport label evidence");
-        assertThat(context.get("retrievalMode")).isEqualTo("bm25-lite-in-memory");
+        assertThat(context.get("retrievalMode")).isEqualTo("source-bound-evidence-search");
+        assertThat(context.get("claimBoundary").toString()).contains("bounded evidence retrieval");
         assertThat(retrievalTopK).isNotEmpty();
-        assertThat(retrievalTopK.get(0)).containsKeys("chunkId", "score", "sourceId", "usedSentence");
+        assertThat(retrievalTopK.get(0)).containsKeys("chunkId", "score", "sourceId", "sourceBound", "displayRole", "usedSentence");
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void buildRanksPublicDataChunksWithCitationFields() {
-        AgentRagContextBuilder builder = new AgentRagContextBuilder();
+        EvidenceContextBuilder builder = new EvidenceContextBuilder();
 
         Map<String, Object> context = builder.build(
                 ProductKnowledge.builder()

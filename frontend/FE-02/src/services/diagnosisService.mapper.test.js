@@ -55,6 +55,34 @@ const detail = {
         decisionImpact: '시장성 점수 상향',
       }],
     },
+    evidenceRetrieval: {
+      mode: 'source-bound-evidence-search',
+      claimBoundary: 'DB 지식과 source trace 안에서만 근거 chunk를 찾습니다.',
+      topK: [{
+        chunkId: 'public-data:1',
+        sourceId: 'KCS_TRADE-1',
+        sourceType: 'live',
+        displayRole: '공공데이터 근거 chunk',
+        score: 2.5,
+        usedSentence: 'provider KCS_TRADE metrics exportAmountUsd=45678',
+      }],
+    },
+    exportKnowledgeTimeline: [{
+      eventId: 'EVT-KCS_TRADE-1',
+      eventType: 'EXPORT_METRIC_SIGNAL',
+      provider: 'KCS_TRADE',
+      sourceType: 'live',
+      usedFor: 'market',
+      periodLabel: '2026-06-01 ~ 2026-06-30',
+      summary: 'exportAmountUsd=45678',
+      scoreImpact: 9,
+    }],
+    evidenceGuardrails: {
+      verdict: 'pass',
+      unsupportedClaimCount: 0,
+      fallbackPositiveContributionCount: 0,
+      officialLiveOrCacheRecordCount: 1,
+    },
   },
 }
 
@@ -72,6 +100,33 @@ assert.equal(mapped.session.gateDecision.status, 'CONDITIONAL_GO')
 assert.equal(mapped.session.confidencePanel.level, 'MEDIUM')
 assert.equal(mapped.stages.s08[0].day, '이번 주')
 assert.equal(mapped.stages.s08[0].tasks[0].title, 'UN38.3 보유 여부 확인')
-assert.equal(mapped.stages.s10[0].source, 'KCS_TRADE')
-assert.equal(mapped.stages.s10[0].status, 'live')
-assert.equal(mapped.stages.s10[0].metricSummary, 'exportAmountUsd=45678')
+assert.equal(mapped.session.evidenceRetrieval.mode, 'source-bound-evidence-search')
+assert.equal(mapped.session.exportKnowledgeTimeline[0].eventType, 'EXPORT_METRIC_SIGNAL')
+assert.equal(mapped.session.evidenceGuardrails.verdict, 'pass')
+assert.equal(mapped.stages.s10.pipes[0].source, 'KCS_TRADE')
+assert.equal(mapped.stages.s10.pipes[0].status, 'live')
+assert.equal(mapped.stages.s10.pipes[0].metricSummary, 'exportAmountUsd=45678')
+assert.equal(mapped.stages.s10.evidenceRetrieval.topK[0].sourceId, 'KCS_TRADE-1')
+assert.equal(mapped.stages.s10.timeline[0].scoreImpact, 9)
+
+const sparseMapped = mapDiagnosisDetail({
+  id: 'diag-empty',
+  productId: 'prod-empty',
+  productName: '신규 제품',
+  targetCountry: 'US',
+  status: 'running',
+  knowledgeSnapshot: {},
+  result: {},
+})
+
+assert.equal(sparseMapped.session.id, 'diag-empty')
+assert.equal(sparseMapped.session.productName, '신규 제품')
+assert.equal(sparseMapped.session.diagnosisScore.overall, 0)
+assert.deepEqual(sparseMapped.session.evidenceSources, [])
+assert.deepEqual(sparseMapped.session.riskItems, [])
+assert.deepEqual(sparseMapped.session.actionRoadmap, {
+  thisWeek: [],
+  beforeQuote: [],
+  beforeShipment: [],
+})
+assert.equal(sparseMapped.kpiData[0].score, 0)

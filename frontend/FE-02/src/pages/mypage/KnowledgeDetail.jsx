@@ -18,12 +18,14 @@ const CERT_SOURCE = {
   internal: { label: '내부 메모', cls: 'memo' },
 }
 
-const ALL_TABS = ['기본 정보', '인증서', 'FTO', '바이어 요구사항', 'AI 지식화', '변경 이력']
+const ALL_TABS = ['기본 정보', '인증서', 'FTO', '바이어 요구사항', '근거 지식화', '변경 이력']
 const KNOWLEDGE_IDEAS = [
   '반복 진단에서 2회 이상 등장한 리스크',
   '담당자가 보유한 내부 정책·라벨링 기준',
   '공공 API fallback이 발생한 영역의 대체 출처',
   '인증 갱신·FTO 검토·바이어 요구사항 체크리스트',
+  'publishedAt/sourcePeriod/fetchedAt이 분리된 시장·규제 근거',
+  'fallback 원인과 재수집 조치를 남기는 error-book 항목',
 ]
 
 // 제품 지식 상세 페이지 컴포넌트
@@ -218,9 +220,9 @@ export default function KnowledgeDetail() {
 
         {activeTab === 4 && (
           <div className={styles.card}>
-            <div className={styles.sectionTitle}>AI 지식화 루프</div>
+            <div className={styles.sectionTitle}>담당자 승인형 근거 지식화 루프</div>
             <div className={styles.loopIntro}>
-              진단 agent가 판단한 근거 중 다음 진단에 재사용할 만한 항목입니다. 담당자가 승인한 항목만 제품 지식 출처로 반영됩니다.
+              workflow trace와 source timeline에서 다음 진단에 재사용할 만한 항목입니다. 담당자가 승인한 항목만 제품 지식 출처로 반영됩니다.
             </div>
             {loopItems.length === 0 ? (
               <div className={styles.ideaPanel}>

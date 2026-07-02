@@ -7,6 +7,7 @@ import KpiRow  from '../../components/layout/KpiRow.jsx'
 import Pager   from '../../components/ui/Pager.jsx'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
 import GateDecisionHero from '../../components/diagnosis/GateDecisionHero.jsx'
+import SourceTrustBar from '../../components/diagnosis/SourceTrustBar.jsx'
 
 import S00Overview   from '../../components/diagnosis/S00Overview.jsx'
 import S01Input      from '../../components/diagnosis/S01Input.jsx'
@@ -97,7 +98,7 @@ export default function DiagnosisResult() {
       case 7:  return <S07FtoSupport key={key} patents={stages.s07.patents} supports={stages.s07.supports} />
       case 8:  return <S08ExecBoard  key={key} execData={stages.s08} />
       case 9:  return <S09Report     key={key} scoreBars={stages.s09.scoreBars} summary={stages.s09.summary} onDownload={downloadReport} fastApiUsed={result.session.reportFastApiUsed} />
-      case 10: return <S10Sources    key={key} pipes={stages.s10} />
+      case 10: return <S10Sources    key={key} data={stages.s10} />
       default: return null
     }
   }
@@ -173,6 +174,7 @@ export default function DiagnosisResult() {
             impactEstimate={result.session.impactEstimate}
             confidencePanel={result.session.confidencePanel}
           />
+          <SourceTrustBar summary={result.session.sourceTrustSummary} />
 
           {['pending', 'running'].includes(String(result.session?.status ?? '').toLowerCase()) && (
             <StatusMessage type="loading" message="공공데이터와 제품 지식을 대조 중입니다. 완료되면 이 화면이 자동으로 갱신됩니다." />

@@ -7,7 +7,7 @@ export default function S00Overview({ data }) {
     <DiagnosisStage
       eyebrow="S00 DIAGNOSIS OVERVIEW"
       title="진단 개요"
-      description="경남 배터리테크 · 리튬이온 배터리팩(HS 850760) · 독일/EU 진출 진단을 11단계로 진행합니다."
+      description="제품 정보, HS Code, 대상국, 바이어 문의를 기준으로 Gate 판단과 source trace를 진행합니다."
     >
 
       <div className="pred-grid">
@@ -23,7 +23,7 @@ export default function S00Overview({ data }) {
         ))}
       </div>
       <MemoBox>
-        <b>요약</b> · 시장성은 충분하므로 인증·제품안전·배터리 규제 준비를 우선 진단합니다. UN38.3 운송시험이 긴급 항목으로 감지되었습니다.
+        <b>요약</b> · 이 화면은 자동 확정 판단이 아니라 견적 전 1차 리스크 체크입니다. 상세 근거는 source trace와 action board에서 확인하세요.
       </MemoBox>
     </DiagnosisStage>
   )

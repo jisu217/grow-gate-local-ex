@@ -31,6 +31,8 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentCaptor.forClass;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -130,7 +132,15 @@ class DiagnosisServiceTest {
         User user = user("user-4", UserType.company);
         Company company = Company.builder().id("company-1").build();
         Membership membership = Membership.builder().role(role).company(company).build();
-        Product product = Product.builder().id("product-1").owner(user).company(company).name("BMS 모듈").build();
+        Product product = Product.builder()
+                .id("product-1")
+                .owner(user)
+                .company(company)
+                .name("BMS 모듈")
+                .hsCode("850760")
+                .targetCountry("US")
+                .description("battery management system")
+                .build();
 
         when(userRepository.findById("user-4")).thenReturn(Optional.of(user));
         when(membershipRepository.findFirstByUserId("user-4")).thenReturn(Optional.of(membership));
@@ -150,6 +160,77 @@ class DiagnosisServiceTest {
         assertThat(response.getStatus()).isEqualTo("pending");
         verify(diagnosisRepository).save(any());
         verify(asyncProcessor).process(any());
+    }
+
+    @Test
+    void createRejectsDirectInputWithoutProductNameAndHsCode() {
+        setUp();
+        User user = user("user-5", UserType.personal);
+
+        when(userRepository.findById("user-5")).thenReturn(Optional.of(user));
+
+        CreateDiagnosisRequest.InputData inputData = new CreateDiagnosisRequest.InputData();
+        ReflectionTestUtils.setField(inputData, "buyerRequest", "CE 보유 여부 확인 요청");
+
+        CreateDiagnosisRequest request = new CreateDiagnosisRequest();
+        ReflectionTestUtils.setField(request, "targetCountry", "DE");
+        ReflectionTestUtils.setField(request, "inputData", inputData);
+
+        assertThatThrownBy(() -> diagnosisService.create("user-5", request))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.INVALID_REQUEST);
+
+        verify(diagnosisRepository, never()).save(any());
+    }
+
+    @Test
+    void createWithProductIdStoresProductSnapshotAndBuyerContext() throws Exception {
+        setUp();
+        User user = user("user-6", UserType.company);
+        Company company = Company.builder().id("company-1").build();
+        Membership membership = Membership.builder().role(UserRole.editor).company(company).build();
+        Product product = Product.builder()
+                .id("product-2")
+                .owner(user)
+                .company(company)
+                .name("리튬 배터리팩")
+                .hsCode("850760")
+                .targetCountry("DE")
+                .description("산업용 배터리팩")
+                .build();
+
+        when(userRepository.findById("user-6")).thenReturn(Optional.of(user));
+        when(membershipRepository.findFirstByUserId("user-6")).thenReturn(Optional.of(membership));
+        when(productRepository.findByIdAndCompany_IdAndDeletedAtIsNull("product-2", "company-1"))
+                .thenReturn(Optional.of(product));
+        when(knowledgeRepository.findByProductId("product-2")).thenReturn(Optional.empty());
+        when(certificationRepository.findByProductId("product-2")).thenReturn(List.of());
+        when(ftoRepository.findByProductId("product-2")).thenReturn(List.of());
+        when(buyerRequirementRepository.findByProductId("product-2")).thenReturn(List.of());
+
+        CreateDiagnosisRequest.InputData inputData = new CreateDiagnosisRequest.InputData();
+        ReflectionTestUtils.setField(inputData, "buyerRequest", "독일 바이어가 CE와 UN38.3 증빙을 요청");
+        ReflectionTestUtils.setField(inputData, "requestedCertifications", List.of("CE", "UN38.3"));
+
+        CreateDiagnosisRequest request = new CreateDiagnosisRequest();
+        ReflectionTestUtils.setField(request, "productId", "product-2");
+        ReflectionTestUtils.setField(request, "targetCountry", "DE");
+        ReflectionTestUtils.setField(request, "inputData", inputData);
+
+        diagnosisService.create("user-6", request);
+
+        var captor = forClass(com.growgate.diagnosis.entity.DiagnosisRun.class);
+        verify(diagnosisRepository).save(captor.capture());
+        var savedRun = captor.getValue();
+        var inputMap = objectMapper.readValue(savedRun.getInputData(), java.util.Map.class);
+        var snapshotMap = objectMapper.readValue(savedRun.getKnowledgeSnapshot(), java.util.Map.class);
+
+        assertThat(inputMap.get("buyerRequest")).isEqualTo("독일 바이어가 CE와 UN38.3 증빙을 요청");
+        assertThat(snapshotMap.get("productName")).isEqualTo("리튬 배터리팩");
+        assertThat(snapshotMap.get("hsCode")).isEqualTo("850760");
+        assertThat(snapshotMap.get("targetCountry")).isEqualTo("DE");
+        assertThat(snapshotMap.get("buyerRequest")).isEqualTo("독일 바이어가 CE와 UN38.3 증빙을 요청");
     }
 
     private User user(String id, UserType type) {

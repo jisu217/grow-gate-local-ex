@@ -35,7 +35,7 @@ export default function DiagnosisSources() {
 
   const publicSources = sources.filter((source) => ['live', 'cache', 'fallback'].includes(source.sourceType))
   const ruleSources = sources.filter((source) => source.sourceType === 'heuristic')
-  const agentSources = sources.filter((source) => source.sourceType === 'agent')
+  const traceSources = sources.filter((source) => source.sourceType === 'agent')
 
   return (
     <div className={styles.wrap}>
@@ -70,7 +70,7 @@ export default function DiagnosisSources() {
 
       <SourceSection title="공공데이터 근거" items={publicSources} />
       <SourceSection title="규칙 엔진 근거" items={ruleSources} />
-      <SourceSection title="Agent 근거" items={agentSources} />
+      <SourceSection title="Workflow trace" items={traceSources} />
 
       {dashboard?.providers?.length > 0 && (
         <div className={styles.section}>

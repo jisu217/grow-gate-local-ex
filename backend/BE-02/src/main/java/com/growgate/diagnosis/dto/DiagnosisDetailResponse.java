@@ -34,6 +34,9 @@ public class DiagnosisDetailResponse {
         private ActionRoadmap actionRoadmap;
         private List<String> evidenceSources;
         private Map<String, Object> agentTrace;
+        private Map<String, Object> evidenceRetrieval;
+        private List<Map<String, Object>> exportKnowledgeTimeline;
+        private Map<String, Object> evidenceGuardrails;
         private Map<String, Object> stageCards;
         private String reportMarkdown;
         private boolean reportFastApiUsed;

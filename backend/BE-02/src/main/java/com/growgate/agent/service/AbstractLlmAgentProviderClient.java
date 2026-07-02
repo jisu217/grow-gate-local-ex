@@ -51,7 +51,7 @@ abstract class AbstractLlmAgentProviderClient implements AgentProviderClient {
                     - hsCode: %s
                     - targetCountry: %s
 
-                    RAG context:
+                    Evidence context:
                     %s
 
                     Scoring context:
@@ -61,7 +61,7 @@ abstract class AbstractLlmAgentProviderClient implements AgentProviderClient {
                     safe(request.getProductName()),
                     safe(request.getHsCode()),
                     safe(request.getTargetCountry()),
-                    objectMapper.writeValueAsString(request.getRagContext() == null ? Map.of() : request.getRagContext()),
+                    objectMapper.writeValueAsString(request.getEvidenceContext() == null ? Map.of() : request.getEvidenceContext()),
                     objectMapper.writeValueAsString(request.getScoringContext() == null ? Map.of() : request.getScoringContext())
             );
         } catch (Exception e) {

@@ -6,7 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.agent.service.AgentInferenceRequest;
 import com.growgate.agent.service.AgentInferenceResult;
 import com.growgate.agent.service.AgentInferenceService;
-import com.growgate.agent.service.AgentRagContextBuilder;
+import com.growgate.agent.service.EvidenceContextBuilder;
 import com.growgate.diagnosis.entity.DiagnosisRun;
 import com.growgate.diagnosis.enums.DiagnosisStatus;
 import com.growgate.diagnosis.repository.DiagnosisRepository;
@@ -62,7 +62,7 @@ public class DiagnosisAsyncProcessor {
     private final FastApiAgentClient fastApiAgentClient;
     private final PublicDataCollectionService publicDataCollectionService;
     private final AgentInferenceService agentInferenceService;
-    private final AgentRagContextBuilder agentRagContextBuilder;
+    private final EvidenceContextBuilder evidenceContextBuilder;
     private final KnowledgeLoopItemRepository knowledgeLoopItemRepository;
 
     @Async
@@ -114,6 +114,20 @@ public class DiagnosisAsyncProcessor {
                             : AgentVerification.fail("public data collection returned no run")
             );
             addPublicDataSources(sources, publicDataResult.getRecords());
+            Map<String, Object> workerRequest = buildWorkerRequest(run, product, productName, hsCode, description,
+                    targetCountry, publicDataResult.getRecords(), knowledgeSources, certs, ftoItems, buyers,
+                    acceptedLoopItems);
+            Optional<Map<String, Object>> workerResult = agentLoop.runTool(
+                    "python_data_ai_engine",
+                    "Python Worker /worker/diagnosis-v1",
+                    2,
+                    Optional.empty(),
+                    () -> fastApiAgentClient.workerDiagnosis(workerRequest),
+                    result -> result != null && result.isPresent()
+                            && "python-worker-diagnosis-v1".equals(stringValue(result.get().get("engineVersion")))
+                            ? AgentVerification.pass("Python worker returned normalized metrics and evidence artifacts")
+                            : AgentVerification.fail("Python worker unavailable; Spring will use local evidence artifacts")
+            );
 
             Map<String, Integer> scoreMap = agentLoop.runTool(
                     "score_readiness",
@@ -184,14 +198,15 @@ public class DiagnosisAsyncProcessor {
                             ? AgentVerification.pass("FastAPI analyze returned payload")
                             : AgentVerification.fail("FastAPI analyze unavailable; retry or fallback to Spring")
             );
-            Map<String, Object> ragContext = agentRagContextBuilder.build(knowledge, certs, ftoItems, buyers,
+            Map<String, Object> evidenceContext = evidenceContextBuilder.build(knowledge, certs, ftoItems, buyers,
                     knowledgeSources, publicDataResult.getRecords(), acceptedLoopItems);
             AgentInferenceRequest inferenceRequest = AgentInferenceRequest.builder()
+                    .userId(run.getUser() != null ? run.getUser().getId() : null)
                     .diagnosisId(run.getId())
                     .productName(productName)
                     .hsCode(hsCode)
                     .targetCountry(targetCountry)
-                    .ragContext(ragContext)
+                    .evidenceContext(evidenceContext)
                     .scoringContext(Map.of(
                             "overall", overall,
                             "market", market,
@@ -236,12 +251,12 @@ public class DiagnosisAsyncProcessor {
                     llmResult, riskItems, sources, productName, hsCode, targetCountry);
             persistKnowledgeLoopSuggestions(run, product, loopSuggestions);
 
-            sources.add(source("agent", "FASTAPI-AGENT-" + targetCountry,
-                    "FastAPI Agent", "Optional analyze/report bridge", "configured APP_FASTAPI_BASE_URL",
-                    "diagnosisId=" + run.getId(), "agentic-analysis", agentResult.isPresent() ? 5 : 0,
+            sources.add(source("agent", "WORKFLOW-TRACE-" + targetCountry,
+                    "WORKFLOW_TRACE", "Optional analysis/report bridge", "configured APP_FASTAPI_BASE_URL",
+                    "diagnosisId=" + run.getId(), "agentic-analysis", 0,
                     agentResult.isEmpty(), agentResult.isPresent()
-                            ? "Spring 진단 결과에 FastAPI agent 분석을 병합"
-                            : "FastAPI agent 미활성 또는 호출 실패로 Spring 규칙 진단 유지"));
+                            ? "Spring 진단 결과에 선택형 분석 bridge 결과를 병합"
+                            : "선택형 분석 bridge 미활성 또는 호출 실패로 Spring 규칙 진단 유지"));
             agentLoop.runTool(
                     "verify_sources",
                     "Agent source verifier",
@@ -275,12 +290,42 @@ public class DiagnosisAsyncProcessor {
             resultMap.put("riskItems", riskItems);
             resultMap.put("actionRoadmap", actionRoadmap);
             resultMap.put("sources", sources);
+            resultMap.put("sourceTrustSummary", buildSourceTrustSummary(run, sources));
+            resultMap.put("scoreContributionLedger", buildScoreContributionLedger(sources));
             resultMap.put("agentTrace", agentLoop.toTrace(agentResult.isPresent(), reportResult.isPresent(), llmResult));
-            resultMap.put("ragRetrieval", Map.of(
-                    "mode", stringValue(ragContext.get("retrievalMode")),
-                    "query", stringValue(ragContext.get("retrievalQuery")),
-                    "topK", ragContext.getOrDefault("retrievalTopK", List.of())
-            ));
+            Map<String, Object> springEvidenceRetrieval = Map.of(
+                    "mode", stringValue(evidenceContext.get("retrievalMode")),
+                    "label", stringValue(evidenceContext.get("retrievalLabel")),
+                    "claimBoundary", stringValue(evidenceContext.get("claimBoundary")),
+                    "query", stringValue(evidenceContext.get("retrievalQuery")),
+                    "topK", evidenceContext.getOrDefault("retrievalTopK", List.of())
+            );
+            resultMap.put("pythonWorker", workerResult.map(result -> Map.of(
+                    "enabled", true,
+                    "succeeded", true,
+                    "engineVersion", stringValue(result.get("engineVersion")),
+                    "generatedAt", stringValue(result.get("generatedAt"))
+            )).orElseGet(() -> Map.of(
+                    "enabled", fastApiAgentClient.isEnabled(),
+                    "succeeded", false,
+                    "engineVersion", "spring-local-fallback"
+            )));
+            resultMap.put("normalizedMetrics", workerResult
+                    .map(result -> result.getOrDefault("normalizedMetrics", buildNormalizedMetrics(publicDataResult.getRecords())))
+                    .orElseGet(() -> buildNormalizedMetrics(publicDataResult.getRecords())));
+            resultMap.put("compiledWiki", workerResult
+                    .map(result -> result.getOrDefault("compiledWiki", Map.of()))
+                    .orElseGet(Map::of));
+            resultMap.put("evidenceRetrieval", workerResult
+                    .map(result -> objectMapOrDefault(result.get("evidenceRetrieval"), springEvidenceRetrieval))
+                    .orElse(springEvidenceRetrieval));
+            resultMap.put("exportKnowledgeTimeline", workerResult
+                    .map(result -> objectListOrDefault(result.get("exportKnowledgeTimeline"), buildExportKnowledgeTimeline(sources)))
+                    .orElseGet(() -> buildExportKnowledgeTimeline(sources)));
+            resultMap.put("evidenceGuardrails", workerResult
+                    .map(result -> objectMapOrDefault(result.get("evidenceGuardrails"),
+                            buildEvidenceGuardrails(sources, publicDataResult.getRecords())))
+                    .orElseGet(() -> buildEvidenceGuardrails(sources, publicDataResult.getRecords())));
             resultMap.put("scoringRubric", buildScoringRubric());
             resultMap.put("stageCards", buildStageCards(productName, hsCode, targetCountry, overall, market,
                     regulation, recall, fto, support, riskItems, actionRoadmap, sources, agentResult.orElse(null),
@@ -380,6 +425,9 @@ public class DiagnosisAsyncProcessor {
             int adjustedContribution = adjustedPublicDataContribution(record);
             source.put("rawScoreContribution", record.getScoreContribution());
             source.put("confidenceAdjustedContribution", adjustedContribution);
+            source.put("rawContribution", record.getScoreContribution());
+            source.put("adjustedContribution", adjustedContribution);
+            source.put("finalScoreDelta", adjustedContribution);
             source.put("scoreContribution", adjustedContribution);
             source.put("fallbackUsed", record.isFallbackUsed());
             source.put("cacheHit", record.isCacheHit());
@@ -396,7 +444,13 @@ public class DiagnosisAsyncProcessor {
             if (metrics instanceof Map<?, ?>) {
                 source.put("metrics", metrics);
                 source.put("scoreInputs", metrics);
+                source.put("rawMetric", metrics);
+                source.put("normalizedMetric", metrics);
             }
+            putIfPresent(source, "publishedAt", normalizedPayload.get("publishedAt"));
+            putIfPresent(source, "sourcePeriodStart", normalizedPayload.get("sourcePeriodStart"));
+            putIfPresent(source, "sourcePeriodEnd", normalizedPayload.get("sourcePeriodEnd"));
+            putIfPresent(source, "eventDate", normalizedPayload.get("eventDate"));
             source.put("metricSummary", publicDataMetricSummary(record, normalizedPayload));
             source.put("decisionImpact", publicDataDecisionImpact(record, adjustedContribution));
             source.put("scoreFormula", normalizedPayload.getOrDefault("scoreFormula",
@@ -406,6 +460,64 @@ public class DiagnosisAsyncProcessor {
                     : "live 공공 API 또는 유효 cache record의 도메인 신호를 진단 점수에 반영");
             sources.add(source);
         }
+    }
+
+    private Map<String, Object> buildSourceTrustSummary(DiagnosisRun run, List<Map<String, Object>> sources) {
+        long liveCount = sources.stream().filter(source -> "live".equals(source.get("sourceType"))).count();
+        long cacheCount = sources.stream().filter(source -> "cache".equals(source.get("sourceType"))).count();
+        long fallbackCount = sources.stream().filter(source -> "fallback".equals(source.get("sourceType"))).count();
+        long crawlCount = sources.stream().filter(source -> "crawl".equals(source.get("sourceType"))).count();
+        long motieContribution = sources.stream()
+                .filter(source -> Boolean.TRUE.equals(source.get("motieRelated")))
+                .mapToLong(source -> source.get("scoreContribution") instanceof Number number ? number.longValue() : 0)
+                .sum();
+        List<String> sourceIds = sources.stream()
+                .map(source -> stringValue(source.get("sourceId")))
+                .filter(value -> !value.isBlank())
+                .distinct()
+                .limit(12)
+                .toList();
+        return Map.of(
+                "diagnosisId", run.getId(),
+                "createdAt", run.getCreatedAt() != null ? run.getCreatedAt().atOffset(ZoneOffset.UTC).toString() : "",
+                "collectionRunIds", sources.stream()
+                        .map(source -> stringValue(source.get("collectionRunId")))
+                        .filter(value -> !value.isBlank())
+                        .distinct()
+                        .toList(),
+                "liveCount", liveCount,
+                "cacheCount", cacheCount,
+                "fallbackCount", fallbackCount,
+                "crawlCount", crawlCount,
+                "sourceIds", sourceIds,
+                "motieRelatedContribution", motieContribution,
+                "motieRelatedSummary", motieContribution == 0
+                        ? "산업부 관련 출처 contribution 없음 또는 확인 대기"
+                        : "산업부 관련 출처가 Gate 판단에 " + (motieContribution > 0 ? "+" : "") + motieContribution + "점 기여"
+        );
+    }
+
+    private List<Map<String, Object>> buildScoreContributionLedger(List<Map<String, Object>> sources) {
+        return sources.stream()
+                .filter(source -> source.get("sourceId") != null)
+                .map(source -> {
+                    Map<String, Object> row = new LinkedHashMap<>();
+                    row.put("sourceId", stringValue(source.get("sourceId")));
+                    row.put("provider", stringValue(source.get("provider")));
+                    row.put("usedFor", stringValue(source.get("usedFor")));
+                    row.put("sourceType", stringValue(source.get("sourceType")));
+                    row.put("rawMetric", source.getOrDefault("rawMetric", source.getOrDefault("metrics", Map.of())));
+                    row.put("normalizedMetric", source.getOrDefault("normalizedMetric", source.getOrDefault("scoreInputs", Map.of())));
+                    row.put("rawContribution", source.getOrDefault("rawContribution", source.getOrDefault("rawScoreContribution", 0)));
+                    row.put("confidence", source.getOrDefault("confidence", 0));
+                    row.put("adjustedContribution", source.getOrDefault("adjustedContribution",
+                            source.getOrDefault("confidenceAdjustedContribution", 0)));
+                    row.put("finalScoreDelta", source.getOrDefault("finalScoreDelta",
+                            source.getOrDefault("scoreContribution", 0)));
+                    row.put("metricSummary", stringValue(source.get("metricSummary")));
+                    return row;
+                })
+                .toList();
     }
 
     private int applyPublicDataContribution(int baseScore, List<PublicDataRecord> records, String usedFor) {
@@ -464,6 +576,12 @@ public class DiagnosisAsyncProcessor {
                 + " metric이 Gate 판단에 " + direction + " 기여(" + adjustedContribution + "점)했습니다.";
     }
 
+    private void putIfPresent(Map<String, Object> target, String key, Object value) {
+        if (value == null) return;
+        String text = stringValue(value);
+        if (!text.isBlank()) target.put(key, text);
+    }
+
     private Map<String, Object> buildAgentRequest(DiagnosisRun run, String productName, String hsCode,
                                                   String description, String targetCountry,
                                                   List<Certification> certs) {
@@ -486,6 +604,120 @@ public class DiagnosisAsyncProcessor {
         payload.put("has_label_draft", false);
         payload.put("notes", nullToEmpty(description));
         return payload;
+    }
+
+    private Map<String, Object> buildWorkerRequest(DiagnosisRun run, Product product, String productName,
+                                                   String hsCode, String description, String targetCountry,
+                                                   List<PublicDataRecord> records,
+                                                   List<KnowledgeSource> knowledgeSources,
+                                                   List<Certification> certs,
+                                                   List<Fto> ftoItems,
+                                                   List<BuyerRequirement> buyers,
+                                                   List<KnowledgeLoopItem> acceptedLoopItems) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("diagnosisId", run.getId());
+        payload.put("userId", run.getUser() != null ? run.getUser().getId() : null);
+        payload.put("companyId", run.getCompany() != null ? run.getCompany().getId() : null);
+        payload.put("productSnapshot", Map.of(
+                "productId", product != null ? product.getId() : "",
+                "productName", nullToEmpty(productName).isBlank() ? "입력 제품" : productName,
+                "hsCode", nullToEmpty(hsCode),
+                "targetCountry", targetCountry,
+                "descriptionPresent", !nullToEmpty(description).isBlank()
+        ));
+        payload.put("knowledgeSnapshot", Map.of(
+                "knowledgeSourceCount", knowledgeSources.size(),
+                "certificationCount", certs.size(),
+                "ftoItemCount", ftoItems.size(),
+                "buyerRequirementCount", buyers.size(),
+                "acceptedLoopItemCount", acceptedLoopItems.size()
+        ));
+        payload.put("publicDataRecords", records.stream()
+                .map(this::workerRecord)
+                .toList());
+        return payload;
+    }
+
+    private Map<String, Object> workerRecord(PublicDataRecord record) {
+        Map<String, Object> normalizedPayload = parseObjectMap(record.getNormalizedPayload());
+        Map<String, Object> item = new LinkedHashMap<>();
+        item.put("id", nullToEmpty(record.getId()));
+        item.put("provider", record.getProvider() != null ? record.getProvider().name() : "");
+        item.put("endpoint", nullToEmpty(record.getEndpoint()));
+        item.put("requestKey", nullToEmpty(record.getRequestKey()));
+        item.put("hsCode", nullToEmpty(record.getHsCode()));
+        item.put("targetCountry", nullToEmpty(record.getTargetCountry()));
+        item.put("matchedKey", nullToEmpty(record.getMatchedKey()));
+        item.put("usedFor", nullToEmpty(record.getUsedFor()));
+        item.put("sourceType", sourceType(record));
+        item.put("fallbackUsed", record.isFallbackUsed());
+        item.put("cacheHit", record.isCacheHit());
+        item.put("scoreContribution", record.getScoreContribution() == null ? 0 : record.getScoreContribution());
+        item.put("confidence", record.getConfidence() == null ? 0.0 : record.getConfidence());
+        item.put("metrics", normalizedPayload.getOrDefault("metrics", Map.of()));
+        item.put("metricSummary", publicDataMetricSummary(record, normalizedPayload));
+        item.put("fetchedAt", record.getFetchedAt() != null ? record.getFetchedAt().toString() : "");
+        item.put("publishedAt", stringValue(normalizedPayload.get("publishedAt")));
+        item.put("sourcePeriodStart", stringValue(normalizedPayload.get("sourcePeriodStart")));
+        item.put("sourcePeriodEnd", stringValue(normalizedPayload.get("sourcePeriodEnd")));
+        return item;
+    }
+
+    private Map<String, Object> buildNormalizedMetrics(List<PublicDataRecord> records) {
+        Map<String, Map<String, Object>> buckets = new LinkedHashMap<>();
+        for (PublicDataRecord record : records) {
+            String usedFor = nullToEmpty(record.getUsedFor()).isBlank() ? "unknown" : record.getUsedFor();
+            Map<String, Object> bucket = buckets.computeIfAbsent(usedFor, ignored -> new LinkedHashMap<>(Map.of(
+                    "recordCount", 0,
+                    "liveOrCacheCount", 0,
+                    "fallbackCount", 0,
+                    "scoreContributionSum", 0,
+                    "averageConfidence", 0.0
+            )));
+            int count = ((Number) bucket.get("recordCount")).intValue() + 1;
+            int contribution = record.getScoreContribution() == null ? 0 : record.getScoreContribution();
+            double confidence = record.getConfidence() == null ? 0.0 : record.getConfidence();
+            bucket.put("recordCount", count);
+            bucket.put("scoreContributionSum", ((Number) bucket.get("scoreContributionSum")).intValue() + contribution);
+            bucket.put("averageConfidence", ((Number) bucket.get("averageConfidence")).doubleValue() + confidence);
+            if ("live".equals(sourceType(record)) || "cache".equals(sourceType(record)) || "crawl".equals(sourceType(record))) {
+                bucket.put("liveOrCacheCount", ((Number) bucket.get("liveOrCacheCount")).intValue() + 1);
+            }
+            if (record.isFallbackUsed() || "fallback".equals(sourceType(record))) {
+                bucket.put("fallbackCount", ((Number) bucket.get("fallbackCount")).intValue() + 1);
+            }
+        }
+        buckets.values().forEach(bucket -> {
+            int count = Math.max(1, ((Number) bucket.get("recordCount")).intValue());
+            double average = ((Number) bucket.get("averageConfidence")).doubleValue() / count;
+            bucket.put("averageConfidence", Math.round(average * 1000.0) / 1000.0);
+        });
+        return new LinkedHashMap<>(buckets);
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> objectMapOrDefault(Object value, Map<String, Object> fallback) {
+        if (value instanceof Map<?, ?> map) {
+            Map<String, Object> result = new LinkedHashMap<>();
+            map.forEach((key, item) -> result.put(String.valueOf(key), item));
+            return result;
+        }
+        return fallback;
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<Map<String, Object>> objectListOrDefault(Object value, List<Map<String, Object>> fallback) {
+        if (value instanceof List<?> list) {
+            return list.stream()
+                    .filter(Map.class::isInstance)
+                    .map(item -> {
+                        Map<String, Object> result = new LinkedHashMap<>();
+                        ((Map<?, ?>) item).forEach((key, mapValue) -> result.put(String.valueOf(key), mapValue));
+                        return result;
+                    })
+                    .toList();
+        }
+        return fallback;
     }
 
     private List<String> inferFeatures(String hsCode, String description) {
@@ -858,10 +1090,10 @@ public class DiagnosisAsyncProcessor {
     private Map<String, Object> normalizeLoopSuggestion(Map<String, Object> item) {
         return Map.of(
                 "type", defaultString(item.get("type"), "policy_note"),
-                "title", defaultString(item.get("title"), "AI 추론 근거 지식화 후보"),
+                "title", defaultString(item.get("title"), "workflow 근거 지식화 후보"),
                 "evidence", defaultString(item.get("evidence"), ""),
                 "rationale", defaultString(item.get("rationale"), defaultString(item.get("reasoning"), "")),
-                "impact", defaultString(item.get("impact"), "다음 진단의 RAG context로 재사용")
+                "impact", defaultString(item.get("impact"), "다음 진단의 evidence context로 재사용")
         );
     }
 
@@ -872,7 +1104,7 @@ public class DiagnosisAsyncProcessor {
                     .product(product)
                     .diagnosisId(run.getId())
                     .type(prefix(defaultString(suggestion.get("type"), "policy_note"), 60))
-                    .title(prefix(defaultString(suggestion.get("title"), "AI 추론 근거 지식화 후보"), 200))
+                    .title(prefix(defaultString(suggestion.get("title"), "workflow 근거 지식화 후보"), 200))
                     .evidence(defaultString(suggestion.get("evidence"), ""))
                     .rationale(defaultString(suggestion.get("rationale"), ""))
                     .impact(defaultString(suggestion.get("impact"), ""))
@@ -1285,6 +1517,99 @@ public class DiagnosisAsyncProcessor {
                         "LLM provider는 점수 산식의 단일 근거가 아니라 설명과 지식화 후보 보조 역할"
                 )
         );
+    }
+
+    private List<Map<String, Object>> buildExportKnowledgeTimeline(List<Map<String, Object>> sources) {
+        return sources.stream()
+                .filter(source -> !stringValue(source.get("sourceId")).isBlank())
+                .map(source -> {
+                    Map<String, Object> event = new LinkedHashMap<>();
+                    String sourceType = stringValue(source.get("sourceType"));
+                    String usedFor = stringValue(source.get("usedFor"));
+                    event.put("eventId", "EVT-" + stringValue(source.get("sourceId")));
+                    event.put("eventType", timelineEventType(sourceType, usedFor, stringValue(source.get("provider"))));
+                    event.put("provider", stringValue(source.get("provider")));
+                    event.put("sourceId", stringValue(source.get("sourceId")));
+                    event.put("sourceType", sourceType);
+                    event.put("usedFor", usedFor);
+                    event.put("title", stringValue(source.get("datasetName")));
+                    event.put("fetchedAt", stringValue(source.get("retrievedAt")));
+                    event.put("publishedAt", stringValue(source.get("publishedAt")));
+                    event.put("sourcePeriodStart", stringValue(source.get("sourcePeriodStart")));
+                    event.put("sourcePeriodEnd", stringValue(source.get("sourcePeriodEnd")));
+                    event.put("periodLabel", timelinePeriodLabel(source));
+                    event.put("summary", stringValue(source.get("metricSummary")).isBlank()
+                            ? stringValue(source.get("reason"))
+                            : stringValue(source.get("metricSummary")));
+                    event.put("scoreImpact", source.getOrDefault("scoreContribution", 0));
+                    event.put("confidence", source.getOrDefault("confidence", sourceConfidenceFromType(sourceType)));
+                    event.put("status", timelineStatus(sourceType));
+                    return event;
+                })
+                .limit(30)
+                .toList();
+    }
+
+    private Map<String, Object> buildEvidenceGuardrails(List<Map<String, Object>> sources,
+                                                        List<PublicDataRecord> records) {
+        long unsupportedClaims = sources.stream()
+                .filter(source -> stringValue(source.get("sourceId")).isBlank())
+                .count();
+        long fallbackPositive = sources.stream()
+                .filter(source -> "fallback".equals(source.get("sourceType")))
+                .filter(source -> source.get("scoreContribution") instanceof Number number && number.intValue() > 0)
+                .count();
+        long officialLiveOrCache = records.stream()
+                .filter(record -> !record.isFallbackUsed())
+                .filter(record -> "live".equals(sourceType(record)) || "cache".equals(sourceType(record)))
+                .count();
+        Map<String, Object> guardrails = new LinkedHashMap<>();
+        guardrails.put("unsupportedClaimCount", unsupportedClaims);
+        guardrails.put("fallbackPositiveContributionCount", fallbackPositive);
+        guardrails.put("officialLiveOrCacheRecordCount", officialLiveOrCache);
+        guardrails.put("policies", List.of(
+                "fallback source는 점수를 올리지 않고 confidence와 담당자 확인 항목에만 반영",
+                "화면 claim은 sourceId가 있는 evidence timeline 또는 rule source에 연결",
+                "publishedAt/fetchedAt/sourcePeriod를 분리해 최신성과 데이터 기준 기간을 혼동하지 않음",
+                "대규모 vector RAG나 자동 의사결정이 아니라 source-bound evidence workflow로 표시"
+        ));
+        guardrails.put("verdict", unsupportedClaims == 0 && fallbackPositive == 0 ? "pass" : "review_required");
+        return guardrails;
+    }
+
+    private String timelineEventType(String sourceType, String usedFor, String provider) {
+        if ("fallback".equals(sourceType)) return "SOURCE_FALLBACK_RECORDED";
+        if ("heuristic".equals(sourceType)) return "RULE_HEURISTIC_APPLIED";
+        if ("agent".equals(sourceType)) return "WORKFLOW_TRACE_RECORDED";
+        if ("market".equals(usedFor)) return "EXPORT_METRIC_SIGNAL";
+        if ("recall".equals(usedFor)) return "SAFETY_RECALL_SIGNAL";
+        if ("fto".equals(usedFor)) return "FTO_SEARCH_SIGNAL";
+        if ("support".equals(usedFor)) return "SUPPORT_PROGRAM_SIGNAL";
+        if (provider.contains("KOTRA")) return "MARKET_DEMAND_SIGNAL";
+        return "EVIDENCE_SOURCE_RECORDED";
+    }
+
+    private String timelinePeriodLabel(Map<String, Object> source) {
+        String start = stringValue(source.get("sourcePeriodStart"));
+        String end = stringValue(source.get("sourcePeriodEnd"));
+        if (!start.isBlank() && !end.isBlank()) return start + " ~ " + end;
+        String fetchedAt = stringValue(source.get("retrievedAt"));
+        return fetchedAt.isBlank() ? "기준일 미확인" : "fetched " + fetchedAt.substring(0, Math.min(10, fetchedAt.length()));
+    }
+
+    private String timelineStatus(String sourceType) {
+        if ("live".equals(sourceType) || "cache".equals(sourceType)) return "evidence_bound";
+        if ("heuristic".equals(sourceType)) return "rule_bound";
+        if ("fallback".equals(sourceType)) return "needs_live_evidence";
+        return "trace_only";
+    }
+
+    private double sourceConfidenceFromType(String sourceType) {
+        if ("live".equals(sourceType)) return 0.85;
+        if ("cache".equals(sourceType)) return 0.70;
+        if ("heuristic".equals(sourceType)) return 0.45;
+        if ("fallback".equals(sourceType)) return 0.20;
+        return 0.50;
     }
 
     private Map<String, Object> buildActionPlan(List<Map<String, Object>> risks, List<Certification> certs,

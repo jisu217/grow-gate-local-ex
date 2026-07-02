@@ -1,8 +1,16 @@
 // 제품 지식 서비스
 import { apiFetch } from './apiClient.js'
-import { PRODUCTS, PRODUCT_DETAILS } from '../mock/productData.js'
 
-const ENABLE_MOCK = import.meta.env.VITE_ENABLE_MOCK === 'true'
+const viteEnv = import.meta.env ?? {}
+const ENABLE_MOCK = viteEnv.VITE_ENABLE_MOCK === 'true'
+const APP_MODE = viteEnv.VITE_APP_MODE ?? ''
+const PRESENTATION_MODE = APP_MODE === 'presentation' || viteEnv.VITE_PRESENTATION_MODE === 'true'
+const MOCK_ALLOWED = ENABLE_MOCK && !PRESENTATION_MODE && !viteEnv.PROD
+
+async function loadProductMock() {
+  const mockPath = '/src/mock/productData.js'
+  return import(/* @vite-ignore */ mockPath)
+}
 
 // 백엔드 knowledgeStatus(snake_case) → FE 표시용 key 변환
 const STATUS_MAP = {
@@ -38,8 +46,9 @@ export async function getProducts() {
     const res = await apiFetch('/products')
     return res.products.map(mapProductSummary)
   } catch (err) {
-    if (!ENABLE_MOCK) throw err
+    if (!MOCK_ALLOWED) throw err
     console.warn('[productService] getProducts API 실패, VITE_ENABLE_MOCK=true라 mock으로 대체합니다.', err)
+    const { PRODUCTS } = await loadProductMock()
     return PRODUCTS
   }
 }
@@ -103,8 +112,9 @@ export async function getProductKnowledge(productId) {
     const detail = await apiFetch(`/products/${productId}/knowledge`)
     return mapProductDetail(detail)
   } catch (err) {
-    if (!ENABLE_MOCK) throw err
+    if (!MOCK_ALLOWED) throw err
     console.warn('[productService] getProductKnowledge API 실패, VITE_ENABLE_MOCK=true라 mock으로 대체합니다.', err)
+    const { PRODUCT_DETAILS } = await loadProductMock()
     const product = PRODUCT_DETAILS[productId]
     if (!product) throw new Error(`제품을 찾을 수 없습니다. (id: ${productId})`)
     return product
@@ -127,7 +137,7 @@ export async function saveProductKnowledge(productId, payload) {
     method: 'PUT',
     body: JSON.stringify(body),
   })
-  return { ...PRODUCT_DETAILS[productId], ...payload, id: res.productId, updatedAt: res.updatedAt }
+  return { ...payload, id: res.productId, updatedAt: res.updatedAt }
 }
 
 // 신규 제품 생성 (쓰기 작업 — saveProductKnowledge와 동일하게 실패 시 에러 그대로 전파)
@@ -161,7 +171,7 @@ export async function getProductAuditLogs(productId) {
       reason: log.reason,
     }))
   } catch (err) {
-    if (!ENABLE_MOCK) throw err
+    if (!MOCK_ALLOWED) throw err
     console.warn('[productService] getProductAuditLogs API 실패, VITE_ENABLE_MOCK=true라 빈 배열로 대체합니다.', err)
     return []
   }

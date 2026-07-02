@@ -318,6 +318,44 @@ def test_analyze_endpoint_exposes_llm_inference_audit_signal():
     assert inference["summary"] == payload["ai_summary"]
 
 
+def test_worker_diagnosis_endpoint_returns_contract_artifacts():
+    client = TestClient(app)
+    response = client.post(
+        "/worker/diagnosis-v1",
+        json={
+            "diagnosisId": "diag-1",
+            "productSnapshot": {
+                "productName": "리튬이온 배터리팩",
+                "hsCode": "850760",
+                "targetCountry": "DE",
+            },
+            "knowledgeSnapshot": {"knowledgeSourceCount": 2},
+            "publicDataRecords": [
+                {
+                    "id": "record-1",
+                    "provider": "KCS_TRADE",
+                    "sourceType": "live",
+                    "usedFor": "market",
+                    "confidence": 0.82,
+                    "scoreContribution": 9,
+                    "metrics": {"importAmountUsd": 123456, "yoyGrowthPct": 12.4},
+                    "metricSummary": "수입액 123456 USD, YoY 12.4%",
+                }
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["engineVersion"] == "python-worker-diagnosis-v1"
+    assert payload["normalizedMetrics"]["market"]["recordCount"] == 1
+    assert payload["evidenceRetrieval"]["topK"][0]["sourceId"] == "record-1"
+    assert payload["exportKnowledgeTimeline"][0]["eventType"] == "PY_MARKET_METRIC_NORMALIZED"
+    assert payload["evidenceGuardrails"]["verdict"] == "pass"
+    assert payload["compiledWiki"]["knowledgePage"]["hsCode"] == "850760"
+    assert "Evidence collection log" in payload["compiledWiki"]["logMarkdown"]
+
+
 def test_product_knowledge_api_upserts_and_returns_rag_feature_preview(tmp_path, monkeypatch):
     from backend.app import product_knowledge_store
     from backend.product_knowledge import ProductKnowledgeStore

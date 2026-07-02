@@ -19,7 +19,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-public class AgentRagContextBuilder {
+public class EvidenceContextBuilder {
 
     public Map<String, Object> build(ProductKnowledge knowledge,
                                      List<Certification> certifications,
@@ -72,7 +72,9 @@ public class AgentRagContextBuilder {
                         "rationale", safe(item.getRationale()),
                         "impact", safe(item.getImpact())
                 )).toList());
-        context.put("retrievalMode", "bm25-lite-in-memory");
+        context.put("retrievalMode", "source-bound-evidence-search");
+        context.put("retrievalLabel", "DB 지식과 공공데이터 record를 citation 가능한 chunk로 검색");
+        context.put("claimBoundary", "vector DB RAG가 아니라 진단 DB와 source trace 안에서만 근거를 찾는 bounded evidence retrieval");
         context.put("retrievalQuery", query);
         context.put("retrievalTopK", retrieveTopK(query, chunks, 5));
         return context;
@@ -175,6 +177,8 @@ public class AgentRagContextBuilder {
                     result.put("sourceType", chunk.sourceType());
                     result.put("category", chunk.category());
                     result.put("score", Math.round(entry.getValue() * 100.0) / 100.0);
+                    result.put("sourceBound", !chunk.sourceId().isBlank() && !"internal".equals(chunk.sourceId()));
+                    result.put("displayRole", displayRole(chunk.category(), chunk.sourceType()));
                     result.put("usedSentence", firstSentence(chunk.text()));
                     return result;
                 })
@@ -205,6 +209,14 @@ public class AgentRagContextBuilder {
         String safeValue = safe(value).replaceAll("\\s+", " ").trim();
         if (safeValue.length() <= 220) return safeValue;
         return safeValue.substring(0, 220) + "...";
+    }
+
+    private String displayRole(String category, String sourceType) {
+        if ("public_data".equals(category)) return "공공데이터 근거 chunk";
+        if ("knowledge_loop".equals(category)) return "담당자 승인 지식화 chunk";
+        if ("knowledge_source".equals(category)) return "등록 문서 출처 chunk";
+        if ("fallback".equals(sourceType)) return "fallback 보강 필요 chunk";
+        return "제품 지식 chunk";
     }
 
     private String safe(String value) {

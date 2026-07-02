@@ -26,11 +26,9 @@ public class CreateDiagnosisRequest {
     @Getter
     @NoArgsConstructor
     public static class InputData {
-        @NotBlank(message = "제품명은 필수입니다.")
         @Size(max = 200, message = "제품명은 200자 이하여야 합니다.")
         private String productName;
 
-        @NotBlank(message = "HS Code는 필수입니다.")
         @Pattern(regexp = "^\\d{6,10}$", message = "HS Code는 숫자 6~10자리여야 합니다.")
         private String hsCode;
 

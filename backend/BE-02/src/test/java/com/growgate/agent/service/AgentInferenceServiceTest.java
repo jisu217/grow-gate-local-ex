@@ -20,6 +20,9 @@ class AgentInferenceServiceTest {
 
         AgentInferenceService service = new AgentInferenceService(List.of(gemini, openRouter));
         ReflectionTestUtils.setField(service, "enabled", true);
+        ReflectionTestUtils.setField(service, "maxDailyRequestsPerUser", 30);
+        ReflectionTestUtils.setField(service, "maxDailyRequestsGlobal", 300);
+        ReflectionTestUtils.setField(service, "maxPromptChars", 12000);
 
         AgentInferenceResult result = service.infer(request());
 
@@ -37,6 +40,9 @@ class AgentInferenceServiceTest {
 
         AgentInferenceService service = new AgentInferenceService(List.of(gemini, openRouter));
         ReflectionTestUtils.setField(service, "enabled", true);
+        ReflectionTestUtils.setField(service, "maxDailyRequestsPerUser", 30);
+        ReflectionTestUtils.setField(service, "maxDailyRequestsGlobal", 300);
+        ReflectionTestUtils.setField(service, "maxPromptChars", 12000);
 
         AgentInferenceResult result = service.infer(request());
 
@@ -54,6 +60,9 @@ class AgentInferenceServiceTest {
                 new FakeProvider("openrouter", AgentInferenceResult.failure("openrouter", "429"))
         ));
         ReflectionTestUtils.setField(service, "enabled", true);
+        ReflectionTestUtils.setField(service, "maxDailyRequestsPerUser", 30);
+        ReflectionTestUtils.setField(service, "maxDailyRequestsGlobal", 300);
+        ReflectionTestUtils.setField(service, "maxPromptChars", 12000);
 
         AgentInferenceResult result = service.infer(request());
 
@@ -69,6 +78,9 @@ class AgentInferenceServiceTest {
                         "401 Bearer sk-or-v1-test-secret-token apiKey=sk-or-v1-test-secret-token"))
         ));
         ReflectionTestUtils.setField(service, "enabled", true);
+        ReflectionTestUtils.setField(service, "maxDailyRequestsPerUser", 30);
+        ReflectionTestUtils.setField(service, "maxDailyRequestsGlobal", 300);
+        ReflectionTestUtils.setField(service, "maxPromptChars", 12000);
 
         AgentInferenceResult result = service.infer(request());
 
@@ -76,13 +88,50 @@ class AgentInferenceServiceTest {
         assertThat(result.getFallbackReasons().get(0)).doesNotContain("sk-or-v1-test-secret-token");
     }
 
+    @Test
+    void inferStopsBeforeProviderWhenUserDailyQuotaIsReached() {
+        FakeProvider gemini = new FakeProvider("gemini", AgentInferenceResult.success(
+                "gemini", "gemini-2.5-flash", Map.of("summary", "ok"), List.of(), 10));
+        AgentInferenceService service = new AgentInferenceService(List.of(gemini));
+        ReflectionTestUtils.setField(service, "enabled", true);
+        ReflectionTestUtils.setField(service, "maxDailyRequestsPerUser", 1);
+        ReflectionTestUtils.setField(service, "maxDailyRequestsGlobal", 300);
+        ReflectionTestUtils.setField(service, "maxPromptChars", 12000);
+
+        AgentInferenceResult first = service.infer(request());
+        AgentInferenceResult second = service.infer(request());
+
+        assertThat(first.isSucceeded()).isTrue();
+        assertThat(second.isSucceeded()).isFalse();
+        assertThat(second.getFallbackReasons()).contains("budget guard: user daily LLM quota reached");
+        assertThat(gemini.calls).isEqualTo(1);
+    }
+
+    @Test
+    void inferStopsBeforeProviderWhenPromptContextIsTooLarge() {
+        FakeProvider gemini = new FakeProvider("gemini", AgentInferenceResult.success(
+                "gemini", "gemini-2.5-flash", Map.of("summary", "ok"), List.of(), 10));
+        AgentInferenceService service = new AgentInferenceService(List.of(gemini));
+        ReflectionTestUtils.setField(service, "enabled", true);
+        ReflectionTestUtils.setField(service, "maxDailyRequestsPerUser", 30);
+        ReflectionTestUtils.setField(service, "maxDailyRequestsGlobal", 300);
+        ReflectionTestUtils.setField(service, "maxPromptChars", 20);
+
+        AgentInferenceResult result = service.infer(request());
+
+        assertThat(result.isSucceeded()).isFalse();
+        assertThat(result.getFallbackReasons().get(0)).contains("budget guard: prompt context too large");
+        assertThat(gemini.calls).isZero();
+    }
+
     private AgentInferenceRequest request() {
         return AgentInferenceRequest.builder()
+                .userId("user-1")
                 .diagnosisId("diagnosis-1")
                 .productName("Battery Pack")
                 .hsCode("850760")
                 .targetCountry("DE")
-                .ragContext(Map.of("knowledge", "FTO review needed"))
+                .evidenceContext(Map.of("knowledge", "FTO review needed"))
                 .build();
     }
 

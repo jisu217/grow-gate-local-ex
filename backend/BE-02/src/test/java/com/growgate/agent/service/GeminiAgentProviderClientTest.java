@@ -21,6 +21,9 @@ import static org.mockito.Mockito.when;
 
 class GeminiAgentProviderClientTest {
 
+    private static final String MASKED_GOOGLE_KEY = "GOOGLE_API_KEY_FOR_TEST_ONLY";
+    private static final String MASKED_OAUTH_TOKEN = "GOOGLE_OAUTH_TOKEN_FOR_TEST_ONLY";
+
     @Test
     @SuppressWarnings("unchecked")
     void inferSendsGoogleApiKeyOnlyInHeader() {
@@ -43,8 +46,10 @@ class GeminiAgentProviderClientTest {
         assertThat(uri.toString()).isEqualTo(
                 "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent");
         assertThat(uri.toString()).doesNotContain("AIza");
-        assertThat(entity.getHeaders().getFirst("x-goog-api-key")).startsWith("AIza");
+        assertThat(entity.getHeaders().getFirst("x-goog-api-key")).isEqualTo(MASKED_GOOGLE_KEY);
         assertThat(entity.getBody().toString()).doesNotContain("AIza");
+        assertThat(entity.getBody()).containsKey("generationConfig");
+        assertThat(entity.getBody().get("generationConfig").toString()).contains("maxOutputTokens");
     }
 
     @Test
@@ -53,14 +58,14 @@ class GeminiAgentProviderClientTest {
         GeminiAgentProviderClient client = configuredClient(restTemplate);
         when(restTemplate.postForObject(any(URI.class), any(HttpEntity.class), eq(Map.class)))
                 .thenThrow(new RestClientException(
-                        "403 key=AIzaSyTestSecretToken1234567890 token=AQ.Ab8TestSecretToken1234567890"));
+                        "403 key=" + MASKED_GOOGLE_KEY + " token=" + MASKED_OAUTH_TOKEN));
 
         AgentInferenceResult result = client.infer(request()).orElseThrow();
 
         assertThat(result.isSucceeded()).isFalse();
         assertThat(result.getErrorMessage()).contains("[REDACTED]");
-        assertThat(result.getErrorMessage()).doesNotContain("AIzaSyTestSecretToken1234567890");
-        assertThat(result.getErrorMessage()).doesNotContain("AQ.Ab8TestSecretToken1234567890");
+        assertThat(result.getErrorMessage()).doesNotContain(MASKED_GOOGLE_KEY);
+        assertThat(result.getErrorMessage()).doesNotContain(MASKED_OAUTH_TOKEN);
     }
 
     @Test
@@ -74,19 +79,21 @@ class GeminiAgentProviderClientTest {
     private GeminiAgentProviderClient configuredClient(RestTemplate restTemplate) {
         GeminiAgentProviderClient client = new GeminiAgentProviderClient(restTemplate, new ObjectMapper());
         ReflectionTestUtils.setField(client, "enabled", true);
-        ReflectionTestUtils.setField(client, "apiKey", "AIzaSyTestSecretToken1234567890");
+        ReflectionTestUtils.setField(client, "apiKey", MASKED_GOOGLE_KEY);
         ReflectionTestUtils.setField(client, "model", "gemini-2.5-flash");
         ReflectionTestUtils.setField(client, "baseUrl", "https://generativelanguage.googleapis.com/v1beta");
+        ReflectionTestUtils.setField(client, "maxOutputTokens", 1024);
         return client;
     }
 
     private AgentInferenceRequest request() {
         return AgentInferenceRequest.builder()
+                .userId("user-1")
                 .diagnosisId("diagnosis-1")
                 .productName("Battery Pack")
                 .hsCode("850760")
                 .targetCountry("DE")
-                .ragContext(Map.of("knowledge", "FTO review needed"))
+                .evidenceContext(Map.of("knowledge", "FTO review needed"))
                 .scoringContext(Map.of("overall", 72))
                 .build();
     }

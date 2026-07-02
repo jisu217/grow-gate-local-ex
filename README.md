@@ -40,6 +40,7 @@
 최근 제출 보완 내역은 [docs/submission-update-report.md](docs/submission-update-report.md)에 정리했습니다. 첨부 평가 항목별 완료/미완료 판정은 [docs/evaluation-resolution-status.md](docs/evaluation-resolution-status.md)에서 확인할 수 있습니다. 팀 공유용 업데이트 요약은 [docs/team-update-2026-06-30-submission-hardening.md](docs/team-update-2026-06-30-submission-hardening.md)에 별도로 정리했습니다.
 
 심사 대응 기준 문서는 [docs/top15-resolution-2026-07-01.md](docs/top15-resolution-2026-07-01.md)입니다. 15개 치명 항목의 처리 상태, code reference, 남은 상용화 과제를 이 문서에 고정했습니다.
+90점권 시연 증거 기준은 [docs/judge-defense-90.md](docs/judge-defense-90.md), 공공데이터 metric/score 매핑은 [docs/public-data-field-mapping.md](docs/public-data-field-mapping.md), 발표 서버 환경 변수 템플릿은 [.env.example.presentation](.env.example.presentation)에 정리했습니다.
 
 | 홈 | 수출 Gate 판단 결과 |
 | :--- | :--- |
@@ -69,8 +70,10 @@ GROW-GATE Local EX는 이 질문을 바이어 회신 가능한 Gate 판단과 �
 | 규칙 기반 스코어링 | HS Code, 대상국, 인증 만료, FTO 위험, 바이어 요구사항, 지식 신뢰도, 출처 수를 점수에 반영 |
 | 공공데이터 근거 추적 | 관세청, KOTRA, Safety Korea, KIPRIS, 지원사업의 live/cache/fallback 수집 상태와 metric 기반 contribution을 `sourceId`, `matchedKey`, `usedFor`, `confidenceAdjustedContribution`으로 반환 |
 | 안전 공개 웹 크롤링 | API가 없거나 보조 근거가 필요한 경우, 명시된 HTTPS allowlist URL만 수집해 마스킹/전처리 후 `sourceType=crawl`로 적재 |
+| source-bound evidence retrieval | 제품 지식, 담당자 문서, 공공데이터 record, 승인된 loop 항목을 출처가 묶인 top-k evidence chunk로 검색 |
+| export knowledge timeline | sourceId, sourceType, fetchedAt, publishedAt/sourcePeriod, scoreImpact를 분리해 “언제 수집한 어떤 근거가 점수에 영향 줬는지” 표시 |
 | self-loop wiki 근거화 | 제품 지식, 인증, FTO, 바이어 요구, 공공데이터 record를 chunk화하고 담당자 승인 지식화 후보를 다음 판단 context에 재사용 |
-| Agent loop | Spring `AgentLoop`가 plan, tool call, observation, verifier, retry, fallback, complete task를 기록 |
+| Workflow trace | Spring `AgentLoop`가 plan, tool call, observation, verifier, retry, fallback, complete task를 기록 |
 | Gate 업무 보드 | 이번 주, 견적 전, 출하 전 단위로 담당자, 산출물, 시험·인증 태스크를 정리 |
 | 팀 운영실 | 데이터 활용도, 부족 데이터, 역할자별 기획 완성도, 입상 가능성, 개선 액션을 점수화 |
 | 코드 게이트 | 리뷰 체크리스트, 커밋 전 확인, 로컬 Git 커밋, GitHub push 가이드를 제공 |
@@ -87,11 +90,11 @@ GROW-GATE Local EX는 이 질문을 바이어 회신 가능한 Gate 판단과 �
 | KIPRIS Plus Open API | 기본 공식 신청 페이지 `https://plus.kipris.or.kr/eng/main/contents.do?menuNo=300024`, `KIPRIS_API_KEY` 또는 `KIPRIS_PLUS_KEY` 사용 | 특허/FTO 점수 contribution |
 | 기업마당·지원사업 | 기본 공식 포털 `https://www.exportvoucher.com/`, 실제 operation endpoint 설정 시 live 수집 | 지원사업/실행 가능성 점수 |
 
-현재 제출용 Spring 앱은 `PUBLIC_DATA_ENABLED=true`가 기본값입니다. API key와 실제 operation endpoint가 있으면 live 공공 API를 호출하고, key가 없거나 호출이 실패하면 `public_data_collection_runs`, `public_data_records`에 fallback 사유를 저장합니다. 공식 카탈로그/신청 페이지 URL은 출처 추적용 기본값으로 보존하되, HTML 상세 페이지를 API 응답으로 저장하지 않도록 fallback 처리합니다. 메인 진단 결과에는 `live`, `cache`, `fallback`, `heuristic`, `agent` sourceType과 confidence-adjusted 점수 기여도, provider별 metric signal이 표시됩니다.
+현재 제출용 Spring 앱은 `PUBLIC_DATA_ENABLED=true`가 기본값입니다. API key와 실제 operation endpoint가 있으면 live 공공 API를 호출하고, key가 없거나 호출이 실패하면 `public_data_collection_runs`, `public_data_records`에 fallback 사유를 저장합니다. 공식 카탈로그/신청 페이지 URL은 출처 추적용 기본값으로 보존하되, HTML 상세 페이지를 API 응답으로 저장하지 않도록 fallback 처리합니다. 메인 진단 결과에는 `live`, `cache`, `fallback`, `heuristic`, `agent` sourceType과 confidence-adjusted 점수 기여도, provider별 metric signal이 표시됩니다. 여기서 `agent`는 점수 산출 주체가 아니라 선택형 분석 bridge와 workflow trace를 나타내는 보조 출처입니다.
 
 필요할 때만 `PUBLIC_DATA_CRAWL_ENABLED=true`와 `PUBLIC_DATA_CRAWL_URLS=https://...`를 설정해 산업부/KOTRA/SafetyKorea 등 allowlist 공개 페이지를 보조 근거로 수집할 수 있습니다. 크롤링 결과는 script/style 제거, 개인정보/키 패턴 마스킹, 길이 제한, keyword metric 전처리를 거친 뒤 `sourceType=crawl`로 표시되며, 공공 API live record와 구분됩니다.
 
-벡터형 대규모 RAG 검색 또는 성과 확률 산출이라고 주장하지 않습니다. 제출 서버의 현재 구현은 DB 지식과 공공데이터 record를 chunk화한 뒤 담당자가 승인한 self-loop wiki 항목을 다음 판단 context에 재사용하는 방식입니다. 대규모 문서 검색은 pgvector/Redis 등으로 교체 가능한 후속 과제입니다.
+벡터형 대규모 RAG 검색 또는 성과 확률 산출이라고 주장하지 않습니다. 제출 서버의 현재 구현은 DB 지식과 공공데이터 record를 chunk화한 뒤 담당자가 승인한 self-loop wiki 항목을 다음 판단 context에 재사용하고, `evidenceRetrieval`, `exportKnowledgeTimeline`, `evidenceGuardrails`로 근거 범위와 fallback 정책을 화면에 드러내는 방식입니다. 대규모 문서 검색은 pgvector/Redis 등으로 교체 가능한 후속 과제입니다.
 
 ---
 
@@ -216,8 +219,11 @@ flowchart LR
   S --> R["Risk Work Items<br/>owner, evidence, due date, next action"]
   E --> F["This Week / Before Quote / Before Shipment Board"]
   C --> T["Source Trace<br/>live, cache, fallback, heuristic, metricSummary, decisionImpact"]
+  S --> P["Python Worker/FastAPI<br/>data collection, preprocessing, evidence artifacts"]
+  P --> C
+  P --> T
   S --> W["Self-loop Wiki<br/>manager-approved knowledge candidates"]
-  D["FastAPI/HTML Demo"] -. optional prototype .-> C
+  D["HTML Demo"] -. separate local demo .-> P
 ```
 
 ---
@@ -290,8 +296,10 @@ BASE_URL=https://your-domain.example ./scripts/smoke-prod.sh
 - CORS origin은 환경변수로 제한합니다.
 - 공공데이터 run/record 조회는 user/company scope로 제한합니다.
 - 공공 API/LLM key는 환경변수 또는 secret manager로만 주입하고 repository에 저장하지 않습니다.
+- Gemini/OpenRouter 보조 추론은 기본 비활성화(`APP_AGENT_ENABLED=false`)이며, 활성화 시에도 사용자별/전체 일일 호출량, prompt 크기, output token 상한을 서버에서 강제합니다.
+- 현재 제출 서버는 결제/환불 기능을 제공하지 않습니다. 유료화 시에는 결제 API, 환불 정책, 정산 로그, 관리자 승인 flow를 별도 release gate로 추가해야 합니다.
 - fallback 공공데이터는 `sourceType=fallback`으로 표시되며 점수를 올리지 않습니다.
-- `scripts/check-risk-gates.sh`가 실제 구현보다 앞서는 예측 모델 표현, S04~S07 mock 회귀, scope 누락, smoke test 누락을 차단합니다.
+- `scripts/check-risk-gates.sh`가 실제 구현보다 앞서는 예측 모델 표현, S04~S07 mock 회귀, scope 누락, LLM 예산 가드 누락, raw API key 커밋, smoke test 누락을 차단합니다.
 
 ---
 

@@ -48,6 +48,86 @@ CREATE INDEX IF NOT EXISTS idx_public_data_records_scope_fetched
 CREATE INDEX IF NOT EXISTS idx_public_data_records_cache
     ON public_data_records (provider, request_key, expires_at DESC);
 
+CREATE TABLE IF NOT EXISTS external_source_documents (
+    id VARCHAR(36) PRIMARY KEY,
+    diagnosis_id VARCHAR(36),
+    provider VARCHAR(80) NOT NULL,
+    source_type VARCHAR(20) NOT NULL,
+    source_url VARCHAR(700),
+    document_title VARCHAR(300),
+    content_hash VARCHAR(128),
+    fetched_at TIMESTAMP NOT NULL,
+    published_at TIMESTAMP,
+    raw_ref VARCHAR(120),
+    normalized_payload TEXT,
+    CONSTRAINT fk_external_source_documents_diagnosis FOREIGN KEY (diagnosis_id) REFERENCES diagnosis_runs(id)
+);
+
+CREATE TABLE IF NOT EXISTS evidence_claims (
+    id VARCHAR(36) PRIMARY KEY,
+    diagnosis_id VARCHAR(36),
+    source_document_id VARCHAR(36),
+    claim_text TEXT NOT NULL,
+    source_id VARCHAR(160) NOT NULL,
+    claim_type VARCHAR(40),
+    confidence DOUBLE PRECISION,
+    verifier_status VARCHAR(30) NOT NULL,
+    rejection_reason TEXT,
+    created_at TIMESTAMP NOT NULL,
+    CONSTRAINT fk_evidence_claims_diagnosis FOREIGN KEY (diagnosis_id) REFERENCES diagnosis_runs(id),
+    CONSTRAINT fk_evidence_claims_source_document FOREIGN KEY (source_document_id) REFERENCES external_source_documents(id)
+);
+
+CREATE TABLE IF NOT EXISTS temporal_events (
+    id VARCHAR(36) PRIMARY KEY,
+    diagnosis_id VARCHAR(36),
+    source_document_id VARCHAR(36),
+    event_type VARCHAR(80) NOT NULL,
+    event_time TIMESTAMP,
+    period_start TIMESTAMP,
+    period_end TIMESTAMP,
+    summary TEXT,
+    created_at TIMESTAMP NOT NULL,
+    CONSTRAINT fk_temporal_events_diagnosis FOREIGN KEY (diagnosis_id) REFERENCES diagnosis_runs(id),
+    CONSTRAINT fk_temporal_events_source_document FOREIGN KEY (source_document_id) REFERENCES external_source_documents(id)
+);
+
+CREATE TABLE IF NOT EXISTS knowledge_pages (
+    id VARCHAR(36) PRIMARY KEY,
+    product_id VARCHAR(36),
+    diagnosis_id VARCHAR(36),
+    page_type VARCHAR(40) NOT NULL,
+    country VARCHAR(40),
+    hs_code VARCHAR(20),
+    industry VARCHAR(80),
+    title VARCHAR(240) NOT NULL,
+    markdown TEXT NOT NULL,
+    status VARCHAR(30) NOT NULL,
+    created_at TIMESTAMP NOT NULL,
+    updated_at TIMESTAMP,
+    CONSTRAINT fk_knowledge_pages_product FOREIGN KEY (product_id) REFERENCES products(id),
+    CONSTRAINT fk_knowledge_pages_diagnosis FOREIGN KEY (diagnosis_id) REFERENCES diagnosis_runs(id)
+);
+
+CREATE TABLE IF NOT EXISTS agent_trace_steps (
+    id VARCHAR(36) PRIMARY KEY,
+    diagnosis_id VARCHAR(36),
+    step_order INTEGER NOT NULL,
+    step_name VARCHAR(120) NOT NULL,
+    tool_name VARCHAR(160),
+    status VARCHAR(30) NOT NULL,
+    retry_count INTEGER NOT NULL DEFAULT 0,
+    message TEXT,
+    attempted_at TIMESTAMP NOT NULL,
+    CONSTRAINT fk_agent_trace_steps_diagnosis FOREIGN KEY (diagnosis_id) REFERENCES diagnosis_runs(id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_evidence_claims_diagnosis_status
+    ON evidence_claims (diagnosis_id, verifier_status);
+
+CREATE INDEX IF NOT EXISTS idx_knowledge_pages_product_type
+    ON knowledge_pages (product_id, page_type, updated_at DESC);
+
 CREATE TABLE IF NOT EXISTS revoked_tokens (
     token_hash VARCHAR(64) PRIMARY KEY,
     expires_at TIMESTAMP NOT NULL,

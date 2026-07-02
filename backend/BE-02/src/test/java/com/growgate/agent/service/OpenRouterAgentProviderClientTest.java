@@ -42,6 +42,7 @@ class OpenRouterAgentProviderClientTest {
         assertThat(entity.getHeaders().getFirst("HTTP-Referer")).isEqualTo("https://growgate.local");
         assertThat(entity.getHeaders().getFirst("X-Title")).isEqualTo("GrowGate Local EX");
         assertThat(entity.getBody()).containsEntry("model", "google/gemini-2.5-flash");
+        assertThat(entity.getBody()).containsEntry("max_tokens", 1024);
         assertThat(entity.getBody().toString()).doesNotContain("sk-or-v1-test");
     }
 
@@ -77,16 +78,18 @@ class OpenRouterAgentProviderClientTest {
         ReflectionTestUtils.setField(client, "url", "https://openrouter.ai/api/v1/chat/completions");
         ReflectionTestUtils.setField(client, "siteUrl", "https://growgate.local");
         ReflectionTestUtils.setField(client, "appTitle", "GrowGate Local EX");
+        ReflectionTestUtils.setField(client, "maxOutputTokens", 1024);
         return client;
     }
 
     private AgentInferenceRequest request() {
         return AgentInferenceRequest.builder()
+                .userId("user-1")
                 .diagnosisId("diagnosis-1")
                 .productName("Battery Pack")
                 .hsCode("850760")
                 .targetCountry("DE")
-                .ragContext(Map.of("knowledge", "FTO review needed"))
+                .evidenceContext(Map.of("knowledge", "FTO review needed"))
                 .scoringContext(Map.of("overall", 72))
                 .build();
     }

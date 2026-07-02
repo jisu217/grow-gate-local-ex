@@ -590,7 +590,7 @@ public class KnowledgeService {
         KnowledgeSource source = KnowledgeSource.builder()
                 .knowledge(knowledge)
                 .url("growgate://diagnosis/" + nullToEmpty(item.getDiagnosisId()) + "/knowledge-loop/" + item.getId())
-                .documentName("[AI 지식화] " + item.getTitle())
+                .documentName("[근거 지식화] " + item.getTitle())
                 .retrievedAt(LocalDate.now())
                 .build();
         knowledgeSourceRepository.save(source);

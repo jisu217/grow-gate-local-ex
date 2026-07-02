@@ -31,6 +31,15 @@ require_file "scripts/smoke-prod.sh"
 require_file "scripts/verify-local.sh"
 require_file ".github/workflows/ci.yml"
 require_file "BUILD.md"
+require_file ".env.example.presentation"
+require_file "docs/public-data-field-mapping.md"
+require_file "docs/judge-defense-90.md"
+require_file "docs/evidence-workflow-redesign-2026-07-02.md"
+require_file "docs/security-sre-performance-review-2026-07-02.md"
+require_file "docs/python-worker-engine-contract-2026-07-02.md"
+require_file "docs/live-public-data-smoke-checklist-2026-07-02.md"
+require_file "docs/pdf-rendering-strategy-2026-07-02.md"
+require_file "docs/presentation-evidence-pack-2026-07-02.md"
 
 grep -q 'scripts/check-risk-gates.sh' "$ROOT_DIR/.github/workflows/ci.yml" \
   || fail "CI must run scripts/check-risk-gates.sh"
@@ -45,6 +54,18 @@ pass "public data defaults to enabled"
 if search_quiet 'MOCK_STAGES|S04_MARKETS|S05_REGULATIONS|S06_RECALLS|S07_PATENTS|S07_SUPPORTS' \
   "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js"; then
   fail "diagnosisService must not import or merge S04-S07 mock stage data"
+fi
+if search_quiet "import .*\\.\\./mock/" "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
+  "$ROOT_DIR/frontend/FE-02/src/services/productService.js"; then
+  fail "presentation services must lazy-load mock data only in explicit dev mock mode"
+fi
+search_quiet 'MOCK_ALLOWED.*!PRESENTATION_MODE.*!viteEnv\.PROD' "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
+  || fail "diagnosisService must block mock fallback in production/presentation mode"
+search_quiet 'MOCK_ALLOWED.*!PRESENTATION_MODE.*!viteEnv\.PROD' "$ROOT_DIR/frontend/FE-02/src/services/productService.js" \
+  || fail "productService must block mock fallback in production/presentation mode"
+if [[ -d "$ROOT_DIR/frontend/FE-02/dist" ]] && search_quiet 'CURRENT_SESSION|KPI_DATA|diag-001|S04_MARKETS|S05_REGULATIONS|S06_RECALLS|S07_PATENTS|S07_SUPPORTS|경남 배터리테크' \
+  "$ROOT_DIR/frontend/FE-02/dist"; then
+  fail "presentation build artifact must not contain demo mock diagnosis data"
 fi
 pass "S04-S07 diagnosis service mapping is backend-driven"
 
@@ -66,6 +87,67 @@ search_quiet 'thisWeek|beforeQuote|beforeShipment' "$ROOT_DIR/frontend/FE-02/src
 search_quiet 'metricSummary|decisionImpact' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
   || fail "public-data source entries must include metric summary and decision impact"
 pass "Gate decision, buyer context, and defensible wording are wired"
+
+search_quiet 'evidenceRetrieval' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "diagnosis result must expose evidenceRetrieval"
+search_quiet 'exportKnowledgeTimeline' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "diagnosis result must expose exportKnowledgeTimeline"
+search_quiet 'evidenceGuardrails' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "diagnosis result must expose evidenceGuardrails"
+search_quiet 'sourceTrustSummary' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "diagnosis result must expose sourceTrustSummary"
+search_quiet 'scoreContributionLedger' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "diagnosis result must expose scoreContributionLedger"
+search_quiet 'SourceTrustBar' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisResult.jsx" \
+  || fail "diagnosis result must render SourceTrustBar near the top"
+search_quiet 'Score contribution ledger' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/S10Sources.jsx" \
+  || fail "S10 must render score contribution ledger"
+search_quiet '/worker/diagnosis-v1' "$ROOT_DIR/grow_gate_local_ex_demo/backend/app.py" \
+  || fail "Python worker diagnosis contract endpoint must exist"
+search_quiet 'workerDiagnosis' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/FastApiAgentClient.java" \
+  || fail "Spring FastAPI client must call the Python worker diagnosis contract"
+search_quiet 'pythonWorker' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "diagnosis result must expose Python worker status"
+search_quiet 'normalizedMetrics' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "diagnosis result must expose normalized metrics from worker or Spring fallback"
+search_quiet 'compiledWiki' "$ROOT_DIR/grow_gate_local_ex_demo/backend/worker_engine.py" \
+  || fail "Python worker must compile wiki/log/error-book artifacts"
+search_quiet 'compiledWiki' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "Spring diagnosis result must preserve compiled wiki artifacts"
+search_quiet 'source-bound-evidence-search' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/agent/service/EvidenceContextBuilder.java" \
+  || fail "evidence retrieval must use defensible source-bound naming"
+search_quiet 'Export knowledge timeline' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/S10Sources.jsx" \
+  || fail "S10 must render export knowledge timeline"
+search_quiet 'LlmClaimVerifier' "$ROOT_DIR/backend/BE-02/src/test/java/com/growgate/agent/service/LlmClaimVerifierTest.java" \
+  || fail "LLM claim verifier tests must exist"
+search_quiet 'external_source_documents|evidence_claims|temporal_events|knowledge_pages|agent_trace_steps' "$ROOT_DIR/backend/BE-02/src/main/resources/db/01_schema.sql" \
+  || fail "external evidence schema tables must exist"
+if search_quiet 'AI 지식화|추론 Agent' "$ROOT_DIR/frontend/FE-02/src" "$ROOT_DIR/backend/BE-02/src/main/java"; then
+  fail "main app must avoid overclaiming AI/Agent wording in knowledge workflow"
+fi
+pass "evidence workflow exposes retrieval, timeline, guardrails, and defensible UI wording"
+
+grep -q 'max-daily-requests-per-user' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml" \
+  || fail "LLM agent must have per-user daily budget controls"
+grep -q 'max-daily-requests-global' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml" \
+  || fail "LLM agent must have global daily budget controls"
+grep -q 'max-prompt-chars' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml" \
+  || fail "LLM agent must cap prompt context size"
+grep -q 'max-output-tokens' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml" \
+  || fail "LLM provider calls must cap output tokens"
+search_quiet 'budget guard: user daily LLM quota reached' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/agent/service/AgentInferenceService.java" \
+  || fail "LLM agent service must stop calls when user quota is reached"
+search_quiet 'maxOutputTokens|max_tokens' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/agent/service" \
+  || fail "LLM provider request bodies must include output-token caps"
+if search_quiet 'VITE_.*(KEY|SECRET|TOKEN)|OPENROUTER|GEMINI|API_KEY|sk-or-v1-[A-Za-z0-9]{20,}|AQ\.Ab8[A-Za-z0-9_-]{12,}' \
+  "$ROOT_DIR/frontend/FE-02/src"; then
+  fail "frontend source must not contain LLM/API keys or public VITE secret variables"
+fi
+if search_quiet 'sk-or-v1-[A-Za-z0-9]{20,}|AQ\.Ab8[A-Za-z0-9_-]{12,}' \
+  "$ROOT_DIR/backend/BE-02/src/main/resources" "$ROOT_DIR/README.md" "$ROOT_DIR/docs" "$ROOT_DIR/scripts"; then
+  fail "repository files must not contain raw OpenRouter/Gemini token values"
+fi
+pass "LLM calls are budget-capped and raw keys are blocked from frontend/docs"
 
 search_quiet 'reportError|try \{|catch \(err\)' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisResult.jsx" \
   || fail "DiagnosisResult must surface report download errors"
@@ -120,6 +202,10 @@ grep -q 'SMOKE_CORS_ORIGIN' "$ROOT_DIR/scripts/smoke-prod.sh" \
   || fail "smoke-prod must support CORS preflight checks"
 grep -q 'SMOKE_REQUIRE_LIVE_PUBLIC_DATA' "$ROOT_DIR/scripts/smoke-prod.sh" \
   || fail "smoke-prod must support live public-data enforcement"
+grep -q 'live-public-data-smoke-evidence.json' "$ROOT_DIR/scripts/smoke-prod.sh" \
+  || fail "smoke-prod must capture live public-data evidence summary"
+grep -q 'diagnosisId=.*collectionRunId=.*liveCount' "$ROOT_DIR/scripts/smoke-prod.sh" \
+  || fail "smoke-prod must print diagnosisId, collectionRunId, and live/cache/fallback counts"
 grep -q 'gg_access_token=.*HttpOnly' "$ROOT_DIR/scripts/smoke-prod.sh" \
   || fail "smoke-prod must verify HttpOnly cookie login"
 grep -q 'stageCards.s04-s07=present' "$ROOT_DIR/scripts/smoke-prod.sh" \
@@ -127,5 +213,27 @@ grep -q 'stageCards.s04-s07=present' "$ROOT_DIR/scripts/smoke-prod.sh" \
 grep -q 'X-GG-CSRF' "$ROOT_DIR/scripts/smoke-prod.sh" \
   || fail "smoke-prod must send CSRF header when csrf cookie is present"
 pass "production smoke covers API/CORS/auth/stage/public-data risks"
+
+grep -q 'VITE_APP_MODE=presentation' "$ROOT_DIR/.env.example.presentation" \
+  || fail "presentation env must set VITE_APP_MODE=presentation"
+grep -q 'REQUIRE_LIVE_PUBLIC_DATA=true' "$ROOT_DIR/.env.example.presentation" \
+  || fail "presentation env must document live public-data enforcement"
+grep -q 'fallback source는 positive contribution' "$ROOT_DIR/docs/public-data-field-mapping.md" \
+  || fail "public-data field mapping must document fallback contribution policy"
+grep -q '90-Point Ready Gates' "$ROOT_DIR/docs/judge-defense-90.md" \
+  || fail "judge defense doc must include 90-point ready gates"
+grep -q 'Evidence Workflow Redesign' "$ROOT_DIR/docs/evidence-workflow-redesign-2026-07-02.md" \
+  || fail "evidence workflow redesign doc must describe the repositioning"
+grep -q 'Security/SRE/Performance Persona Review' "$ROOT_DIR/docs/security-sre-performance-review-2026-07-02.md" \
+  || fail "security/SRE/performance persona review must be documented"
+grep -q 'Python Worker Engine Contract' "$ROOT_DIR/docs/python-worker-engine-contract-2026-07-02.md" \
+  || fail "Python worker engine contract must be documented"
+grep -q 'live-public-data-smoke-evidence.json' "$ROOT_DIR/docs/live-public-data-smoke-checklist-2026-07-02.md" \
+  || fail "live public-data smoke checklist must document evidence output"
+grep -q 'Korean font rendering' "$ROOT_DIR/docs/pdf-rendering-strategy-2026-07-02.md" \
+  || fail "PDF strategy must document Korean font rendering gate"
+grep -q 'Source Trust Bar screenshot' "$ROOT_DIR/docs/presentation-evidence-pack-2026-07-02.md" \
+  || fail "presentation evidence pack must require Source Trust Bar screenshot"
+pass "evidence pack documents presentation env, field mapping, and judge defense"
 
 pass "all risk gates passed"

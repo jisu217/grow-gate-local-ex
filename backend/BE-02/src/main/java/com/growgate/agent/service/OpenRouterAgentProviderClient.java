@@ -42,6 +42,9 @@ public class OpenRouterAgentProviderClient extends AbstractLlmAgentProviderClien
     @Value("${app.agent.openrouter.app-title:GrowGate Local EX}")
     private String appTitle;
 
+    @Value("${app.agent.budget.max-output-tokens:1024}")
+    private int maxOutputTokens;
+
     public OpenRouterAgentProviderClient(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(objectMapper);
         this.restTemplate = restTemplate;
@@ -72,7 +75,9 @@ public class OpenRouterAgentProviderClient extends AbstractLlmAgentProviderClien
             headers.add("X-Title", appTitle == null || appTitle.isBlank() ? "GrowGate Local EX" : appTitle);
             Map<String, Object> body = Map.of(
                     "model", model,
-                    "messages", List.of(Map.of("role", "user", "content", buildPrompt(request)))
+                    "messages", List.of(Map.of("role", "user", "content", buildPrompt(request))),
+                    "temperature", 0.2,
+                    "max_tokens", Math.max(256, maxOutputTokens)
             );
             Map<String, Object> response = restTemplate.postForObject(url, new HttpEntity<>(body, headers), Map.class);
             String text = extractOpenRouterText(response);
