@@ -189,6 +189,108 @@ export function mapDiagnosisDetail(d, evidenceSources) {
   }
 }
 
+export function buildDecisionBrief(session = {}, stages = {}) {
+  const sourceSummary = session.sourceTrustSummary ?? {}
+  const fallbackCount = Number(
+    sourceSummary.fallbackCount
+      ?? session.confidencePanel?.fallbackSourceCount
+      ?? 0
+  )
+  const liveCount = Number(
+    sourceSummary.liveCount
+      ?? session.confidencePanel?.liveSourceCount
+      ?? 0
+  )
+  const cacheCount = Number(
+    sourceSummary.cacheCount
+      ?? session.confidencePanel?.cacheSourceCount
+      ?? 0
+  )
+  const gateDecision = session.gateDecision ?? {}
+  const topRisks = normalizeTopRisks(session.riskItems, gateDecision.mustFixBeforeQuote)
+  const nextActions = normalizeNextActions(stages.s08, gateDecision.mustFixBeforeQuote, topRisks)
+
+  return {
+    gateLabel: gateDecision.label ?? gateDecision.status ?? '조건부 검토',
+    gateReason: gateDecision.oneLineReason ?? '견적 확정 전 source trace와 담당자 확인이 필요합니다.',
+    fallbackReviewRequired: fallbackCount > 0,
+    fallbackMessage: fallbackCount > 0
+      ? `fallback 출처 ${fallbackCount}건이 포함되어 담당자 검토 후 바이어 회신을 확정해야 합니다.`
+      : 'live/cache 출처 중심으로 판단 근거가 구성되었습니다.',
+    sourceCounts: { live: liveCount, cache: cacheCount, fallback: fallbackCount },
+    topRisks,
+    nextActions,
+  }
+}
+
+function normalizeTopRisks(riskItems, mustFixBeforeQuote) {
+  const risks = Array.isArray(riskItems) ? riskItems : []
+  const mappedRisks = risks
+    .map((item, index) => ({
+      level: String(item.level ?? (index === 0 ? 'high' : 'medium')).toLowerCase(),
+      label: item.label ?? item.title ?? String(item),
+    }))
+    .filter((item) => item.label)
+
+  const mustFixRisks = (Array.isArray(mustFixBeforeQuote) ? mustFixBeforeQuote : [])
+    .map((item) => ({ level: 'high', label: item }))
+
+  const unique = [...mappedRisks, ...mustFixRisks].filter((item, index, list) =>
+    list.findIndex((candidate) => candidate.label === item.label) === index
+  )
+  const fallbackRisks = [
+    { level: 'medium', label: 'fallback 또는 cache 출처는 담당자가 원문 최신성을 확인해야 합니다.' },
+    { level: 'medium', label: 'FTO, 리콜, 인증 항목은 외부 전문가 확인 전 확정 표현을 피해야 합니다.' },
+    { level: 'low', label: '바이어 회신 전 HS Code, 대상국, 제품 사양 변경 여부를 재확인해야 합니다.' },
+  ]
+  const padded = [...unique]
+  fallbackRisks.forEach((item) => {
+    if (padded.length < 3 && !padded.some((risk) => risk.label === item.label)) {
+      padded.push(item)
+    }
+  })
+
+  return padded.slice(0, 3).length
+    ? padded.slice(0, 3)
+    : [{ level: 'medium', label: 'source trace와 등록 제품 지식을 담당자가 최종 확인해야 합니다.' }]
+}
+
+function normalizeNextActions(roadmapStage, mustFixBeforeQuote, topRisks) {
+  const roadmap = Array.isArray(roadmapStage) ? roadmapStage : []
+  const firstTask = (label) => roadmap
+    .find((bucket) => bucket.day === label || bucket.label === label)
+    ?.tasks?.find((task) => task?.title)
+
+  const todayTask = firstTask('이번 주') ?? roadmap[0]?.tasks?.find((task) => task?.title)
+  const quoteTask = firstTask('견적 전') ?? roadmap[1]?.tasks?.find((task) => task?.title)
+  const externalTask = firstTask('출하 전') ?? roadmap[2]?.tasks?.find((task) => task?.title)
+  const mustFix = Array.isArray(mustFixBeforeQuote) && mustFixBeforeQuote[0]
+    ? mustFixBeforeQuote[0]
+    : null
+  const risk = topRisks[0]?.label ?? '고위험 항목'
+
+  return [
+    {
+      bucket: '오늘 할 일',
+      title: todayTask?.title ?? mustFix ?? '바이어 문의 조건과 현재 보유 문서를 확인합니다.',
+      owner: todayTask?.who ?? todayTask?.owner ?? '수출 담당자',
+      output: todayTask?.output ?? '회신 가능/보류 판단',
+    },
+    {
+      bucket: '이번 주 할 일',
+      title: quoteTask?.title ?? '견적 전 필수 보완 항목을 완료합니다.',
+      owner: quoteTask?.who ?? quoteTask?.owner ?? '품질/인증 담당자',
+      output: quoteTask?.output ?? '보완 증빙 또는 검토 메모',
+    },
+    {
+      bucket: '외부기관 문의',
+      title: externalTask?.title ?? `${risk}에 대해 인증기관·변리사·지원기관에 확인합니다.`,
+      owner: externalTask?.who ?? externalTask?.owner ?? '담당자 + 외부 전문가',
+      output: externalTask?.output ?? '외부 확인 기록',
+    },
+  ]
+}
+
 function mapInputStage(stageData, detail) {
   if (Array.isArray(stageData) && stageData.length > 0) return stageData
   return [
@@ -548,6 +650,7 @@ export async function getDiagnosisReport(id) {
 export async function runDiagnosis(payload) {
   // productId 유무와 무관하게 백엔드 CreateDiagnosisRequest.InputData는
   // productName·hsCode를 항상 @NotBlank로 요구하므로 항상 함께 보낸다.
+  // (기존엔 productId가 있으면 두 값을 빼서 "제품명/HS Code는 필수" 오류로 진단 생성이 실패했음)
   const body = {
     productId: payload.productId ?? null,
     targetCountry: payload.targetMarket ?? payload.targetCountry,

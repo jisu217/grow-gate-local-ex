@@ -72,6 +72,31 @@ pass "S04-S07 diagnosis service mapping is backend-driven"
 if search_quiet 'XGBoost|xgboost|ML 예측|AI 진단' "$ROOT_DIR/frontend/FE-02/src"; then
   fail "main frontend must use defensible Gate/rule-scoring language, not XGBoost/AI diagnosis claims"
 fi
+if search_quiet '파이프라인 실행' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/S10Sources.jsx"; then
+  fail "S10 must not show a non-functional pipeline execution button"
+fi
+search_quiet 'DecisionBrief' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisResult.jsx" \
+  || fail "diagnosis result must show a first-screen decision brief"
+search_quiet 'buildDecisionBrief' "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
+  || fail "frontend must normalize top risks and next actions for non-expert users"
+search_quiet '오늘 할 일' "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
+  || fail "decision brief must include today action bucket"
+search_quiet '이번 주 할 일' "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
+  || fail "decision brief must include this-week action bucket"
+search_quiet '외부기관 문의' "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
+  || fail "decision brief must include external-inquiry action bucket"
+search_quiet 'fallback.*담당자 검토' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/GateDecisionHero.jsx" \
+  || fail "Gate area must warn when fallback sources require owner review"
+search_quiet 'Markdown 메모 다운로드' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/S09Report.jsx" \
+  || fail "report UI must describe the default customer artifact as Markdown, not ambiguous PDF"
+require_file "frontend/FE-02/src/mock/README.md"
+search_quiet 'Dev-only Fixtures' "$ROOT_DIR/frontend/FE-02/src/mock/README.md" \
+  || fail "mock fixtures must be documented as dev-only"
+search_quiet 'LEGACY DEMO - DO NOT JUDGE AS PRODUCTION APP' "$ROOT_DIR/GROW_GATE_Local_EX_standalone.html" \
+  || fail "standalone static demo must be clearly marked as legacy and not production evidence"
+if search_quiet 'AI Agent|수출 가능성 예측|성공 가능성' "$ROOT_DIR/GROW_GATE_Local_EX_standalone.html"; then
+  fail "standalone legacy demo must not use overclaim wording"
+fi
 search_quiet 'GateDecisionHero' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisResult.jsx" \
   || fail "diagnosis result must show gate decision before detailed stages"
 search_quiet 'gateDecision' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \

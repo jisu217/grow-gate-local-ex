@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict'
-import { mapDiagnosisDetail } from './diagnosisService.js'
+import { buildDecisionBrief, mapDiagnosisDetail } from './diagnosisService.js'
 
 const detail = {
   id: 'diag-1',
@@ -83,6 +83,11 @@ const detail = {
       fallbackPositiveContributionCount: 0,
       officialLiveOrCacheRecordCount: 1,
     },
+    sourceTrustSummary: {
+      liveCount: 1,
+      cacheCount: 0,
+      fallbackCount: 1,
+    },
   },
 }
 
@@ -108,6 +113,17 @@ assert.equal(mapped.stages.s10.pipes[0].status, 'live')
 assert.equal(mapped.stages.s10.pipes[0].metricSummary, 'exportAmountUsd=45678')
 assert.equal(mapped.stages.s10.evidenceRetrieval.topK[0].sourceId, 'KCS_TRADE-1')
 assert.equal(mapped.stages.s10.timeline[0].scoreImpact, 9)
+
+const decisionBrief = buildDecisionBrief(mapped.session, mapped.stages)
+assert.equal(decisionBrief.fallbackReviewRequired, true)
+assert.match(decisionBrief.fallbackMessage, /담당자 검토/)
+assert.equal(decisionBrief.topRisks.length, 3)
+assert.deepEqual(
+  decisionBrief.nextActions.map((action) => action.bucket),
+  ['오늘 할 일', '이번 주 할 일', '외부기관 문의']
+)
+assert.equal(decisionBrief.nextActions[0].title, 'UN38.3 보유 여부 확인')
+assert.equal(decisionBrief.nextActions[2].owner, '해외영업')
 
 const sparseMapped = mapDiagnosisDetail({
   id: 'diag-empty',

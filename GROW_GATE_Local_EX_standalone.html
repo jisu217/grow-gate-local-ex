@@ -1,10 +1,15 @@
 <!doctype html>
+<!--
+  LEGACY DEMO - DO NOT JUDGE AS PRODUCTION APP
+  제출/시연 기준 구현은 frontend/FE-02 React 앱과 backend/BE-02 Spring API입니다.
+  이 파일은 오프라인 레이아웃 보존용 정적 데모이며 공공 API, 인증, 권한, live 수집 검증 대상이 아닙니다.
+-->
 <html lang="ko">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>GROW-GATE Local EX Demo</title>
-  <meta name="description" content="지역 제조기업 수출규제·인증 실행 AI 에이전트 시연 화면" />
+  <title>GROW-GATE Local EX Legacy Demo</title>
+  <meta name="description" content="지역 제조기업 수출규제·인증 실행 워크플로 정적 레거시 데모" />
   <style>
 :root {
   --bg: #06111f;
@@ -58,6 +63,21 @@ button { cursor: pointer; }
   width: min(1720px, 100%);
   margin: 0 auto;
   padding: 32px;
+}
+
+.legacy-demo-banner {
+  margin: 0 0 18px;
+  border: 1px solid rgba(255, 190, 59, 0.55);
+  background: rgba(255, 190, 59, 0.12);
+  color: #ffe3a1;
+  border-radius: 14px;
+  padding: 14px 16px;
+  font-size: 13px;
+  line-height: 1.55;
+}
+
+.legacy-demo-banner b {
+  color: #fff;
 }
 
 .hero {
@@ -510,6 +530,10 @@ footer {
 </head>
 <body>
   <div class="app-shell">
+    <div class="legacy-demo-banner">
+      <b>LEGACY DEMO - 제출 심사 대상 아님.</b>
+      실제 구현은 React FE-02 + Spring BE-02 앱입니다. 이 파일은 오프라인 화면 보존용이며 live 공공데이터, 인증, 권한, 보고서 검증을 수행하지 않습니다.
+    </div>
     <header class="hero">
       <section class="hero-title">
         <p class="eyebrow">산업부 공공데이터 활용 서비스 시연</p>
@@ -592,7 +616,7 @@ footer {
             <label class="check"><input id="hasLabelDraft" type="checkbox" checked /> 라벨·매뉴얼 초안 보유</label>
           </fieldset>
           <div class="button-row">
-            <button type="submit" class="primary">AI Agent 분석 실행</button>
+            <button type="submit" class="primary">워크플로 분석 실행</button>
             <button type="button" id="fillSample" class="secondary">샘플값</button>
           </div>
           <label class="switch-row">
@@ -606,7 +630,7 @@ footer {
       <section class="map-panel panel">
         <div class="panel-heading horizontal">
           <div>
-            <p class="eyebrow">AI ANALYTICS ENGINE</p>
+            <p class="eyebrow">WORKFLOW ANALYTICS</p>
             <h2>Regulation-to-Market Twin</h2>
           </div>
           <div class="live-badge"><span></span> DEMO LIVE</div>
@@ -648,14 +672,14 @@ footer {
         </div>
 
         <div class="data-flow" aria-label="데이터 처리 흐름">
-          <div class="flow-item active">AI Agent</div>
+          <div class="flow-item active">워크플로 분석</div>
           <div class="flow-item">무역 데이터</div>
           <div class="flow-item">규제·관세</div>
           <div class="flow-item">인증·표준</div>
           <div class="flow-item">리콜 정보</div>
           <div class="flow-item">특허·FTO</div>
           <div class="flow-item">지원사업</div>
-          <div class="flow-item success">수출 가능성 예측</div>
+          <div class="flow-item success">수출 준비도 추정</div>
         </div>
       </section>
 
@@ -1689,7 +1713,7 @@ function buildRoadmap(request, regulations, recalls, patents, supports) {
         "시험 결과 보완사항을 설계·라벨·포장에 반영",
         "리콜 위험 기반 FMEA와 출하 전 품질 체크리스트를 운영",
         "수출단가, 물류 리드타임, 통관 서류, A/S 정책을 견적서에 반영",
-        "성공 가능성이 높은 1개 국가부터 파일럿 주문·샘플 발송을 진행",
+        "준비도와 근거가 비교적 충분한 1개 국가부터 파일럿 주문·샘플 발송을 진행",
       ],
       output: "수출 실행 패키지, FMEA, 파일럿 바이어 제안서, 2차 지원사업 계획",
       owner: "대표이사 / 해외영업 / 품질책임자",
@@ -1790,11 +1814,11 @@ async function runAnalysis(event) {
       });
       if (!response.ok) throw new Error(`API ${response.status}`);
       lastResult = await response.json();
-      showToast("FastAPI AI Agent 분석 완료");
+      showToast("FastAPI 워크플로 분석 완료");
     } else {
       await wait(240);
       lastResult = analyzeLocal(request);
-      showToast("로컬 JS AI Agent 분석 완료");
+      showToast("로컬 JS 워크플로 분석 완료");
     }
   } catch (error) {
     console.warn(error);
@@ -1813,7 +1837,7 @@ function wait(ms) { return new Promise((resolve) => setTimeout(resolve, ms)); }
 function setBusy(isBusy) {
   const button = $("button[type='submit']");
   button.disabled = isBusy;
-  button.textContent = isBusy ? "분석 중..." : "AI Agent 분석 실행";
+  button.textContent = isBusy ? "분석 중..." : "워크플로 분석 실행";
 }
 
 function updateBackendState() {

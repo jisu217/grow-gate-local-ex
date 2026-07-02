@@ -74,6 +74,7 @@ GROW-GATE Local EX는 이 질문을 바이어 회신 가능한 Gate 판단과 �
 | export knowledge timeline | sourceId, sourceType, fetchedAt, publishedAt/sourcePeriod, scoreImpact를 분리해 “언제 수집한 어떤 근거가 점수에 영향 줬는지” 표시 |
 | self-loop wiki 근거화 | 제품 지식, 인증, FTO, 바이어 요구, 공공데이터 record를 chunk화하고 담당자 승인 지식화 후보를 다음 판단 context에 재사용 |
 | Workflow trace | Spring `AgentLoop`가 plan, tool call, observation, verifier, retry, fallback, complete task를 기록 |
+| Decision Brief | 결과 첫 화면에서 Gate 판단, 핵심 위험 3개, `오늘 할 일`/`이번 주 할 일`/`외부기관 문의` 3개 행동을 먼저 표시 |
 | Gate 업무 보드 | 이번 주, 견적 전, 출하 전 단위로 담당자, 산출물, 시험·인증 태스크를 정리 |
 | 팀 운영실 | 데이터 활용도, 부족 데이터, 역할자별 기획 완성도, 입상 가능성, 개선 액션을 점수화 |
 | 코드 게이트 | 리뷰 체크리스트, 커밋 전 확인, 로컬 Git 커밋, GitHub push 가이드를 제공 |
@@ -140,6 +141,8 @@ http://localhost:5173
 ```
 
 ### 2. 보조 정적 데모 보기
+
+아래 정적 데모는 레이아웃 보존용 보조 화면입니다. 제출 판단 대상은 `frontend/FE-02`와 `backend/BE-02` 메인 앱이며, root의 `GROW_GATE_Local_EX_standalone.html`에는 `LEGACY DEMO - DO NOT JUDGE AS PRODUCTION APP` 배너를 표시합니다.
 
 ```bash
 cd grow_gate_local_ex_demo
@@ -301,7 +304,7 @@ BASE_URL=https://your-domain.example ./scripts/smoke-prod.sh
 - Google Sign-In은 제출 서버 기본값에서 비활성화(`GOOGLE_SSO_ENABLED=false`)합니다. 정식 도메인, OAuth consent screen, 개인정보 처리방침 URL, 서버측 ID token 검증이 준비된 release에서만 켭니다.
 - 현재 제출 서버는 결제/환불 기능을 제공하지 않습니다. 유료화 시에는 결제 API, 환불 정책, 정산 로그, 관리자 승인 flow를 별도 release gate로 추가해야 합니다.
 - fallback 공공데이터는 `sourceType=fallback`으로 표시되며 점수를 올리지 않습니다.
-- `scripts/check-risk-gates.sh`가 실제 구현보다 앞서는 예측 모델 표현, S04~S07 mock 회귀, scope 누락, LLM 예산 가드 누락, raw API key 커밋, smoke test 누락을 차단합니다.
+- `scripts/check-risk-gates.sh`가 실제 구현보다 앞서는 예측 모델 표현, S04~S07 mock 회귀, 비기능 버튼, Decision Brief 누락, scope 누락, LLM 예산 가드 누락, raw API key 커밋, smoke test 누락을 차단합니다.
 
 ---
 

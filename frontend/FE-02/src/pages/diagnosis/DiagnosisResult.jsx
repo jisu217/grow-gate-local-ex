@@ -7,6 +7,7 @@ import KpiRow  from '../../components/layout/KpiRow.jsx'
 import Pager   from '../../components/ui/Pager.jsx'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
 import GateDecisionHero from '../../components/diagnosis/GateDecisionHero.jsx'
+import DecisionBrief from '../../components/diagnosis/DecisionBrief.jsx'
 import SourceTrustBar from '../../components/diagnosis/SourceTrustBar.jsx'
 
 import S00Overview   from '../../components/diagnosis/S00Overview.jsx'
@@ -173,7 +174,9 @@ export default function DiagnosisResult() {
             gateDecision={result.session.gateDecision}
             impactEstimate={result.session.impactEstimate}
             confidencePanel={result.session.confidencePanel}
+            sourceTrustSummary={result.session.sourceTrustSummary}
           />
+          <DecisionBrief session={result.session} stages={result.stages} />
           <SourceTrustBar summary={result.session.sourceTrustSummary} />
 
           {['pending', 'running'].includes(String(result.session?.status ?? '').toLowerCase()) && (

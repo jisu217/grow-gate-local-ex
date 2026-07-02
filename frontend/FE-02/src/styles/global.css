@@ -260,6 +260,17 @@ body {
 }
 .gate-status { font-size: 30px; font-weight: 800; color: var(--navy); }
 .gate-main p { font-size: 14px; color: var(--slate); max-width: 780px; }
+.gate-warning {
+  margin: 0 0 14px;
+  border: 1px solid #f3b8b0;
+  background: #fff1f0;
+  color: #9f2418;
+  border-radius: 10px;
+  padding: 11px 13px;
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1.45;
+}
 .gate-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
 .gate-grid div {
   min-height: 96px;
@@ -275,6 +286,148 @@ body {
 .gate-fix { margin-top: 14px; border-top: 1px solid rgba(185,197,219,.75); padding-top: 14px; }
 .gate-fix ul { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px 16px; padding-left: 18px; }
 .gate-fix li { font-size: 13px; color: var(--ink); }
+
+.decision-brief {
+  border: 1px solid var(--line);
+  background: var(--card);
+  border-radius: 8px;
+  padding: 18px;
+  margin: 0 0 18px;
+  box-shadow: 0 1px 3px rgba(15, 27, 61, 0.04);
+}
+.decision-brief-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 14px;
+}
+.decision-brief-kicker {
+  display: block;
+  font-family: var(--en);
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--green);
+  text-transform: uppercase;
+  letter-spacing: .08em;
+  margin-bottom: 6px;
+}
+.decision-brief h2 {
+  margin: 0 0 6px;
+  font-size: 22px;
+  color: var(--ink);
+}
+.decision-brief p {
+  margin: 0;
+  color: var(--slate);
+  font-size: 13px;
+  line-height: 1.5;
+}
+.decision-source-mini {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+}
+.decision-source-mini span {
+  border: 1px solid var(--line);
+  background: #fafbfe;
+  border-radius: 999px;
+  padding: 5px 9px;
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--slate);
+}
+.decision-source-mini .danger {
+  border-color: #f3b8b0;
+  color: #b42318;
+  background: #fff1f0;
+}
+.decision-warning {
+  margin: 0 0 14px;
+  border: 1px solid #f3b8b0;
+  background: #fff7f6;
+  color: #9f2418;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 13px;
+  font-weight: 700;
+}
+.decision-brief-grid {
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.35fr);
+  gap: 12px;
+}
+.decision-panel {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fafbfe;
+  padding: 14px;
+}
+.decision-panel h3 {
+  margin: 0 0 10px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.decision-panel ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 8px;
+}
+.decision-panel li {
+  display: grid;
+  grid-template-columns: 64px minmax(0, 1fr);
+  gap: 8px;
+  align-items: start;
+}
+.risk-dot {
+  display: inline-flex;
+  justify-content: center;
+  border-radius: 999px;
+  padding: 3px 7px;
+  border: 1px solid var(--line);
+  font-family: var(--en);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.risk-dot.high { color: #b42318; border-color: #f3b8b0; background: #fff1f0; }
+.risk-dot.medium { color: var(--amber); border-color: #f3e2bf; background: #fdf7e9; }
+.risk-dot.low { color: var(--green); border-color: #bfe6d2; background: #eaf7f0; }
+.action-strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+.decision-action {
+  min-height: 116px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--card);
+  padding: 12px;
+}
+.decision-action span {
+  display: block;
+  margin-bottom: 7px;
+  color: var(--blue);
+  font-size: 11px;
+  font-weight: 800;
+}
+.decision-action strong {
+  display: block;
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.decision-action small {
+  display: block;
+  margin-top: 8px;
+  color: var(--slate-2);
+  font-size: 11px;
+  line-height: 1.4;
+}
 
 .memo {
   border: 1px solid var(--blue-line);
@@ -1011,6 +1164,17 @@ body {
   }
   .source-trust-bar {
     grid-template-columns: 1fr;
+  }
+  .decision-brief-head,
+  .decision-brief-grid,
+  .action-strip {
+    grid-template-columns: 1fr;
+  }
+  .decision-brief-head {
+    display: grid;
+  }
+  .decision-source-mini {
+    justify-content: flex-start;
   }
   .board, .mkt-grid, .rep, .pipe, .fto-split, .reg-head-row, .reg-row {
     grid-template-columns: 1fr;
