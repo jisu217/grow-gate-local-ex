@@ -19,6 +19,7 @@ LOG_DIR="${DEMO_LOG_DIR:-/tmp/growgate-demo-$DEMO_RUN_ID}"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/setup.log"
 COOKIE_JAR="$LOG_DIR/cookies.txt"
+rm -f "$COOKIE_JAR"
 SUMMARY_MD="$LOG_DIR/demo-summary.md"
 
 step() {

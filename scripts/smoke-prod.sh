@@ -17,6 +17,7 @@ LOG_DIR="${SMOKE_LOG_DIR:-/tmp/growgate-smoke}"
 mkdir -p "$LOG_DIR"
 LOG_FILE="$LOG_DIR/smoke-$(date +%Y%m%d-%H%M%S).log"
 COOKIE_JAR="$LOG_DIR/cookies.txt"
+rm -f "$COOKIE_JAR"
 
 step() {
   echo "[$(date -u +%H:%M:%S)] $*" | tee -a "$LOG_FILE"
