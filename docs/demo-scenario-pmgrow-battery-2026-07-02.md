@@ -8,7 +8,7 @@
 BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/setup-demo-scenario.sh
 ```
 
-정식 도메인을 새로 붙이면 `BASE_URL=https://도메인`으로 바꿔 실행한다. 스크립트는 공개 API만 사용해서 회원가입, 로그인, 제품 등록, 제품 지식 등록, 공공데이터 수집 요청, 진단 생성/폴링, 출처 조회, Markdown/PDF 리포트 다운로드, 지식화 후보 승인까지 수행한다.
+정식 도메인을 새로 붙이면 `BASE_URL=https://도메인`으로 바꿔 실행한다. 스크립트는 공개 API만 사용해서 회원가입, 로그인, 제품 등록, 제품 지식 등록, 공공데이터 수집 요청, 진단 생성/폴링, 출처 조회, Markdown 리포트 다운로드, 지식화 후보 승인까지 수행한다.
 
 기본 데모 계정:
 
@@ -34,7 +34,7 @@ BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/setup-demo-scenario.sh
 - 지식 출처: EU Battery Regulation, UN Manual of Tests and Criteria, 국가기술표준원 참고 URL
 - 공공데이터: `/api/public-data/collect`로 HS 850760/DE 수집 요청
 - 진단: `/api/diagnosis` 생성 후 완료까지 polling
-- 리포트: `/report`, `/report.pdf` 다운로드 검증
+- 리포트: `/report` Markdown 바이어 대응 메모 검증
 - self-loop wiki: 진단 결과에서 생성된 지식화 후보 1건을 담당자 승인 처리
 
 ## 발표 화면 순서
@@ -44,7 +44,7 @@ BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/setup-demo-scenario.sh
 3. 진단 결과 화면에서 S04~S07이 backend `stageCards` 기반으로 채워지는지 확인한다.
 4. S10 출처 화면에서 `live/cache/fallback/heuristic/user_input/agent`가 구분되는지 보여준다.
 5. 공공데이터 dashboard에서 success/fallback 비율을 확인한다.
-6. PDF 리포트 다운로드가 실제 `%PDF-` 파일로 내려오는지 보여준다.
+6. Markdown 바이어 대응 메모를 다운로드하고 UTF-8 한글 내용이 보존되는지 보여준다.
 7. 마이페이지 지식화 후보에서 AI 판단 근거를 담당자가 승인해 지식 출처로 순환시키는 흐름을 설명한다.
 
 ## 약한 질문에 대한 방어 포인트
@@ -52,7 +52,7 @@ BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/setup-demo-scenario.sh
 - “공공데이터가 실패하면?”: fallback이 화면과 sourceType에 명시되고 confidence가 낮아진다. 성공/실패 비율은 dashboard와 smoke 로그로 확인한다.
 - “AI Agent가 실제로 뭘 하나?”: 진단 trace는 planning, tool execution, retry/fallback, verification 단계로 남고, 판단 근거는 담당자가 선택해 지식화할 수 있다.
 - “RAG인가?”: 발표 표현은 RAG 과장 대신 담당자 통제형 self-loop wiki로 설명한다. 승인된 loop item은 다음 진단 context에 다시 들어간다.
-- “PDF인가?”: `/report.pdf`는 실제 PDF 다운로드이며 `/report`는 Markdown API다. 발표자료에서는 둘을 구분한다.
+- “PDF인가?”: 현재 제출 시연 기본 산출물은 Markdown이다. PDF는 한글 font embedding과 시각 검증이 끝난 뒤 후속 기능으로만 설명한다.
 
 ## 강제 live 검증
 

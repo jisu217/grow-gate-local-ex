@@ -40,10 +40,24 @@ require_file "docs/python-worker-engine-contract-2026-07-02.md"
 require_file "docs/live-public-data-smoke-checklist-2026-07-02.md"
 require_file "docs/pdf-rendering-strategy-2026-07-02.md"
 require_file "docs/presentation-evidence-pack-2026-07-02.md"
+require_file "docs/security-csrf-rate-limit-threat-model-2026-07-03.md"
+require_file "scripts/verify-fresh-db.sh"
 
 grep -q 'scripts/check-risk-gates.sh' "$ROOT_DIR/.github/workflows/ci.yml" \
   || fail "CI must run scripts/check-risk-gates.sh"
 pass "CI runs risk gates"
+
+grep -q 'confidence DOUBLE PRECISION' "$ROOT_DIR/database/mysql/init/01_schema.sql" \
+  || fail "Docker init schema must include public_data_records.confidence"
+grep -q 'source_type VARCHAR(20)' "$ROOT_DIR/database/mysql/init/01_schema.sql" \
+  || fail "Docker init schema must include public_data_records.source_type"
+grep -q 'JPA_DDL_AUTO=\"validate\"' "$ROOT_DIR/scripts/verify-fresh-db.sh" \
+  || fail "fresh DB verifier must start backend with ddl-auto=validate"
+grep -q 'COMPOSE_PROJECT_NAME' "$ROOT_DIR/scripts/verify-fresh-db.sh" \
+  || fail "fresh DB verifier must isolate Docker project/volume"
+grep -q 'verify-fresh-db.sh' "$ROOT_DIR/README.md" \
+  || fail "README must document fresh DB verification"
+pass "fresh Docker DB schema is aligned with validate startup"
 
 grep -q 'enabled: ${PUBLIC_DATA_ENABLED:true}' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml" \
   || fail "public-data.enabled must default to true"
@@ -176,6 +190,12 @@ pass "LLM calls are budget-capped and raw keys are blocked from frontend/docs"
 
 search_quiet 'reportError|try \{|catch \(err\)' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisResult.jsx" \
   || fail "DiagnosisResult must surface report download errors"
+if search_quiet 'report\.pdf|getReportPdf|minimalPdf|%PDF-' \
+  "$ROOT_DIR/backend/BE-02/src/main/java" "$ROOT_DIR/scripts/smoke-prod.sh" "$ROOT_DIR/scripts/setup-demo-scenario.sh" "$ROOT_DIR/README.md" "$ROOT_DIR/docs/pdf-rendering-strategy-2026-07-02.md" "$ROOT_DIR/docs/presentation-evidence-pack-2026-07-02.md" "$ROOT_DIR/docs/judge-question-defense-2026-07-01.md" "$ROOT_DIR/docs/demo-scenario-pmgrow-battery-2026-07-02.md"; then
+  fail "presentation path must not expose unverified PDF report claims"
+fi
+grep -q 'Markdown report payload' "$ROOT_DIR/docs/pdf-rendering-strategy-2026-07-02.md" \
+  || fail "PDF strategy must explain Markdown-only presentation report policy"
 pass "report download has visible error handling"
 
 if search_quiet 'localStorage\.setItem\((LEGACY_TOKEN_KEY|["'\'']gg_access_token)' "$ROOT_DIR/frontend/FE-02/src"; then
@@ -189,6 +209,14 @@ search_quiet 'X-GG-CSRF|gg_csrf_token' "$ROOT_DIR/backend/BE-02/src/main/java/co
   || fail "cookie auth must have CSRF double-submit filter"
 search_quiet 'X-GG-CSRF|gg_csrf_token' "$ROOT_DIR/frontend/FE-02/src/services/apiClient.js" \
   || fail "frontend API client must send CSRF header from cookie"
+grep -q 'VITE_API_BASE_URL' "$ROOT_DIR/frontend/FE-02/src/services/apiClient.js" \
+  || fail "frontend API client must support presentation env VITE_API_BASE_URL"
+grep -q 'CsrfCookieFilterTest' "$ROOT_DIR/backend/BE-02/src/test/java/com/growgate/security/CsrfCookieFilterTest.java" \
+  || fail "CSRF double-submit filter must have tests"
+grep -q 'LoginAttemptRateLimiterTest' "$ROOT_DIR/backend/BE-02/src/test/java/com/growgate/auth/service/LoginAttemptRateLimiterTest.java" \
+  || fail "login rate limiter must have tests"
+grep -q 'in-memory for the single-instance Lightsail submission server' "$ROOT_DIR/docs/security-csrf-rate-limit-threat-model-2026-07-03.md" \
+  || fail "rate limit scope must be documented as single-instance in-memory"
 pass "auth uses HttpOnly cookie path and avoids localStorage token persistence"
 
 search_quiet 'termsAccepted' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/auth/dto/SignupRequest.java" \
@@ -277,8 +305,8 @@ grep -q 'Python Worker Engine Contract' "$ROOT_DIR/docs/python-worker-engine-con
   || fail "Python worker engine contract must be documented"
 grep -q 'live-public-data-smoke-evidence.json' "$ROOT_DIR/docs/live-public-data-smoke-checklist-2026-07-02.md" \
   || fail "live public-data smoke checklist must document evidence output"
-grep -q 'Korean font rendering' "$ROOT_DIR/docs/pdf-rendering-strategy-2026-07-02.md" \
-  || fail "PDF strategy must document Korean font rendering gate"
+grep -q 'font embedding' "$ROOT_DIR/docs/pdf-rendering-strategy-2026-07-02.md" \
+  || fail "PDF strategy must document Korean font embedding gate"
 grep -q 'Source Trust Bar screenshot' "$ROOT_DIR/docs/presentation-evidence-pack-2026-07-02.md" \
   || fail "presentation evidence pack must require Source Trust Bar screenshot"
 pass "evidence pack documents presentation env, field mapping, and judge defense"

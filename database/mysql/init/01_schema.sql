@@ -258,6 +258,8 @@ CREATE TABLE IF NOT EXISTS public_data_records (
   raw_payload TEXT NULL,
   normalized_payload TEXT NULL,
   score_contribution INT NULL,
+  confidence DOUBLE PRECISION NULL,
+  source_type VARCHAR(20) NULL,
   fallback_used BOOLEAN NOT NULL DEFAULT FALSE,
   cache_hit BOOLEAN NOT NULL DEFAULT FALSE,
   error_message TEXT NULL,

@@ -1,6 +1,6 @@
 // 백엔드 API 공통 fetch 헬퍼
 const viteEnv = import.meta.env ?? {}
-const configuredApiUrl = viteEnv.VITE_API_URL?.trim() || ''
+const configuredApiUrl = (viteEnv.VITE_API_URL?.trim() || viteEnv.VITE_API_BASE_URL?.trim() || '')
 const rawApiUrl = configuredApiUrl || (typeof window !== 'undefined' ? window.location.origin : '')
 const normalizedApiUrl = rawApiUrl.replace(/\/+$/, '')
 const API_BASE = normalizedApiUrl.endsWith('/api') ? normalizedApiUrl : `${normalizedApiUrl}/api`

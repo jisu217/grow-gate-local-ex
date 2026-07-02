@@ -10,9 +10,7 @@ import com.growgate.diagnosis.dto.DiagnosisSourcesResponse;
 import com.growgate.diagnosis.service.DiagnosisService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -63,17 +61,5 @@ public class DiagnosisController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String diagnosisId) {
         return ResponseEntity.ok(diagnosisService.getReport(userDetails.getUsername(), diagnosisId));
-    }
-
-    @GetMapping("/{diagnosisId}/report.pdf")
-    public ResponseEntity<byte[]> getReportPdf(
-            @AuthenticationPrincipal UserDetails userDetails,
-            @PathVariable String diagnosisId) {
-        byte[] pdf = diagnosisService.getReportPdf(userDetails.getUsername(), diagnosisId);
-        return ResponseEntity.ok()
-                .contentType(MediaType.APPLICATION_PDF)
-                .header(HttpHeaders.CONTENT_DISPOSITION,
-                        "attachment; filename=\"grow-gate-diagnosis-" + diagnosisId + ".pdf\"")
-                .body(pdf);
     }
 }

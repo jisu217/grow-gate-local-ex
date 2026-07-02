@@ -12,7 +12,7 @@ Prepare this pack after running production smoke against the Lightsail domain.
 | Public data dashboard screenshot | `/api/public-data/dashboard` backed UI/API output |
 | Five-minute scenario capture | PMGrow or battery-pack demo scenario |
 | Markdown report | `/api/diagnosis/{id}/report` |
-| PDF proof, if used | `/api/diagnosis/{id}/report.pdf` visual check |
+| Markdown report proof | `/api/diagnosis/{id}/report` payload and downloaded `.md` file |
 
 ## Five-Minute Scenario
 
@@ -22,4 +22,3 @@ Prepare this pack after running production smoke against the Lightsail domain.
 4. Show Source Trust Bar: run id, live/cache/fallback count, MOTIE-related contribution.
 5. Open S10 and show source ids plus score contribution ledger.
 6. Download Markdown report. Show PDF only when Korean rendering has been visually confirmed.
-

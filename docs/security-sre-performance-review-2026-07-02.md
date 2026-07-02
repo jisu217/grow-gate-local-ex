@@ -61,7 +61,7 @@ Recommended demo stance:
 
 - Keep `APP_AGENT_ENABLED=false` unless keys and quotas are confirmed.
 - If enabled, start with lower limits for a public demo account.
-- Keep provider keys out of frontend `.env` files. Only `VITE_API_BASE_URL` belongs in frontend build settings.
+- Keep provider keys out of frontend `.env` files. Only `VITE_API_BASE_URL`/`VITE_API_URL` API origin aliases belong in frontend build settings.
 
 ## Remaining Release Gates
 

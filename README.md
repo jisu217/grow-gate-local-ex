@@ -266,9 +266,12 @@ grow_gate_local_ex_demo/                     # FastAPI/HTML 보조 프로토타�
 
 ```bash
 ./scripts/check-risk-gates.sh
+./scripts/verify-fresh-db.sh
 cd backend/BE-02 && ./gradlew test --no-daemon
 cd frontend/FE-02 && npm run test:mappers && npm run build
 ```
+
+`verify-fresh-db.sh`는 별도 Docker Compose project로 clean MySQL을 띄우고 `JPA_DDL_AUTO=validate`로 백엔드 health까지 확인합니다. 기존 로컬 DB volume은 사용하지 않습니다.
 
 배포 서버 smoke test:
 
@@ -296,6 +299,7 @@ BASE_URL=https://your-domain.example ./scripts/smoke-prod.sh
 
 - JWT access token은 HttpOnly cookie 경로를 사용하고, legacy localStorage token 저장을 CI risk gate에서 차단합니다.
 - Cookie 인증 요청은 `X-GG-CSRF` double-submit header를 사용합니다.
+- CSRF 설계와 테스트 범위는 [docs/security-csrf-rate-limit-threat-model-2026-07-03.md](docs/security-csrf-rate-limit-threat-model-2026-07-03.md)에 정리되어 있습니다.
 - CORS origin은 환경변수로 제한합니다.
 - 공공데이터 run/record 조회는 user/company scope로 제한합니다.
 - 공공 API/LLM key는 환경변수 또는 secret manager로만 주입하고 repository에 저장하지 않습니다.
@@ -304,6 +308,7 @@ BASE_URL=https://your-domain.example ./scripts/smoke-prod.sh
 - Google Sign-In은 제출 서버 기본값에서 비활성화(`GOOGLE_SSO_ENABLED=false`)합니다. 정식 도메인, OAuth consent screen, 개인정보 처리방침 URL, 서버측 ID token 검증이 준비된 release에서만 켭니다.
 - 현재 제출 서버는 결제/환불 기능을 제공하지 않습니다. 유료화 시에는 결제 API, 환불 정책, 정산 로그, 관리자 승인 flow를 별도 release gate로 추가해야 합니다.
 - fallback 공공데이터는 `sourceType=fallback`으로 표시되며 점수를 올리지 않습니다.
+- 로그인 실패 제한은 단일 Lightsail 제출 서버용 in-memory limiter입니다. 다중 인스턴스 상용 배포 전에는 Redis/shared TTL store로 교체합니다.
 - `scripts/check-risk-gates.sh`가 실제 구현보다 앞서는 예측 모델 표현, S04~S07 mock 회귀, 비기능 버튼, Decision Brief 누락, scope 누락, LLM 예산 가드 누락, raw API key 커밋, smoke test 누락을 차단합니다.
 
 ---

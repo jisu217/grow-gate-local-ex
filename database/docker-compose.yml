@@ -1,7 +1,6 @@
 services:
   growgate-mysql:
     image: mysql:8.4
-    container_name: growgate-mysql
     restart: unless-stopped
     ports:
       - "${MYSQL_PORT:-3306}:3306"

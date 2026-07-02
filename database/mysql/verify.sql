@@ -10,7 +10,20 @@ UNION ALL SELECT 'fto', COUNT(*) FROM fto
 UNION ALL SELECT 'buyer_requirements', COUNT(*) FROM buyer_requirements
 UNION ALL SELECT 'knowledge_sources', COUNT(*) FROM knowledge_sources
 UNION ALL SELECT 'audit_logs', COUNT(*) FROM audit_logs
-UNION ALL SELECT 'diagnosis_runs', COUNT(*) FROM diagnosis_runs;
+UNION ALL SELECT 'diagnosis_runs', COUNT(*) FROM diagnosis_runs
+UNION ALL SELECT 'public_data_collection_runs', COUNT(*) FROM public_data_collection_runs
+UNION ALL SELECT 'public_data_records', COUNT(*) FROM public_data_records
+UNION ALL SELECT 'revoked_tokens', COUNT(*) FROM revoked_tokens;
+
+SELECT
+  column_name,
+  column_type,
+  is_nullable
+FROM information_schema.columns
+WHERE table_schema = 'growgate'
+  AND table_name = 'public_data_records'
+  AND column_name IN ('confidence', 'source_type')
+ORDER BY column_name;
 
 SELECT
   c.name AS company_name,

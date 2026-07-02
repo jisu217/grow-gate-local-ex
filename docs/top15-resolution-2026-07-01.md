@@ -18,7 +18,7 @@
 | 8 | 점수 산식 근거 없음 | 완료 | `scoringRubric`과 `docs/scoring-rubric-validation-2026.md`에 문헌/전문가 검증용 10개 시나리오 표 정리 |
 | 9 | 배포 end-to-end 증거 부족 | 완료 | `scripts/smoke-prod.sh`가 health, auth, product, diagnosis, polling, sources, PDF, public data runs를 한 번에 검증 |
 | 10 | public data endpoint 전역 조회 | 완료 | 개인은 본인, 회사는 같은 company membership scope로 run/record 조회 제한 |
-| 11 | report가 PDF 아님 | 완료 | `/api/diagnosis/{diagnosisId}/report.pdf`가 `%PDF-` binary 응답을 반환 |
+| 11 | report 산출물 불명확 | 완료 | 제출 기본 산출물을 UTF-8 Markdown 바이어 대응 메모로 확정하고, 한글 font embedding이 검증되지 않은 PDF endpoint는 제거 |
 | 12 | README 제출 구조 혼란 | 완료 | README 상단에 제출 대상 FE-02/BE-02와 보조 demo 경계를 고정 |
 | 13 | 빌드 재현성 약함 | 완료 | `BUILD.md`, `scripts/verify-local.sh`, GitHub Actions CI 추가 |
 | 14 | 보안 운영 수준 아님 | 부분 완료 | 로그인 rate limit, HttpOnly cookie 인증 경로, DB hash 기반 JWT revocation 추가. refresh token rotation은 상용화 후속 과제 |
@@ -30,7 +30,7 @@
 - “시장성 점수는 관세청/KOTRA parser가 뽑은 numeric metric과 로컬 heuristic을 분리해서 반영합니다.”
 - “RAG는 pgvector라고 과장하지 않고, 현재 제출 서버에서는 DB chunk 기반 BM25-lite top-k와 citation trace를 제공합니다.”
 - “Agent는 단순 로그가 아니라 고정 도구 계획을 실행하고 verifier 실패 시 retry/fallback 후 complete task를 남깁니다.”
-- “PDF는 Markdown과 별도 endpoint로 생성되며 smoke script가 `%PDF-` header를 확인합니다.”
+- “제출 시연 산출물은 Markdown 바이어 대응 메모이며 smoke script가 contentType, fileName, payload를 확인합니다. PDF는 font QA 후속 과제입니다.”
 
 ## 남은 상용화 과제
 

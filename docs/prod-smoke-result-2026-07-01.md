@@ -20,11 +20,10 @@ Expected checks:
 | diagnosis create | diagnosis id returned |
 | diagnosis polling | `done` or `failed` visible |
 | sources | sourceType visible |
-| report PDF | `%PDF-` file downloaded |
+| report Markdown | UTF-8 Markdown payload downloaded |
 | public data runs | success/fallback counts printed |
 
 Latest local verification before deploy:
 
 - Backend `./gradlew test`: pending for this smoke run
 - Frontend `npm run build`: pending for this smoke run
-

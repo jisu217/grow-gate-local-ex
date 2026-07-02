@@ -42,7 +42,7 @@ npm run build
 BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/smoke-prod.sh
 ```
 
-The smoke script checks health, unauthenticated 401, signup/login, `/api/users/me`, product create, diagnosis create/polling, sources, PDF report download, and public-data run counts.
+The smoke script checks health, unauthenticated 401, signup/login, `/api/users/me`, product create, diagnosis create/polling, sources, Markdown report download, and public-data run counts.
 
 Optional stricter checks:
 

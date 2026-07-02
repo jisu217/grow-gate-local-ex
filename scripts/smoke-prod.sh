@@ -153,9 +153,15 @@ request GET "/api/diagnosis/$DIAGNOSIS_ID/sources" "" "$TOKEN" "$LOG_DIR/sources
 request GET "/api/diagnosis/$DIAGNOSIS_ID/report" "" "$TOKEN" "$LOG_DIR/report.json"
 [[ "$(cat "$LOG_DIR/report.json.status")" == "200" ]] || fail "Markdown report API failed"
 
-request GET "/api/diagnosis/$DIAGNOSIS_ID/report.pdf" "" "$TOKEN" "$LOG_DIR/report.pdf"
-[[ "$(cat "$LOG_DIR/report.pdf.status")" == "200" ]] || fail "PDF report failed"
-head -c 5 "$LOG_DIR/report.pdf" | grep -q "%PDF-" || fail "report.pdf is not a PDF"
+python3 - "$LOG_DIR/report.json" <<'PY'
+import json, sys
+data = json.load(open(sys.argv[1]))
+content_type = data.get("contentType", "")
+file_name = data.get("fileName", "")
+markdown = data.get("markdown", "")
+if "text/markdown" not in content_type or not file_name.endswith(".md") or "GROW-GATE" not in markdown:
+    raise SystemExit("Markdown report payload is not presentation-ready")
+PY
 
 request GET "/api/public-data/runs" "" "$TOKEN" "$LOG_DIR/public-runs.json"
 [[ "$(cat "$LOG_DIR/public-runs.json.status")" == "200" ]] || fail "public data runs failed"

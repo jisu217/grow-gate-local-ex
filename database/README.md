@@ -56,6 +56,12 @@ cp .env.example .env
 docker compose up -d
 ```
 
+Fresh clone에서 Docker DB와 Spring `ddl-auto=validate`가 같이 뜨는지 한 번에 확인하려면 root에서 아래 스크립트를 실행합니다. 이 스크립트는 별도 Compose project와 기본 포트 `33306`을 사용하고 종료 시 임시 volume을 삭제하므로 기존 로컬 DB를 건드리지 않습니다.
+
+```bash
+./scripts/verify-fresh-db.sh
+```
+
 DBeaver connection:
 
 | Field | Value |

@@ -56,5 +56,4 @@ Capture these before the presentation:
 - diagnosis result first screen with Source Trust Bar
 - S10 Sources screen with score contribution ledger
 - public data dashboard showing live/cache/fallback ratio
-- `/api/diagnosis/{id}/report.pdf` download proof if PDF is shown
-
+- `/api/diagnosis/{id}/report` Markdown payload proof

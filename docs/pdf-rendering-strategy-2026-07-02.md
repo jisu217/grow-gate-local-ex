@@ -2,23 +2,16 @@
 
 ## Current Policy
 
-GrowGate supports two report surfaces:
+GrowGate exposes one presentation-ready report surface:
 
-- `/api/diagnosis/{id}/report`: stable Markdown payload
-- `/api/diagnosis/{id}/report.pdf`: binary PDF endpoint verified by smoke test
+- `/api/diagnosis/{id}/report`: stable Markdown payload encoded as UTF-8
 
-The demo UI should continue to expose Markdown download as the safest default. PDF can be shown in presentation only after the production smoke confirms:
-
-- HTTP 200
-- `Content-Type` is PDF-compatible
-- response begins with `%PDF-`
-- Korean text is legible in the downloaded file
+The previous minimal PDF endpoint used a Latin font path and could not prove Korean rendering quality. It has been removed from the presentation API surface. The demo UI exposes Markdown download as the customer-facing artifact.
 
 ## Fallback Policy
 
-If Korean font rendering is not verified on the deployed server, do not claim PDF quality in the presentation. Use Markdown report download and show `/report.pdf` only as an implementation endpoint that is still font-QA gated.
+Do not claim PDF quality in the presentation until Korean font embedding is implemented and visually verified. If PDF is reintroduced, it must use an embedded Korean-capable font, include a downloaded sample in the evidence pack, and be covered by smoke and visual QA.
 
 ## Evidence
 
-`scripts/smoke-prod.sh` already checks `/report.pdf` and fails if the response is not a PDF binary. Add a screenshot or downloaded sample to the presentation evidence pack only after visual inspection.
-
+`scripts/smoke-prod.sh` checks the Markdown report payload, file name, content type, and Korean-safe UTF-8 response path. PDF evidence should not be included unless a future font-embedded renderer passes visual inspection.

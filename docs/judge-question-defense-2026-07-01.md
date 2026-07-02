@@ -16,7 +16,7 @@
 | 10 | Agent가 실패하면 어떤 계획을 다시 세웁니까? | `AgentLoop`가 collect/score/roadmap/FastAPI/LLM/report/source verification 계획을 만들고, tool verifier 실패 시 재시도 후 deterministic fallback을 기록한다. | `DiagnosisAsyncProcessor.AgentLoop` |
 | 11 | FastAPI Agent가 배포 서버에서 켜져 있습니까? | 기본은 optional bridge다. `APP_FASTAPI_ENABLED=true`일 때만 `/analyze`, `/report`를 호출하고, 비활성 시 Spring 결과로 degrade한다. | `FastApiAgentClient`, `agentTrace` |
 | 12 | S04 시장성 화면은 backend API 값입니까? | 예. `stageCards.s04~s07`을 backend에서 생성하고 frontend는 해당 값을 매핑한다. S04~S07 mock fallback import를 제거했다. | `DiagnosisAsyncProcessor`, `diagnosisService.js` |
-| 13 | 이 리포트는 PDF입니까? | Markdown API와 별도로 `/api/diagnosis/{id}/report.pdf`가 `application/pdf` bytes를 내려준다. | `DiagnosisController.getReportPdf()` |
+| 13 | 이 리포트는 PDF입니까? | 제출 시연 기본 산출물은 UTF-8 Markdown 바이어 대응 메모다. 한글 폰트 임베딩이 검증되지 않은 PDF endpoint는 제거했고, PDF는 후속 font QA gate를 통과한 뒤에만 다시 노출한다. | `DiagnosisController`, `docs/pdf-rendering-strategy-2026-07-02.md` |
 | 14 | 사용자 A가 사용자 B의 public data runs를 볼 수 있습니까? | scope 제한을 추가했다. 개인은 본인 run만, 회사 사용자는 같은 company membership 사용자 run만 조회한다. | `PublicDataCollectionService.scopeUserIds()` |
 | 15 | 로그아웃한 JWT는 서버 재시작 후에도 무효입니까? | 예. 로그아웃 토큰은 원문이 아니라 SHA-256 hash로 `revoked_tokens`에 저장되어 서버 재시작 후에도 차단된다. | `TokenRevocationService`, `RevokedToken` |
 | 16 | XSS로 localStorage token이 털리면 어떻게 합니까? | 기존 Bearer 호환은 유지하지만 로그인 시 HttpOnly cookie도 내려주고 필터가 cookie token을 우선 인증 경로로 처리한다. 제출 서버는 `APP_AUTH_COOKIE_SECURE=true`로 운영한다. | `AuthController`, `JwtAuthenticationFilter`, `apiClient.js` |
