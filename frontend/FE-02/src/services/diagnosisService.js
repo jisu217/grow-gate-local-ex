@@ -49,6 +49,7 @@ const EMPTY_SESSION = {
   scoreContributionLedger: [],
   normalizedMetrics: null,
   pythonWorker: null,
+  pythonAgenticLoop: null,
   reportMarkdown: '',
   reportFastApiUsed: false,
 }
@@ -159,6 +160,7 @@ export function mapDiagnosisDetail(d, evidenceSources) {
     scoreContributionLedger: Array.isArray(d.result?.scoreContributionLedger) ? d.result.scoreContributionLedger : [],
     normalizedMetrics: d.result?.normalizedMetrics ?? null,
     pythonWorker: d.result?.pythonWorker ?? null,
+    pythonAgenticLoop: d.result?.pythonAgenticLoop ?? null,
     reportMarkdown: d.result?.reportMarkdown ?? '',
     reportFastApiUsed: Boolean(d.result?.reportFastApiUsed),
   }

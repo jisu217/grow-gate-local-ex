@@ -26,6 +26,10 @@ Python returns:
 - `evidenceRetrieval`
 - `exportKnowledgeTimeline`
 - `evidenceGuardrails`
+- `sourceBoundVerification`
+- `claimVerification`
+- `budgetGuard`
+- `agenticLoop`
 - `preprocessingTrace`
 
 ## Runtime Behavior
@@ -46,4 +50,21 @@ Python returns:
 - Spring sends normalized metrics, not raw public-data payloads.
 - Fallback records cannot create positive score contribution.
 - Worker result must include `engineVersion`; otherwise Spring rejects it and uses local fallback.
-- CI risk gate checks that the endpoint, Spring client method, `pythonWorker`, and `normalizedMetrics` result fields remain wired.
+- Worker never performs external LLM calls in this endpoint; `budgetGuard.externalLlmCalls=0` and `estimatedCostUsd=0` make cost posture explicit.
+- Worker enforces `GROW_GATE_WORKER_MAX_RECORDS` and reports truncated records rather than processing unbounded input.
+- Candidate claims must reference an existing `sourceId`; overconfident phrases such as "문제 없음" are rejected before exposure.
+- CI risk gate checks that the endpoint, Spring client method, `pythonWorker`, `pythonAgenticLoop`, and `normalizedMetrics` result fields remain wired.
+
+## Agentic Worker Shape
+
+The worker now returns `agenticLoop.mode=python-planning-tool-verification-retry`.
+This is intentionally bounded rather than open-ended autonomous browsing:
+
+1. `ingest_public_records`: receives Spring-scoped normalized records only.
+2. `preprocess_metrics`: aggregates numeric metrics by scoring bucket.
+3. `rank_evidence`: selects top source-bound evidence.
+4. `verify_claims`: rejects claims without source ids or with overconfident wording.
+5. `compile_wiki`: creates wiki/log/error-book artifacts for manager review.
+6. `decide_retry`: recommends retry/backoff when live/cache evidence is missing or fallback remains.
+
+Spring remains the owner of auth, company/user scope, persistence, and final response DTOs.

@@ -158,6 +158,10 @@ search_quiet 'workerDiagnosis' "$ROOT_DIR/backend/BE-02/src/main/java/com/growga
   || fail "Spring FastAPI client must call the Python worker diagnosis contract"
 search_quiet 'pythonWorker' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
   || fail "diagnosis result must expose Python worker status"
+search_quiet 'pythonAgenticLoop' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "diagnosis result must expose Python worker agentic loop details"
+search_quiet 'budgetGuard|sourceBoundVerification|claimVerification|retryPlan' "$ROOT_DIR/grow_gate_local_ex_demo/backend/worker_engine.py" \
+  || fail "Python worker must expose CSO/SRE/performance guardrails"
 search_quiet 'normalizedMetrics' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
   || fail "diagnosis result must expose normalized metrics from worker or Spring fallback"
 search_quiet 'compiledWiki' "$ROOT_DIR/grow_gate_local_ex_demo/backend/worker_engine.py" \
@@ -340,6 +344,8 @@ grep -q 'Security/SRE/Performance Persona Review' "$ROOT_DIR/docs/security-sre-p
   || fail "security/SRE/performance persona review must be documented"
 grep -q 'Python Worker Engine Contract' "$ROOT_DIR/docs/python-worker-engine-contract-2026-07-02.md" \
   || fail "Python worker engine contract must be documented"
+grep -q 'python-planning-tool-verification-retry' "$ROOT_DIR/docs/python-worker-engine-contract-2026-07-02.md" \
+  || fail "Python worker contract must document bounded planning/tool/verification/retry loop"
 grep -q 'live-public-data-smoke-evidence.json' "$ROOT_DIR/docs/live-public-data-smoke-checklist-2026-07-02.md" \
   || fail "live public-data smoke checklist must document evidence output"
 grep -q 'font embedding' "$ROOT_DIR/docs/pdf-rendering-strategy-2026-07-02.md" \

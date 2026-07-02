@@ -330,6 +330,10 @@ def test_worker_diagnosis_endpoint_returns_contract_artifacts():
                 "targetCountry": "DE",
             },
             "knowledgeSnapshot": {"knowledgeSourceCount": 2},
+            "candidateClaims": [
+                {"text": "KCS live record 기준 수입 증가 신호가 있습니다.", "sourceId": "record-1"},
+                {"text": "FTO 문제 없음", "sourceId": "missing-source"},
+            ],
             "publicDataRecords": [
                 {
                     "id": "record-1",
@@ -352,8 +356,62 @@ def test_worker_diagnosis_endpoint_returns_contract_artifacts():
     assert payload["evidenceRetrieval"]["topK"][0]["sourceId"] == "record-1"
     assert payload["exportKnowledgeTimeline"][0]["eventType"] == "PY_MARKET_METRIC_NORMALIZED"
     assert payload["evidenceGuardrails"]["verdict"] == "pass"
+    assert payload["sourceBoundVerification"]["verdict"] == "review_required"
+    assert payload["claimVerification"]["acceptedCount"] == 1
+    assert payload["claimVerification"]["rejectedCount"] == 1
+    assert payload["budgetGuard"]["externalLlmCalls"] == 0
+    assert payload["budgetGuard"]["privacy"]["rawPayloadPersisted"] is False
+    assert payload["agenticLoop"]["mode"] == "python-planning-tool-verification-retry"
+    assert payload["agenticLoop"]["retryPlan"] == []
+    assert payload["latencyMs"] >= 0
     assert payload["compiledWiki"]["knowledgePage"]["hsCode"] == "850760"
     assert "Evidence collection log" in payload["compiledWiki"]["logMarkdown"]
+
+
+def test_worker_diagnosis_truncates_records_and_builds_retry_plan(monkeypatch):
+    monkeypatch.setenv("GROW_GATE_WORKER_MAX_RECORDS", "1")
+    client = TestClient(app)
+    response = client.post(
+        "/worker/diagnosis-v1",
+        json={
+            "diagnosisId": "diag-budget",
+            "productSnapshot": {
+                "productName": "전장 모듈",
+                "hsCode": "853710",
+                "targetCountry": "DE",
+            },
+            "knowledgeSnapshot": {"knowledgeSourceCount": 0},
+            "publicDataRecords": [
+                {
+                    "id": "fallback-1",
+                    "provider": "KOTRA_MARKET",
+                    "sourceType": "fallback",
+                    "fallbackUsed": True,
+                    "usedFor": "market",
+                    "confidence": 0.25,
+                    "scoreContribution": 0,
+                    "metrics": {},
+                },
+                {
+                    "id": "live-2",
+                    "provider": "SAFETY_RECALL",
+                    "sourceType": "live",
+                    "usedFor": "recall",
+                    "confidence": 0.8,
+                    "scoreContribution": -3,
+                    "metrics": {"recordCount": 2},
+                },
+            ],
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["budgetGuard"]["status"] == "truncated_to_budget"
+    assert payload["budgetGuard"]["recordsProcessed"] == 1
+    assert payload["budgetGuard"]["recordsSkipped"] == 1
+    assert payload["retryPlan"][0]["bucket"] == "market"
+    assert payload["agenticLoop"]["toolUseTrace"][0]["tool"] == "PythonRecordBudgetGuard"
 
 
 def test_product_knowledge_api_upserts_and_returns_rag_feature_preview(tmp_path, monkeypatch):

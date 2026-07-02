@@ -42,6 +42,10 @@ mock leakage, daily collection caps, crawler safety limits, and avoidable repeat
 | Data access | Public-data history must not leak across users. | Existing user/company scoped run and record queries remain protected by risk gate. |
 | Personal data storage | Auth token should not be readable by XSS. | Existing HttpOnly cookie + CSRF path remains protected by risk gate; localStorage access token writes are blocked. |
 | Refund policy | Current service has no paid plan or payment API. | README now states billing/refund is not implemented and must be a separate release gate before monetization. |
+| Python worker input privacy | Data/AI worker could become a raw-payload sink if it accepts arbitrary public-data bodies. | `/worker/diagnosis-v1` now reports `budgetGuard.privacy.rawPayloadAccepted=false` and uses normalized metrics/source ids only. |
+| Python worker cost control | Agent/LLM branding can imply unbounded inference calls. | The worker endpoint performs zero external LLM calls and returns `externalLlmCalls=0`, `estimatedCostUsd=0`. |
+| Python worker reliability | Fallback-heavy records need operator-visible retry guidance. | Worker emits `agenticLoop.retryPlan` with provider/bucket/backoff steps when live/cache evidence is missing. |
+| Python worker performance | Large diagnosis evidence packs could slow presentation runs. | Worker applies `GROW_GATE_WORKER_MAX_RECORDS` and exposes `latencyMs`, processed/skipped counts, and source-type counts. |
 
 ## Runtime Controls
 
@@ -55,6 +59,7 @@ APP_AGENT_MAX_PROMPT_CHARS=12000
 APP_AGENT_MAX_OUTPUT_TOKENS=1024
 APP_AGENT_GEMINI_API_KEY=...
 APP_AGENT_OPENROUTER_API_KEY=...
+GROW_GATE_WORKER_MAX_RECORDS=80
 ```
 
 Recommended demo stance:
@@ -71,6 +76,8 @@ These are not blockers for the current non-paid submission demo, but should be h
 - Add billing/refund policy pages before any payment integration.
 - Add SLO dashboard for public-data success/fallback ratio and LLM provider failure rate.
 - Add data-retention controls for raw public-data payloads and accepted evidence-loop knowledge.
+- Persist Python worker latency/error metrics in the same monitoring channel as Spring health checks.
+- Move worker retry scheduling from advisory JSON into an operator-triggered queue if daily live collection volume grows.
 
 ## Final Verification Snapshot
 

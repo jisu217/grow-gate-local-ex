@@ -312,12 +312,21 @@ public class DiagnosisAsyncProcessor {
                     "enabled", true,
                     "succeeded", true,
                     "engineVersion", stringValue(result.get("engineVersion")),
-                    "generatedAt", stringValue(result.get("generatedAt"))
+                    "generatedAt", stringValue(result.get("generatedAt")),
+                    "latencyMs", result.getOrDefault("latencyMs", 0),
+                    "budgetGuard", result.getOrDefault("budgetGuard", Map.of()),
+                    "sourceBoundVerification", result.getOrDefault("sourceBoundVerification", Map.of()),
+                    "retryPlan", result.getOrDefault("retryPlan", List.of()),
+                    "claimVerification", result.getOrDefault("claimVerification", Map.of())
             )).orElseGet(() -> Map.of(
                     "enabled", fastApiAgentClient.isEnabled(),
                     "succeeded", false,
-                    "engineVersion", "spring-local-fallback"
+                    "engineVersion", "spring-local-fallback",
+                    "budgetGuard", Map.of("externalLlmCalls", 0, "estimatedCostUsd", 0)
             )));
+            resultMap.put("pythonAgenticLoop", workerResult
+                    .map(result -> objectMapOrDefault(result.get("agenticLoop"), Map.of()))
+                    .orElseGet(Map::of));
             resultMap.put("normalizedMetrics", workerResult
                     .map(result -> result.getOrDefault("normalizedMetrics", buildNormalizedMetrics(publicDataResult.getRecords())))
                     .orElseGet(() -> buildNormalizedMetrics(publicDataResult.getRecords())));
