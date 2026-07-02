@@ -271,4 +271,12 @@ CREATE TABLE IF NOT EXISTS public_data_records (
   CONSTRAINT fk_public_data_records_run FOREIGN KEY (run_id) REFERENCES public_data_collection_runs (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
+CREATE TABLE IF NOT EXISTS revoked_tokens (
+  token_hash VARCHAR(64) NOT NULL,
+  expires_at DATETIME(6) NOT NULL,
+  created_at DATETIME(6) NOT NULL,
+  PRIMARY KEY (token_hash),
+  KEY idx_revoked_tokens_expires_at (expires_at)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
 SET FOREIGN_KEY_CHECKS = 1;
