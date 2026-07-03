@@ -25,7 +25,9 @@ import org.junit.jupiter.params.provider.EnumSource;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.LocalDateTime;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -233,6 +235,115 @@ class DiagnosisServiceTest {
         assertThat(snapshotMap.get("buyerRequest")).isEqualTo("독일 바이어가 CE와 UN38.3 증빙을 요청");
     }
 
+    @Test
+    void getDetailPreservesEvidenceContractFieldsFromResultJson() throws Exception {
+        setUp();
+        User user = user("user-detail", UserType.personal);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("summary", "evidence contract result");
+        result.put("sourceTrustSummary", Map.of(
+                        "liveCount", 1,
+                        "operationEndpointLiveCount", 1,
+                        "apiKeyConfiguredLiveCount", 1,
+                        "providerHealth", List.of(Map.of(
+                                "provider", "KCS_TRADE",
+                                "operationEndpoint", true,
+                                "apiKeyConfigured", true,
+                                "endpointType", "operation"
+                        ))
+                ));
+        result.put("regionalIndustryProfile", Map.of("region", "경남"));
+        result.put("buyerRequestTrace", Map.of("matchedKeywords", List.of("CE")));
+        result.put("scoreContributionLedger", List.of(Map.of(
+                        "sourceId", "KCS_TRADE-record-1",
+                        "provider", "KCS_TRADE",
+                        "operationEndpoint", true,
+                        "apiKeyConfigured", true,
+                        "finalScoreDelta", 7
+                )));
+        result.put("pythonWorker", Map.of("status", "disabled"));
+        result.put("pythonAgenticLoop", Map.of("mode", "python-planning-tool-verification-retry"));
+        result.put("normalizedMetrics", Map.of("market", Map.of("recordCount", 1)));
+        result.put("compiledWiki", Map.of("knowledgePage", Map.of("title", "850760-DE")));
+        result.put("scoringRubric", Map.of("version", "rule-v1"));
+        result.put("agentInference", Map.of("enabled", false));
+        result.put("knowledgeLoopSuggestions", List.of(Map.of("title", "CE evidence memo")));
+        result.put("publicDataCollectionRunId", "run-1");
+        result.put("inputTrace", Map.of("hsCode", "850760"));
+        var run = diagnosisRun("diag-detail", user, objectMapper.writeValueAsString(result));
+
+        when(userRepository.findById("user-detail")).thenReturn(Optional.of(user));
+        when(diagnosisRepository.findByIdAndUserId("diag-detail", "user-detail")).thenReturn(Optional.of(run));
+
+        var response = diagnosisService.getDetail("user-detail", "diag-detail");
+
+        assertThat(response.getResult().getSourceTrustSummary()).containsEntry("liveCount", 1);
+        assertThat(response.getResult().getSourceTrustSummary()).containsEntry("operationEndpointLiveCount", 1);
+        assertThat(response.getResult().getScoreContributionLedger()).hasSize(1);
+        assertThat(response.getResult().getScoreContributionLedger().get(0)).containsEntry("operationEndpoint", true);
+        assertThat(response.getResult().getNormalizedMetrics()).containsKey("market");
+        assertThat(response.getResult().getPublicDataCollectionRunId()).isEqualTo("run-1");
+        assertThat(response.getResult().getInputTrace()).containsEntry("hsCode", "850760");
+        assertThat(response.getResult().getRegionalIndustryProfile()).containsEntry("region", "경남");
+        assertThat(response.getResult().getKnowledgeLoopSuggestions()).hasSize(1);
+    }
+
+    @Test
+    void getSourcesPreservesCollectionEvidenceForPublicApiProof() throws Exception {
+        setUp();
+        User user = user("user-sources", UserType.personal);
+        Map<String, Object> collectionEvidence = Map.of(
+                "endpointConfigured", true,
+                "operationEndpoint", true,
+                "endpointType", "operation",
+                "apiKeyConfigured", true,
+                "apiKeyStored", false
+        );
+        Map<String, Object> sourceMap = new LinkedHashMap<>();
+        sourceMap.put("field", "market");
+        sourceMap.put("sourceId", "KCS_TRADE-record-1");
+        sourceMap.put("provider", "KCS_TRADE");
+        sourceMap.put("sourceType", "live");
+        sourceMap.put("fallbackUsed", false);
+        sourceMap.put("collectionRunId", "run-1");
+        sourceMap.put("collectionEvidence", collectionEvidence);
+        sourceMap.put("endpointConfigured", true);
+        sourceMap.put("operationEndpoint", true);
+        sourceMap.put("endpointType", "operation");
+        sourceMap.put("apiKeyConfigured", true);
+        sourceMap.put("apiKeyStored", false);
+        sourceMap.put("retrievedAt", "2026-07-03T00:00:00Z");
+        sourceMap.put("fetchedAt", "2026-07-03T00:00:00Z");
+        sourceMap.put("sourcePeriodStart", "2026-06-01");
+        sourceMap.put("sourcePeriodEnd", "2026-06-30");
+        sourceMap.put("metricSummary", "exportAmountUsd=45678");
+        sourceMap.put("decisionImpact", "시장성 +7");
+        sourceMap.put("metrics", Map.of("exportAmountUsd", 45678));
+        sourceMap.put("domainSignals", Map.of("recordCount", 12));
+        Map<String, Object> result = Map.of("sources", List.of(sourceMap));
+        var run = diagnosisRun("diag-sources", user, objectMapper.writeValueAsString(result));
+
+        when(userRepository.findById("user-sources")).thenReturn(Optional.of(user));
+        when(diagnosisRepository.findByIdAndUserId("diag-sources", "user-sources")).thenReturn(Optional.of(run));
+
+        var response = diagnosisService.getSources("user-sources", "diag-sources");
+        var source = response.getSources().get(0);
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseEvidence = (Map<String, Object>) source.getCollectionEvidence();
+        @SuppressWarnings("unchecked")
+        Map<String, Object> responseMetrics = (Map<String, Object>) source.getMetrics();
+
+        assertThat(responseEvidence).containsEntry("operationEndpoint", true);
+        assertThat(source.getOperationEndpoint()).isTrue();
+        assertThat(source.getEndpointType()).isEqualTo("operation");
+        assertThat(source.getApiKeyConfigured()).isTrue();
+        assertThat(source.getFetchedAt()).isEqualTo("2026-07-03T00:00:00Z");
+        assertThat(source.getMetricSummary()).isEqualTo("exportAmountUsd=45678");
+        assertThat(source.getDecisionImpact()).isEqualTo("시장성 +7");
+        assertThat(responseMetrics).containsEntry("exportAmountUsd", 45678);
+    }
+
     private User user(String id, UserType type) {
         User user = User.builder()
                 .id(id)
@@ -244,5 +355,19 @@ class DiagnosisServiceTest {
         ReflectionTestUtils.setField(user, "createdAt", LocalDateTime.of(2026, 6, 21, 4, 0));
         ReflectionTestUtils.setField(user, "updatedAt", LocalDateTime.of(2026, 6, 21, 4, 0));
         return user;
+    }
+
+    private com.growgate.diagnosis.entity.DiagnosisRun diagnosisRun(String id, User user, String resultJson) {
+        var run = com.growgate.diagnosis.entity.DiagnosisRun.builder()
+                .id(id)
+                .user(user)
+                .result(resultJson)
+                .status(com.growgate.diagnosis.enums.DiagnosisStatus.done)
+                .targetCountry("DE")
+                .inputData("{}")
+                .knowledgeSnapshot("{}")
+                .build();
+        ReflectionTestUtils.setField(run, "createdAt", LocalDateTime.of(2026, 7, 3, 9, 0));
+        return run;
     }
 }

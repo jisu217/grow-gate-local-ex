@@ -31,6 +31,7 @@ zip -qr "$OUT_ZIP" . \
   -x "**/__pycache__/*" \
   -x "**/.pytest_cache/*" \
   -x "artifacts/legacy-backups/*" \
+  -x "artifacts/presentation/*" \
   -x "artifacts/submission/*" \
   -x "*.zip"
 

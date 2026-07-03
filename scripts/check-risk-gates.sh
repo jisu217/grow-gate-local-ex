@@ -2,6 +2,7 @@
 set -euo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
 
 fail() {
   echo "[risk-gate] FAIL: $*" >&2
@@ -30,6 +31,7 @@ search_quiet() {
 require_file "scripts/smoke-prod.sh"
 require_file "scripts/verify-local.sh"
 require_file "scripts/package-submission.sh"
+require_file "scripts/presentation-public-data-proof.sh"
 require_file ".github/workflows/ci.yml"
 require_file "BUILD.md"
 require_file ".env.example.presentation"
@@ -121,6 +123,8 @@ if ! compgen -G "$ROOT_DIR/artifacts/legacy-backups/legacy-demo-and-mock-backup-
 fi
 grep -q 'artifacts/legacy-backups/\*' "$ROOT_DIR/scripts/package-submission.sh" \
   || fail "submission package script must exclude legacy backup archives"
+grep -q 'artifacts/presentation/\*' "$ROOT_DIR/scripts/package-submission.sh" \
+  || fail "submission package script must exclude presentation proof runtime artifacts"
 grep -q '\*.zip' "$ROOT_DIR/scripts/package-submission.sh" \
   || fail "submission package script must exclude zip archives from the submission zip"
 grep -q '\*/\.env' "$ROOT_DIR/scripts/package-submission.sh" \
@@ -157,6 +161,28 @@ search_quiet 'sourceTrustSummary' "$ROOT_DIR/backend/BE-02/src/main/java/com/gro
   || fail "diagnosis result must expose sourceTrustSummary"
 search_quiet 'scoreContributionLedger' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
   || fail "diagnosis result must expose scoreContributionLedger"
+for field in sourceTrustSummary scoreContributionLedger publicDataCollectionRunId inputTrace; do
+  grep -q "$field" "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/dto/DiagnosisDetailResponse.java" \
+    || fail "DiagnosisDetailResponse must preserve result field: $field"
+done
+for mapping in 'sourceTrustSummary(parseObjectMap' 'scoreContributionLedger(parseMapList' 'publicDataCollectionRunId(asString' 'inputTrace(parseObjectMap'; do
+  grep -q "$mapping" "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisService.java" \
+    || fail "DiagnosisService.getDetail must map: $mapping"
+done
+for field in collectionEvidence operationEndpoint apiKeyConfigured endpointType fetchedAt metricSummary decisionImpact; do
+  grep -q "$field" "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/dto/DiagnosisSourcesResponse.java" \
+    || fail "DiagnosisSourcesResponse must expose source proof field: $field"
+done
+for mapping in 'collectionEvidence(s.get' 'operationEndpoint(asBoolean' 'apiKeyConfigured(asBoolean' 'metricSummary(asString' 'decisionImpact(asString'; do
+  grep -q "$mapping" "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisService.java" \
+    || fail "DiagnosisService.getSources must map: $mapping"
+done
+search_quiet 'getDetailPreservesEvidenceContractFieldsFromResultJson|getSourcesPreservesCollectionEvidenceForPublicApiProof' "$ROOT_DIR/backend/BE-02/src/test/java/com/growgate/diagnosis/service/DiagnosisServiceTest.java" \
+  || fail "DiagnosisService evidence contract regression tests must exist"
+search_quiet 'buildSourceTrustSummaryFromSources|operationEndpointLiveCount|apiKeyConfiguredLiveCount' "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js" \
+  || fail "frontend mapper must restore source trust summary from /sources proof fields"
+search_quiet 'sourceRestored|operationEndpointLiveCount|apiKeyConfiguredLiveCount' "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.mapper.test.js" \
+  || fail "frontend mapper contract test must cover source proof restoration"
 search_quiet 'liveSuccessRate|providerHealth|lastCollectedAt|sourcePeriod' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
   || fail "sourceTrustSummary must expose freshness, period, live success rate, and provider health"
 search_quiet 'SourceTrustBar' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisResult.jsx" \
@@ -343,6 +369,12 @@ grep -q 'stageCards.s04-s07=present' "$ROOT_DIR/scripts/smoke-prod.sh" \
   || fail "smoke-prod must verify backend stageCards s04-s07"
 grep -q 'X-GG-CSRF' "$ROOT_DIR/scripts/smoke-prod.sh" \
   || fail "smoke-prod must send CSRF header when csrf cookie is present"
+grep -q 'operationEndpointLiveCount' "$ROOT_DIR/scripts/presentation-public-data-proof.sh" \
+  || fail "presentation public-data proof script must capture operation endpoint evidence"
+grep -q 'apiKeyConfiguredLiveCount' "$ROOT_DIR/scripts/presentation-public-data-proof.sh" \
+  || fail "presentation public-data proof script must capture API key configured evidence"
+grep -q 'officialOperationApiEvidenceCount' "$ROOT_DIR/scripts/presentation-public-data-proof.sh" \
+  || fail "presentation public-data proof script must separate official operation API evidence"
 pass "production smoke covers API/CORS/auth/stage/public-data risks"
 
 grep -q 'VITE_APP_MODE=presentation' "$ROOT_DIR/.env.example.presentation" \
@@ -378,5 +410,9 @@ search_quiet 'region: payload.region|industry: payload.industry' "$ROOT_DIR/fron
 search_quiet '기업 지역|지역 업종' "$ROOT_DIR/frontend/FE-02/src/pages/diagnosis/DiagnosisNew.jsx" \
   || fail "diagnosis input must capture regional manufacturing context"
 pass "regional industry and buyer-request trace are wired"
+
+(cd "$ROOT_DIR/frontend/FE-02" && node src/services/diagnosisService.mapper.test.js) \
+  || fail "frontend diagnosis mapper contract test failed"
+pass "frontend diagnosis mapper contract test passed"
 
 pass "all risk gates passed"

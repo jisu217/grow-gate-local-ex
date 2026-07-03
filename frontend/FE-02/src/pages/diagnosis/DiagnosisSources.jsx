@@ -34,6 +34,7 @@ export default function DiagnosisSources() {
   }, [id])
 
   const publicSources = sources.filter((source) => ['live', 'cache', 'fallback'].includes(source.sourceType))
+  const reconstructedSources = sources.filter((source) => ['crawl', 'external_feed', 'external_reconstructed'].includes(source.sourceType))
   const ruleSources = sources.filter((source) => source.sourceType === 'heuristic')
   const traceSources = sources.filter((source) => source.sourceType === 'agent')
 
@@ -69,6 +70,7 @@ export default function DiagnosisSources() {
       )}
 
       <SourceSection title="공공데이터 근거" items={publicSources} />
+      <SourceSection title="재구성 보조근거" items={reconstructedSources} />
       <SourceSection title="규칙 엔진 근거" items={ruleSources} />
       <SourceSection title="Workflow trace" items={traceSources} />
 
@@ -109,6 +111,22 @@ function SourceSection({ title, items }) {
               {item.sourceType} · {item.usedFor} · confidence {Math.round((item.confidence ?? 0) * 100)}%
               {item.motieRelated ? ' · 산업부/산하기관' : ' · 타 기관'}
             </div>
+            <div className={styles.proofGrid}>
+              <span className={proofClass(item.operationEndpoint)}>operation endpoint {item.operationEndpoint ? 'yes' : 'no'}</span>
+              <span className={proofClass(item.apiKeyConfigured)}>API key {item.apiKeyConfigured ? 'configured' : 'missing'}</span>
+              <span>{item.endpointType || item.collectionEvidence?.endpointType || 'endpoint unknown'}</span>
+              <span>fetched {formatDateTime(item.fetchedAt || item.retrievedAt)}</span>
+            </div>
+            {isAuxiliarySource(item.sourceType) && (
+              <div className={styles.notice}>보조근거입니다. 공식 공공 API live 증거 수에는 포함하지 않습니다.</div>
+            )}
+            {(item.metricSummary || item.decisionImpact) && (
+              <div className={styles.formula}>
+                {item.metricSummary ? `metric: ${item.metricSummary}` : ''}
+                {item.metricSummary && item.decisionImpact ? ' · ' : ''}
+                {item.decisionImpact ? `impact: ${item.decisionImpact}` : ''}
+              </div>
+            )}
             {item.scoreFormula && <div className={styles.formula}>{item.scoreFormula}</div>}
           </div>
           <span className={styles.itemDate}>
@@ -123,4 +141,17 @@ function SourceSection({ title, items }) {
 function formatDate(value) {
   if (!value) return '-'
   return String(value).slice(0, 10)
+}
+
+function formatDateTime(value) {
+  if (!value) return '-'
+  return String(value).replace('T', ' ').replace('Z', '').slice(0, 16)
+}
+
+function proofClass(value) {
+  return value ? styles.proofOk : styles.proofWarn
+}
+
+function isAuxiliarySource(sourceType) {
+  return ['crawl', 'external_feed', 'external_reconstructed', 'heuristic', 'agent'].includes(sourceType)
 }

@@ -44,6 +44,9 @@ It captures:
 - `liveCount`
 - `cacheCount`
 - `fallbackCount`
+- `operationEndpointLiveCount`
+- `apiKeyConfiguredLiveCount`
+- `officialOperationApiEvidenceCount`
 - `sourcePeriod`
 - `liveSuccessRate`
 - `providerHealth`
@@ -52,6 +55,27 @@ It captures:
 - `sourceIds`
 
 If `SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true`, the script fails when no live/cache record or collection run id is captured.
+
+## Presentation Proof Script
+
+For the final judge-facing evidence pack, use the completed diagnosis id and capture the stronger API proof contract:
+
+```bash
+BASE_URL=https://your-domain.example \
+DIAGNOSIS_ID=<completed-diagnosis-id> \
+AUTH_TOKEN=<jwt-from-login-response> \
+PRESENTATION_REQUIRE_LIVE_PUBLIC_DATA=true \
+PRESENTATION_REQUIRE_OPERATION_API=true \
+./scripts/presentation-public-data-proof.sh
+```
+
+The script writes:
+
+```text
+artifacts/presentation/live-public-data-proof-<diagnosisId>.json
+```
+
+The judge-facing success condition is stricter than `liveCount > 0`: at least one source should be `live/cache` and have both `operationEndpoint=true` and `apiKeyConfigured=true`. `fallback`, `crawl`, and `external_feed` are captured but are not counted as official operation API evidence.
 
 ## Presentation Evidence Pack
 

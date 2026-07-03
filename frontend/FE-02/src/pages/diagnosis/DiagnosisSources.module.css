@@ -29,6 +29,11 @@
 /* 출처 제목 */
 .itemTitle { font-size: 14px; font-weight: 600; color: var(--ink); }
 .meta { font-size: 12px; color: var(--slate-2); margin-top: 4px; }
+.proofGrid { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; font-size: 11.5px; color: var(--slate-2); }
+.proofGrid span { border: 1px solid var(--line); border-radius: 6px; padding: 4px 7px; background: #f8fafc; }
+.proofOk { color: #067647 !important; border-color: #bfe6d2 !important; background: #ecfdf3 !important; font-weight: 700; }
+.proofWarn { color: #b42318 !important; border-color: #f3b8b0 !important; background: #fff1f0 !important; font-weight: 700; }
+.notice { font-size: 11.5px; color: #9a5b00; background: #fff8ec; border: 1px solid #f5d98c; border-radius: 8px; padding: 7px 9px; margin-top: 8px; line-height: 1.45; }
 .formula { font-size: 11.5px; color: var(--slate-2); margin-top: 5px; line-height: 1.5; }
 .empty { font-size: 13px; color: var(--slate-2); background: var(--card); border: 1px dashed var(--line); border-radius: 12px; padding: 18px; margin-bottom: 8px; }
 .providerRow { display: flex; align-items: center; justify-content: space-between; gap: 14px; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 14px 18px; margin-bottom: 8px; }

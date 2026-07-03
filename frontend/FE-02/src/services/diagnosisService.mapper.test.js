@@ -186,3 +186,65 @@ assert.deepEqual(sparseMapped.session.actionRoadmap, {
   beforeShipment: [],
 })
 assert.equal(sparseMapped.kpiData[0].score, 0)
+
+const sourceRestored = mapDiagnosisDetail({
+  id: 'diag-source-restore',
+  productName: '전장 모듈',
+  targetCountry: 'DE',
+  status: 'completed',
+  knowledgeSnapshot: {},
+  result: {
+    diagnosisScore: { overall: 70 },
+    stageCards: {},
+  },
+}, null, [{
+  sourceId: 'KCS_TRADE-record-1',
+  provider: 'KCS_TRADE',
+  sourceType: 'live',
+  usedFor: 'market',
+  scoreContribution: 7,
+  rawScoreContribution: 9,
+  confidenceAdjustedContribution: 7,
+  confidence: 0.82,
+  collectionRunId: 'run-1',
+  operationEndpoint: true,
+  apiKeyConfigured: true,
+  apiKeyStored: false,
+  endpointType: 'operation',
+  fetchedAt: '2026-07-03T09:00:00Z',
+  sourcePeriodStart: '2026-06-01',
+  sourcePeriodEnd: '2026-06-30',
+  metricSummary: 'exportAmountUsd=45678',
+  decisionImpact: '시장성 +7',
+  metrics: { exportAmountUsd: 45678 },
+  collectionEvidence: {
+    operationEndpoint: true,
+    apiKeyConfigured: true,
+    endpointType: 'operation',
+  },
+}, {
+  sourceId: 'SAFETY_RECALL-record-2',
+  provider: 'SAFETY_RECALL',
+  sourceType: 'fallback',
+  usedFor: 'recall',
+  fallbackUsed: true,
+  scoreContribution: 0,
+  confidence: 0.2,
+  operationEndpoint: false,
+  apiKeyConfigured: false,
+  endpointType: 'catalog',
+  fetchedAt: '2026-07-03T09:01:00Z',
+  metricSummary: 'fallback',
+  decisionImpact: '담당자 검토 필요',
+}])
+
+assert.equal(sourceRestored.session.sourceTrustSummary.liveCount, 1)
+assert.equal(sourceRestored.session.sourceTrustSummary.fallbackCount, 1)
+assert.equal(sourceRestored.session.sourceTrustSummary.operationEndpointLiveCount, 1)
+assert.equal(sourceRestored.session.sourceTrustSummary.apiKeyConfiguredLiveCount, 1)
+assert.equal(sourceRestored.session.sourceTrustSummary.providerHealth[0].operationEndpoint, true)
+assert.equal(sourceRestored.session.sourceTrustSummary.providerHealth[1].apiKeyConfigured, false)
+assert.equal(sourceRestored.stages.s10.ledger[0].operationEndpoint, true)
+assert.equal(sourceRestored.stages.s10.ledger[0].apiKeyConfigured, true)
+assert.equal(sourceRestored.stages.s10.ledger[0].endpointType, 'operation')
+assert.equal(sourceRestored.stages.s10.ledger[0].rawMetric.exportAmountUsd, 45678)

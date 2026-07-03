@@ -84,12 +84,17 @@ export async function getDiagnosisList() {
 }
 
 // 진단 결과 상세 매핑
-export function mapDiagnosisDetail(d, evidenceSources) {
+export function mapDiagnosisDetail(d, evidenceSources, sourceEntries = []) {
   const diagnosisScore = normalizeDiagnosisScore(d.result?.diagnosisScore)
   const overallScore = typeof diagnosisScore === 'number'
     ? diagnosisScore
     : diagnosisScore?.overall ?? 0
   const stageCards = d.result?.stageCards ?? {}
+  const restoredSourceTrustSummary = d.result?.sourceTrustSummary
+    ?? buildSourceTrustSummaryFromSources(sourceEntries, d)
+  const restoredLedger = Array.isArray(d.result?.scoreContributionLedger) && d.result.scoreContributionLedger.length > 0
+    ? d.result.scoreContributionLedger
+    : buildLedgerFromSources(sourceEntries)
   const session = {
     ...EMPTY_SESSION,
     id: d.id,
@@ -113,8 +118,8 @@ export function mapDiagnosisDetail(d, evidenceSources) {
     evidenceRetrieval: d.result?.evidenceRetrieval ?? null,
     exportKnowledgeTimeline: Array.isArray(d.result?.exportKnowledgeTimeline) ? d.result.exportKnowledgeTimeline : [],
     evidenceGuardrails: d.result?.evidenceGuardrails ?? null,
-    sourceTrustSummary: d.result?.sourceTrustSummary ?? null,
-    scoreContributionLedger: Array.isArray(d.result?.scoreContributionLedger) ? d.result.scoreContributionLedger : [],
+    sourceTrustSummary: restoredSourceTrustSummary,
+    scoreContributionLedger: restoredLedger,
     normalizedMetrics: d.result?.normalizedMetrics ?? null,
     pythonWorker: d.result?.pythonWorker ?? null,
     pythonAgenticLoop: d.result?.pythonAgenticLoop ?? null,
@@ -180,6 +185,136 @@ export function buildDecisionBrief(session = {}, stages = {}) {
     topRisks,
     nextActions,
   }
+}
+
+export function buildSourceTrustSummaryFromSources(sourceEntries = [], detail = {}) {
+  const entries = Array.isArray(sourceEntries) ? sourceEntries : []
+  if (entries.length === 0) return null
+  const byProvider = new Map()
+  let liveCount = 0
+  let cacheCount = 0
+  let fallbackCount = 0
+  let crawlCount = 0
+  let externalFeedCount = 0
+  let operationEndpointLiveCount = 0
+  let apiKeyConfiguredLiveCount = 0
+  const collected = []
+  const periodStarts = []
+  const periodEnds = []
+  const collectionRunIds = new Set()
+
+  entries.forEach((entry) => {
+    const sourceType = entry.sourceType ?? 'fallback'
+    if (sourceType === 'live') liveCount += 1
+    if (sourceType === 'cache') cacheCount += 1
+    if (sourceType === 'fallback') fallbackCount += 1
+    if (sourceType === 'crawl') crawlCount += 1
+    if (sourceType === 'external_feed' || sourceType === 'external_reconstructed') externalFeedCount += 1
+    const isLiveOrCache = sourceType === 'live' || sourceType === 'cache'
+    if (isLiveOrCache && Boolean(entry.operationEndpoint ?? entry.collectionEvidence?.operationEndpoint)) {
+      operationEndpointLiveCount += 1
+    }
+    if (isLiveOrCache && Boolean(entry.apiKeyConfigured ?? entry.collectionEvidence?.apiKeyConfigured)) {
+      apiKeyConfiguredLiveCount += 1
+    }
+    if (entry.fetchedAt || entry.retrievedAt) collected.push(entry.fetchedAt ?? entry.retrievedAt)
+    if (entry.sourcePeriodStart) periodStarts.push(entry.sourcePeriodStart)
+    if (entry.sourcePeriodEnd) periodEnds.push(entry.sourcePeriodEnd)
+    if (entry.collectionRunId) collectionRunIds.add(entry.collectionRunId)
+
+    const provider = entry.provider ?? entry.datasetName ?? 'UNKNOWN'
+    const operationEndpoint = Boolean(entry.operationEndpoint ?? entry.collectionEvidence?.operationEndpoint)
+    const apiKeyConfigured = Boolean(entry.apiKeyConfigured ?? entry.collectionEvidence?.apiKeyConfigured)
+    const row = byProvider.get(provider) ?? {
+      provider,
+      liveCount: 0,
+      cacheCount: 0,
+      fallbackCount: 0,
+      crawlCount: 0,
+      externalFeedCount: 0,
+      operationEndpoint: false,
+      apiKeyConfigured: false,
+      operationEndpointLiveCount: 0,
+      apiKeyConfiguredLiveCount: 0,
+      endpointType: '',
+      lastCollectedAt: '',
+      sourcePeriodStart: '',
+      sourcePeriodEnd: '',
+      failureReason: '',
+      status: 'no_record',
+    }
+    if (sourceType === 'live') row.liveCount += 1
+    if (sourceType === 'cache') row.cacheCount += 1
+    if (sourceType === 'fallback') row.fallbackCount += 1
+    if (sourceType === 'crawl') row.crawlCount += 1
+    if (sourceType === 'external_feed' || sourceType === 'external_reconstructed') row.externalFeedCount += 1
+    row.operationEndpoint = row.operationEndpoint || operationEndpoint
+    row.apiKeyConfigured = row.apiKeyConfigured || apiKeyConfigured
+    if (isLiveOrCache && operationEndpoint) row.operationEndpointLiveCount += 1
+    if (isLiveOrCache && apiKeyConfigured) row.apiKeyConfiguredLiveCount += 1
+    row.endpointType = row.endpointType || entry.endpointType || entry.collectionEvidence?.endpointType || ''
+    row.lastCollectedAt = maxDateString(row.lastCollectedAt, entry.fetchedAt ?? entry.retrievedAt)
+    row.sourcePeriodStart = minDateString(row.sourcePeriodStart, entry.sourcePeriodStart)
+    row.sourcePeriodEnd = maxDateString(row.sourcePeriodEnd, entry.sourcePeriodEnd)
+    row.failureReason = row.failureReason || entry.errorMessage || entry.reason || ''
+    row.status = row.fallbackCount > 0 && row.liveCount + row.cacheCount + row.crawlCount + row.externalFeedCount === 0 ? 'fallback'
+      : row.fallbackCount > 0 ? 'partial'
+        : row.liveCount > 0 ? 'live'
+          : row.cacheCount > 0 ? 'cache'
+            : row.externalFeedCount > 0 ? 'external_feed'
+              : row.crawlCount > 0 ? 'crawl' : 'no_record'
+    byProvider.set(provider, row)
+  })
+
+  const officialAttemptCount = liveCount + cacheCount + fallbackCount
+  const liveSuccessRate = officialAttemptCount === 0 ? 0 : Math.round(((liveCount + cacheCount) / officialAttemptCount) * 1000) / 1000
+  const sortedCollected = collected.filter(Boolean).sort()
+  const sortedStarts = periodStarts.filter(Boolean).sort()
+  const sortedEnds = periodEnds.filter(Boolean).sort()
+
+  return {
+    diagnosisId: detail.id,
+    createdAt: detail.createdAt,
+    collectionRunIds: [...collectionRunIds],
+    liveCount,
+    cacheCount,
+    fallbackCount,
+    crawlCount,
+    externalFeedCount,
+    operationEndpointLiveCount,
+    apiKeyConfiguredLiveCount,
+    liveSuccessRate,
+    lastCollectedAt: sortedCollected.at(-1) ?? '',
+    sourcePeriodStart: sortedStarts[0] ?? '',
+    sourcePeriodEnd: sortedEnds.at(-1) ?? '',
+    sourcePeriod: sortedStarts.length && sortedEnds.length ? `${sortedStarts[0]} ~ ${sortedEnds.at(-1)}` : 'source period 확인 대기',
+    providerHealth: [...byProvider.values()],
+    sourceIds: entries.map((entry) => entry.sourceId).filter(Boolean).slice(0, 12),
+  }
+}
+
+export function buildLedgerFromSources(sourceEntries = []) {
+  const entries = Array.isArray(sourceEntries) ? sourceEntries : []
+  return entries
+    .filter((entry) => entry.sourceId || entry.provider)
+    .map((entry) => ({
+      sourceId: entry.sourceId ?? entry.recordId ?? `${entry.provider}-${entry.usedFor}`,
+      provider: entry.provider ?? entry.datasetName ?? '',
+      usedFor: entry.usedFor ?? entry.field ?? '',
+      sourceType: entry.sourceType ?? 'fallback',
+      operationEndpoint: Boolean(entry.operationEndpoint ?? entry.collectionEvidence?.operationEndpoint),
+      apiKeyConfigured: Boolean(entry.apiKeyConfigured ?? entry.collectionEvidence?.apiKeyConfigured),
+      endpointType: entry.endpointType ?? entry.collectionEvidence?.endpointType ?? '',
+      fetchedAt: entry.fetchedAt ?? entry.retrievedAt ?? '',
+      rawMetric: entry.rawMetric ?? entry.metrics ?? entry.scoreInputs ?? {},
+      normalizedMetric: entry.normalizedMetric ?? entry.metrics ?? entry.scoreInputs ?? {},
+      rawContribution: entry.rawScoreContribution ?? entry.scoreContribution ?? 0,
+      confidence: entry.confidence ?? 0,
+      adjustedContribution: entry.confidenceAdjustedContribution ?? entry.scoreContribution ?? 0,
+      finalScoreDelta: entry.scoreContribution ?? entry.confidenceAdjustedContribution ?? 0,
+      metricSummary: entry.metricSummary ?? '',
+      decisionImpact: entry.decisionImpact ?? '',
+    }))
 }
 
 function normalizeTopRisks(riskItems, mustFixBeforeQuote) {
@@ -248,6 +383,18 @@ function normalizeNextActions(roadmapStage, mustFixBeforeQuote, topRisks) {
       output: externalTask?.output ?? '외부 확인 기록',
     },
   ]
+}
+
+function maxDateString(current, candidate) {
+  if (!candidate) return current || ''
+  if (!current) return candidate
+  return String(candidate) > String(current) ? candidate : current
+}
+
+function minDateString(current, candidate) {
+  if (!candidate) return current || ''
+  if (!current) return candidate
+  return String(candidate) < String(current) ? candidate : current
 }
 
 function mapInputStage(stageData, detail) {
@@ -583,12 +730,17 @@ export async function getDiagnosisSourceEntries(id) {
 export async function getDiagnosisResult(id) {
   const detail = await apiFetch(`/diagnosis/${id}`)
   let evidenceSources = null
+  let sourceEntries = []
   try {
-    evidenceSources = await getDiagnosisSources(id)
+    sourceEntries = await getDiagnosisSourceEntries(id)
+    evidenceSources = sourceEntries.map((s) => {
+      const contribution = s.scoreContribution != null ? ` (${s.scoreContribution > 0 ? '+' : ''}${s.scoreContribution})` : ''
+      return `${s.provider ?? s.documentName ?? s.field}${contribution}`
+    })
   } catch {
     evidenceSources = detail.result?.evidenceSources ?? null
   }
-  return mapDiagnosisDetail(detail, evidenceSources)
+  return mapDiagnosisDetail(detail, evidenceSources, sourceEntries)
 }
 
 export async function getDiagnosisReport(id) {

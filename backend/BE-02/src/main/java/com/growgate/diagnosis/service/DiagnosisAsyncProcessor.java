@@ -438,6 +438,7 @@ public class DiagnosisAsyncProcessor {
             source.put("retrievedAt", record.getFetchedAt() != null
                     ? record.getFetchedAt().atOffset(ZoneOffset.UTC).toString()
                     : OffsetDateTime.now(ZoneOffset.UTC).toString());
+            source.put("fetchedAt", source.get("retrievedAt"));
             source.put("recordId", record.getId());
             source.put("matchedKey", record.getMatchedKey());
             source.put("usedFor", record.getUsedFor());
@@ -466,6 +467,15 @@ public class DiagnosisAsyncProcessor {
                 source.put("rawMetric", metrics);
                 source.put("normalizedMetric", metrics);
             }
+            Object collectionEvidence = normalizedPayload.get("collectionEvidence");
+            if (collectionEvidence instanceof Map<?, ?> evidence) {
+                source.put("collectionEvidence", collectionEvidence);
+                source.put("endpointConfigured", evidence.get("endpointConfigured"));
+                source.put("operationEndpoint", evidence.get("operationEndpoint"));
+                source.put("endpointType", evidence.get("endpointType"));
+                source.put("apiKeyConfigured", evidence.get("apiKeyConfigured"));
+                source.put("apiKeyStored", evidence.get("apiKeyStored"));
+            }
             putIfPresent(source, "publishedAt", normalizedPayload.get("publishedAt"));
             putIfPresent(source, "sourcePeriodStart", normalizedPayload.get("sourcePeriodStart"));
             putIfPresent(source, "sourcePeriodEnd", normalizedPayload.get("sourcePeriodEnd"));
@@ -488,6 +498,14 @@ public class DiagnosisAsyncProcessor {
         long crawlCount = sources.stream().filter(source -> "crawl".equals(source.get("sourceType"))).count();
         long externalFeedCount = sources.stream().filter(source -> "external_feed".equals(source.get("sourceType"))).count();
         long seedCount = sources.stream().filter(source -> "seed".equals(source.get("sourceType"))).count();
+        long operationEndpointLiveCount = sources.stream()
+                .filter(source -> ("live".equals(source.get("sourceType")) || "cache".equals(source.get("sourceType")))
+                        && Boolean.TRUE.equals(source.get("operationEndpoint")))
+                .count();
+        long apiKeyConfiguredLiveCount = sources.stream()
+                .filter(source -> ("live".equals(source.get("sourceType")) || "cache".equals(source.get("sourceType")))
+                        && Boolean.TRUE.equals(source.get("apiKeyConfigured")))
+                .count();
         long officialAttemptCount = liveCount + cacheCount + fallbackCount;
         double liveSuccessRate = officialAttemptCount == 0 ? 0.0
                 : Math.round(((liveCount + cacheCount) / (double) officialAttemptCount) * 1000.0) / 1000.0;
@@ -532,6 +550,8 @@ public class DiagnosisAsyncProcessor {
         summary.put("crawlCount", crawlCount);
         summary.put("externalFeedCount", externalFeedCount);
         summary.put("seedCount", seedCount);
+        summary.put("operationEndpointLiveCount", operationEndpointLiveCount);
+        summary.put("apiKeyConfiguredLiveCount", apiKeyConfiguredLiveCount);
         summary.put("liveSuccessRate", liveSuccessRate);
         summary.put("lastCollectedAt", collectedAt.isEmpty() ? "" : collectedAt.get(collectedAt.size() - 1));
         summary.put("sourcePeriodStart", periodStarts.isEmpty() ? "" : periodStarts.get(0));
@@ -587,6 +607,21 @@ public class DiagnosisAsyncProcessor {
             row.put("fallbackCount", fallback);
             row.put("crawlCount", crawl);
             row.put("externalFeedCount", externalFeed);
+            row.put("operationEndpoint", items.stream().anyMatch(item -> Boolean.TRUE.equals(item.get("operationEndpoint"))));
+            row.put("apiKeyConfigured", items.stream().anyMatch(item -> Boolean.TRUE.equals(item.get("apiKeyConfigured"))));
+            row.put("operationEndpointLiveCount", items.stream()
+                    .filter(item -> ("live".equals(item.get("sourceType")) || "cache".equals(item.get("sourceType")))
+                            && Boolean.TRUE.equals(item.get("operationEndpoint")))
+                    .count());
+            row.put("apiKeyConfiguredLiveCount", items.stream()
+                    .filter(item -> ("live".equals(item.get("sourceType")) || "cache".equals(item.get("sourceType")))
+                            && Boolean.TRUE.equals(item.get("apiKeyConfigured")))
+                    .count());
+            row.put("endpointType", items.stream()
+                    .map(item -> stringValue(item.get("endpointType")))
+                    .filter(value -> !value.isBlank())
+                    .findFirst()
+                    .orElse(""));
             row.put("lastCollectedAt", fetched.isEmpty() ? "" : fetched.get(fetched.size() - 1));
             row.put("sourcePeriodStart", periodStart.isEmpty() ? "" : periodStart.get(0));
             row.put("sourcePeriodEnd", periodEnd.isEmpty() ? "" : periodEnd.get(periodEnd.size() - 1));
@@ -629,6 +664,10 @@ public class DiagnosisAsyncProcessor {
                     row.put("sourceType", stringValue(source.get("sourceType")));
                     row.put("rawMetric", source.getOrDefault("rawMetric", source.getOrDefault("metrics", Map.of())));
                     row.put("normalizedMetric", source.getOrDefault("normalizedMetric", source.getOrDefault("scoreInputs", Map.of())));
+                    row.put("operationEndpoint", source.getOrDefault("operationEndpoint", false));
+                    row.put("apiKeyConfigured", source.getOrDefault("apiKeyConfigured", false));
+                    row.put("endpointType", stringValue(source.get("endpointType")));
+                    row.put("fetchedAt", stringValue(source.get("fetchedAt")));
                     row.put("rawContribution", source.getOrDefault("rawContribution", source.getOrDefault("rawScoreContribution", 0)));
                     row.put("confidence", source.getOrDefault("confidence", 0));
                     row.put("adjustedContribution", source.getOrDefault("adjustedContribution",

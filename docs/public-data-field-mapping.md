@@ -51,6 +51,9 @@
 | `sourceType` | `live/cache/fallback/crawl/external_feed/seed/heuristic/user_input/agent` |
 | `usedFor` | `market/regulation/recall/fto/support` |
 | `metricSummary` | 점수에 쓰인 핵심 metric 요약 |
+| `operationEndpoint` | connector가 catalog/application page가 아니라 실제 operation endpoint를 호출했다는 evidence |
+| `apiKeyConfigured` | 인증키 기반 API 호출 설정이 있었는지에 대한 evidence. 값은 키 원문이 아니라 boolean만 저장한다. |
+| `endpointType` | `operation`, `catalog`, `application`, `portal` 등 endpoint 분류 |
 | `rawScoreContribution` | connector가 계산한 원점 기여도 |
 | `confidence` | provider/parser confidence |
 | `scoreContribution` | confidence와 fallback 정책을 반영한 최종 기여도 |
@@ -73,6 +76,8 @@ fallbackCount > 0 or lowCoverage => confidencePanel.uncertaintyReasons 추가
 - `SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true`이면 live success가 1건 미만일 때 실패한다.
 - `/api/public-data/health`는 현재 사용자/회사 scope에서 `motieRelatedLiveOrCacheCount`, `motieVerifiedOperationLiveCount`, `motieRelatedScoreContribution`, `motieLiveEvidenceReady`를 반환한다.
 - 산업부 계열 live 증거는 `sourceType=live/cache`, `provider.motieRelated=true`, `collectionEvidence.operationEndpoint=true`인 record만 verified operation evidence로 계산한다.
+- 발표장에서 "실제 operation API 증거"로 말하려면 `sourceType=live/cache`, `operationEndpoint=true`, `apiKeyConfigured=true`, `collectionRunId`, `fetchedAt/retrievedAt`가 함께 있어야 한다.
+- `scripts/presentation-public-data-proof.sh`는 `operationEndpointLiveCount`, `apiKeyConfiguredLiveCount`, `officialOperationApiEvidenceCount`를 산출한다.
 - S10 Sources 화면에서 `live`, `cache`, `fallback`, `crawl`, `heuristic` badge가 구분되어야 한다.
 - Source Trust Bar는 `lastCollectedAt`, `sourcePeriod`, `providerHealth`, `liveSuccessRate`를 첫 화면에 표시해야 한다.
 - S10 Sources 화면은 raw metric -> normalized metric -> raw contribution -> confidence -> adjusted contribution -> final score delta waterfall을 보여야 한다.

@@ -42,5 +42,18 @@ public class DiagnosisSourcesResponse {
         private String collectionRunId;
         private String errorMessage;
         private String reason;
+        private Object collectionEvidence;
+        private Boolean endpointConfigured;
+        private Boolean operationEndpoint;
+        private String endpointType;
+        private Boolean apiKeyConfigured;
+        private Boolean apiKeyStored;
+        private String fetchedAt;
+        private String sourcePeriodStart;
+        private String sourcePeriodEnd;
+        private String metricSummary;
+        private String decisionImpact;
+        private Object metrics;
+        private Object domainSignals;
     }
 }

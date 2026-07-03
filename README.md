@@ -93,6 +93,8 @@ GROW-GATE Local EX는 이 질문을 바이어 회신 가능한 Gate 판단과 �
 
 현재 제출용 Spring 앱은 `PUBLIC_DATA_ENABLED=true`가 기본값입니다. API key와 실제 operation endpoint가 있으면 live 공공 API를 호출하고, key가 없거나 호출이 실패하면 `public_data_collection_runs`, `public_data_records`에 fallback 사유를 저장합니다. 공식 카탈로그/신청 페이지 URL은 출처 추적용 기본값으로 보존하되, HTML 상세 페이지를 API 응답으로 저장하지 않도록 fallback 처리합니다. 메인 진단 결과에는 `live`, `cache`, `fallback`, `heuristic`, `agent` sourceType과 confidence-adjusted 점수 기여도, provider별 metric signal이 표시됩니다. 여기서 `agent`는 점수 산출 주체가 아니라 선택형 분석 bridge와 workflow trace를 나타내는 보조 출처입니다.
 
+발표장에서 공식 live 공공 API 증거로 설명할 수 있는 record는 `sourceType=live/cache`, `operationEndpoint=true`, `apiKeyConfigured=true`, `collectionRunId`, `fetchedAt/retrievedAt`, `metricSummary/metrics`가 함께 있어야 합니다. S10 화면과 `/diagnosis/{id}/sources` 화면은 이 값을 직접 표시하고, `fallback`, `crawl`, `external_feed`, `heuristic`은 공식 API 연결 성공으로 표시하지 않습니다.
+
 필요할 때만 `PUBLIC_DATA_CRAWL_ENABLED=true`와 `PUBLIC_DATA_CRAWL_URLS=https://...`를 설정해 산업부/KOTRA/SafetyKorea 등 allowlist 공개 페이지를 보조 근거로 수집할 수 있습니다. 크롤링 결과는 script/style 제거, 개인정보/키 패턴 마스킹, 길이 제한, keyword metric 전처리를 거친 뒤 `sourceType=crawl`로 표시되며, 공공 API live record와 구분됩니다.
 
 벡터형 대규모 RAG 검색 또는 성과 확률 산출이라고 주장하지 않습니다. 제출 서버의 현재 구현은 DB 지식과 공공데이터 record를 chunk화한 뒤 담당자가 승인한 self-loop wiki 항목을 다음 판단 context에 재사용하고, `evidenceRetrieval`, `exportKnowledgeTimeline`, `evidenceGuardrails`로 근거 범위와 fallback 정책을 화면에 드러내는 방식입니다. 대규모 문서 검색은 pgvector/Redis 등으로 교체 가능한 후속 과제입니다.
@@ -259,6 +261,17 @@ cd frontend/FE-02 && npm run test:mappers && npm run build
 
 ```bash
 BASE_URL=https://your-domain.example ./scripts/smoke-prod.sh
+```
+
+완료된 진단 1건에 대해 operation endpoint/API key evidence까지 발표용 JSON으로 캡처:
+
+```bash
+BASE_URL=https://your-domain.example \
+DIAGNOSIS_ID=<completed-diagnosis-id> \
+AUTH_TOKEN=<jwt-from-login-response> \
+PRESENTATION_REQUIRE_LIVE_PUBLIC_DATA=true \
+PRESENTATION_REQUIRE_OPERATION_API=true \
+./scripts/presentation-public-data-proof.sh
 ```
 
 ---

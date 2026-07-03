@@ -207,6 +207,22 @@ source_types = [s.get("sourceType") for s in sources]
 live_count = int(summary.get("liveCount") or source_types.count("live"))
 cache_count = int(summary.get("cacheCount") or source_types.count("cache"))
 fallback_count = int(summary.get("fallbackCount") or source_types.count("fallback"))
+operation_endpoint_live_count = int(summary.get("operationEndpointLiveCount") or sum(
+    1 for s in sources
+    if s.get("sourceType") in ("live", "cache")
+    and bool(s.get("operationEndpoint") if s.get("operationEndpoint") is not None else (s.get("collectionEvidence") or {}).get("operationEndpoint"))
+))
+api_key_configured_live_count = int(summary.get("apiKeyConfiguredLiveCount") or sum(
+    1 for s in sources
+    if s.get("sourceType") in ("live", "cache")
+    and bool(s.get("apiKeyConfigured") if s.get("apiKeyConfigured") is not None else (s.get("collectionEvidence") or {}).get("apiKeyConfigured"))
+))
+official_operation_api_evidence_count = sum(
+    1 for s in sources
+    if s.get("sourceType") in ("live", "cache")
+    and bool(s.get("operationEndpoint") if s.get("operationEndpoint") is not None else (s.get("collectionEvidence") or {}).get("operationEndpoint"))
+    and bool(s.get("apiKeyConfigured") if s.get("apiKeyConfigured") is not None else (s.get("collectionEvidence") or {}).get("apiKeyConfigured"))
+)
 source_ids = summary.get("sourceIds") or [s.get("sourceId") for s in sources if s.get("sourceId")]
 collection_run_ids = summary.get("collectionRunIds") or []
 if not collection_run_ids and result.get("publicDataCollectionRunId"):
@@ -220,6 +236,9 @@ evidence = {
     "liveCount": live_count,
     "cacheCount": cache_count,
     "fallbackCount": fallback_count,
+    "operationEndpointLiveCount": operation_endpoint_live_count,
+    "apiKeyConfiguredLiveCount": api_key_configured_live_count,
+    "officialOperationApiEvidenceCount": official_operation_api_evidence_count,
     "dashboardSuccessCount": dashboard.get("successCount"),
     "dashboardFallbackCount": dashboard.get("fallbackCount"),
     "sourceIds": source_ids[:20],
@@ -227,7 +246,7 @@ evidence = {
 with open(out_path, "w", encoding="utf-8") as f:
     json.dump(evidence, f, ensure_ascii=False, indent=2)
 print("smokeEvidence=" + out_path)
-print(f"diagnosisId={evidence['diagnosisId']} collectionRunId={evidence['collectionRunId']} liveCount={live_count} cacheCount={cache_count} fallbackCount={fallback_count}")
+print(f"diagnosisId={evidence['diagnosisId']} collectionRunId={evidence['collectionRunId']} liveCount={live_count} cacheCount={cache_count} fallbackCount={fallback_count} operationEndpointLiveCount={operation_endpoint_live_count} apiKeyConfiguredLiveCount={api_key_configured_live_count}")
 if require_live and live_count <= 0 and cache_count <= 0:
     raise SystemExit("SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true but diagnosis sources have no live/cache records")
 if require_live and not evidence["collectionRunId"]:

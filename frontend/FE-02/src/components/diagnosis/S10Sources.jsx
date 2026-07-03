@@ -11,6 +11,8 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
   const providerHealth = Array.isArray(sourceTrustSummary?.providerHealth) ? sourceTrustSummary.providerHealth : []
   const liveCount = Number(sourceTrustSummary?.liveCount ?? 0)
   const cacheCount = Number(sourceTrustSummary?.cacheCount ?? 0)
+  const operationEndpointLiveCount = Number(sourceTrustSummary?.operationEndpointLiveCount ?? 0)
+  const apiKeyConfiguredLiveCount = Number(sourceTrustSummary?.apiKeyConfiguredLiveCount ?? 0)
 
   return (
     <DiagnosisStage
@@ -95,6 +97,12 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
           {liveCount + cacheCount === 0 && (
             <div className="pipe-lbl req-text">live/cache 공공데이터 0건 - fallback 원인 확인 후 재수집이 필요합니다.</div>
           )}
+          {liveCount + cacheCount > 0 && operationEndpointLiveCount === 0 && (
+            <div className="pipe-lbl req-text">operation endpoint 증거 0건 - catalog/신청 페이지 기반 응답은 공식 API live 증거로 표시하지 않습니다.</div>
+          )}
+          {operationEndpointLiveCount > 0 && apiKeyConfiguredLiveCount === 0 && (
+            <div className="pipe-lbl req-text">API key configured 증거 0건 - 공개 feed/cache와 인증키 기반 공공 API를 구분해 확인하십시오.</div>
+          )}
         </div>
         <button type="button" className="secondary-btn" onClick={onRetry} disabled={!onRetry || retryStatus === 'running'}>
           {retryStatus === 'running' ? '재수집 중' : '공공데이터 재수집'}
@@ -106,9 +114,19 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
           ) : providerHealth.map((provider) => (
             <div key={provider.provider} className={`provider-health-row ${provider.status}`}>
               <strong>{provider.provider}</strong>
-              <span>L{provider.liveCount ?? 0} / C{provider.cacheCount ?? 0} / F{provider.fallbackCount ?? 0} / Feed{provider.externalFeedCount ?? 0}</span>
-              <span>{provider.lastCollectedAt || '-'}</span>
-              <span>{provider.failureReason || 'failure 없음'}</span>
+              <span>
+                L{provider.liveCount ?? 0} / C{provider.cacheCount ?? 0} / F{provider.fallbackCount ?? 0}
+                {Number(provider.externalFeedCount ?? 0) > 0 ? ` / Feed${provider.externalFeedCount}` : ''}
+                {Number(provider.crawlCount ?? 0) > 0 ? ` / Crawl${provider.crawlCount}` : ''}
+              </span>
+              <span>
+                operation {provider.operationEndpoint ? 'yes' : 'no'} · key {provider.apiKeyConfigured ? 'set' : 'missing'}
+                <small>{provider.endpointType || 'endpoint unknown'}</small>
+              </span>
+              <span>
+                {provider.lastCollectedAt || '-'}
+                <small>{provider.failureReason || 'failure 없음'}</small>
+              </span>
             </div>
           ))}
         </div>
@@ -121,6 +139,7 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
             <thead>
               <tr>
                 <th>Source</th>
+                <th>API proof</th>
                 <th>Raw metric</th>
                 <th>Normalized metric</th>
                 <th>Raw contribution</th>
@@ -132,13 +151,18 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
             <tbody>
               {ledger.length === 0 ? (
                 <tr>
-                  <td colSpan="7">ledger 대기 - backend scoreContributionLedger가 없습니다.</td>
+                  <td colSpan="8">ledger 대기 - backend scoreContributionLedger가 없습니다.</td>
                 </tr>
               ) : ledger.slice(0, 10).map((row) => (
                 <tr key={`${row.sourceId}-${row.usedFor}`}>
                   <td>
                     <strong>{row.provider}</strong>
                     <span>{row.sourceType} · {row.usedFor}</span>
+                  </td>
+                  <td>
+                    <strong>{row.operationEndpoint ? 'operation endpoint' : 'no operation proof'}</strong>
+                    <span>API key {row.apiKeyConfigured ? 'configured' : 'not configured'} · {row.endpointType || 'unknown'}</span>
+                    <span>{row.fetchedAt || '-'}</span>
                   </td>
                   <td>{compactMetric(row.rawMetric)}</td>
                   <td>{row.metricSummary || compactMetric(row.normalizedMetric)}</td>
@@ -181,8 +205,9 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
       </div>
 
       <div style={{ fontSize: 11.5, color: 'var(--slate-2)', marginTop: 16, lineHeight: 1.6 }}>
-        출처는 live/cache/fallback 공공데이터, crawl 공개 웹, heuristic 규칙 엔진을 구분합니다.
-        fallback, crawl, heuristic은 “공공 API 연결됨”으로 해석하지 말고 보강 대상 여부를 확인하십시오.
+        출처는 live/cache/fallback 공공데이터, crawl 공개 웹, external_feed 재구성 자료, heuristic 규칙 엔진을 구분합니다.
+        official API 증거는 live/cache이면서 operation endpoint와 API key configured evidence가 있는 경우에만 인정합니다.
+        fallback, crawl, external_feed, heuristic은 “공공 API 연결됨”으로 해석하지 말고 보강 대상 여부를 확인하십시오.
       </div>
     </DiagnosisStage>
   )
