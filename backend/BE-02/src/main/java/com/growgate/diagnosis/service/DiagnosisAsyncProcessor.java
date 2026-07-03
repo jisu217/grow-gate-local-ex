@@ -6,6 +6,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.agent.service.AgentInferenceRequest;
 import com.growgate.agent.service.AgentInferenceResult;
 import com.growgate.agent.service.AgentInferenceService;
+import com.growgate.agent.service.ClaimVerificationService;
 import com.growgate.agent.service.EvidenceContextBuilder;
 import com.growgate.diagnosis.entity.DiagnosisRun;
 import com.growgate.diagnosis.enums.DiagnosisStatus;
@@ -64,6 +65,7 @@ public class DiagnosisAsyncProcessor {
     private final AgentInferenceService agentInferenceService;
     private final EvidenceContextBuilder evidenceContextBuilder;
     private final KnowledgeLoopItemRepository knowledgeLoopItemRepository;
+    private final ClaimVerificationService claimVerificationService;
 
     @Async
     @Transactional
@@ -256,6 +258,9 @@ public class DiagnosisAsyncProcessor {
             List<Map<String, Object>> loopSuggestions = buildKnowledgeLoopSuggestions(
                     llmResult, riskItems, sources, productName, hsCode, targetCountry);
             persistKnowledgeLoopSuggestions(run, product, loopSuggestions);
+            Map<String, Object> claimVerificationResult = claimVerificationService.verifyClaims(
+                    extractLlmClaims(llmResult), validSourceIds(sources));
+            List<String> llmFallbackReasons = combineFallbackReasons(llmResult, claimVerificationResult);
 
             sources.add(source("agent", "WORKFLOW-TRACE-" + targetCountry,
                     "WORKFLOW_TRACE", "Optional analysis/report bridge", "configured APP_FASTAPI_BASE_URL",
@@ -301,6 +306,7 @@ public class DiagnosisAsyncProcessor {
             resultMap.put("buyerRequestTrace", buyerRequestTrace);
             resultMap.put("scoreContributionLedger", buildScoreContributionLedger(sources));
             resultMap.put("agentTrace", agentLoop.toTrace(agentResult.isPresent(), reportResult.isPresent(), llmResult));
+            resultMap.put("sourceTrace", buildSourceTrace(sources));
             Map<String, Object> springEvidenceRetrieval = Map.of(
                     "mode", stringValue(evidenceContext.get("retrievalMode")),
                     "label", stringValue(evidenceContext.get("retrievalLabel")),
@@ -343,6 +349,9 @@ public class DiagnosisAsyncProcessor {
                     .map(result -> objectMapOrDefault(result.get("evidenceGuardrails"),
                             buildEvidenceGuardrails(sources, publicDataResult.getRecords())))
                     .orElseGet(() -> buildEvidenceGuardrails(sources, publicDataResult.getRecords())));
+            resultMap.put("claimVerifications", objectListOrDefault(
+                    claimVerificationResult.get("claimVerifications"), List.of()));
+            resultMap.put("llmFallbackReasons", llmFallbackReasons);
             resultMap.put("scoringRubric", buildScoringRubric());
             resultMap.put("stageCards", buildStageCards(productName, hsCode, targetCountry, overall, market,
                     regulation, recall, fto, support, riskItems, actionRoadmap, sources, agentResult.orElse(null),
@@ -354,7 +363,7 @@ public class DiagnosisAsyncProcessor {
                     "succeeded", llmResult.isSucceeded(),
                     "provider", nullToEmpty(llmResult.getProvider()),
                     "model", nullToEmpty(llmResult.getModel()),
-                    "fallbackReasons", llmResult.getFallbackReasons() == null ? List.of() : llmResult.getFallbackReasons(),
+                    "fallbackReasons", llmFallbackReasons,
                     "summary", llmResult.getContent() != null ? stringValue(llmResult.getContent().get("summary")) : ""
             ));
             resultMap.put("knowledgeLoopSuggestions", loopSuggestions);
@@ -1684,15 +1693,27 @@ public class DiagnosisAsyncProcessor {
                 ? "바이어 요구사항을 먼저 확인한 뒤 인증/FTO 보완 상태를 기준으로 견적 가능 여부를 회신하십시오."
                 : "현재 제품 공급 가능성을 검토 중이며, 인증·FTO·출하 가능 일정 확인 후 견적과 납기를 확정하겠다고 회신하십시오.";
 
-        return Map.of(
-                "status", status,
-                "label", label,
-                "oneLineReason", topRisk + " 때문에 견적 확정 전 Gate 확인이 필요합니다.",
-                "allowedNextStep", status.equals("STOP") ? "보완 근거 확보 후 재진단" : "바이어에게 검토 중 회신 및 필수 증빙 확인",
-                "blockedStep", status.equals("GO") ? "없음" : "가격·납기 확정 견적 발송",
-                "buyerReplyGuidance", reply,
-                "mustFixBeforeQuote", mustFix.isEmpty() ? List.of("공공데이터 source trace 최신성 확인") : mustFix
-        );
+        Map<String, Object> decision = new LinkedHashMap<>();
+        decision.put("status", status);
+        decision.put("finalGate", status);
+        decision.put("ruleScore", overall);
+        decision.put("riskLevel", highRiskCount >= 2 || fto < 45 || regulation < 40 ? "high"
+                : highRiskCount == 1 || fallbackCount > 0 || regulation < 55 || recall < 55 ? "medium" : "low");
+        decision.put("fallbackCount", fallbackCount);
+        decision.put("reasons", List.of(
+                "ruleScore=" + overall,
+                "highRiskCount=" + highRiskCount,
+                "fallbackCount=" + fallbackCount
+        ));
+        decision.put("llmInfluencedGate", false);
+        decision.put("llmDecisionPolicy", "LLM output is advisory and cannot override deterministic Gate");
+        decision.put("label", label);
+        decision.put("oneLineReason", topRisk + " 때문에 견적 확정 전 Gate 확인이 필요합니다.");
+        decision.put("allowedNextStep", status.equals("STOP") ? "보완 근거 확보 후 재진단" : "바이어에게 검토 중 회신 및 필수 증빙 확인");
+        decision.put("blockedStep", status.equals("GO") ? "없음" : "가격·납기 확정 견적 발송");
+        decision.put("buyerReplyGuidance", reply);
+        decision.put("mustFixBeforeQuote", mustFix.isEmpty() ? List.of("공공데이터 source trace 최신성 확인") : mustFix);
+        return decision;
     }
 
     private Map<String, Object> buildImpactEstimate(List<Map<String, Object>> risks,
@@ -1814,6 +1835,66 @@ public class DiagnosisAsyncProcessor {
         return list.stream().map(this::stringValue).filter(item -> !item.isBlank()).toList();
     }
 
+    private List<String> validSourceIds(List<Map<String, Object>> sources) {
+        return sources.stream()
+                .map(source -> stringValue(source.get("sourceId")))
+                .filter(value -> !value.isBlank())
+                .distinct()
+                .toList();
+    }
+
+    private List<Map<String, Object>> extractLlmClaims(AgentInferenceResult llmResult) {
+        if (llmResult == null || llmResult.getContent() == null) return List.of();
+        return objectListOrDefault(llmResult.getContent().get("claims"), List.of());
+    }
+
+    private List<String> combineFallbackReasons(AgentInferenceResult llmResult,
+                                                Map<String, Object> claimVerificationResult) {
+        List<String> reasons = new ArrayList<>();
+        if (llmResult != null && llmResult.getFallbackReasons() != null) {
+            reasons.addAll(llmResult.getFallbackReasons());
+        }
+        Object claimReasons = claimVerificationResult.get("fallbackReasons");
+        if (claimReasons instanceof List<?> list) {
+            list.stream()
+                    .map(this::stringValue)
+                    .filter(value -> !value.isBlank())
+                    .forEach(reasons::add);
+        }
+        return reasons.stream().distinct().toList();
+    }
+
+    private Map<String, Object> buildSourceTrace(List<Map<String, Object>> sources) {
+        Map<String, Long> countsByType = sources.stream()
+                .collect(Collectors.groupingBy(
+                        source -> defaultString(source.get("sourceType"), "unknown"),
+                        LinkedHashMap::new,
+                        Collectors.counting()
+                ));
+        List<Map<String, Object>> entries = sources.stream()
+                .filter(source -> !stringValue(source.get("sourceId")).isBlank())
+                .map(source -> {
+                    Map<String, Object> entry = new LinkedHashMap<>();
+                    entry.put("sourceId", source.get("sourceId"));
+                    entry.put("provider", source.get("provider"));
+                    entry.put("sourceType", source.get("sourceType"));
+                    entry.put("usedFor", source.get("usedFor"));
+                    entry.put("metricSummary", source.get("metricSummary"));
+                    entry.put("decisionImpact", source.get("decisionImpact"));
+                    entry.put("fallbackUsed", source.getOrDefault("fallbackUsed", false));
+                    return entry;
+                })
+                .limit(30)
+                .toList();
+        Map<String, Object> trace = new LinkedHashMap<>();
+        trace.put("sourceCount", sources.size());
+        trace.put("countsByType", countsByType);
+        trace.put("sourceIds", validSourceIds(sources));
+        trace.put("entries", entries);
+        trace.put("llmClaimBoundary", "LLM report claims must reference one of these sourceIds; source-less claims are blocked or surfaced as fallback reasons.");
+        return trace;
+    }
+
     private Map<String, Object> buildScoringRubric() {
         return Map.of(
                 "version", "submission-2026-07-01",
@@ -1885,7 +1966,7 @@ public class DiagnosisAsyncProcessor {
                 "fallback source는 점수를 올리지 않고 confidence와 담당자 확인 항목에만 반영",
                 "화면 claim은 sourceId가 있는 evidence timeline 또는 rule source에 연결",
                 "publishedAt/fetchedAt/sourcePeriod를 분리해 최신성과 데이터 기준 기간을 혼동하지 않음",
-                "대규모 vector RAG나 자동 의사결정이 아니라 source-bound evidence workflow로 표시"
+                "대규모 벡터 검색이나 자동 의사결정이 아니라 source-bound evidence workflow로 표시"
         ));
         guardrails.put("verdict", unsupportedClaims == 0 && fallbackPositive == 0 ? "pass" : "review_required");
         return guardrails;

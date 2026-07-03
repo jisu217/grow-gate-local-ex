@@ -12,7 +12,7 @@
 | 관세청/KOTRA/KIPRIS 데이터를 완전 분석해 예측 | 관세청/KOTRA/KIPRIS 응답에서 파싱 가능한 numeric signal을 점수 산식에 반영 | `PublicDataSignal.metrics`, `scoreContribution`, provider별 normalizedPayload |
 | 공공데이터 기반 자동 의사결정 | 담당자 검토를 돕는 근거 기반 실행 우선순위 제안 | 결과는 decision이 아니라 readiness score, risk flag, roadmap task로 표시 |
 | 5종 공공데이터 API 완전 연동 | 5개 provider의 operation endpoint, cache, fallback 상태를 구분해 수집 | disabled/fallback 상태를 “연결됨”으로 표시하지 않고 sourceType badge로 분리 |
-| RAG 기반 지능형 수출 성공률 예측 | DB 지식과 공공데이터 record의 BM25-lite top-k 근거 검색 및 규칙 기반 준비도 추정 | pgvector급 RAG/성공률 예측은 후속 과제로 분리하고 메인 UI에서 주장하지 않음 |
+| 대규모 문서 검색 기반 성과 확률 산출 | DB 지식과 공공데이터 record의 BM25-lite top-k 근거 검색 및 규칙 기반 준비도 추정 | pgvector 기반 대규모 검색/성과 확률 산출은 후속 과제로 분리하고 메인 UI에서 주장하지 않음 |
 
 ## 발표 시 한 문장
 

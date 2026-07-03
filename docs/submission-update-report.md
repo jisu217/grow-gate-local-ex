@@ -378,11 +378,11 @@ Spring Boot 3.4.4는 Java 17 이상 필요
 
 > 제출용 메인 서비스는 React와 Spring Boot로 구성되어 있습니다. 사용자가 제품명, HS Code, 대상국을 입력하면 실제 `/api/diagnosis` run이 생성되고, Spring 진단 엔진이 제품 지식 DB와 공공데이터 출처 신호를 조합해 시장성, 규제, 리콜, FTO, 지원 적합도 점수를 계산합니다. 각 점수에는 source id, matched key, used for, score contribution, fallback 여부가 함께 저장되어 어떤 근거가 몇 점에 반영됐는지 추적할 수 있습니다.
 
-피해야 할 표현:
+표현 제한:
 
-- “실제 라벨 기반 XGBoost 예측 모델이 완성됐다”
-- “pgvector 기반 RAG가 운영 중이다”
-- “실시간 공공 API만으로 모든 점수가 계산된다”
+- 실제 라벨 기반 ML 모델은 후속 과제로 분리한다.
+- pgvector 기반 대규모 문서 검색은 후속 과제로 분리한다.
+- 점수 산식은 live/cache/fallback/API 실패 상태를 구분해 설명한다.
 
 권장 표현:
 

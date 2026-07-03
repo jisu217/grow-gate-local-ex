@@ -37,6 +37,9 @@ public class DiagnosisDetailResponse {
         private Map<String, Object> evidenceRetrieval;
         private List<Map<String, Object>> exportKnowledgeTimeline;
         private Map<String, Object> evidenceGuardrails;
+        private Map<String, Object> sourceTrace;
+        private List<String> llmFallbackReasons;
+        private List<Map<String, Object>> claimVerifications;
         private Map<String, Object> sourceTrustSummary;
         private Map<String, Object> regionalIndustryProfile;
         private Map<String, Object> buyerRequestTrace;
@@ -68,6 +71,13 @@ public class DiagnosisDetailResponse {
         private String blockedStep;
         private String buyerReplyGuidance;
         private List<String> mustFixBeforeQuote;
+        private Integer ruleScore;
+        private String riskLevel;
+        private Integer fallbackCount;
+        private String finalGate;
+        private List<String> reasons;
+        private boolean llmInfluencedGate;
+        private String llmDecisionPolicy;
     }
 
     @Getter

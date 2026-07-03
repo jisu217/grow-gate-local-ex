@@ -34,7 +34,7 @@ overall = market*0.25 + regulation*0.22 + recall*0.16 + fto*0.20 + support*0.17
 ## 검증 운영 방식
 
 1. 각 시나리오를 제품으로 등록하고 진단을 생성한다.
-2. `ragRetrieval.topK`, `sources`, `scoringRubric`, `stageCards.s04~s07`을 저장한다.
+2. `evidenceRetrieval.topK`, `sources`, `scoringRubric`, `stageCards.s04~s07`을 저장한다.
 3. 전문가가 “위험 수준 방향성”과 “실행 로드맵의 업무 지시 가능성”을 5점 척도로 평가한다.
 4. 점수가 기대 범위를 벗어나면 해당 dimension contribution만 조정하고 sourceType trace는 유지한다.
 

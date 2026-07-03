@@ -233,7 +233,7 @@ http://localhost:5173/
 
 - public-data provider 5종 설명이 실제 출처/활용 목적과 일치하는지 확인.
 - `scoreContribution` 설명이 사용자에게 과장으로 보이지 않는지 확인.
-- `실제 라벨 기반 XGBoost`, `pgvector급 RAG`는 아직 제외 범위임을 문서 표현에서 유지.
+- 실제 라벨 기반 ML 모델과 pgvector 기반 대규모 문서 검색은 아직 제외 범위임을 문서 표현에서 유지.
 
 ### 발표/제출 문서 담당
 

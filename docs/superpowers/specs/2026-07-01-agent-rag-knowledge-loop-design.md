@@ -1,4 +1,4 @@
-# Agent RAG Knowledge Loop Design
+# LLM Assisted Evidence Knowledge Loop Design
 
 작성일: 2026-07-01
 
@@ -14,7 +14,7 @@ Gemini Flash 계열 API를 1차 추론 agent로, OpenRouter API를 백업 추론
 - 지식화는 자동 확정하지 않고 담당자 승인 후 KB에 반영한다.
 - 운영 모델명과 endpoint는 환경변수로 바꿀 수 있어야 한다.
 
-## Agent Provider
+## LLM Provider
 
 `AgentInferenceService`가 단일 진입점이 된다.
 
@@ -32,9 +32,9 @@ Gemini Flash 계열 API를 1차 추론 agent로, OpenRouter API를 백업 추론
 - `APP_AGENT_OPENROUTER_API_KEY`
 - `APP_AGENT_OPENROUTER_MODEL`
 
-## RAG Context
+## Evidence Context
 
-현재 pgvector 수준의 embedding retrieval은 도입하지 않는다. 대신 제출 안정성을 위해 DB 기반 context injection RAG를 구성한다.
+현재 운영형 벡터 검색은 도입하지 않는다. 대신 제출 안정성을 위해 DB 기반 evidence context injection을 구성한다.
 
 Context 구성 요소:
 
@@ -88,6 +88,6 @@ Context 구성 요소:
 
 - Gemini 실패 시 OpenRouter provider가 호출된다.
 - OpenRouter도 실패하면 Spring fallback trace로 끝난다.
-- RAG context가 제품 지식/출처/공공데이터를 포함한다.
+- Evidence context가 제품 지식/출처/공공데이터를 포함한다.
 - 진단 결과에 지식화 후보가 생성된다.
 - 담당자가 후보를 지식화하면 `knowledge_sources`에 반영된다.

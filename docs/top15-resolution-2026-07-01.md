@@ -12,9 +12,9 @@
 | 2 | connector domain parsing 없음 | 완료 | `PublicDataSignal`과 provider별 parser가 무역액, 성장률, 리콜 수, 특허 수, 지원사업 수를 normalized payload에 저장 |
 | 3 | rule source가 공공데이터처럼 보임 | 완료 | 로컬 규칙은 `provider=RULE_ENGINE`, `sourceType=heuristic`으로 분리 |
 | 4 | S04~S07 mock 중심 | 완료 | backend `stageCards.s04~s07` 생성, frontend stage mapper가 backend response를 사용 |
-| 5 | XGBoost UI 라벨 불일치 | 완료 | 메인 앱 표현을 readiness/rule-based scoring으로 변경. XGBoost는 FastAPI demo/후속 과제로만 언급 |
-| 6 | Agent가 trace 수준 | 완료 | `AgentLoop`가 plan, tool call, observation, verifier, retry, fallback, `complete_task`를 실제 실행 |
-| 7 | RAG가 retrieval 없음 | 완료 | `AgentRagContextBuilder`가 DB 지식/공공데이터 chunk를 만들고 BM25-lite top-k를 `ragRetrieval.topK`에 저장 |
+| 5 | ML UI 라벨 불일치 | 완료 | 메인 앱 표현을 readiness/rule-based scoring으로 변경. 실제 라벨 ML은 후속 과제로만 언급 |
+| 6 | workflow trace가 약함 | 완료 | `AgentLoop`가 고정 계획, tool call, observation, verifier, retry, fallback, `complete_task`를 기록 |
+| 7 | evidence retrieval 없음 | 완료 | `EvidenceContextBuilder`가 DB 지식/공공데이터 chunk를 만들고 source-bound top-k를 `evidenceRetrieval.topK`에 저장 |
 | 8 | 점수 산식 근거 없음 | 완료 | `scoringRubric`과 `docs/scoring-rubric-validation-2026.md`에 문헌/전문가 검증용 10개 시나리오 표 정리 |
 | 9 | 배포 end-to-end 증거 부족 | 완료 | `scripts/smoke-prod.sh`가 health, auth, product, diagnosis, polling, sources, PDF, public data runs를 한 번에 검증 |
 | 10 | public data endpoint 전역 조회 | 완료 | 개인은 본인, 회사는 같은 company membership scope로 run/record 조회 제한 |
@@ -28,8 +28,8 @@
 
 - “공공데이터가 실제 live인지 fallback인지 sourceType과 run count로 구분합니다. disabled 상태를 connected로 표시하지 않습니다.”
 - “시장성 점수는 관세청/KOTRA parser가 뽑은 numeric metric과 로컬 heuristic을 분리해서 반영합니다.”
-- “RAG는 pgvector라고 과장하지 않고, 현재 제출 서버에서는 DB chunk 기반 BM25-lite top-k와 citation trace를 제공합니다.”
-- “Agent는 단순 로그가 아니라 고정 도구 계획을 실행하고 verifier 실패 시 retry/fallback 후 complete task를 남깁니다.”
+- “현재 제출 서버는 source-bound evidence retrieval과 citation trace를 제공합니다.”
+- “workflow loop는 고정 도구 계획을 실행하고 verifier 실패 시 retry/fallback 후 complete task를 남깁니다.”
 - “제출 시연 산출물은 Markdown 바이어 대응 메모이며 smoke script가 contentType, fileName, payload를 확인합니다. PDF는 font QA 후속 과제입니다.”
 
 ## 남은 상용화 과제
@@ -38,5 +38,5 @@
 | --- | --- |
 | refresh token rotation | 현재 access token + cookie + DB revocation 구조로 제출 서버 방어선을 올렸지만, 장기 세션 운영에는 refresh token 회전이 필요 |
 | Redis revocation cache | DB revocation은 재시작 내구성은 있으나 트래픽 증가 시 Redis cache가 필요 |
-| pgvector embedding retrieval | 현재는 BM25-lite top-k이며, 대규모 문서 KB에는 embedding index가 필요 |
+| 운영형 벡터 검색 | 현재는 source-bound top-k이며, 대규모 문서 KB에는 별도 검색 인프라가 필요 |
 | 실제 사용자 인터뷰 증빙 | 문서는 검증 설계와 시나리오 표이며, 실제 기업 담당자 서명/인터뷰 기록은 별도 확보 필요 |

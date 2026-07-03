@@ -14,9 +14,9 @@ GrowGate Local EX는 지역 수출 담당자가 제품 단위로 시장성, 규�
 | 공공 API 결과가 도메인 필드로 파싱되지 않음 | normalized payload에 HS/국가/제품명 매칭, record count, numeric token, evidence strength 저장 | `AbstractPublicDataConnector` |
 | 로컬 규칙 출처가 실제 기관 출처처럼 보임 | 로컬 산식 출처 provider를 `RULE_ENGINE`, sourceType을 `heuristic`으로 분리 | `DiagnosisAsyncProcessor` |
 | S04~S07 상세 카드가 mock 기반 | S04 시장, S05 규제, S06 리콜, S07 FTO/지원 stageCards를 백엔드에서 생성하고 프론트 매핑 | `DiagnosisAsyncProcessor`, `diagnosisService.js` |
-| XGBoost UI 표기가 실제 구현과 다름 | S03을 `RULE SCORING LAB`으로 변경하고 rule rubric + LLM assisted로 표기 | `S03PredLab.jsx` |
-| agentic loop 과장 위험 | 실제 `AgentLoop`로 plan/tool execution/verification/retry/fallback/complete_task trace를 생성 | `DiagnosisAsyncProcessor` |
-| RAG 과장 위험 | LLM은 점수 근거가 아니라 DB 지식/공공데이터 context 기반 보조 추론 및 지식화 후보 생성으로 제한 | `AgentRagContextBuilder`, `AgentInferenceService` |
+| ML UI 표기가 실제 구현과 다름 | S03을 `RULE SCORING LAB`으로 변경하고 rule rubric + LLM assisted로 표기 | `S03PredLab.jsx` |
+| workflow loop 과장 위험 | `AgentLoop`로 고정 plan/tool execution/verification/retry/fallback/complete_task trace를 생성 | `DiagnosisAsyncProcessor` |
+| retrieval 과장 위험 | LLM은 점수 근거가 아니라 DB 지식/공공데이터 context 기반 보조 설명 및 지식화 후보 생성으로 제한 | `EvidenceContextBuilder`, `AgentInferenceService` |
 | 점수 산식이 임의로 보임 | `scoringRubric`에 weight, evidence, guardrail을 결과 JSON으로 저장 | `DiagnosisAsyncProcessor` |
 
 ## 기획서에서 밀 강점
@@ -38,7 +38,7 @@ GrowGate Local EX는 지역 수출 담당자가 제품 단위로 시장성, 규�
    - 키는 환경변수로만 주입하고, 오류 메시지와 fallback reason은 secret sanitizer로 마스킹한다.
 
 5. **정직한 기술 범위**
-   - 현재 제출 표현은 실제 라벨 기반 XGBoost, pgvector급 vector RAG, LLM 동적 도구 발견형 open-ended agent라고 주장하지 않는다.
+   - 현재 제출 표현은 실제 라벨 기반 ML, 운영형 벡터 검색, LLM 동적 도구 발견형 자율 시스템이라고 주장하지 않는다.
    - 대신 공공 API 수집, source trace, 규칙 산식, bounded LLM reasoning, 지식 순환이라는 구현된 강점을 전면에 둔다.
 
 ## 발표/서류 표현 가이드
@@ -52,9 +52,9 @@ GrowGate Local EX는 지역 수출 담당자가 제품 단위로 시장성, 규�
 
 피해야 할 표현:
 
-- “실제 라벨 기반 XGBoost 모델이 운영 중이다.”
-- “pgvector 기반 RAG가 완성됐다.”
-- “LLM agent가 자율적으로 모든 도구를 계획하고 재시도한다.”
+- “실제 라벨 기반 ML 모델이 운영 중이다.”
+- “운영형 벡터 검색이 완성됐다.”
+- “LLM이 자율적으로 모든 도구를 계획하고 재시도한다.”
 - “API key 없이도 항상 live 공공데이터가 수집된다.”
 
 ## 남은 현실적 리스크
@@ -63,5 +63,5 @@ GrowGate Local EX는 지역 수출 담당자가 제품 단위로 시장성, 규�
 | --- | --- | --- |
 | 일부 공공데이터는 활용신청 후 operation endpoint 필요 | fallback record로 명시 | 실제 발급 URL과 key 확보 후 smoke test |
 | 실제 성과 라벨 기반 ML 부재 | rule rubric으로 투명화 | 진단/수출 결과 라벨 축적 후 ML 전환 |
-| vector DB RAG 부재 | DB context injection과 지식화 루프 | embedding/chunk/citation score 도입 |
-| Agent 고도화 | Spring `AgentLoop`는 고정 도구 계획과 retry/fallback을 수행 | 동적 tool registry, checkpoint/resume, 사용자 승인형 agent action 추가 |
+| 운영형 벡터 검색 부재 | DB context injection과 지식화 루프 | 별도 검색 인프라와 citation score 도입 |
+| workflow 고도화 | Spring `AgentLoop`는 고정 도구 계획과 retry/fallback을 수행 | 사용자 승인형 action과 checkpoint/resume 추가 |

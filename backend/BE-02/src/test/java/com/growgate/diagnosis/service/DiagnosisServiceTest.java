@@ -267,6 +267,13 @@ class DiagnosisServiceTest {
         result.put("compiledWiki", Map.of("knowledgePage", Map.of("title", "850760-DE")));
         result.put("scoringRubric", Map.of("version", "rule-v1"));
         result.put("agentInference", Map.of("enabled", false));
+        result.put("sourceTrace", Map.of("sourceCount", 2, "sourceTypes", List.of("live", "fallback")));
+        result.put("llmFallbackReasons", List.of("agent disabled", "blocked source-less claim"));
+        result.put("claimVerifications", List.of(Map.of(
+                "claim", "KCS source 기반 시장 신호입니다.",
+                "status", "PASS",
+                "sourceId", "KCS_TRADE-record-1"
+        )));
         result.put("knowledgeLoopSuggestions", List.of(Map.of("title", "CE evidence memo")));
         result.put("publicDataCollectionRunId", "run-1");
         result.put("inputTrace", Map.of("hsCode", "850760"));
@@ -285,7 +292,48 @@ class DiagnosisServiceTest {
         assertThat(response.getResult().getPublicDataCollectionRunId()).isEqualTo("run-1");
         assertThat(response.getResult().getInputTrace()).containsEntry("hsCode", "850760");
         assertThat(response.getResult().getRegionalIndustryProfile()).containsEntry("region", "경남");
+        assertThat(response.getResult().getSourceTrace()).containsEntry("sourceCount", 2);
+        assertThat(response.getResult().getLlmFallbackReasons()).contains("blocked source-less claim");
+        assertThat(response.getResult().getClaimVerifications()).hasSize(1);
+        assertThat(response.getResult().getClaimVerifications().get(0)).containsEntry("status", "PASS");
         assertThat(response.getResult().getKnowledgeLoopSuggestions()).hasSize(1);
+    }
+
+    @Test
+    void getDetailExposesRuleOwnedGateDecisionAndDoesNotLetLlmOverrideFinalGate() throws Exception {
+        setUp();
+        User user = user("user-gate", UserType.personal);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("diagnosisScore", Map.of("overall", 82, "market", 80, "regulation", 78, "recall", 74, "fto", 76, "support", 86));
+        result.put("gateDecision", Map.of(
+                "status", "CONDITIONAL_GO",
+                "finalGate", "CONDITIONAL_GO",
+                "ruleScore", 82,
+                "riskLevel", "medium",
+                "fallbackCount", 1,
+                "reasons", List.of("fallback 1건으로 담당자 검토 필요"),
+                "llmInfluencedGate", false,
+                "llmDecisionPolicy", "LLM output is advisory and cannot override deterministic Gate"
+        ));
+        result.put("agentInference", Map.of(
+                "succeeded", true,
+                "summary", "LLM suggested GO, but this must not alter finalGate"
+        ));
+        var run = diagnosisRun("diag-gate", user, objectMapper.writeValueAsString(result));
+
+        when(userRepository.findById("user-gate")).thenReturn(Optional.of(user));
+        when(diagnosisRepository.findByIdAndUserId("diag-gate", "user-gate")).thenReturn(Optional.of(run));
+
+        var response = diagnosisService.getDetail("user-gate", "diag-gate");
+
+        assertThat(response.getResult().getGateDecision().getStatus()).isEqualTo("CONDITIONAL_GO");
+        assertThat(response.getResult().getGateDecision().getFinalGate()).isEqualTo("CONDITIONAL_GO");
+        assertThat(response.getResult().getGateDecision().getRuleScore()).isEqualTo(82);
+        assertThat(response.getResult().getGateDecision().getRiskLevel()).isEqualTo("medium");
+        assertThat(response.getResult().getGateDecision().getFallbackCount()).isEqualTo(1);
+        assertThat(response.getResult().getGateDecision().isLlmInfluencedGate()).isFalse();
+        assertThat(response.getResult().getGateDecision().getReasons()).contains("fallback 1건으로 담당자 검토 필요");
+        assertThat(response.getResult().getGateDecision().getLlmDecisionPolicy()).contains("cannot override");
     }
 
     @Test

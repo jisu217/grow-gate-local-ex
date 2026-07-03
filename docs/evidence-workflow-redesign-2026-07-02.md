@@ -2,7 +2,7 @@
 
 ## 목적
 
-첨부 평가의 핵심은 GROW-GATE를 “과장된 AI Agent/RAG/XGBoost 서비스”로 보이게 하지 말고, 실제 구현 범위에 맞는 “근거 지식화 기반 수출 의사결정 workflow trace 서비스”로 재정렬하라는 것이다.
+첨부 평가의 핵심은 GROW-GATE를 구현 범위보다 큰 AI/ML 서비스로 보이게 하지 말고, 실제 구현 범위에 맞는 “근거 지식화 기반 수출 의사결정 workflow trace 서비스”로 재정렬하라는 것이다.
 
 이번 수정은 그 방향에 맞춰 진단 결과 payload, S10 화면, 마이페이지 지식화 표현, README/리스크 게이트를 보강했다.
 
@@ -11,7 +11,7 @@
 | 영역 | 변경 내용 | 방어 포인트 |
 | --- | --- | --- |
 | Backend result payload | `evidenceRetrieval`, `exportKnowledgeTimeline`, `evidenceGuardrails` 추가 | top-k 근거, 시계열 source event, fallback 정책을 API 결과로 설명 가능 |
-| Evidence retrieval | `retrievalMode`를 `source-bound-evidence-search`로 변경하고 `claimBoundary`, `sourceBound`, `displayRole` 추가 | pgvector급 RAG가 아니라 DB/source trace 범위의 bounded retrieval임을 명시 |
+| Evidence retrieval | `retrievalMode`를 `source-bound-evidence-search`로 변경하고 `claimBoundary`, `sourceBound`, `displayRole` 추가 | pgvector 기반 대규모 문서 검색이 아니라 DB/source trace 범위의 bounded retrieval임을 명시 |
 | Timeline compiler | `sourceId`, `sourceType`, `usedFor`, `fetchedAt`, `publishedAt`, `sourcePeriodStart/End`, `scoreImpact` 기반 이벤트 생성 | “언제 수집한 어떤 근거가 점수에 들어갔는가?” 질문에 대응 |
 | Guardrails | fallback positive contribution count, unsupported claim count, official live/cache record count 계산 | fallback으로 점수를 올리지 않는 정책 검증 |
 | S10 화면 | Public Data Pipeline에서 Evidence Workflow로 확장 | 공공데이터 카드, top-k evidence chunk, guardrail, export knowledge timeline을 한 화면에서 시연 |
@@ -24,7 +24,7 @@
 {
   "evidenceRetrieval": {
     "mode": "source-bound-evidence-search",
-    "claimBoundary": "vector DB RAG가 아니라 진단 DB와 source trace 안에서만 근거를 찾는 bounded evidence retrieval",
+    "claimBoundary": "vector DB 검색이 아니라 진단 DB와 source trace 안에서만 근거를 찾는 bounded evidence retrieval",
     "topK": [
       {
         "chunkId": "public-data:...",
@@ -66,8 +66,8 @@
 
 피해야 할 표현:
 
-- “대규모 RAG 기반 자동 의사결정”
-- “AI가 수출 성공률을 예측”
+- “대규모 문서 검색 기반 자동 의사결정”
+- “AI가 수출 성과 확률을 예측”
 - “XGBoost/LLM이 점수를 직접 산출”
 - “공공데이터 API가 항상 live로 완전 연동”
 

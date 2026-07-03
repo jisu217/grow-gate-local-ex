@@ -50,8 +50,8 @@ BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/setup-demo-scenario.sh
 ## 약한 질문에 대한 방어 포인트
 
 - “공공데이터가 실패하면?”: fallback이 화면과 sourceType에 명시되고 confidence가 낮아진다. 성공/실패 비율은 dashboard와 smoke 로그로 확인한다.
-- “AI Agent가 실제로 뭘 하나?”: 진단 trace는 planning, tool execution, retry/fallback, verification 단계로 남고, 판단 근거는 담당자가 선택해 지식화할 수 있다.
-- “RAG인가?”: 발표 표현은 RAG 과장 대신 담당자 통제형 self-loop wiki로 설명한다. 승인된 loop item은 다음 진단 context에 다시 들어간다.
+- “workflow loop가 실제로 뭘 하나?”: 진단 trace는 planning, tool execution, retry/fallback, verification 단계로 남고, 판단 근거는 담당자가 선택해 지식화할 수 있다.
+- “검색형 AI인가?”: 발표 표현은 담당자 통제형 self-loop wiki와 source-bound evidence retrieval로 설명한다. 승인된 loop item은 다음 진단 context에 다시 들어간다.
 - “PDF인가?”: 현재 제출 시연 기본 산출물은 Markdown이다. PDF는 한글 font embedding과 시각 검증이 끝난 뒤 후속 기능으로만 설명한다.
 
 ## 강제 live 검증

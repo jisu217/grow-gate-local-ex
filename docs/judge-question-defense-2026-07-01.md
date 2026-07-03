@@ -12,7 +12,7 @@
 | 6 | KIPRIS 특허 검색 결과 몇 건이 FTO 점수에 반영됩니까? | `patentCount`, `claimsCount`, `productMentions`를 metrics로 저장하고 patent count가 높을수록 FTO contribution을 낮춘다. | `KiprisFtoConnector.java` |
 | 7 | 이 점수 가중치는 누가 검증했습니까? | 수출 실무 검토 순서 기준 rubric으로 문서화했고 10개 제품 시나리오로 기대 점수대와 위험 방향성을 검증한다. 전문가 sign-off 표를 별도로 받는다. | `docs/scoring-rubric-validation-2026.md`, `docs/user-validation-2026.md` |
 | 8 | XGBoost 모델 파일과 학습 데이터는 어디 있습니까? | 메인 앱은 XGBoost를 주장하지 않는다. UI는 readiness scoring으로 바꿨고 실제 라벨 ML은 후속 과제로 분리했다. | `S03PredLab.jsx`, `diagnosisSteps.js` |
-| 9 | RAG 검색에서 top-k chunk를 보여주세요. | `ragRetrieval.topK`에 `chunkId`, `score`, `sourceId`, `usedSentence`가 저장된다. 현재는 pgvector가 아니라 DB chunk 기반 BM25-lite retrieval이다. | `AgentRagContextBuilder`, `DiagnosisAsyncProcessor` |
+| 9 | 근거 검색에서 top-k chunk를 보여주세요. | `evidenceRetrieval.topK`에 `chunkId`, `score`, `sourceId`, `usedSentence`가 저장된다. 현재는 pgvector가 아니라 DB chunk 기반 BM25-lite retrieval이다. | `EvidenceContextBuilder`, `DiagnosisAsyncProcessor` |
 | 10 | Agent가 실패하면 어떤 계획을 다시 세웁니까? | `AgentLoop`가 collect/score/roadmap/FastAPI/LLM/report/source verification 계획을 만들고, tool verifier 실패 시 재시도 후 deterministic fallback을 기록한다. | `DiagnosisAsyncProcessor.AgentLoop` |
 | 11 | FastAPI Agent가 배포 서버에서 켜져 있습니까? | 기본은 optional bridge다. `APP_FASTAPI_ENABLED=true`일 때만 `/analyze`, `/report`를 호출하고, 비활성 시 Spring 결과로 degrade한다. | `FastApiAgentClient`, `agentTrace` |
 | 12 | S04 시장성 화면은 backend API 값입니까? | 예. `stageCards.s04~s07`을 backend에서 생성하고 frontend는 해당 값을 매핑한다. S04~S07 mock fallback import를 제거했다. | `DiagnosisAsyncProcessor`, `diagnosisService.js` |
@@ -28,5 +28,5 @@
 ## 남은 한계
 
 - 실제 API key와 operation endpoint가 없는 provider는 `fallback`으로 남는다.
-- 실제 라벨 기반 XGBoost와 pgvector embedding RAG는 제출 주장 범위에서 제외한다.
+- 실제 라벨 기반 ML 모델과 pgvector 기반 대규모 문서 검색은 제출 주장 범위에서 제외한다.
 - refresh token rotation과 Redis revocation cache는 상용화 보안 과제로 남아 있다.

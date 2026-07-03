@@ -19,8 +19,8 @@
 | 항목 | 현재 상태 | 제출 시 표현 |
 | --- | --- | --- |
 | 실제 live 공공 API 수집 | 부분 완료 | `PUBLIC_DATA_ENABLED=true`를 기본값으로 전환했고 provider별 live/cache/fallback record와 domain signal을 저장한다. 단, 일부 기관은 실제 operation endpoint/key 발급이 필요 |
-| 실제 라벨 기반 XGBoost | 미완료 | 현재는 실제 라벨 학습 모델이 아니라 규칙 기반 점수화 및 데모/프로토타입 ML 코드 |
-| pgvector급 RAG | 미완료 | 현재는 운영형 vector DB 검색 RAG가 아니라 문서/출처 기반 근거 추적 수준 |
+| 실제 라벨 기반 ML 모델 | 미완료 | 현재는 실제 라벨 학습 모델이 아니라 규칙 기반 점수화와 출처 추적 구조 |
+| 운영형 벡터 검색 | 미완료 | 현재는 운영형 벡터 DB 검색이 아니라 source-bound evidence retrieval과 출처 추적 수준 |
 
 ## 3. 위 3개를 제외한 추가 보완 현황
 
@@ -28,8 +28,8 @@
 
 | 남은 항목 | 상태 | 이유 |
 | --- | --- | --- |
-| Spring 메인 앱과 FastAPI Agent 백엔드의 실제 통합 | 부분 완료 | `APP_FASTAPI_ENABLED=true`일 때 Spring 진단 프로세서가 FastAPI `/analyze`, `/report`를 호출해 결과 JSON에 병합한다. 단, FastAPI 운영 배포/장애 모니터링까지는 아님 |
-| 실제 agentic planning/tool/retry loop | 완료 | Spring 진단 경로에 `AgentLoop`를 추가해 plan, tool execution, verifier, retry, fallback, `complete_task`를 실제 실행한다. 단, LLM이 런타임에 임의 도구를 새로 발견하는 open-ended agent는 아님 |
+| Spring 메인 앱과 선택형 FastAPI worker 백엔드 통합 | 부분 완료 | `APP_FASTAPI_ENABLED=true`일 때 Spring 진단 프로세서가 FastAPI `/analyze`, `/report`를 호출해 결과 JSON에 병합한다. 단, FastAPI 운영 배포/장애 모니터링까지는 아님 |
+| bounded workflow planning/tool/retry loop | 완료 | Spring 진단 경로에 `AgentLoop`를 추가해 고정 계획, tool execution, verifier, retry, fallback, `complete_task`를 기록한다. 단, LLM이 런타임에 임의 도구를 새로 발견하지 않는다 |
 | PDF 리포트 생성의 제출용 연동 | 부분 완료 | React/Spring 진단 상세에서 `/diagnosis/{id}/report` 리포트 다운로드를 연결했다. 현재는 Markdown/PDF-ready report이며 서버 binary PDF 생성은 아님 |
 | 진단 진행 상태 polling/WebSocket | 완료 | 진단 상세 페이지가 `pending/running` 상태를 2.5초 간격으로 polling하고 완료 시 자동 갱신한다 |
 | 진단 결과 상세 카드의 완전한 API 데이터화 | 완료 | S00~S10 상세 카드를 backend `stageCards` 기반으로 매핑한다. S04~S07도 backend 점수/source trace 기반으로 치환 |
@@ -56,8 +56,8 @@
 | 5 | mock/fallback이 실패를 숨김 | 완료 | 프론트 `src/mock`과 service mock fallback 제거. API 실패는 error state로 노출 |
 | 6 | 멤버십이 없으면 admin 처리 | 완료 | `orElse(UserRole.admin)` 제거, 개인 owner/회사 멤버십 기준으로 권한 정리 |
 | 7 | 제품 삭제가 FK를 깨뜨릴 수 있음 | 완료 | 물리 삭제 대신 `deleted_at`, `deleted_by` 기반 soft delete 적용 |
-| 8 | XGBoost가 synthetic data 기반 | 완료 | UI/문서에서 XGBoost 표현을 제거하고 `Rule rubric · LLM assisted`로 구현 수준에 맞춤. 실제 라벨 ML은 후속 과제로 유지 |
-| 9 | RAG가 vector retrieval 수준이 아님 | 완료 | pgvector 주장은 하지 않고 DB chunk 기반 BM25-lite top-k retrieval을 `ragRetrieval.topK`에 저장. embedding/vector index는 후속 과제 |
+| 8 | ML UI 라벨이 실제 구현보다 강함 | 완료 | UI/문서에서 예측 모델 표현을 제거하고 `Rule rubric · LLM assisted`로 구현 수준에 맞춤. 실제 라벨 ML은 후속 과제로 유지 |
+| 9 | retrieval이 벡터 검색 수준이 아님 | 완료 | 벡터 DB 주장은 하지 않고 source-bound evidence retrieval을 `evidenceRetrieval.topK`에 저장. 벡터 인덱스는 후속 과제 |
 | 10 | README와 실제 코드 수준 불일치 | 완료 | 제출용 메인 앱 범위, FastAPI 보조 성격, 남은 한계를 README와 보완 보고서에 반영 |
 
 ## 5. 프론트엔드 세부 항목
@@ -91,7 +91,7 @@
 | --- | --- | --- | --- |
 | `DiagnosisAsyncProcessor` | 점수/출처/문구 하드코딩 | 완료 | 입력과 제품 지식 기반 규칙 점수 및 source trace 생성 |
 | `DiagnosisAsyncProcessor` | 실제 공공 API 데이터 미사용 | 부분 완료 | `PublicDataCollectionService`로 live/cache/fallback record와 provider별 metric signal을 수집하고 source trace/점수에 반영. 단, 심사 환경에 실제 API key/operation endpoint가 없으면 `fallback`으로 기록 |
-| `DiagnosisAsyncProcessor` | FastAPI agent 미연동 | 부분 완료 | `APP_FASTAPI_ENABLED=true`일 때 FastAPI `/analyze`, `/report` 호출 및 fallback trace 기록 |
+| `DiagnosisAsyncProcessor` | 선택형 FastAPI worker 미연동 | 부분 완료 | `APP_FASTAPI_ENABLED=true`일 때 FastAPI `/analyze`, `/report` 호출 및 fallback trace 기록 |
 | `DiagnosisService` | `productId`와 `inputData` 정책 없음 | 완료 | 동시 전달 거부, 직접 입력 필수값 검증 |
 | `DiagnosisService` | description 누락 | 완료 | `inputData` snapshot에 description 저장 |
 | `DiagnosisService` | 비동기 race 가능 | 완료 | transaction commit 이후 async processor 실행 |
@@ -125,7 +125,7 @@
 | FastAPI 과장 표현 완화 | 완료 | FastAPI는 보조 정적/로컬 데모로 설명 |
 | 공공데이터 수준 명확화 | 완료 | API key 기반 live 수집, cache, fallback record, sourceType, domain signal, 점수 기여도로 표현 |
 | 변경사항 보고서 추가 | 완료 | [submission-update-report.md](submission-update-report.md)에 구현 변경사항 정리 |
-| 한계 공개 | 완료 | 실제 API key/운영 모니터링, 라벨 ML, pgvector RAG는 후속 과제로 분리 |
+| 한계 공개 | 완료 | 실제 API key/운영 모니터링, 라벨 ML, 운영형 벡터 검색은 후속 과제로 분리 |
 
 ## 8. 검증 현황
 
@@ -142,7 +142,7 @@
 
 현재는 “데모 화면 + 일부 CRUD + mock/fallback”이라는 가장 큰 비판을 상당 부분 줄였다. 특히 진단 시작, 점수 산정, source trace, 권한, soft delete, mock 격리, README 정합성은 제출 설명에 완료 항목으로 적을 수 있다.
 
-다만 “모든 점수가 항상 실시간 공공 API만으로 계산되는 AI/RAG 서비스”라고 주장하면 아직 방어가 어렵다. 제출 표현은 아래처럼 잡는 것이 안전하다.
+다만 “모든 점수가 항상 실시간 공공 API나 AI로 자동 계산된다”고 주장하면 아직 방어가 어렵다. 제출 표현은 아래처럼 잡는 것이 안전하다.
 
 - 완료로 말할 수 있는 것: React/Spring 메인 앱의 실제 진단 run 생성, 입력 기반 규칙 진단, API key 기반 live 공공데이터 수집 구조, cache/fallback record, sourceType/domain signal, S00~S10 stageCards API화, 권한/삭제/검증/문서 정합성 보완
-- 아직 말하면 안 되는 것: API key/operation endpoint 없이도 항상 live 데이터가 수집된다는 주장, 실제 라벨 기반 XGBoost 예측, pgvector급 RAG 검색, LLM이 임의 도구를 동적으로 발견하는 open-ended agent, refresh token rotation까지 갖춘 상용 인증 완성
+- 아직 말하면 안 되는 것: API key/operation endpoint 없이도 항상 live 데이터가 수집된다는 주장, 실제 라벨 기반 ML 예측, 운영형 벡터 검색, LLM이 임의 도구를 동적으로 발견한다는 주장, refresh token rotation까지 갖춘 상용 인증 완성

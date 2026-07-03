@@ -3,6 +3,7 @@ package com.growgate.diagnosis.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.agent.service.AgentInferenceService;
+import com.growgate.agent.service.ClaimVerificationService;
 import com.growgate.agent.service.EvidenceContextBuilder;
 import com.growgate.diagnosis.dto.CreateDiagnosisRequest;
 import com.growgate.diagnosis.dto.DiagnosisDetailResponse;
@@ -95,7 +96,8 @@ class DiagnosisFlowMergeTest {
                 mock(PublicDataCollectionService.class),
                 mock(AgentInferenceService.class),
                 mock(EvidenceContextBuilder.class),
-                mock(KnowledgeLoopItemRepository.class)
+                mock(KnowledgeLoopItemRepository.class),
+                mock(ClaimVerificationService.class)
         );
     }
 }

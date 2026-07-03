@@ -44,6 +44,10 @@ require_file "docs/live-public-data-smoke-checklist-2026-07-02.md"
 require_file "docs/pdf-rendering-strategy-2026-07-02.md"
 require_file "docs/presentation-evidence-pack-2026-07-02.md"
 require_file "docs/security-csrf-rate-limit-threat-model-2026-07-03.md"
+require_file "AGENTS.md"
+require_file "docs/contest-defense.md"
+require_file "docs/ai-claim-truth-table.md"
+require_file "docs/engineering/failure-log.md"
 require_file "scripts/verify-fresh-db.sh"
 require_file "backend/BE-02/src/test/resources/publicdata/kotra-market-sample-live-response.json"
 require_file "backend/BE-02/src/test/resources/publicdata/safety-recall-sample-live-response.json"
@@ -161,14 +165,24 @@ search_quiet 'sourceTrustSummary' "$ROOT_DIR/backend/BE-02/src/main/java/com/gro
   || fail "diagnosis result must expose sourceTrustSummary"
 search_quiet 'scoreContributionLedger' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
   || fail "diagnosis result must expose scoreContributionLedger"
-for field in sourceTrustSummary scoreContributionLedger publicDataCollectionRunId inputTrace; do
+for field in sourceTrustSummary scoreContributionLedger publicDataCollectionRunId inputTrace sourceTrace llmFallbackReasons claimVerifications; do
   grep -q "$field" "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/dto/DiagnosisDetailResponse.java" \
     || fail "DiagnosisDetailResponse must preserve result field: $field"
 done
-for mapping in 'sourceTrustSummary(parseObjectMap' 'scoreContributionLedger(parseMapList' 'publicDataCollectionRunId(asString' 'inputTrace(parseObjectMap'; do
+for mapping in 'sourceTrustSummary(parseObjectMap' 'scoreContributionLedger(parseMapList' 'publicDataCollectionRunId(asString' 'inputTrace(parseObjectMap' 'sourceTrace(parseObjectMap' 'llmFallbackReasons(parseStringList' 'claimVerifications(parseMapList'; do
   grep -q "$mapping" "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisService.java" \
     || fail "DiagnosisService.getDetail must map: $mapping"
 done
+for field in ruleScore riskLevel fallbackCount finalGate llmInfluencedGate llmDecisionPolicy; do
+  grep -q "$field" "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/dto/DiagnosisDetailResponse.java" \
+    || fail "GateDecision DTO must expose rule-owned field: $field"
+  grep -q "$field" "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+    || fail "DiagnosisAsyncProcessor must write rule-owned gate field: $field"
+done
+grep -q 'ClaimVerificationService' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/agent/service/ClaimVerificationService.java" \
+  || fail "ClaimVerificationService must exist"
+search_quiet 'source-less|Source-less' "$ROOT_DIR/AGENTS.md" "$ROOT_DIR/docs/contest-defense.md" "$ROOT_DIR/docs/ai-claim-truth-table.md" \
+  || fail "AI truth docs must document source-less claim blocking"
 for field in collectionEvidence operationEndpoint apiKeyConfigured endpointType fetchedAt metricSummary decisionImpact; do
   grep -q "$field" "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/dto/DiagnosisSourcesResponse.java" \
     || fail "DiagnosisSourcesResponse must expose source proof field: $field"

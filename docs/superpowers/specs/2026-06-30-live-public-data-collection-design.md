@@ -23,7 +23,7 @@ GROW-GATE Local EX의 제출용 메인 앱인 Spring `BE-02`가 실제 공공 AP
 - 실제 배포 환경 secret manager 연결
 - 모든 provider의 실제 응답 필드 완전 정규화
 - live API 장애 모니터링/알림
-- pgvector RAG 또는 실제 라벨 ML
+- pgvector 기반 대규모 문서 검색 또는 실제 라벨 ML
 
 ## 아키텍처
 

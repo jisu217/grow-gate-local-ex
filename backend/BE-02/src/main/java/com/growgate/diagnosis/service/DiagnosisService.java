@@ -185,6 +185,9 @@ public class DiagnosisService {
                         .evidenceRetrieval(parseObjectMap(resultMap, "evidenceRetrieval"))
                         .exportKnowledgeTimeline(parseMapList(resultMap, "exportKnowledgeTimeline"))
                         .evidenceGuardrails(parseObjectMap(resultMap, "evidenceGuardrails"))
+                        .sourceTrace(parseObjectMap(resultMap, "sourceTrace"))
+                        .llmFallbackReasons(parseStringList(resultMap, "llmFallbackReasons"))
+                        .claimVerifications(parseMapList(resultMap, "claimVerifications"))
                         .sourceTrustSummary(parseObjectMap(resultMap, "sourceTrustSummary"))
                         .regionalIndustryProfile(parseObjectMap(resultMap, "regionalIndustryProfile"))
                         .buyerRequestTrace(parseObjectMap(resultMap, "buyerRequestTrace"))
@@ -639,6 +642,13 @@ public class DiagnosisService {
                 .blockedStep(asString(m.get("blockedStep")))
                 .buyerReplyGuidance(asString(m.get("buyerReplyGuidance")))
                 .mustFixBeforeQuote(parseStringList(m, "mustFixBeforeQuote"))
+                .ruleScore(asInteger(m.get("ruleScore")))
+                .riskLevel(asString(m.get("riskLevel")))
+                .fallbackCount(asInteger(m.get("fallbackCount")))
+                .finalGate(asString(m.getOrDefault("finalGate", m.get("status"))))
+                .reasons(parseStringList(m, "reasons"))
+                .llmInfluencedGate(Boolean.TRUE.equals(m.get("llmInfluencedGate")))
+                .llmDecisionPolicy(asString(m.get("llmDecisionPolicy")))
                 .build();
     }
 

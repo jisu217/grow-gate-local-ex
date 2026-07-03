@@ -10,7 +10,7 @@
 
 ## 결론
 
-21시 이후 핵심 변경은 “AI Agent/RAG/XGBoost 과장” 리스크를 줄이고, 심사위원에게 방어 가능한 **Evidence Workflow**로 재정렬한 것이다. 기존 `RAG context` 중심 명칭을 `source-bound evidence retrieval`로 바꾸고, 진단 결과에 `evidenceRetrieval`, `exportKnowledgeTimeline`, `evidenceGuardrails`를 추가했다. 프론트 S10 화면도 단순 공공데이터 파이프라인이 아니라 출처, top-k evidence chunk, guardrail, timeline을 함께 보여주는 화면으로 확장했다.
+21시 이후 핵심 변경은 구현 범위를 넘어서는 AI/ML 표현 리스크를 줄이고, 심사위원에게 방어 가능한 **Evidence Workflow**로 재정렬한 것이다. 기존 검색 context 중심 명칭을 `source-bound evidence retrieval`로 바꾸고, 진단 결과에 `evidenceRetrieval`, `exportKnowledgeTimeline`, `evidenceGuardrails`를 추가했다. 프론트 S10 화면도 단순 공공데이터 파이프라인이 아니라 출처, top-k evidence chunk, guardrail, timeline을 함께 보여주는 화면으로 확장했다.
 
 다만 90점 실행계획서가 요구하는 모든 항목이 끝난 것은 아니다. 특히 live 공공 API 성공 증거, DB 영속형 external evidence schema, claim/source span verifier, Source Trust Bar, 실제 발표 서버 smoke log는 아직 추가 확인 또는 구현이 필요하다.
 
@@ -18,8 +18,8 @@
 
 | 영역 | 수정 내용 | 주요 파일 |
 | --- | --- | --- |
-| Evidence retrieval 명칭 정리 | `AgentRagContextBuilder`를 `EvidenceContextBuilder`로 전환. `ragContext`를 `evidenceContext`로 변경. `retrievalMode=source-bound-evidence-search`, `claimBoundary`, `sourceBound`, `displayRole` 추가 | `backend/BE-02/src/main/java/com/growgate/agent/service/EvidenceContextBuilder.java`, `AgentInferenceRequest.java`, `AbstractLlmAgentProviderClient.java` |
-| 진단 결과 payload 확장 | `evidenceRetrieval`, `exportKnowledgeTimeline`, `evidenceGuardrails` 추가. `ragRetrieval` 제거. public data source에 `publishedAt`, `sourcePeriodStart`, `sourcePeriodEnd`, `eventDate` 전달 | `DiagnosisAsyncProcessor.java`, `DiagnosisDetailResponse.java`, `DiagnosisService.java` |
+| Evidence retrieval 명칭 정리 | context builder를 `EvidenceContextBuilder`로 전환. 검색 context를 `evidenceContext`로 변경. `retrievalMode=source-bound-evidence-search`, `claimBoundary`, `sourceBound`, `displayRole` 추가 | `backend/BE-02/src/main/java/com/growgate/agent/service/EvidenceContextBuilder.java`, `AgentInferenceRequest.java`, `AbstractLlmAgentProviderClient.java` |
+| 진단 결과 payload 확장 | `evidenceRetrieval`, `exportKnowledgeTimeline`, `evidenceGuardrails` 추가. public data source에 `publishedAt`, `sourcePeriodStart`, `sourcePeriodEnd`, `eventDate` 전달 | `DiagnosisAsyncProcessor.java`, `DiagnosisDetailResponse.java`, `DiagnosisService.java` |
 | Workflow trace source 정직화 | optional FastAPI bridge 출처를 `FASTAPI-AGENT`/`FastAPI Agent`에서 `WORKFLOW_TRACE`로 변경하고 점수 기여도를 0으로 고정 | `DiagnosisAsyncProcessor.java` |
 | S10 결과 화면 확장 | `S10 PUBLIC DATA PIPELINE`을 `S10 EVIDENCE WORKFLOW`로 변경. source card, top-k evidence chunk, evidence guardrails, export knowledge timeline 표시 | `frontend/FE-02/src/components/diagnosis/S10Sources.jsx`, `frontend/FE-02/src/styles/global.css` |
 | 프론트 mapper 보강 | S10 stage를 `{ pipes, evidenceRetrieval, timeline, guardrails }` 구조로 매핑. `session`에 evidence 관련 필드 추가 | `frontend/FE-02/src/services/diagnosisService.js`, `diagnosisService.mapper.test.js` |
@@ -32,7 +32,7 @@
 | 지시서/기획서 요구 | 보완 상태 | 설명 |
 | --- | --- | --- |
 | G3 presentation/production build에서 mock fallback 차단 | 보완 | `diagnosisService.js`, `productService.js`의 정적 mock import 제거 및 lazy import 구조. presentation/prod에서 mock fallback 차단. risk gate와 dist grep로 확인 |
-| G5 AI/ML/RAG 과장 표현 제거 | 보완 | 메인 코드 경로에서 `ragRetrieval`, `AgentRagContextBuilder`, `AI 지식화`, `추론 Agent` 표현 제거 또는 gate 대상화 |
+| G5 AI/ML 과장 표현 제거 | 보완 | 메인 코드 경로에서 과거 검색/agent 명칭, `AI 지식화`, `추론 Agent` 표현 제거 또는 gate 대상화 |
 | Workflow agent trace와 source-bound guardrail | 부분 보완 | 기존 `AgentLoop`는 유지하고, 결과 payload에 `evidenceGuardrails`를 추가해 unsupported claim count, fallback positive count, official live/cache count를 노출 |
 | LLM-Wiki식 source timeline | 부분 보완 | `exportKnowledgeTimeline`을 진단 결과에 추가. sourceId, sourceType, fetchedAt, publishedAt/sourcePeriod, scoreImpact 기반 이벤트 생성 |
 | fallback positive contribution 방어 | 부분 보완 | 기존 scoring 정책은 fallback positive를 제한하고, 21시 이후 guardrail count로 추가 노출. 다만 별도 DB constraint나 전용 단위 테스트는 아직 부족 |

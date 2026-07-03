@@ -1,10 +1,10 @@
-# Agent RAG Knowledge Loop Implementation Plan
+# LLM Assisted Evidence Knowledge Loop Implementation Plan
 
 > **For agentic workers:** REQUIRED SUB-SKILL: Use superpowers:subagent-driven-development (recommended) or superpowers:executing-plans to implement this plan task-by-task. Steps use checkbox (`- [ ]`) syntax for tracking.
 
-**Goal:** Add Gemini/OpenRouter fallback inference, DB-backed RAG context injection, and mypage knowledge-loop approval.
+**Goal:** Add Gemini/OpenRouter fallback inference, DB-backed evidence context injection, and mypage knowledge-loop approval.
 
-**Architecture:** Spring owns the diagnosis orchestration and calls a provider-agnostic `AgentInferenceService`. The service builds bounded RAG context from existing KB/public-data records, calls Gemini first and OpenRouter second, and stores only summarized trace and knowledge-loop suggestions.
+**Architecture:** Spring owns the diagnosis orchestration and calls a provider-agnostic `AgentInferenceService`. The service builds bounded evidence context from existing KB/public-data records, calls Gemini first and OpenRouter second, and stores only summarized trace and knowledge-loop suggestions.
 
 **Tech Stack:** Spring Boot 3.4, RestTemplate, JPA, MySQL schema SQL, React/Vite.
 
@@ -26,11 +26,11 @@
 - [ ] Add environment flags and timeout-safe RestTemplate calls.
 - [ ] Run backend tests.
 
-### Task 2: RAG Context Builder
+### Task 2: Evidence Context Builder
 
 **Files:**
-- Create: `backend/BE-02/src/main/java/com/growgate/agent/service/AgentRagContextBuilder.java`
-- Test: `backend/BE-02/src/test/java/com/growgate/agent/service/AgentRagContextBuilderTest.java`
+- Create: `backend/BE-02/src/main/java/com/growgate/agent/service/EvidenceContextBuilder.java`
+- Test: `backend/BE-02/src/test/java/com/growgate/agent/service/EvidenceContextBuilderTest.java`
 
 - [ ] Write failing test proving product KB, sources, public-data records, and accepted loop items appear in context.
 - [ ] Implement bounded context maps without raw secret/prompt persistence.
