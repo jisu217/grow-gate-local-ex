@@ -87,14 +87,16 @@ public class DemoAdminBootstrap implements ApplicationRunner {
                     .build());
         }
 
-        consentRecordRepository.save(UserConsentRecord.builder()
-                .id(CONSENT_ID)
-                .user(user)
-                .policyVersion("2026-07-privacy-v1")
-                .termsAccepted(true)
-                .privacyAccepted(true)
-                .marketingAccepted(false)
-                .source("seed-demo-not-live")
-                .build());
+        if (!consentRecordRepository.existsById(CONSENT_ID)) {
+            consentRecordRepository.save(UserConsentRecord.builder()
+                    .id(CONSENT_ID)
+                    .user(user)
+                    .policyVersion("2026-07-privacy-v1")
+                    .termsAccepted(true)
+                    .privacyAccepted(true)
+                    .marketingAccepted(false)
+                    .source("seed-demo-not-live")
+                    .build());
+        }
     }
 }

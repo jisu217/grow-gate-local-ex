@@ -207,7 +207,7 @@ CREATE TABLE IF NOT EXISTS diagnosis_runs (
   product_id VARCHAR(36) NULL,
   input_data TEXT NULL,
   knowledge_snapshot TEXT NULL,
-  result TEXT NULL,
+  result LONGTEXT NULL,
   status VARCHAR(20) NOT NULL,
   target_country VARCHAR(100) NOT NULL,
   created_at DATETIME(6) NOT NULL,

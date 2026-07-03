@@ -55,7 +55,7 @@ public class DiagnosisRun {
     @Column(name = "knowledge_snapshot", columnDefinition = "TEXT")
     private String knowledgeSnapshot;
 
-    @Column(name = "result", columnDefinition = "TEXT")
+    @Column(name = "result", columnDefinition = "LONGTEXT")
     private String result;
 
     @Enumerated(EnumType.STRING)
