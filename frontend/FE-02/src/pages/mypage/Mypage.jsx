@@ -7,7 +7,7 @@ import {
   createMypageProduct,
   deleteMypageProduct,
   getMypageReport,
-  rerunDiagnosis,
+  buildRerunDiagnosisPath,
 } from '../../services/mypageService.js'
 import { COUNTRY_OPTIONS, normalizeTargetCountry } from '../../utils/country.js'
 import MarkdownReportPreview, { reportPreviewDocument } from '../../components/report/MarkdownReportPreview.jsx'
@@ -38,9 +38,6 @@ export default function Mypage() {
   // 제품 삭제 확인 모달 대상 (null이면 닫힘)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleting, setDeleting] = useState(false)
-
-  // 진단 재실행 로딩
-  const [rerunLoading, setRerunLoading] = useState(false)
 
   // 내 제품 관리 목록 페이지 (0부터)
   const [productPage, setProductPage] = useState(0)
@@ -150,18 +147,10 @@ export default function Mypage() {
     }
   }
 
-  // 수출 Gate 판단 다시 실행
-  async function rerun() {
+  // 수출 Gate 판단 다시 실행 — 이번 건 바이어 문의/마감/요구 인증을 다시 입력받는다.
+  function rerun() {
     if (!current) return
-    setRerunLoading(true)
-    try {
-      const result = await rerunDiagnosis(current.id, current.country)
-      navigate(`/diagnosis/${result.diagnosisId}`)
-    } catch (err) {
-      alert(err.message || '진단 실행에 실패했습니다.')
-    } finally {
-      setRerunLoading(false)
-    }
+    navigate(buildRerunDiagnosisPath(current))
   }
 
   async function fetchReport(report) {
@@ -305,7 +294,7 @@ export default function Mypage() {
                 <div className={styles.bar}>
                   <div className={styles.fill} style={{ width: `${current.kn}%` }} />
                 </div>
-                <div className={styles.meta}><span>입력 완료</span><span>{current.miss}</span></div>
+                <div className={styles.meta}><span>데이터 기준</span><span>{current.miss}</span></div>
               </div>
 
               <div className={`${styles.card} ${styles.rep}`}>
@@ -334,12 +323,11 @@ export default function Mypage() {
 
             <div className={styles.rerunWrap}>
               <button
-                className={`${styles.rerun} ${rerunLoading ? styles.loading : ''}`}
+                className={styles.rerun}
                 onClick={rerun}
-                disabled={rerunLoading}
               >
                 <span className={styles.sp} />
-                <span className={styles.ar}>↻</span>&nbsp;이 제품 준비도 진단 다시 실행
+                <span className={styles.ar}>↻</span>&nbsp;이번 문의 정보 입력 후 재진단
               </button>
             </div>
           </>

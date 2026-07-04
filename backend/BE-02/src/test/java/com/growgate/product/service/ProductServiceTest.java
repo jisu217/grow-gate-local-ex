@@ -5,6 +5,11 @@ import com.growgate.company.entity.Company;
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;
 import com.growgate.knowledge.entity.AuditLog;
+import com.growgate.knowledge.entity.BuyerRequirement;
+import com.growgate.knowledge.entity.Certification;
+import com.growgate.knowledge.entity.Fto;
+import com.growgate.knowledge.entity.ProductKnowledge;
+import com.growgate.knowledge.enums.TrustGrade;
 import com.growgate.knowledge.repository.AuditLogRepository;
 import com.growgate.knowledge.repository.BuyerRequirementRepository;
 import com.growgate.knowledge.repository.CertificationRepository;
@@ -31,6 +36,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.test.util.ReflectionTestUtils;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -231,6 +237,57 @@ class ProductServiceTest {
         assertThat(summary.getTargetCountry()).isEqualTo("미국");
         assertThat(summary.getDescription()).isEqualTo("보호회로 제어 모듈");
         verify(productRepository).findByOwnerIdAndDeletedAtIsNullOrderByUpdatedAtDesc("user-1");
+    }
+
+    @Test
+    void getListIncludesKnowledgeRegistrationCountBasis() {
+        User user = user("user-1", UserType.personal);
+        Product product = Product.builder()
+                .id("product-1")
+                .owner(user)
+                .name("BMS 모듈")
+                .hsCode("853710")
+                .targetCountry("미국")
+                .updatedAt(LocalDateTime.of(2026, 6, 21, 4, 0))
+                .build();
+        ProductKnowledge knowledge = ProductKnowledge.builder()
+                .product(product)
+                .trustGrade(TrustGrade.high)
+                .build();
+        Certification certification = Certification.builder()
+                .product(product)
+                .name("UL")
+                .expiresAt(LocalDate.now().plusDays(120))
+                .build();
+        Fto fto = Fto.builder()
+                .product(product)
+                .targetCountry("미국")
+                .build();
+        BuyerRequirement buyerRequirement = BuyerRequirement.builder()
+                .product(product)
+                .buyerName("Acme")
+                .country("베트남")
+                .requirements("UL 인증서")
+                .build();
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(membershipRepository.findFirstByUserId("user-1")).thenReturn(Optional.empty());
+        when(productRepository.findByOwnerIdAndDeletedAtIsNullOrderByUpdatedAtDesc("user-1")).thenReturn(List.of(product));
+        when(knowledgeRepository.findByProductIdIn(List.of("product-1"))).thenReturn(List.of(knowledge));
+        when(certificationRepository.findByProductIdIn(List.of("product-1"))).thenReturn(List.of(certification));
+        when(ftoRepository.findByProductIdIn(List.of("product-1"))).thenReturn(List.of(fto));
+        when(buyerRequirementRepository.findByProductIdIn(List.of("product-1"))).thenReturn(List.of(buyerRequirement));
+
+        ProductListResponse response = productService.getList("user-1");
+
+        ProductListResponse.ProductSummary summary = response.getProducts().get(0);
+        assertThat(summary.getCertificationCount()).isEqualTo(1);
+        assertThat(summary.getFtoCount()).isEqualTo(1);
+        assertThat(summary.getBuyerRequirementCount()).isEqualTo(1);
+        assertThat(summary.getBuyerName()).isEqualTo("Acme");
+        assertThat(summary.getBuyerCountry()).isEqualTo("베트남");
+        assertThat(summary.getBuyerRequest()).isEqualTo("UL 인증서");
+        assertThat(summary.getMissingFieldCount()).isZero();
     }
 
     @Test

@@ -1,6 +1,10 @@
 // 마이페이지 서비스 — 로그인 사용자 기준 DB API 연동
 import { apiFetch } from './apiClient.js'
 import { getDiagnosisList, getDiagnosisReport } from './diagnosisService.js'
+import {
+  calculateKnowledgeRegistrationRate,
+  describeKnowledgeRegistration,
+} from '../utils/knowledgeRegistration.js'
 
 const ROLE_LABELS = {
   owner: '소유자',
@@ -26,9 +30,11 @@ function toMypageMember(member) {
 function toMypageProduct(product) {
   const missingCount = product.missingFieldCount ?? 0
   const expiringCount = product.expiringCertCount ?? 0
+  const registrationRate = calculateKnowledgeRegistrationRate(product)
+  const registrationLabel = describeKnowledgeRegistration({ ...product, registrationRate })
   const chips = []
 
-  if (product.knowledgeStatus === 'valid') chips.push('제품 지식 확인 완료')
+  if (registrationRate >= 100) chips.push('제품 지식 확인 완료')
   if (expiringCount > 0) chips.push(`만료 임박 ${expiringCount}건`)
   if (missingCount > 0) chips.push(`누락 정보 ${missingCount}건`)
 
@@ -41,15 +47,20 @@ function toMypageProduct(product) {
     country: product.targetCountry ?? '',
     category: product.category ?? '',
     description: product.description ?? '',
+    buyerName: product.buyerName ?? '',
+    buyerCountry: product.buyerCountry ?? '',
+    buyerRequest: product.buyerRequest ?? '',
+    buyerRequirementCount: product.buyerRequirementCount ?? 0,
     score: product.score ?? null,
     chips,
     todo: product.diagnosisStatus === 'running' || product.diagnosisStatus === 'pending'
       ? [{ task: '진단 완료 상태 확인하기', due: '30' }]
-      : missingCount > 0
+      : registrationRate < 100
       ? [{ task: '제품 지식 보완하기', due: '30' }]
       : [{ task: '준비도 진단 실행하기', due: '30' }],
-    kn: product.knowledgeStatus === 'valid' ? 100 : missingCount > 0 ? 60 : 30,
-    miss: missingCount > 0 ? `누락 정보 ${missingCount}건` : '기본 정보 저장됨',
+    kn: registrationRate,
+    registrationLabel,
+    miss: registrationLabel.replace(/^데이터 기준 \d+% · /, ''),
     reports: product.reports ?? [],
     updatedAt: product.updatedAt,
   }
@@ -68,6 +79,37 @@ export function buildReportArchive(diagnoses = [], productId) {
       targetMarket: diagnosis.targetMarket ?? '',
       downloadLabel: 'Markdown 다운로드',
     }))
+}
+
+export function buildRerunDiagnosisPath(product) {
+  if (!product?.id) return '/diagnosis/new'
+  const params = new URLSearchParams({
+    productId: product.id,
+    mode: 'rerun',
+  })
+  return `/diagnosis/new?${params.toString()}`
+}
+
+export function buildRerunDiagnosisPayload(product) {
+  if (!product?.id) return null
+  return {
+    productId: product.id,
+    targetCountry: product.buyerCountry || product.country,
+    inputData: {
+      productName: product.name,
+      hsCode: product.hs,
+      description: product.description ?? '',
+      region: '',
+      industry: product.category ?? '',
+      buyerRequest: product.buyerRequest ?? '',
+      buyerDeadline: null,
+      expectedShipmentDate: null,
+      requestedCertifications: [],
+      currentDocuments: [],
+      exportExperience: '',
+      budgetLimitKrw: null,
+    },
+  }
 }
 
 function formatReportDate(value) {
@@ -169,7 +211,13 @@ export async function createMypageProduct({ name, hs, country, description = '',
     hsCode: hs,
     targetCountry: country,
     description,
+    buyerName: '',
+    buyerCountry: '',
+    buyerRequest: '',
     knowledgeStatus: 'incomplete',
+    certificationCount: 0,
+    ftoCount: 0,
+    buyerRequirementCount: 0,
     missingFieldCount: 2,
     expiringCertCount: 0,
     updatedAt: created.createdAt,
@@ -196,12 +244,4 @@ export async function updateMypageProduct(id, { name, hs, country, description, 
 export async function deleteMypageProduct(id) {
   await apiFetch(`/products/${id}`, { method: 'DELETE' })
   return { id }
-}
-
-// 수출 준비도 진단 다시 실행 — 실제 진단 생성 API로 연결
-export async function rerunDiagnosis(productId, targetCountry) {
-  return apiFetch('/diagnosis', {
-    method: 'POST',
-    body: JSON.stringify({ productId, targetCountry }),
-  })
 }

@@ -21,8 +21,14 @@ public class ProductListResponse {
         private String hsCode;
         private String targetCountry;
         private String description;
+        private String buyerName;
+        private String buyerCountry;
+        private String buyerRequest;
+        private int buyerRequirementCount;
         private String trustGrade;
         private String knowledgeStatus;  // valid | expiring_soon | expired | needs_review | incomplete
+        private int certificationCount;
+        private int ftoCount;
         private int expiringCertCount;
         private int missingFieldCount;
         private String updatedAt;

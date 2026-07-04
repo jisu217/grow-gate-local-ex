@@ -36,6 +36,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
+import java.util.Comparator;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -79,6 +80,10 @@ public class ProductService {
             List<Certification> certs = certsByProductId.getOrDefault(product.getId(), Collections.emptyList());
             List<Fto> ftoList = ftoByProductId.getOrDefault(product.getId(), Collections.emptyList());
             List<BuyerRequirement> buyers = buyersByProductId.getOrDefault(product.getId(), Collections.emptyList());
+            BuyerRequirement latestBuyer = buyers.stream()
+                    .filter(b -> b.getCreatedAt() != null)
+                    .max(Comparator.comparing(BuyerRequirement::getCreatedAt))
+                    .orElse(buyers.isEmpty() ? null : buyers.get(0));
 
             LocalDate today = LocalDate.now();
 
@@ -108,8 +113,14 @@ public class ProductService {
                     .hsCode(product.getHsCode())
                     .targetCountry(product.getTargetCountry())
                     .description(product.getDescription())
+                    .buyerName(latestBuyer != null ? latestBuyer.getBuyerName() : null)
+                    .buyerCountry(latestBuyer != null ? latestBuyer.getCountry() : null)
+                    .buyerRequest(latestBuyer != null ? latestBuyer.getRequirements() : null)
+                    .buyerRequirementCount(buyers.size())
                     .trustGrade(trustGrade)
                     .knowledgeStatus(knowledgeStatus)
+                    .certificationCount(certs.size())
+                    .ftoCount(ftoList.size())
                     .expiringCertCount(expiringCertCount)
                     .missingFieldCount(missingFieldCount)
                     .updatedAt(DateTimeUtils.formatUtc(product.getUpdatedAt()))

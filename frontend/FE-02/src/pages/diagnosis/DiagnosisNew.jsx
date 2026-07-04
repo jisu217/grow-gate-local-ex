@@ -77,12 +77,27 @@ function splitList(value) {
     .filter(Boolean)
 }
 
+function buildRerunFormDefaults(product) {
+  return {
+    region: '',
+    industry: product?.category ?? '',
+    buyerRequest: product?.buyerRequest ?? '',
+    buyerDeadline: '',
+    expectedShipmentDate: '',
+    requestedCertifications: '',
+    currentDocuments: '',
+    exportExperience: '',
+    budgetLimitKrw: '',
+  }
+}
+
 // 수출 문의 판단 입력 페이지
 // 제품 정보는 마이페이지에서만 입력·관리하고, 여기서는 "등록된 제품 선택 + 이번 건 판단 정보"만 받는다.
 export default function DiagnosisNew() {
   const navigate = useNavigate()
   const [searchParams] = useSearchParams()
   const preselectId = searchParams.get('productId') // 제품 맥락에서 진입 시 자동 선택할 제품
+  const isRerunMode = searchParams.get('mode') === 'rerun'
 
   // 이번 수출 건 판단 정보 (제품 정보는 선택한 제품에서 가져옴)
   const [formData, setFormData] = useState({
@@ -122,15 +137,17 @@ export default function DiagnosisNew() {
       .then((products) => {
         setSavedProducts(products)
         setPickerLoadError('')
-        if (preselectId && products.some((p) => p.id === preselectId)) {
+        const preselected = products.find((p) => p.id === preselectId)
+        if (preselected) {
           setSelectedId(preselectId)
+          if (isRerunMode) setFormData(buildRerunFormDefaults(preselected))
         }
       })
       .catch((err) => {
         setSavedProducts([])
         setPickerLoadError(err.message || '저장된 제품을 불러오지 못했습니다. 로그인 상태와 서버 연결을 확인해주세요.')
       })
-  }, [preselectId])
+  }, [preselectId, isRerunMode])
 
   const filteredProducts = useMemo(() => {
     const keyword = normalizeSearchValue(pickerKeyword)
@@ -160,7 +177,12 @@ export default function DiagnosisNew() {
   }
 
   const openPicker = () => { setPickerKeyword(''); setPickerPage(1); setPickerOpen(true) }
-  const pickProduct = (p) => { setSelectedId(p.id); setPickerOpen(false); setSubmitError('') }
+  const pickProduct = (p) => {
+    setSelectedId(p.id)
+    if (isRerunMode) setFormData(buildRerunFormDefaults(p))
+    setPickerOpen(false)
+    setSubmitError('')
+  }
   const handlePickerSearch = (e) => { setPickerKeyword(e.target.value); setPickerPage(1) }
   const loadDemoScenario = (scenario) => {
     const product = savedProducts.find((p) => p.id === scenario.productId)
@@ -263,10 +285,12 @@ export default function DiagnosisNew() {
         <div className={styles.formArea}>
           <div className={styles.formCard}>
             <div className={styles.formEyebrow}>S01 INPUT</div>
-            <h2 className={styles.formTitle}>수출 문의 판단</h2>
+            <h2 className={styles.formTitle}>{isRerunMode ? '재진단 입력' : '수출 문의 판단'}</h2>
             <p className={styles.formDesc}>
-              등록된 제품을 선택하고, 이번 수출 문의(바이어 요구사항)를 입력하면 견적 전 Gate 판단으로 정리합니다.
-              제품 정보는 마이페이지에서 관리됩니다.
+              {isRerunMode
+                ? '제품 정보는 유지하고, 이번 바이어 문의·회신 마감일·요구 인증·보유 문서를 다시 입력해 새 Gate 판단을 실행합니다.'
+                : '등록된 제품을 선택하고, 이번 수출 문의(바이어 요구사항)를 입력하면 견적 전 Gate 판단으로 정리합니다.'}
+              {' '}제품 정보는 마이페이지에서 관리됩니다.
             </p>
 
             <div className={styles.demoPanel}>
@@ -357,7 +381,11 @@ export default function DiagnosisNew() {
                   <span className={styles.stepNum}>2</span>
                   <div>
                     <div className={styles.stepTitle}>이번 수출 문의 정보</div>
-                    <div className={styles.stepSub}>바이어 요구사항을 입력하면 견적 전 Gate 판단으로 정리합니다</div>
+                    <div className={styles.stepSub}>
+                      {isRerunMode
+                        ? '이전 진단값을 재사용하지 않고 이번 문의 조건을 새로 입력합니다'
+                        : '바이어 요구사항을 입력하면 견적 전 Gate 판단으로 정리합니다'}
+                    </div>
                   </div>
                 </div>
                 <div className={styles.fields}>
