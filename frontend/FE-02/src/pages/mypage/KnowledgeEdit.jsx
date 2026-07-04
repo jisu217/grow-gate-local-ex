@@ -8,7 +8,7 @@ import { COUNTRY_OPTIONS, normalizeTargetCountry } from '../../utils/country.js'
 
 const CATEGORIES = ['전기전자', '전자부품', '기계·장비', '화학·소재', '식품·의료', '기타']
 
-// 제품 지식 수정 페이지 컴포넌트
+// 제품 정보 수정 페이지 컴포넌트
 export default function KnowledgeEdit() {
   const { productId } = useParams()
   const navigate = useNavigate()
@@ -18,6 +18,7 @@ export default function KnowledgeEdit() {
   const [pageState, setPageState] = useState('loading')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     setPageState('loading')
@@ -33,7 +34,7 @@ export default function KnowledgeEdit() {
         setPageState('ok')
       })
       .catch(() => setPageState('error'))
-  }, [productId])
+  }, [productId, reloadKey])
 
   if (!can('knowledge:edit')) {
     return (
@@ -43,7 +44,7 @@ export default function KnowledgeEdit() {
         </button>
         <StatusMessage
           type="permission"
-          message="이 회사 제품 지식을 수정할 권한이 없습니다."
+          message="이 회사 제품 정보를 수정할 권한이 없습니다."
         />
       </div>
     )
@@ -51,7 +52,7 @@ export default function KnowledgeEdit() {
 
   if (pageState === 'loading') return (
     <div className={styles.wrap}>
-      <StatusMessage type="loading" message="제품 지식을 불러오는 중입니다." />
+      <StatusMessage type="loading" message="제품 정보를 불러오는 중입니다." />
     </div>
   )
   if (pageState === 'error') return (
@@ -59,7 +60,13 @@ export default function KnowledgeEdit() {
       <button className={styles.back} onClick={() => navigate(`/mypage/knowledge/${productId}`)}>
         ← 제품 상세로 돌아가기
       </button>
-      <StatusMessage type="error" message="제품 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요." />
+      <StatusMessage
+        type="error"
+        message="제품 정보를 불러오지 못했습니다. 네트워크를 확인하고 다시 시도해주세요."
+        onAction={() => setReloadKey((k) => k + 1)}
+        onSecondary={() => navigate(`/mypage/knowledge/${productId}`)}
+        secondaryLabel="제품 상세로"
+      />
     </div>
   )
 
@@ -167,7 +174,7 @@ export default function KnowledgeEdit() {
           background: 'var(--blue-soft)', border: '1px solid var(--blue-line)',
           borderRadius: 10, padding: '10px 14px', marginBottom: 8
         }}>
-          💡 저장하면 변경 이력(Audit Log)이 자동으로 기록됩니다.
+          💡 저장하면 변경 이력(Audit Log)이 자동으로 기록되고, 변경된 정보는 다음 Gate 판단부터 반영됩니다.
         </div>
 
         {error && <p className={styles.errorMsg} role="alert">{error}</p>}

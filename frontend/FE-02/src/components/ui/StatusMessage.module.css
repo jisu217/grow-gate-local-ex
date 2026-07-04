@@ -16,6 +16,27 @@
   line-height: 1.7;
 }
 
+/* 다음 행동 버튼 (재시도/뒤로가기) */
+.actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-top: 16px;
+}
+.primaryBtn {
+  font-family: var(--kr); font-size: 13px; font-weight: 700;
+  color: #fff; background: var(--blue); border: none;
+  padding: 9px 18px; border-radius: 10px; cursor: pointer; transition: .15s;
+}
+.primaryBtn:hover { filter: brightness(1.06); }
+.secondaryBtn {
+  font-family: var(--kr); font-size: 13px; font-weight: 600;
+  color: var(--slate); background: #fff; border: 1.5px solid var(--line);
+  padding: 9px 18px; border-radius: 10px; cursor: pointer; transition: .15s;
+}
+.secondaryBtn:hover { border-color: var(--blue); color: var(--blue); }
+
 /* 빈 상태 */
 .empty      { background: var(--bg);        border-color: var(--line);      color: var(--slate-2); }
 /* 로딩 상태 */

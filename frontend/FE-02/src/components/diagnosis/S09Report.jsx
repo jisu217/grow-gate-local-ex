@@ -25,7 +25,7 @@ export default function S09Report({ scoreBars, summary, onDownload, fastApiUsed 
           </div>
 
           <div className="guardrail">
-            모든 규제 답변에는 추천·최신성·전문가 확인 여부를 함께 확인하십시오. 본 결과는 등록 제품 지식과 공공데이터 출처 신호 기반 분석이며, 최종 판단은 인증 전문가와 함께 하십시오.
+            모든 규제 답변에는 추천·최신성·전문가 확인 여부를 함께 확인하십시오. 본 결과는 등록 제품 정보와 공공데이터 출처 신호 기반 분석이며, 최종 판단은 인증 전문가와 함께 하십시오.
           </div>
         </div>
 

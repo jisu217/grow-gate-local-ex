@@ -34,7 +34,7 @@ function toMypageProduct(product) {
   const registrationLabel = describeKnowledgeRegistration({ ...product, registrationRate })
   const chips = []
 
-  if (registrationRate >= 100) chips.push('제품 지식 확인 완료')
+  if (registrationRate >= 100) chips.push('제품 정보 확인 완료')
   if (expiringCount > 0) chips.push(`만료 임박 ${expiringCount}건`)
   if (missingCount > 0) chips.push(`누락 정보 ${missingCount}건`)
 
@@ -56,8 +56,8 @@ function toMypageProduct(product) {
     todo: product.diagnosisStatus === 'running' || product.diagnosisStatus === 'pending'
       ? [{ task: '진단 완료 상태 확인하기', due: '30' }]
       : registrationRate < 100
-      ? [{ task: '제품 지식 보완하기', due: '30' }]
-      : [{ task: '준비도 진단 실행하기', due: '30' }],
+      ? [{ task: '제품 정보 보완하기', due: '30' }]
+      : [{ task: 'Gate 판단 실행하기', due: '30' }],
     kn: registrationRate,
     registrationLabel,
     miss: registrationLabel.replace(/^데이터 기준 \d+% · /, ''),

@@ -17,8 +17,6 @@ import DailyPublicData  from './pages/publicdata/DailyPublicData.jsx'
 
 import Mypage          from './pages/mypage/Mypage.jsx'
 import DiagnosisDetail from './pages/mypage/DiagnosisDetail.jsx'
-import Knowledge       from './pages/mypage/Knowledge.jsx'
-import KnowledgeNew    from './pages/mypage/KnowledgeNew.jsx'
 import KnowledgeDetail from './pages/mypage/KnowledgeDetail.jsx'
 import KnowledgeEdit   from './pages/mypage/KnowledgeEdit.jsx'
 
@@ -55,12 +53,10 @@ export default function App() {
 
             <Route path="/mypage"                        element={<Mypage />} />
             <Route path="/mypage/diagnosis/:productId"   element={<DiagnosisDetail />} />
-            <Route path="/mypage/knowledge"              element={<Knowledge />} />
             <Route path="/mypage/knowledge/:productId"   element={<KnowledgeDetail />} />
 
-            {/* 제품 등록·수정: 개인 계정(owner)도 백엔드가 허용하므로 회사 전용 제한 해제.
-                실제 권한(knowledge:create/edit)은 각 페이지의 can()이 담당 */}
-            <Route path="/mypage/knowledge/new"               element={<KnowledgeNew />} />
+            {/* 제품 정보 상세/수정. 제품 목록·생성은 마이페이지('내 제품 관리' + 제품 추가 모달)로 일원화됨.
+                수정 권한(knowledge:edit)은 페이지의 can()이 담당 */}
             <Route path="/mypage/knowledge/:productId/edit"   element={<KnowledgeEdit />} />
 
           </Route>

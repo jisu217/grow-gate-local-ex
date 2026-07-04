@@ -1,4 +1,4 @@
-// 제품 지식 서비스
+// 제품 정보 서비스
 import { apiFetch } from './apiClient.js'
 import {
   calculateKnowledgeRegistrationRate,
@@ -114,13 +114,13 @@ function mapProductDetail(p) {
   }
 }
 
-// 특정 제품 지식 상세 조회
+// 특정 제품 정보 상세 조회
 export async function getProductKnowledge(productId) {
   const detail = await apiFetch(`/products/${productId}/knowledge`)
   return mapProductDetail(detail)
 }
 
-// 제품 지식 저장 (쓰기 작업 — 조회와 달리 실패 시 mock 대체 없이 에러 그대로 전파)
+// 제품 정보 저장 (쓰기 작업 — 조회와 달리 실패 시 mock 대체 없이 에러 그대로 전파)
 // 사유: mock 성공으로 둔갑 시 사용자는 저장 완료로 착각하나 실제로는 입력 유실 위험
 export async function saveProductKnowledge(productId, payload) {
   const body = {

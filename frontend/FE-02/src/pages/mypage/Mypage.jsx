@@ -9,15 +9,25 @@ import {
   getMypageReport,
   buildRerunDiagnosisPath,
 } from '../../services/mypageService.js'
+import { getDiagnosisResult, buildDecisionBrief } from '../../services/diagnosisService.js'
 import { COUNTRY_OPTIONS, normalizeTargetCountry } from '../../utils/country.js'
 import MarkdownReportPreview, { reportPreviewDocument } from '../../components/report/MarkdownReportPreview.jsx'
 import ReportDownloadButtons from '../../components/report/ReportDownloadButtons.jsx'
+import StatusMessage from '../../components/ui/StatusMessage.jsx'
 
 // 내 제품 관리 목록: 한 페이지에 보여줄 제품 수
 const PRODUCTS_PER_PAGE = 5
 
 // 제품 카테고리 (제품 수정 페이지와 동일 목록)
 const CATEGORIES = ['전기전자', '전자부품', '기계·장비', '화학·소재', '식품·의료', '기타']
+
+// 판정 상태 → 색상 클래스 (DiagnosisDetail과 동일 규칙)
+function gateClassOf(status) {
+  const s = String(status ?? '').toUpperCase()
+  if (s.includes('NO')) return 'gateNo'
+  if (s.includes('GO') && !s.includes('CONDITION')) return 'gateGo'
+  return 'gateCond'
+}
 
 // 마이페이지 — 수출 준비 상태 대시보드
 export default function Mypage() {
@@ -41,6 +51,13 @@ export default function Mypage() {
 
   // 내 제품 관리 목록 페이지 (0부터)
   const [productPage, setProductPage] = useState(0)
+
+  // 선택 제품의 최신 판정(GO/조건부/NO-GO). 요약엔 판정값이 없어 진단 상세에서 가져온다.
+  const [verdict, setVerdict] = useState(null)
+  const [verdictState, setVerdictState] = useState('idle') // idle | loading | ok | none | error
+
+  // 대시보드 로드 재시도 트리거
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     let cancelled = false
@@ -66,9 +83,37 @@ export default function Mypage() {
     }
     load()
     return () => { cancelled = true }
-  }, [])
+  }, [reloadKey])
 
   const current = products.find((p) => p.id === selectedId)
+
+  // 선택 제품의 최신 진단 상세에서 실제 판정값을 가져온다 (점수로 지어내지 않음).
+  useEffect(() => {
+    let alive = true
+    if (!current) { setVerdict(null); setVerdictState('idle'); return }
+    if (!current.runId) { setVerdict(null); setVerdictState('none'); return }
+    setVerdictState('loading')
+    getDiagnosisResult(current.runId)
+      .then((result) => {
+        if (!alive) return
+        const session = result.session ?? {}
+        const stages = result.stages ?? {}
+        const brief = buildDecisionBrief(session, stages)
+        const mustFix = Array.isArray(session.gateDecision?.mustFixBeforeQuote)
+          ? session.gateDecision.mustFixBeforeQuote.filter(Boolean)
+          : []
+        const risks = mustFix.length ? mustFix : brief.topRisks.map((r) => r.label)
+        setVerdict({
+          gateLabel: brief.gateLabel,
+          gateReason: brief.gateReason,
+          gateCls: gateClassOf(session.gateDecision?.status),
+          risks,
+        })
+        setVerdictState('ok')
+      })
+      .catch(() => { if (alive) { setVerdict(null); setVerdictState('error') } })
+    return () => { alive = false }
+  }, [current?.id, current?.runId])
 
   // 내 제품 관리 목록 페이지네이션 (제품 수가 바뀌어도 범위 벗어나지 않게 보정)
   const pageCount = Math.max(1, Math.ceil(products.length / PRODUCTS_PER_PAGE))
@@ -254,15 +299,52 @@ export default function Mypage() {
                 onClick={() => navigate(`/mypage/diagnosis/${current.id}`)}
                 role="button"
               >
-                <div className={styles.ctitle}>최근 Gate 판단 결과 <span className={styles.goHint}>· 왜 이 점수인지 보기 →</span></div>
-                <div className={styles.big}>
-                  {current.score != null ? current.score : '—'}<span className={styles.u}>/100</span>
-                </div>
-                <div className={styles.chips}>
-                  {current.chips.length
-                    ? current.chips.map((c) => <span key={c} className={styles.chip}>{c}</span>)
-                    : <span className={styles.chip}>아직 진단 전입니다</span>}
-                </div>
+                {verdictState === 'ok' && verdict ? (
+                  <>
+                    <div className={styles.gateRow}>
+                      <span className={`${styles.gateBadge} ${styles[verdict.gateCls]}`}>
+                        <span className={styles.gateDot} />{verdict.gateLabel}
+                      </span>
+                      {current.score != null && (
+                        <span className={styles.refScore}>참고 점수 <b>{current.score}</b>/100</span>
+                      )}
+                    </div>
+                    {verdict.gateReason && <p className={styles.gateReason}>{verdict.gateReason}</p>}
+                    {verdict.risks.length > 0 && (
+                      <div className={styles.riskList}>
+                        <div className={styles.riskHead}>핵심 리스크 {verdict.risks.length}건</div>
+                        {verdict.risks.slice(0, 3).map((r, i) => (
+                          <div key={i} className={styles.riskItem}>
+                            <span className={styles.riskNum}>{i + 1}</span><span>{r}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                    {current.runId && (
+                      <button
+                        className={styles.fullResultBtn}
+                        onClick={(e) => { e.stopPropagation(); navigate(`/diagnosis/${current.runId}`) }}
+                      >
+                        전체 결과 보기 →
+                      </button>
+                    )}
+                  </>
+                ) : verdictState === 'loading' ? (
+                  <div className={styles.big}>…</div>
+                ) : (
+                  <>
+                    <div className={styles.big}>
+                      {current.score != null ? current.score : '—'}<span className={styles.u}>/100</span>
+                    </div>
+                    <div className={styles.chips}>
+                      {verdictState === 'error'
+                        ? <span className={styles.chip}>판정 정보를 불러오지 못했습니다</span>
+                        : current.chips.length
+                        ? current.chips.map((c) => <span key={c} className={styles.chip}>{c}</span>)
+                        : <span className={styles.chip}>아직 진단 전입니다</span>}
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className={`${styles.card} ${styles.todo}`}>
@@ -286,10 +368,10 @@ export default function Mypage() {
             <div className={`${styles.row} ${styles.two}`}>
               <div
                 className={`${styles.card} ${styles.kn} ${styles.clickable}`}
-                onClick={() => navigate('/mypage/knowledge')}
+                onClick={() => document.getElementById('my-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                 role="button"
               >
-                <div className={styles.ctitle}>제품 지식 등록 현황 <span className={styles.goHint}>· 지식 입력하러 가기 →</span></div>
+                <div className={styles.ctitle}>제품 정보 등록 현황 <span className={styles.goHint}>· 내 제품 보러 가기 →</span></div>
                 <div className={styles.pct}>{current.kn}%</div>
                 <div className={styles.bar}>
                   <div className={styles.fill} style={{ width: `${current.kn}%` }} />
@@ -338,9 +420,15 @@ export default function Mypage() {
           <span className={styles.dot} />내 제품 · 회사 정보 · 제품을 바꿔도 회사 정보는 고정됩니다
         </div>
 
-        {loadError && <div className={styles.notice}>{loadError}</div>}
+        {loadError && (
+          <StatusMessage
+            type="error"
+            message={`${loadError} 네트워크를 확인하고 다시 시도해주세요.`}
+            onAction={() => setReloadKey((k) => k + 1)}
+          />
+        )}
 
-        <div className={`${styles.card} ${styles.pm}`}>
+        <div id="my-products" className={`${styles.card} ${styles.pm}`}>
           <div className={styles.pmHead}>
             <div className={styles.ctitle}>내 제품 관리</div>
             <button className={styles.add} onClick={openAdd}>+ 제품 추가</button>
@@ -356,7 +444,15 @@ export default function Mypage() {
               >
                 <div>
                   <div className={styles.pn}>{p.name}</div>
-                  <div className={styles.pmeta}>HS {p.hs} · {p.country} 수출</div>
+                  <div className={styles.pmeta}>HS {p.hs} · {p.country} 수출 · 등록률 {p.kn}%</div>
+                  {p.chips.some((c) => c.includes('누락') || c.includes('만료')) && (
+                    <span
+                      className={`pill ${p.chips.some((c) => c.includes('누락')) ? 'req' : 'warn'}`}
+                      style={{ marginTop: 4, display: 'inline-block' }}
+                    >
+                      {p.chips.find((c) => c.includes('누락') || c.includes('만료'))}
+                    </span>
+                  )}
                 </div>
                 <span className={`${styles.badge} ${p.id === selectedId ? styles.badgeCur : ''}`}>
                   {p.id === selectedId ? '지금 보는 제품' : '클릭해 전환'}
@@ -435,7 +531,7 @@ export default function Mypage() {
         <div className={styles.sheet}>
           <h3>제품 추가</h3>
           <div className={styles.desc}>
-            제품명·HS Code·수출 대상국을 입력하면 마이페이지와 진단 입력에 반영됩니다.
+            제품 정보를 등록해두면 다음 Gate 판단부터 제품명·HS Code·대상국을 자동으로 불러와 재사용합니다.
           </div>
           <div className={styles.field}>
             <label>제품명</label>

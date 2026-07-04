@@ -21,12 +21,14 @@ export default function DiagnosisList() {
   const [list, setList] = useState([])
   const [pageState, setPageState] = useState('loading')
   const [page, setPage] = useState(0)
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
+    setPageState('loading')
     getDiagnosisList()
       .then((data) => { setList(data); setPageState('ok') })
       .catch(() => setPageState('error'))
-  }, [])
+  }, [reloadKey])
 
   // 페이지네이션 (범위 자동 보정)
   const pageCount = Math.max(1, Math.ceil(list.length / ITEMS_PER_PAGE))
@@ -50,10 +52,14 @@ export default function DiagnosisList() {
       </div>
 
       {pageState === 'loading' && (
-        <StatusMessage type="loading" message="공공데이터와 제품 지식을 대조 중입니다." />
+        <StatusMessage type="loading" message="공공데이터와 제품 정보를 대조 중입니다." />
       )}
       {pageState === 'error' && (
-        <StatusMessage type="error" message="현재 진단을 불러오지 못했습니다. 잠시 후 다시 시도해주세요." />
+        <StatusMessage
+          type="error"
+          message="현재 진단을 불러오지 못했습니다. 네트워크를 확인하고 다시 시도해주세요."
+          onAction={() => setReloadKey((k) => k + 1)}
+        />
       )}
       {pageState === 'ok' && list.length === 0 && (
         <div className={styles.empty}>
@@ -118,7 +124,7 @@ export default function DiagnosisList() {
                     ))}
                   </div>
                 ) : ['pending', 'running'].includes(diag.status) ? (
-                  <div className={styles.summaryPending}>공공데이터와 제품 지식을 대조 중입니다…</div>
+                  <div className={styles.summaryPending}>공공데이터와 제품 정보를 대조 중입니다…</div>
                 ) : diag.status === 'failed' ? (
                   <div className={styles.summaryFailed}>Gate 판단에 실패했습니다. 다시 시도해 주세요.</div>
                 ) : null}
