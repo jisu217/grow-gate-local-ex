@@ -83,6 +83,37 @@ def providers(args):
             "defaultZeroReason": "CATALOG_PAGE_ENDPOINT",
         },
         {
+            "provider": "KATS 국내리콜정보",
+            "runtimeProvider": "NOT_RUNTIME_CONNECTED",
+            "agent": "domestic-recall-reference",
+            "endpoint": env(
+                "KATS_DOMESTIC_RECALL_API_URL",
+                "https://api.odcloud.kr/api/15040696/v1/uddi:f13d1404-717d-4862-871d-b249899ea58f",
+            ),
+            "apiKey": first_env("KATS_DOMESTIC_RECALL_API_KEY", "DATAGO_SERVICE_KEY"),
+            "apiKeyEnv": "KATS_DOMESTIC_RECALL_API_KEY|DATAGO_SERVICE_KEY",
+            "params": {
+                "page": "1",
+                "perPage": "10",
+                "returnType": "JSON",
+            },
+            "defaultZeroReason": "API_KEY_NOT_CONFIGURED",
+        },
+        {
+            "provider": "KATS 국외리콜공표기관",
+            "runtimeProvider": "NOT_RUNTIME_CONNECTED",
+            "agent": "recall-agency-reference",
+            "endpoint": env("KATS_FOREIGN_RECALL_AGENCY_API_URL", "https://www.data.go.kr/data/15118082/fileData.do"),
+            "apiKey": first_env("KATS_FOREIGN_RECALL_AGENCY_API_KEY", "DATAGO_SERVICE_KEY"),
+            "apiKeyEnv": "KATS_FOREIGN_RECALL_AGENCY_API_KEY|DATAGO_SERVICE_KEY",
+            "params": {
+                "page": "1",
+                "perPage": "10",
+                "returnType": "JSON",
+            },
+            "defaultZeroReason": "SWAGGER_OPERATION_ENDPOINT_NOT_CONFIGURED",
+        },
+        {
             "provider": "KIPRISPlus",
             "runtimeProvider": "KIPRIS_FTO",
             "agent": "fto",
@@ -144,6 +175,9 @@ def is_catalog_or_application(endpoint):
     value = (endpoint or "").lower()
     return (
         ("data.go.kr" in value and value.endswith("/openapi.do"))
+        or ("data.go.kr" in value and value.endswith("/filedata.do"))
+        or ("infuser.odcloud.kr/oas/docs" in value)
+        or value.rstrip("/") == "https://api.odcloud.kr/api"
         or ("plus.kipris.or.kr" in value and "/contents.do" in value)
         or value == "https://www.exportvoucher.com/"
         or value == "https://www.safetykorea.kr/release/openapi"
