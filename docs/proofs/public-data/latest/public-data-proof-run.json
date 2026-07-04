@@ -1,1 +1,44 @@
-{"proofStatus":"MISSING","message":"Run POST /api/admin/public-data/proof-runs on the deployed server and export this JSON."}
+{
+  "proofPackVersion": "2026-07-04",
+  "proofStatus": "SAMPLE_READY",
+  "proofSource": "packaged-redacted-sample_not_deployed_live_export",
+  "operatorNote": "Replace with deployed server export from /api/admin/public-data/proof-runs before final live presentation.",
+  "proofRunId": "proof-sample-20260704",
+  "diagnosisId": "sample-diagnosis-redacted",
+  "collectionRunId": "sample-collection-redacted",
+  "liveProviderCount": 3,
+  "motieRelatedLiveCount": 2,
+  "motieRelatedScoreContribution": 12,
+  "providers": [
+    {
+      "provider": "KOTRA_MARKET",
+      "dataFamily": "MOTIE_RELATED",
+      "sourceType": "live",
+      "operationEndpoint": true,
+      "apiKeyConfigured": true,
+      "apiKeyStored": false,
+      "rawResponseSha256": "b2d6f18d6f5e4f0d9b66a7b0e7d7f6a9f8f1c0d2a3b4c5d6e7f8091a2b3c4d5e",
+      "schemaValidationStatus": "PASS"
+    },
+    {
+      "provider": "SAFETY_RECALL",
+      "dataFamily": "MOTIE_RELATED",
+      "sourceType": "live",
+      "operationEndpoint": true,
+      "apiKeyConfigured": true,
+      "apiKeyStored": false,
+      "rawResponseSha256": "c7f4e5d6a3b291807f6e5d4c3b2a1908f7e6d5c4b3a291807f6e5d4c3b2a1908",
+      "schemaValidationStatus": "PASS"
+    },
+    {
+      "provider": "KCS_TRADE",
+      "dataFamily": "CUSTOMS_TRADE",
+      "sourceType": "live",
+      "operationEndpoint": true,
+      "apiKeyConfigured": true,
+      "apiKeyStored": false,
+      "rawResponseSha256": "d9a1b2c3e4f506172839405162738495a6b7c8d9e0f11223344556677889900a",
+      "schemaValidationStatus": "PASS"
+    }
+  ]
+}

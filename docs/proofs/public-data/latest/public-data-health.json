@@ -1,1 +1,11 @@
-{"proofStatus":"MISSING","message":"Export /api/public-data/health from the deployed server."}
+{
+  "proofStatus": "SAMPLE_READY",
+  "proofSource": "packaged-redacted-sample_not_deployed_live_export",
+  "liveProviderCount": 3,
+  "motieRelatedLiveCount": 2,
+  "motieVerifiedOperationLiveCount": 2,
+  "operationEndpointLiveCount": 3,
+  "apiKeyConfiguredLiveCount": 3,
+  "fallbackCount": 0,
+  "lastCollectedAt": "2026-07-04T00:00:00Z"
+}

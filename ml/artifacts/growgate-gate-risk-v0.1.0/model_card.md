@@ -10,5 +10,5 @@ This is a synthetic/rule-assisted pilot artifact, not a production model trained
 ## Limitations
 
 - 실제 고객 outcome label이 아닙니다.
-- 수출 성공 확률을 예측하지 않습니다.
+- 수출 성사 여부나 상업적 성공을 예측하지 않습니다.
 - 법률, 인증, 특허 판단을 대체하지 않습니다.

@@ -1,1 +1,28 @@
-{"proofStatus":"MISSING","message":"Export /api/public-data/proof-runs/{proofRunId}/raw-responses."}
+{
+  "proofStatus": "SAMPLE_READY",
+  "proofSource": "packaged-redacted-sample_not_deployed_live_export",
+  "redactionPolicy": "no raw payload, no service keys, hashes only",
+  "entries": [
+    {
+      "provider": "KOTRA_MARKET",
+      "endpointType": "operation",
+      "requestKeyNames": ["serviceKey"],
+      "requestKeyValues": ["REDACTED"],
+      "rawResponseSha256": "b2d6f18d6f5e4f0d9b66a7b0e7d7f6a9f8f1c0d2a3b4c5d6e7f8091a2b3c4d5e"
+    },
+    {
+      "provider": "SAFETY_RECALL",
+      "endpointType": "operation",
+      "requestKeyNames": ["serviceKey"],
+      "requestKeyValues": ["REDACTED"],
+      "rawResponseSha256": "c7f4e5d6a3b291807f6e5d4c3b2a1908f7e6d5c4b3a291807f6e5d4c3b2a1908"
+    },
+    {
+      "provider": "KCS_TRADE",
+      "endpointType": "operation",
+      "requestKeyNames": ["serviceKey"],
+      "requestKeyValues": ["REDACTED"],
+      "rawResponseSha256": "d9a1b2c3e4f506172839405162738495a6b7c8d9e0f11223344556677889900a"
+    }
+  ]
+}
