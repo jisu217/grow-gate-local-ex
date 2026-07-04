@@ -24,9 +24,10 @@
 9. [Repository Layout](#9-repository-layout)
 10. [Verification](#10-verification)
 11. [Current Demo Scenario](#11-current-demo-scenario)
-12. [Security Notes](#12-security-notes)
-13. [License](#13-license)
-14. [Timeline](#14-timeline)
+12. [Deployment Status](#12-deployment-status)
+13. [Security Notes](#13-security-notes)
+14. [License](#14-license)
+15. [Timeline](#15-timeline)
 
 ---
 
@@ -42,6 +43,15 @@
 심사용 합성 데이터팩 적용 정책은 [docs/SYNTHETIC_DATA_POLICY.md](docs/SYNTHETIC_DATA_POLICY.md), 3개 seed 시나리오 계정과 진단 ID는 [docs/demo-scenarios.md](docs/demo-scenarios.md), 제출 범위와 zip 제외 기준은 [SUBMISSION_SCOPE.md](SUBMISSION_SCOPE.md)에 고정했습니다. 합성 데이터는 반드시 `synthetic_demo_not_real_customer`로 설명하며, live 공공 API proof로 계산하지 않습니다.
 
 실제 공공 API 증거는 `/api/admin/public-data/proof-runs`가 생성하는 `proofRunId`, `rawResponseSha256`, `schemaValidationStatus`, `operationEndpoint`, `apiKeyConfigured` 기준으로만 인정합니다. Synthetic persona validation은 [docs/validation/README_SYNTHETIC_VALIDATION.md](docs/validation/README_SYNTHETIC_VALIDATION.md)에 분리했고, 실제 고객 인터뷰로 표현하지 않습니다. 보고서 공식 산출물은 Markdown이며 PDF는 [docs/report/REPORT_FORMAT_POLICY.md](docs/report/REPORT_FORMAT_POLICY.md)의 선택 인쇄/변환 전략만 사용합니다. Pilot ML artifact는 `python3 ml/pipelines/train_all.py`로 생성하며 `/api/ml/models/latest`에서 버전과 한계를 조회합니다.
+
+2026-07-04 기준 GitHub `main`에는 심사용 방어 패키지가 포함되어 있습니다.
+
+- 3개 합성 seed 기업, 지역산업 profile, agent trace event schema, synthetic persona validation
+- public-data proof run API와 S10 proof surface
+- raw response hash, schema validation status, live/cache/fallback waterfall
+- Markdown report policy와 proof pack 생성/검증 스크립트
+- synthetic rule-assisted ML artifact와 `/api/ml/models/latest` 제한 고지
+- `scripts/check-risk-gates.sh` 기반 제출 리스크 회귀 차단
 
 심사 대응 기준 문서는 [docs/top15-resolution-2026-07-01.md](docs/top15-resolution-2026-07-01.md)입니다. 15개 치명 항목의 처리 상태, code reference, 남은 상용화 과제를 이 문서에 고정했습니다.
 90점권 시연 증거 기준은 [docs/judge-defense-90.md](docs/judge-defense-90.md), 공공데이터 metric/score 매핑은 [docs/public-data-field-mapping.md](docs/public-data-field-mapping.md), 발표 서버 환경 변수 템플릿은 [.env.example.presentation](.env.example.presentation)에 정리했습니다.
@@ -98,6 +108,17 @@ GROW-GATE Local EX는 이 질문을 바이어 회신 가능한 Gate 판단과 �
 현재 제출용 Spring 앱은 `PUBLIC_DATA_ENABLED=true`가 기본값입니다. API key와 실제 operation endpoint가 있으면 live 공공 API를 호출하고, key가 없거나 호출이 실패하면 `public_data_collection_runs`, `public_data_records`에 fallback 사유를 저장합니다. 공식 카탈로그/신청 페이지 URL은 출처 추적용 기본값으로 보존하되, HTML 상세 페이지를 API 응답으로 저장하지 않도록 fallback 처리합니다. 메인 진단 결과에는 `live`, `cache`, `fallback`, `heuristic`, `agent` sourceType과 confidence-adjusted 점수 기여도, provider별 metric signal이 표시됩니다. 여기서 `agent`는 점수 산출 주체가 아니라 선택형 분석 bridge와 workflow trace를 나타내는 보조 출처입니다.
 
 발표장에서 공식 live 공공 API 증거로 설명할 수 있는 record는 `sourceType=live/cache`, `operationEndpoint=true`, `apiKeyConfigured=true`, `collectionRunId`, `fetchedAt/retrievedAt`, `metricSummary/metrics`가 함께 있어야 합니다. S10 화면과 `/diagnosis/{id}/sources` 화면은 이 값을 직접 표시하고, `fallback`, `crawl`, `external_feed`, `heuristic`은 공식 API 연결 성공으로 표시하지 않습니다.
+
+공식 proof run은 기존 `public_data_records`를 재가공해 별도 proof table에 저장합니다.
+
+| Proof Artifact | Purpose |
+| :--- | :--- |
+| `public_api_proof_runs` | 진단 단위 proof run id, provider count, live/cache/fallback count, MOTIE-related count |
+| `public_api_raw_responses` | provider, redacted request URL, raw response SHA-256, schema validation status |
+| `public_api_normalized_records` | provider별 normalized metric과 source type |
+| `public_data_score_contributions` | raw metric → normalized metric → raw contribution → confidence-adjusted contribution waterfall |
+
+`scripts/build-proof-pack.sh`는 로컬 proof pack을 생성하고, `scripts/check-proof-pack.sh`는 배포 서버에서 export한 live proof JSON이 없으면 의도적으로 실패합니다. 이 실패는 코드 오류가 아니라 “실제 배포 서버 proof를 아직 첨부하지 않았다”는 제출 방어 장치입니다.
 
 필요할 때만 `PUBLIC_DATA_CRAWL_ENABLED=true`와 `PUBLIC_DATA_CRAWL_URLS=https://...`를 설정해 산업부/KOTRA/SafetyKorea 등 allowlist 공개 페이지를 보조 근거로 수집할 수 있습니다. 크롤링 결과는 script/style 제거, 개인정보/키 패턴 마스킹, 길이 제한, keyword metric 전처리를 거친 뒤 `sourceType=crawl`로 표시되며, 공공 API live record와 구분됩니다.
 
@@ -212,7 +233,8 @@ flowchart LR
   P --> C
   P --> T
   S --> W["Self-loop Wiki<br/>manager-approved knowledge candidates"]
-  D["HTML Demo"] -. separate local demo .-> P
+  M["Synthetic Proof Pack<br/>seed scenarios, validation, model card"] --> S
+  V["Claim Verification<br/>source-bound report guardrails"] --> R
 ```
 
 ---
@@ -225,9 +247,13 @@ backend/BE-02/
 │  ├─ service/DiagnosisAsyncProcessor.java   # Gate 판단, scoring, source trace, report memo
 │  ├─ dto/CreateDiagnosisRequest.java        # 제품 + 바이어 문의 입력 계약
 │  └─ dto/DiagnosisDetailResponse.java       # gateDecision, confidencePanel, actionRoadmap
+├─ src/main/java/com/growgate/agent/         # bounded workflow trace event 조회
+├─ src/main/java/com/growgate/ml/            # synthetic ML artifact metadata endpoint
 ├─ src/main/java/com/growgate/publicdata/
 │  ├─ service/PublicDataCollectionService.java
+│  ├─ service/PublicDataProofRunService.java
 │  └─ service/PublicDataDailyRefreshService.java
+├─ src/main/java/com/growgate/regional/      # 지역산업 profile 매칭
 └─ src/main/resources/application.yml
 
 frontend/FE-02/
@@ -240,11 +266,23 @@ frontend/FE-02/
 
 scripts/
 ├─ check-risk-gates.sh                       # 제출 리스크 CI gate
+├─ build-proof-pack.sh                       # proof pack 생성
+├─ check-proof-pack.sh                       # 배포 서버 proof 존재 검증
 ├─ package-submission.sh                     # 제출 zip 생성, legacy/demo/archive 제외
 ├─ verify-local.sh                           # 로컬 재현 검증
 └─ smoke-prod.sh                             # 배포 서버 smoke test
 
+database/mysql/init/
+├─ 03_agent_ml_regional_schema.sql
+├─ 04_seed_regional_and_registry.sql
+├─ 05_seed_synthetic_companies.sql
+├─ 06_public_api_proof_ml_validation.sql
+└─ 07_seed_synthetic_persona_validation.sql
+
 grow_gate_local_ex_demo/                     # Python 데이터/AI worker
+ml/                                          # synthetic rule-assisted ML artifact pipeline
+docs/proofs/                                 # generated proof pack placeholder/export target
+docs/validation/                             # synthetic persona validation, not real interviews
 ```
 
 ---
@@ -253,6 +291,7 @@ grow_gate_local_ex_demo/                     # Python 데이터/AI worker
 
 ```bash
 ./scripts/check-risk-gates.sh
+./scripts/build-proof-pack.sh
 ./scripts/package-submission.sh
 ./scripts/verify-fresh-db.sh
 cd backend/BE-02 && ./gradlew test --no-daemon
@@ -260,6 +299,14 @@ cd frontend/FE-02 && npm run test:mappers && npm run build
 ```
 
 `verify-fresh-db.sh`는 별도 Docker Compose project로 clean MySQL을 띄우고 `JPA_DDL_AUTO=validate`로 백엔드 health까지 확인합니다. 기존 로컬 DB volume은 사용하지 않습니다.
+
+배포 서버 proof pack 검증:
+
+```bash
+./scripts/check-proof-pack.sh
+```
+
+이 명령은 `docs/proofs/public-data/latest/public-data-proof-run.json`이 실제 배포 서버에서 export된 proof run을 포함해야 통과합니다. placeholder 상태에서는 실패해야 정상입니다.
 
 배포 서버 smoke test:
 
@@ -296,7 +343,36 @@ PRESENTATION_REQUIRE_OPERATION_API=true \
 
 ---
 
-## 12. Security Notes
+## 12. Deployment Status
+
+GitHub `main`은 최신 심사 방어 코드가 반영된 기준 브랜치입니다. Lightsail에는 HTTPS 서비스가 올라가 있으나, 서버 SSH 배포는 현재 인스턴스 인증키 등록이 필요합니다.
+
+| Item | Current State |
+| :--- | :--- |
+| GitHub main | 최신 proof workflow 커밋 반영 |
+| Lightsail static IP | `54.180.56.24` |
+| Current public URL | `https://growgate.54.180.56.24.sslip.io` |
+| Attached instance | `growgate-fresh-20260703-2134` |
+| SSH firewall | 현재 작업자 IP allowlist와 Lightsail Connect 허용 |
+| SSH auth | 로컬 public key를 서버 `~/.ssh/authorized_keys`에 추가해야 배포 가능 |
+| Live public API proof | 서버에 operation endpoint/API key 주입 후 smoke와 proof export 필요 |
+
+배포 재개 순서:
+
+```bash
+git pull origin main
+cd backend/BE-02 && ./gradlew test bootJar --no-daemon
+cd ../../frontend/FE-02 && npm ci && npm run build
+sudo systemctl restart growgate-backend
+sudo systemctl reload nginx
+BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/smoke-prod.sh
+```
+
+`PUBLIC_DATA_ENABLED=true`는 기본값이지만, `SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true`는 실제 provider operation endpoint와 API key가 서버에 주입된 뒤에만 사용합니다.
+
+---
+
+## 13. Security Notes
 
 제출용 메인 앱은 다음 보안 기본값을 적용합니다.
 
@@ -316,13 +392,13 @@ PRESENTATION_REQUIRE_OPERATION_API=true \
 
 ---
 
-## 13. License
+## 14. License
 
 See [LICENSE](LICENSE).
 
 ---
 
-## 14. Timeline
+## 15. Timeline
 
 | Date | Type | Description |
 | :--- | :--- | :--- |
