@@ -20,6 +20,11 @@ export default function SourceTrustBar({ summary, onRetry, retryStatus }) {
           live/cache 공공데이터가 0건입니다. 현재 Gate는 fallback/규칙/보조 근거 기반이므로 담당자 검토와 재수집이 필요합니다.
         </div>
       )}
+      {seedCount > 0 && (
+        <div className="source-trust-warning seed">
+          synthetic_demo_not_real_customer Seed {seedCount}건은 시연용 합성 근거이며 live 공공 API proof로 계산하지 않습니다.
+        </div>
+      )}
       <div className="source-trust-layout">
         <div className="source-trust-main">
           <div>

@@ -39,6 +39,10 @@
 
 최근 제출 보완 내역은 [docs/submission-update-report.md](docs/submission-update-report.md)에 정리했습니다. 첨부 평가 항목별 완료/미완료 판정은 [docs/evaluation-resolution-status.md](docs/evaluation-resolution-status.md)에서 확인할 수 있습니다. 팀 공유용 업데이트 요약은 [docs/team-update-2026-06-30-submission-hardening.md](docs/team-update-2026-06-30-submission-hardening.md)에 별도로 정리했습니다.
 
+심사용 합성 데이터팩 적용 정책은 [docs/SYNTHETIC_DATA_POLICY.md](docs/SYNTHETIC_DATA_POLICY.md), 3개 seed 시나리오 계정과 진단 ID는 [docs/demo-scenarios.md](docs/demo-scenarios.md), 제출 범위와 zip 제외 기준은 [SUBMISSION_SCOPE.md](SUBMISSION_SCOPE.md)에 고정했습니다. 합성 데이터는 반드시 `synthetic_demo_not_real_customer`로 설명하며, live 공공 API proof로 계산하지 않습니다.
+
+실제 공공 API 증거는 `/api/admin/public-data/proof-runs`가 생성하는 `proofRunId`, `rawResponseSha256`, `schemaValidationStatus`, `operationEndpoint`, `apiKeyConfigured` 기준으로만 인정합니다. Synthetic persona validation은 [docs/validation/README_SYNTHETIC_VALIDATION.md](docs/validation/README_SYNTHETIC_VALIDATION.md)에 분리했고, 실제 고객 인터뷰로 표현하지 않습니다. 보고서 공식 산출물은 Markdown이며 PDF는 [docs/report/REPORT_FORMAT_POLICY.md](docs/report/REPORT_FORMAT_POLICY.md)의 선택 인쇄/변환 전략만 사용합니다. Pilot ML artifact는 `python3 ml/pipelines/train_all.py`로 생성하며 `/api/ml/models/latest`에서 버전과 한계를 조회합니다.
+
 심사 대응 기준 문서는 [docs/top15-resolution-2026-07-01.md](docs/top15-resolution-2026-07-01.md)입니다. 15개 치명 항목의 처리 상태, code reference, 남은 상용화 과제를 이 문서에 고정했습니다.
 90점권 시연 증거 기준은 [docs/judge-defense-90.md](docs/judge-defense-90.md), 공공데이터 metric/score 매핑은 [docs/public-data-field-mapping.md](docs/public-data-field-mapping.md), 발표 서버 환경 변수 템플릿은 [.env.example.presentation](.env.example.presentation)에 정리했습니다.
 
@@ -278,13 +282,17 @@ PRESENTATION_REQUIRE_OPERATION_API=true \
 
 ## 11. Current Demo Scenario
 
-- 기업: 경남 배터리테크
-- 제품: 리튬이온 배터리팩
-- HS Code: 850760
-- 대상국: Germany / EU
-- 바이어 문의: CE, UN38.3 보유 여부와 4주 내 샘플 출하 가능성 확인
-- 핵심 Gate: 견적 전 인증/FTO/리콜 source trace와 제출 문서 확인
-- 산출물: Gate Decision, confidence panel, 이번 주/견적 전/출하 전 업무 보드, 바이어 대응 메모
+합성 seed 시연 계정은 모두 `growgateadmin` 비밀번호를 사용합니다.
+
+| Scenario | Login | Diagnosis ID | Gate |
+| :--- | :--- | :--- | :--- |
+| 창원 배터리팩 | `owner+battery@growgate.local` | `2b52340c-d51d-50dc-b6cb-592627abb62d` | `HOLD` |
+| 부산 마린 액추에이터 | `owner+marine@growgate.local` | `6bc9800e-755c-55f9-b9ce-87a69dc2c450` | `CONDITIONAL_GO` |
+| 대구 메디센서 | `owner+medical@growgate.local` | `cf7d23b4-51d8-53f7-be26-a92bf6682a6d` | `STOP` |
+
+이 세 케이스는 `synthetic_demo_not_real_customer`입니다. S10에서 `seedCount`로 표시되며, `liveCount/cacheCount`와 공식 operation endpoint proof를 올리지 않습니다.
+
+시연 산출물: Gate Decision, confidence panel, Source Trust Bar, S10 evidence ledger, 이번 주/견적 전/출하 전 업무 보드, Markdown 바이어 대응 메모.
 
 ---
 

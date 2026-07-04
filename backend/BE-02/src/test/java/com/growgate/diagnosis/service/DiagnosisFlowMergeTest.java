@@ -17,6 +17,7 @@ import com.growgate.knowledge.repository.ProductKnowledgeRepository;
 import com.growgate.membership.repository.MembershipRepository;
 import com.growgate.product.repository.ProductRepository;
 import com.growgate.publicdata.service.PublicDataCollectionService;
+import com.growgate.regional.service.RegionalIndustryProfileService;
 import com.growgate.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
@@ -97,7 +98,8 @@ class DiagnosisFlowMergeTest {
                 mock(AgentInferenceService.class),
                 mock(EvidenceContextBuilder.class),
                 mock(KnowledgeLoopItemRepository.class),
-                mock(ClaimVerificationService.class)
+                mock(ClaimVerificationService.class),
+                mock(RegionalIndustryProfileService.class)
         );
     }
 }

@@ -1,0 +1,16 @@
+{
+  "classification": "synthetic_persona_validation_not_real_customer_interview",
+  "estimateType": "synthetic_persona_assumption",
+  "personaCount": 5,
+  "taskSessionCount": 15,
+  "taskSuccessCount": 15,
+  "medianManualBaselineMinutes": 150,
+  "medianGrowGateMinutes": 15,
+  "disclaimer": "실제 고객 인터뷰가 아니라 가상 페르소나 기반 모의 검증입니다.",
+  "safePresentationSentence": "실제 고객 검증 전 단계로, 3개 가상 제조기업과 5개 사용자 페르소나를 설계해 바이어 문의, 진단, 출처 검증, 보고서 작성 흐름을 모의 검증했습니다.",
+  "topFindings": [
+    "FTO/KIPRIS 결과는 전문가 검토 대체가 아니라는 한계 문구가 더 앞에 필요합니다.",
+    "S10 proof 화면에서 live/cache/fallback 차이를 바로 보여야 합니다.",
+    "Markdown report는 공식 산출물로 유지하고 PDF는 선택 인쇄로 설명해야 합니다."
+  ]
+}

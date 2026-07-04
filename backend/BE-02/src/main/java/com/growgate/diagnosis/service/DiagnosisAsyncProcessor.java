@@ -30,6 +30,7 @@ import com.growgate.product.entity.Product;
 import com.growgate.publicdata.entity.PublicDataRecord;
 import com.growgate.publicdata.service.PublicDataCollectionResult;
 import com.growgate.publicdata.service.PublicDataCollectionService;
+import com.growgate.regional.service.RegionalIndustryProfileService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Async;
@@ -66,6 +67,7 @@ public class DiagnosisAsyncProcessor {
     private final EvidenceContextBuilder evidenceContextBuilder;
     private final KnowledgeLoopItemRepository knowledgeLoopItemRepository;
     private final ClaimVerificationService claimVerificationService;
+    private final RegionalIndustryProfileService regionalIndustryProfileService;
 
     @Async
     @Transactional
@@ -1454,73 +1456,7 @@ public class DiagnosisAsyncProcessor {
         String region = firstNonBlank(stringValue(inputData.get("region")), "지역 미입력");
         String industry = firstNonBlank(stringValue(inputData.get("industry")),
                 run.getCompany() != null ? nullToEmpty(run.getCompany().getIndustry()) : "제조");
-        String regionKey = normalizeRegionKey(region);
-        String text = (industry + " " + productName + " " + hsCode).toLowerCase();
-
-        Map<String, Object> profile = new LinkedHashMap<>();
-        List<String> supportOrgs = new ArrayList<>();
-        List<String> matchedSignals = new ArrayList<>();
-        String cluster = "지역 산업 매칭 미확인";
-        String leadingIndustry = "제조 일반";
-        int contribution = 0;
-
-        if (regionKey.contains("경남") || regionKey.contains("창원") || regionKey.contains("김해")) {
-            supportOrgs.addAll(List.of("경남테크노파크", "창원산업진흥원", "KOTRA 경남지원단"));
-            cluster = "창원 국가산단·경남 기계/미래모빌리티";
-            if (containsAny(text, "battery", "배터리", "8507", "전기전자", "모빌리티", "기계")) {
-                leadingIndustry = "미래모빌리티·기계·전기전자";
-                matchedSignals.add("region=경남, hs/industry=배터리·전기전자·기계");
-                contribution = 8;
-            } else contribution = 3;
-        } else if (regionKey.contains("부산")) {
-            supportOrgs.addAll(List.of("부산테크노파크", "부산경제진흥원", "KOTRA 부산지원단"));
-            cluster = "부산 물류·해양·소부장";
-            if (containsAny(text, "물류", "해양", "기계", "전기전자", "부품")) {
-                leadingIndustry = "해양/물류/소부장";
-                matchedSignals.add("region=부산, industry=해양·물류·소부장");
-                contribution = 7;
-            } else contribution = 3;
-        } else if (regionKey.contains("울산")) {
-            supportOrgs.addAll(List.of("울산테크노파크", "울산경제일자리진흥원"));
-            cluster = "울산 화학·이차전지·모빌리티";
-            if (containsAny(text, "battery", "배터리", "화학", "자동차", "모빌리티", "8507")) {
-                leadingIndustry = "이차전지·화학·모빌리티";
-                matchedSignals.add("region=울산, hs/industry=이차전지·화학·모빌리티");
-                contribution = 8;
-            } else contribution = 3;
-        } else if (regionKey.contains("대구") || regionKey.contains("경북")) {
-            supportOrgs.addAll(List.of("대구테크노파크", "경북테크노파크"));
-            cluster = "대구경북 로봇·전기전자·의료";
-            if (containsAny(text, "로봇", "전기전자", "의료", "센서", "부품")) {
-                leadingIndustry = "로봇·전기전자·의료";
-                matchedSignals.add("region=대구경북, industry=로봇·전기전자·의료");
-                contribution = 7;
-            } else contribution = 3;
-        } else if (regionKey.contains("광주") || regionKey.contains("전남")) {
-            supportOrgs.addAll(List.of("광주테크노파크", "전남테크노파크"));
-            cluster = "광주전남 미래차·에너지";
-            if (containsAny(text, "자동차", "모빌리티", "에너지", "battery", "배터리", "8507")) {
-                leadingIndustry = "미래차·에너지";
-                matchedSignals.add("region=광주전남, hs/industry=미래차·에너지");
-                contribution = 7;
-            } else contribution = 3;
-        } else {
-            supportOrgs.addAll(List.of("지역테크노파크", "KOTRA 지방지원단", "중소벤처기업진흥공단 지역본부"));
-            contribution = "지역 미입력".equals(region) ? -2 : 2;
-            matchedSignals.add("region 입력 기반 일반 지역지원기관 후보");
-        }
-
-        profile.put("region", region);
-        profile.put("industry", industry);
-        profile.put("regionKey", regionKey);
-        profile.put("cluster", cluster);
-        profile.put("leadingIndustry", leadingIndustry);
-        profile.put("supportOrgs", supportOrgs);
-        profile.put("matchedSignals", matchedSignals);
-        profile.put("scoreContribution", contribution);
-        profile.put("confidence", contribution >= 7 ? 0.72 : contribution > 0 ? 0.52 : 0.25);
-        profile.put("evidencePolicy", "지역/업종/HS deterministic matching. 공식 지역지원사업 API가 연결되면 live source로 보강");
-        return profile;
+        return regionalIndustryProfileService.resolve(region, industry, hsCode, productName);
     }
 
     private void addRegionalIndustrySource(List<Map<String, Object>> sources, Map<String, Object> profile) {

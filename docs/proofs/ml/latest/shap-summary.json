@@ -1,0 +1,26 @@
+{
+  "explanationMethod": "permutation_fallback_not_shap",
+  "reason": "stdlib pipeline avoids optional SHAP dependency; use SHAP only if installed and regenerated",
+  "topFeatures": [
+    {
+      "feature": "cert_gap_count",
+      "meanAbsContribution": 1.0
+    },
+    {
+      "feature": "fto_risk_score",
+      "meanAbsContribution": 0.5
+    },
+    {
+      "feature": "public_fallback_count",
+      "meanAbsContribution": 0.3333
+    },
+    {
+      "feature": "doc_completeness_score",
+      "meanAbsContribution": 0.25
+    },
+    {
+      "feature": "leadtime_pressure_score",
+      "meanAbsContribution": 0.2
+    }
+  ]
+}

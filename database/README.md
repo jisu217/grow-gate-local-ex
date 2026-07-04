@@ -17,6 +17,7 @@ The schema is based on the current `BE-02` JPA entities:
 - `knowledge_sources`
 - `audit_logs`
 - `diagnosis_runs`
+- judge-facing extension tables: `synthetic_data_registry`, `regional_industry_profiles`, `agent_trace_events`, `ml_prediction_runs`, `company_validation_interviews`
 
 ## Option A. Open Immediately In DBeaver With SQLite
 
@@ -105,8 +106,27 @@ Seed users are included for DB-level testing:
 | `admin@growgate.com` | `owner` | presentation/demo admin for the sample company |
 | `owner@growgate.local` | `owner` | owns sample company and product |
 | `viewer@growgate.local` | `viewer` | read-only sample member |
+| `owner+battery@growgate.local` | `owner` | synthetic_demo_not_real_customer 창원 배터리팩 |
+| `owner+marine@growgate.local` | `owner` | synthetic_demo_not_real_customer 부산 마린 액추에이터 |
+| `owner+medical@growgate.local` | `owner` | synthetic_demo_not_real_customer 대구 메디센서 |
 
 The presentation admin password is `growgateadmin`. The backend also upserts this account on startup while `APP_DEMO_ADMIN_ENABLED=true`, so existing demo DB volumes can recover the login without a full reset. Set `APP_DEMO_ADMIN_ENABLED=false` outside local/demo environments. The legacy local seed users still use the bcrypt test hash for `password`. Use these accounts only for local development and demo reset environments.
+
+MySQL init order:
+
+```text
+01_schema.sql
+02_seed.sql
+03_agent_ml_regional_schema.sql
+04_seed_regional_and_registry.sql
+05_seed_synthetic_companies.sql
+06_public_api_proof_ml_validation.sql
+07_seed_synthetic_persona_validation.sql
+```
+
+The three `owner+...@growgate.local` accounts are synthetic judge scenarios. They use the same demo password, `growgateadmin`, and must be presented with the `synthetic_demo_not_real_customer` limitation. Details are in [../docs/demo-scenarios.md](../docs/demo-scenarios.md).
+
+`06_public_api_proof_ml_validation.sql` adds proof-run, raw-response hash, normalized proof, score waterfall, ML metadata, and synthetic persona validation tables. `07_seed_synthetic_persona_validation.sql` inserts persona-based validation rows and keeps `synthetic_disclaimer=TRUE`.
 
 ## Resetting MySQL
 

@@ -1039,6 +1039,11 @@ body {
   font-weight: 700;
   line-height: 1.45;
 }
+.source-trust-warning.seed {
+  border-color: #f1d48a;
+  background: #fff8e6;
+  color: #9a6700;
+}
 .source-trust-layout {
   display: grid;
   grid-template-columns: minmax(260px, 1.4fr) minmax(260px, 1fr) minmax(150px, .6fr);
@@ -1201,6 +1206,51 @@ body {
   display: grid;
   gap: 10px;
 }
+.public-proof-panel {
+  margin-top: 18px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  padding: 16px;
+}
+.public-proof-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 12px;
+}
+.public-proof-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: flex-end;
+}
+.public-proof-summary {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 8px;
+}
+.public-proof-kpi {
+  min-height: 64px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 10px;
+  background: #fafbfe;
+}
+.public-proof-kpi span {
+  display: block;
+  font-size: 11px;
+  color: var(--slate-2);
+  word-break: break-word;
+}
+.public-proof-kpi strong {
+  display: block;
+  margin-top: 6px;
+  font-size: 15px;
+  color: var(--ink);
+  word-break: break-word;
+}
 .provider-health-list {
   display: grid;
   gap: 6px;
@@ -1296,6 +1346,12 @@ body {
   }
   .source-trust-counts {
     grid-template-columns: repeat(2, minmax(80px, 1fr));
+  }
+  .public-proof-header {
+    flex-direction: column;
+  }
+  .public-proof-actions {
+    justify-content: flex-start;
   }
 }
 

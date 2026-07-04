@@ -39,6 +39,7 @@ const EMPTY_SESSION = {
   exportKnowledgeTimeline: [],
   evidenceGuardrails: null,
   sourceTrustSummary: null,
+  regionalIndustryProfile: null,
   scoreContributionLedger: [],
   normalizedMetrics: null,
   pythonWorker: null,
@@ -119,6 +120,7 @@ export function mapDiagnosisDetail(d, evidenceSources, sourceEntries = []) {
     exportKnowledgeTimeline: Array.isArray(d.result?.exportKnowledgeTimeline) ? d.result.exportKnowledgeTimeline : [],
     evidenceGuardrails: d.result?.evidenceGuardrails ?? null,
     sourceTrustSummary: restoredSourceTrustSummary,
+    regionalIndustryProfile: d.result?.regionalIndustryProfile ?? null,
     scoreContributionLedger: restoredLedger,
     normalizedMetrics: d.result?.normalizedMetrics ?? null,
     pythonWorker: d.result?.pythonWorker ?? null,
@@ -148,6 +150,7 @@ export function mapDiagnosisDetail(d, evidenceSources, sourceEntries = []) {
         exportKnowledgeTimeline: session.exportKnowledgeTimeline,
         evidenceGuardrails: session.evidenceGuardrails,
         scoreContributionLedger: session.scoreContributionLedger,
+        regionalIndustryProfile: session.regionalIndustryProfile,
       }),
     },
   }
@@ -666,6 +669,7 @@ function mapSourceStage(stageData, evidenceMeta = {}) {
     timeline: Array.isArray(evidenceMeta.exportKnowledgeTimeline) ? evidenceMeta.exportKnowledgeTimeline : [],
     guardrails: evidenceMeta.evidenceGuardrails ?? null,
     ledger: Array.isArray(evidenceMeta.scoreContributionLedger) ? evidenceMeta.scoreContributionLedger : [],
+    regionalIndustryProfile: evidenceMeta.regionalIndustryProfile ?? null,
   }
 }
 

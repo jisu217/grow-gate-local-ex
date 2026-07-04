@@ -1,0 +1,30 @@
+{
+  "modelName": "growgate-gate-risk",
+  "modelVersion": "0.1.0",
+  "createdAt": "2026-07-04T00:52:09.007543+00:00",
+  "dataSources": [
+    {
+      "name": "synthetic_company_cases",
+      "sourceType": "synthetic",
+      "notRealCustomerData": true,
+      "rows": 204
+    },
+    {
+      "name": "synthetic_persona_validation",
+      "sourceType": "synthetic_persona",
+      "notRealCustomerData": true,
+      "rows": 15
+    }
+  ],
+  "split": {
+    "method": "deterministic_modulo_split",
+    "train": 0.7,
+    "valid": 0.15,
+    "test": 0.15,
+    "randomSeed": 42
+  },
+  "limitations": [
+    "실제 고객 outcome label이 아닌 synthetic/rule-assisted label입니다.",
+    "모델 결과는 advisory signal이며 최종 Gate를 override하지 않습니다."
+  ]
+}

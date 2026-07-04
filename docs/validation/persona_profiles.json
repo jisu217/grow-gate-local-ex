@@ -1,0 +1,10 @@
+{
+  "classification": "synthetic_persona_validation_not_real_customer_interview",
+  "personas": [
+    {"personaId":"PV-01","company":"창원에너지팩","role":"해외영업팀장 김민재","coreProblem":"독일 바이어가 배터리팩 견적을 요청했지만 CE/UN38.3/리콜/FTO 확인에 시간이 오래 걸림","validationFocus":["Gate 판단","Safety/KOTRA/KIPRIS 출처","buyer reply draft"]},
+    {"personaId":"PV-02","company":"창원에너지팩","role":"품질인증 담당 오수진","coreProblem":"인증서와 시험성적서가 여러 폴더에 흩어져 최신성 관리가 어려움","validationFocus":["문서 분류 Agent","인증 누락 risk","Markdown report"]},
+    {"personaId":"PV-03","company":"부산마린컨트롤","role":"대표 박도현","coreProblem":"미국 조선 기자재 납품 기회를 놓치고 싶지 않지만 납기·인증·지원사업 확인 인력이 부족함","validationFocus":["30/60/90 roadmap","Bizinfo 지원사업","time saved estimate"]},
+    {"personaId":"PV-04","company":"대구메디센서","role":"R&D/IP 책임 이준호","coreProblem":"일본 의료·헬스케어 시장 진입 전 특허/FTO red flag가 걱정됨","validationFocus":["KIPRIS FTO","ML advisory explanation","STOP/HOLD 방어"]},
+    {"personaId":"PV-05","company":"지역 수출지원센터","role":"컨설턴트 정하윤","coreProblem":"기업마다 KOTRA/KIPRIS/Bizinfo/SafetyKorea를 따로 확인해 상담 시간이 길어짐","validationFocus":["여러 기업 비교","public-data proof","consultant mode"]}
+  ]
+}

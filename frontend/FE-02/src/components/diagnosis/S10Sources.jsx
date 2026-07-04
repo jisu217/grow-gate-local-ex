@@ -1,11 +1,14 @@
 // S10 데이터 출처 스테이지
+import { useEffect, useState } from 'react'
 import DiagnosisStage from './DiagnosisStage.jsx'
+import { createPublicDataProofRun, getLatestPublicDataProofRun } from '../../services/publicDataService.js'
 
 export default function S10Sources({ data, sourceTrustSummary, onRetry, retryStatus }) {
   const pipes = Array.isArray(data) ? data : data?.pipes ?? []
   const timeline = Array.isArray(data?.timeline) ? data.timeline : []
   const retrieval = data?.evidenceRetrieval ?? null
   const guardrails = data?.guardrails ?? null
+  const regionalProfile = data?.regionalIndustryProfile ?? null
   const ledger = Array.isArray(data?.ledger) ? data.ledger : []
   const topK = Array.isArray(retrieval?.topK) ? retrieval.topK : []
   const providerHealth = Array.isArray(sourceTrustSummary?.providerHealth) ? sourceTrustSummary.providerHealth : []
@@ -13,6 +16,37 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
   const cacheCount = Number(sourceTrustSummary?.cacheCount ?? 0)
   const operationEndpointLiveCount = Number(sourceTrustSummary?.operationEndpointLiveCount ?? 0)
   const apiKeyConfiguredLiveCount = Number(sourceTrustSummary?.apiKeyConfiguredLiveCount ?? 0)
+  const seedCount = Number(sourceTrustSummary?.seedCount ?? 0)
+  const [proofRun, setProofRun] = useState(null)
+  const [proofStatus, setProofStatus] = useState('idle')
+  const [proofError, setProofError] = useState('')
+
+  useEffect(() => {
+    let alive = true
+    setProofStatus('loading')
+    getLatestPublicDataProofRun()
+      .then((data) => { if (alive) { setProofRun(data); setProofStatus('ready') } })
+      .catch((error) => { if (alive) { setProofError(error.message || 'proof run 조회 실패'); setProofStatus('error') } })
+    return () => { alive = false }
+  }, [])
+
+  const runProof = async () => {
+    setProofStatus('running')
+    setProofError('')
+    try {
+      const next = await createPublicDataProofRun('manual')
+      setProofRun(next)
+      setProofStatus('ready')
+    } catch (error) {
+      setProofError(error.message || 'proof run 생성 실패')
+      setProofStatus('error')
+    }
+  }
+
+  const copyProofRunId = async () => {
+    if (!proofRun?.proofRunId || !navigator.clipboard) return
+    await navigator.clipboard.writeText(proofRun.proofRunId)
+  }
 
   return (
     <DiagnosisStage
@@ -88,12 +122,112 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
         </section>
       </div>
 
+      {regionalProfile && (
+        <section className="pipe-card" style={{ marginTop: 18 }}>
+          <div className="pipe-source">Regional industry profile</div>
+          <div className="pipe-lbl">
+            {regionalProfile.regionName || regionalProfile.region || '-'} · {regionalProfile.leadingIndustry || regionalProfile.industry || '-'}
+          </div>
+          <div className="pipe-lbl">
+            source {regionalProfile.publicSourceName || '-'} · period {regionalProfile.sourcePeriod || '-'} · refresh {regionalProfile.refreshCycleHours ?? '-'}h
+          </div>
+          {regionalProfile.synthetic && (
+            <div className="pipe-lbl req-text">
+              synthetic_demo_not_real_customer 지역 프로필입니다. 공식 지역산업 공공데이터로 교체해야 live proof가 됩니다.
+            </div>
+          )}
+        </section>
+      )}
+
+      <section className="public-proof-panel">
+        <div className="public-proof-header">
+          <div>
+            <div className="pipe-source">Public Data Proof</div>
+            <div className="pipe-lbl">
+              실제 공공 API proof는 서버가 생성한 proofRunId, raw hash, schema validation으로만 인정합니다.
+            </div>
+          </div>
+          <div className="public-proof-actions">
+            <button type="button" className="secondary-btn" onClick={runProof} disabled={proofStatus === 'running'}>
+              {proofStatus === 'running' ? 'Proof 생성 중' : 'Proof run 생성'}
+            </button>
+            <button type="button" className="secondary-btn" onClick={copyProofRunId} disabled={!proofRun?.proofRunId}>
+              proofRunId 복사
+            </button>
+            <a className="secondary-btn" href="/api/public-data/health" target="_blank" rel="noreferrer">health 열기</a>
+          </div>
+        </div>
+        {proofError && <div className="pipe-lbl req-text">{proofError}</div>}
+        <div className="public-proof-summary">
+          {[
+            ['proofRunId', proofRun?.proofRunId || proofRun?.proof_run_id || '-'],
+            ['proofStatus', proofRun?.proofStatus || proofRun?.proof_status || proofStatus],
+            ['liveProviderCount', proofRun?.liveProviderCount ?? proofRun?.live_provider_count ?? 0],
+            ['motieRelatedLiveCount', proofRun?.motieRelatedLiveCount ?? proofRun?.motie_related_live_count ?? 0],
+            ['operationEndpointLiveCount', proofRun?.operationEndpointLiveCount ?? proofRun?.operation_endpoint_live_count ?? 0],
+            ['apiKeyConfiguredLiveCount', proofRun?.apiKeyConfiguredLiveCount ?? proofRun?.api_key_configured_live_count ?? 0],
+            ['schemaPassCount', proofRun?.schemaPassCount ?? proofRun?.schema_pass_count ?? 0],
+          ].map(([label, value]) => (
+            <div key={label} className="public-proof-kpi">
+              <span>{label}</span>
+              <strong>{value}</strong>
+            </div>
+          ))}
+        </div>
+        {Number(proofRun?.liveProviderCount ?? proofRun?.live_provider_count ?? 0) === 0 && (
+          <div className="pipe-lbl req-text">live provider 0건입니다. 실제 키와 operation endpoint가 설정된 서버에서 proof run을 다시 생성해야 합니다.</div>
+        )}
+        {Array.isArray(proofRun?.providers) && proofRun.providers.length > 0 && (
+          <div className="ledger-table-wrap" style={{ marginTop: 12 }}>
+            <table className="ledger-table">
+              <thead>
+                <tr>
+                  <th>Provider</th>
+                  <th>Source</th>
+                  <th>HTTP</th>
+                  <th>Records</th>
+                  <th>API proof</th>
+                  <th>Raw hash</th>
+                  <th>Schema</th>
+                  <th>Fallback reason</th>
+                </tr>
+              </thead>
+              <tbody>
+                {proofRun.providers.slice(0, 12).map((provider) => (
+                  <tr key={`${provider.providerCode}-${provider.rawResponseSha256 || provider.fallbackReason}`}>
+                    <td>
+                      <strong>{provider.providerCode}</strong>
+                      <span>{provider.agencyName || provider.datasetName || '-'}</span>
+                    </td>
+                    <td>{provider.sourceType}</td>
+                    <td>{provider.httpStatus || '-'}</td>
+                    <td>{provider.recordCount ?? 0}</td>
+                    <td>
+                      endpoint {provider.operationEndpoint ? 'yes' : 'no'}
+                      <span>key {provider.apiKeyConfigured ? 'set' : 'missing'}</span>
+                    </td>
+                    <td>{shortHash(provider.rawResponseSha256)}</td>
+                    <td>{provider.schemaValidationStatus || '-'}</td>
+                    <td>{provider.fallbackReason || '-'}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
       <div className="source-health-panel">
         <div>
           <div className="pipe-source">Provider health & retry</div>
           <div className="pipe-lbl">
             lastCollectedAt {sourceTrustSummary?.lastCollectedAt || '-'} · sourcePeriod {sourceTrustSummary?.sourcePeriod || '확인 대기'} · liveSuccessRate {Math.round(Number(sourceTrustSummary?.liveSuccessRate ?? 0) * 100)}%
           </div>
+          {seedCount > 0 && (
+            <div className="pipe-lbl req-text">
+              synthetic_demo_not_real_customer seed {seedCount}건은 합성 시연 데이터이며, live/cache proof 숫자를 올리지 않습니다.
+            </div>
+          )}
           {liveCount + cacheCount === 0 && (
             <div className="pipe-lbl req-text">live/cache 공공데이터 0건 - fallback 원인 확인 후 재수집이 필요합니다.</div>
           )}
@@ -227,4 +361,10 @@ function formatConfidence(value) {
 function compactMetric(metric) {
   if (!metric || typeof metric !== 'object') return '-'
   return Object.entries(metric).slice(0, 3).map(([key, value]) => `${key}=${value}`).join(', ')
+}
+
+function shortHash(value) {
+  if (!value) return '-'
+  const text = String(value)
+  return text.length > 18 ? `${text.slice(0, 18)}...` : text
 }

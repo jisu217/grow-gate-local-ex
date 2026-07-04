@@ -8,6 +8,7 @@ import com.growgate.diagnosis.dto.DiagnosisListResponse;
 import com.growgate.diagnosis.dto.DiagnosisReportResponse;
 import com.growgate.diagnosis.dto.DiagnosisSourcesResponse;
 import com.growgate.diagnosis.service.DiagnosisService;
+import com.growgate.agent.service.AgentTraceQueryService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -27,6 +28,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class DiagnosisController {
 
     private final DiagnosisService diagnosisService;
+    private final AgentTraceQueryService agentTraceQueryService;
 
     @GetMapping
     public ResponseEntity<DiagnosisListResponse> getList(
@@ -61,5 +63,12 @@ public class DiagnosisController {
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String diagnosisId) {
         return ResponseEntity.ok(diagnosisService.getReport(userDetails.getUsername(), diagnosisId));
+    }
+
+    @GetMapping("/{diagnosisId}/agent-trace")
+    public ResponseEntity<java.util.Map<String, Object>> getAgentTrace(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String diagnosisId) {
+        return ResponseEntity.ok(agentTraceQueryService.getTrace(userDetails.getUsername(), diagnosisId));
     }
 }

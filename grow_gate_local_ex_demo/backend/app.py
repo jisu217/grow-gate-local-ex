@@ -24,6 +24,7 @@ from .operational_pipeline import AIRFLOW_READY_TASKS, PipelineRunStore, run_ml_
 from .product_knowledge import ProductKnowledgeStore
 from .rag_database import rag_schema
 from .schemas import AISearchRequest, AISearchResponse, AnalysisResult, GitCommitRequest, GitInitRequest, ProductInput
+from .synthetic_ml import predict_gate_v1
 from .target_company import load_target_company_profile
 from .worker_engine import build_diagnosis_engine_result
 
@@ -274,6 +275,16 @@ def ml_train(use_live: bool = Query(default=False)) -> Dict[str, Any]:
             detail="Live ML pipeline collection is disabled. Set GROW_GATE_ENABLE_LIVE_COLLECTION=1 to enable it.",
         )
     return run_ml_training_pipeline(pipeline_run_store, use_live=use_live)
+
+
+@app.post("/ml/predict-gate-v1")
+def ml_predict_gate_v1(payload: Dict[str, Any]) -> Dict[str, Any]:
+    """Return a synthetic-limited ML contract response.
+
+    This endpoint does not own the final Gate. It gives SHAP-compatible feature
+    explanations for demo cases and clearly marks syntheticTraining=true.
+    """
+    return predict_gate_v1(payload)
 
 
 @app.get("/pipeline/runs")

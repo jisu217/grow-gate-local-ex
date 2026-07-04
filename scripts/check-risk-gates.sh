@@ -31,6 +31,9 @@ search_quiet() {
 require_file "scripts/smoke-prod.sh"
 require_file "scripts/verify-local.sh"
 require_file "scripts/package-submission.sh"
+require_file "scripts/check-submission-zip.sh"
+require_file "scripts/build-proof-pack.sh"
+require_file "scripts/check-proof-pack.sh"
 require_file "scripts/presentation-public-data-proof.sh"
 require_file ".github/workflows/ci.yml"
 require_file "BUILD.md"
@@ -48,6 +51,21 @@ require_file "AGENTS.md"
 require_file "docs/contest-defense.md"
 require_file "docs/ai-claim-truth-table.md"
 require_file "docs/engineering/failure-log.md"
+require_file "docs/SYNTHETIC_DATA_POLICY.md"
+require_file "docs/demo-scenarios.md"
+require_file "SUBMISSION_SCOPE.md"
+require_file "database/mysql/init/03_agent_ml_regional_schema.sql"
+require_file "database/mysql/init/04_seed_regional_and_registry.sql"
+require_file "database/mysql/init/05_seed_synthetic_companies.sql"
+require_file "database/mysql/init/06_public_api_proof_ml_validation.sql"
+require_file "database/mysql/init/07_seed_synthetic_persona_validation.sql"
+require_file "docs/judge-solution-pack/04_codex_prompts/00_PROMPT_ORDER.md"
+require_file "docs/validation/README_SYNTHETIC_VALIDATION.md"
+require_file "docs/validation/synthetic_validation_sessions.csv"
+require_file "docs/report/REPORT_FORMAT_POLICY.md"
+require_file "ml/pipelines/build_dataset.py"
+require_file "ml/pipelines/train_all.py"
+require_file "grow_gate_local_ex_demo/backend/synthetic_ml.py"
 require_file "scripts/verify-fresh-db.sh"
 require_file "backend/BE-02/src/test/resources/publicdata/kotra-market-sample-live-response.json"
 require_file "backend/BE-02/src/test/resources/publicdata/safety-recall-sample-live-response.json"
@@ -70,6 +88,23 @@ grep -q 'COMPOSE_PROJECT_NAME' "$ROOT_DIR/scripts/verify-fresh-db.sh" \
 grep -q 'verify-fresh-db.sh' "$ROOT_DIR/README.md" \
   || fail "README must document fresh DB verification"
 pass "fresh Docker DB schema is aligned with validate startup"
+
+grep -q 'synthetic_demo_not_real_customer' "$ROOT_DIR/docs/SYNTHETIC_DATA_POLICY.md" \
+  || fail "synthetic data policy must preserve the required synthetic label"
+grep -q 'synthetic_demo_not_real_customer' "$ROOT_DIR/database/mysql/init/05_seed_synthetic_companies.sql" \
+  || fail "synthetic seed SQL must mark demo data as synthetic_demo_not_real_customer"
+if grep -q '"sourceType":"live"\|"sourceType":"cache"\|"operationEndpoint":true\|"apiKeyConfigured":true' \
+  "$ROOT_DIR/database/mysql/init/05_seed_synthetic_companies.sql"; then
+  fail "synthetic seed must not masquerade as live/cache public API proof"
+fi
+if grep -Eq 'XGBoost|LightGBM|SHAP' "$ROOT_DIR/database/mysql/init/05_seed_synthetic_companies.sql"; then
+  fail "synthetic seed must not imply production XGBoost/LightGBM/SHAP implementation"
+fi
+grep -q 'owner+battery@growgate.local' "$ROOT_DIR/docs/demo-scenarios.md" \
+  || fail "demo scenario docs must include the synthetic owner accounts"
+grep -q 'syntheticTraining.*True\|syntheticTraining.*true' "$ROOT_DIR/grow_gate_local_ex_demo/backend/synthetic_ml.py" \
+  || fail "Python ML contract must mark syntheticTraining=true"
+pass "synthetic judge seed policy and not-live proof guard are wired"
 
 grep -q 'enabled: ${PUBLIC_DATA_ENABLED:true}' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml" \
   || fail "public-data.enabled must default to true"
@@ -414,6 +449,37 @@ grep -q 'font embedding' "$ROOT_DIR/docs/pdf-rendering-strategy-2026-07-02.md" \
 grep -q 'Source Trust Bar screenshot' "$ROOT_DIR/docs/presentation-evidence-pack-2026-07-02.md" \
   || fail "presentation evidence pack must require Source Trust Bar screenshot"
 pass "evidence pack documents presentation env, field mapping, and judge defense"
+
+search_quiet 'public_api_proof_runs|public_api_raw_responses|public_data_score_contributions' "$ROOT_DIR/database/mysql/init/06_public_api_proof_ml_validation.sql" \
+  || fail "public API proof schema must include proof run, raw response, and score contribution tables"
+search_quiet 'rawResponseSha256|schemaValidationStatus|operationEndpointLiveCount|apiKeyConfiguredLiveCount' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataProofRunService.java" \
+  || fail "PublicDataProofRunService must expose raw hash and operation/API key proof counts"
+search_quiet '/api/admin/public-data/proof-runs|/api/diagnoses/.*/public-data-waterfall' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/controller/PublicDataProofController.java" \
+  || fail "public-data proof controller must expose admin proof run and diagnosis waterfall endpoints"
+search_quiet 'Public Data Proof|proofRunId|rawResponseSha256|schemaValidationStatus' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/S10Sources.jsx" \
+  || fail "S10 must expose judge-facing public data proof fields"
+pass "public-data proof run API and S10 proof surface are wired"
+
+grep -q 'not real customer interviews' "$ROOT_DIR/docs/validation/README_SYNTHETIC_VALIDATION.md" \
+  || fail "synthetic validation README must explicitly say it is not real customer interviews"
+grep -q 'synthetic_disclaimer' "$ROOT_DIR/docs/validation/synthetic_validation_sessions.csv" \
+  || fail "synthetic validation sessions must keep synthetic disclaimer"
+grep -q ',true$' "$ROOT_DIR/docs/validation/synthetic_validation_sessions.csv" \
+  || fail "synthetic validation sessions must mark rows as synthetic"
+grep -q 'estimateType.*synthetic_persona_assumption' "$ROOT_DIR/frontend/FE-02/src/fixtures/syntheticPersonaValidationSummary.json" \
+  || fail "frontend validation fixture must mark synthetic persona assumption"
+pass "synthetic persona validation is separated from real customer evidence"
+
+search_quiet 'synthetic_rule_assisted_not_real_customer_outcome|permutation_fallback_not_shap|final Gate를 override' "$ROOT_DIR/ml/pipelines/train_all.py" \
+  || fail "ML pipeline must label synthetic data, non-SHAP fallback, and Gate ownership limits"
+search_quiet '/api/ml|syntheticTraining|notRealCustomerOutcome' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/ml/controller/MlModelController.java" \
+  || fail "backend must expose latest ML model metadata with limitations"
+grep -q 'Official report output is Markdown' "$ROOT_DIR/docs/report/REPORT_FORMAT_POLICY.md" \
+  || fail "report policy must make Markdown the official output"
+if grep -Eq '자동 PDF 생성|수출 성공 확률|AI가 최종 판단' "$ROOT_DIR/README.md" "$ROOT_DIR/docs/report/REPORT_FORMAT_POLICY.md"; then
+  fail "README/report policy must not include forbidden overclaims"
+fi
+pass "ML artifact and Markdown report truth contracts are wired"
 
 search_quiet 'regionalIndustryProfile|buildRegionalIndustryProfile|지역 주력산업' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
   || fail "diagnosis processor must score/trace regional industry matching"

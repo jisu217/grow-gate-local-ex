@@ -10,3 +10,13 @@ export function collectPublicData(payload) {
     body: JSON.stringify(payload),
   })
 }
+
+export function getLatestPublicDataProofRun() {
+  return apiFetch('/public-data/proof-runs/latest')
+}
+
+export function createPublicDataProofRun(triggerType = 'manual') {
+  return apiFetch(`/admin/public-data/proof-runs?triggerType=${encodeURIComponent(triggerType)}`, {
+    method: 'POST',
+  })
+}

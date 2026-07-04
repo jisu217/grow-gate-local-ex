@@ -1,0 +1,47 @@
+[
+  {
+    "caseId": "SYN-BATTERY-018",
+    "predictedGate": "HOLD",
+    "topFeatures": [
+      "cert_gap_count",
+      "fto_risk_score",
+      "public_fallback_count"
+    ]
+  },
+  {
+    "caseId": "SYN-BATTERY-019",
+    "predictedGate": "HOLD",
+    "topFeatures": [
+      "cert_gap_count",
+      "fto_risk_score",
+      "public_fallback_count"
+    ]
+  },
+  {
+    "caseId": "SYN-BATTERY-020",
+    "predictedGate": "HOLD",
+    "topFeatures": [
+      "cert_gap_count",
+      "fto_risk_score",
+      "public_fallback_count"
+    ]
+  },
+  {
+    "caseId": "SYN-BATTERY-038",
+    "predictedGate": "HOLD",
+    "topFeatures": [
+      "cert_gap_count",
+      "fto_risk_score",
+      "public_fallback_count"
+    ]
+  },
+  {
+    "caseId": "SYN-BATTERY-039",
+    "predictedGate": "HOLD",
+    "topFeatures": [
+      "cert_gap_count",
+      "fto_risk_score",
+      "public_fallback_count"
+    ]
+  }
+]

@@ -1,0 +1,78 @@
+{
+  "createdAt": "2026-07-03",
+  "synthetic": true,
+  "cases": [
+    {
+      "caseId": "battery_germany_hold",
+      "product": "산업용 리튬이온 배터리팩 48V 80Ah",
+      "hsCode": "850760",
+      "targetCountry": "Germany / EU",
+      "expectedAgents": [
+        "PlannerAgent",
+        "PublicDataAgent",
+        "DocumentClassifierAgent",
+        "RegulationAgent",
+        "RecallAgent",
+        "FTOAgent",
+        "MLPredictionAgent",
+        "ShapExplainerAgent",
+        "ReportAgent",
+        "VerifierAgent"
+      ],
+      "expectedGate": "HOLD",
+      "assertions": [
+        "llmInfluencedGate=false",
+        "seed is not live proof",
+        "fallbackPositiveContributionCount=0",
+        "agentTraceEvents.size>=8"
+      ]
+    },
+    {
+      "caseId": "marine_us_conditional",
+      "product": "선박용 스마트 전동밸브 액추에이터 24V DC",
+      "hsCode": "848180",
+      "targetCountry": "United States",
+      "expectedAgents": [
+        "PlannerAgent",
+        "PublicDataAgent",
+        "RegulationAgent",
+        "FTOAgent",
+        "SupportAgent",
+        "MLPredictionAgent",
+        "ReportAgent",
+        "VerifierAgent"
+      ],
+      "expectedGate": "CONDITIONAL_GO",
+      "assertions": [
+        "UL/FCC gap appears",
+        "FTO low risk lowers stop probability",
+        "SHAP top features include cert_gap_count or public_live_count"
+      ]
+    },
+    {
+      "caseId": "medical_japan_stop",
+      "product": "웨어러블 체온·활력징후 모니터 패치",
+      "hsCode": "902519",
+      "targetCountry": "Japan",
+      "expectedAgents": [
+        "PlannerAgent",
+        "PublicDataAgent",
+        "DocumentClassifierAgent",
+        "RegulationAgent",
+        "FTOAgent",
+        "SentimentAgent",
+        "MLPredictionAgent",
+        "ShapExplainerAgent",
+        "ReportAgent",
+        "VerifierAgent"
+      ],
+      "expectedGate": "STOP",
+      "assertions": [
+        "regulation score below threshold",
+        "fto high risk appears",
+        "buyer urgency high",
+        "report limitations include PMDA/FTO expert review"
+      ]
+    }
+  ]
+}

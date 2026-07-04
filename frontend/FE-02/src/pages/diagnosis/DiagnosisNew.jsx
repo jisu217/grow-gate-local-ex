@@ -8,6 +8,59 @@ import { COUNTRY_OPTIONS, normalizeTargetCountry } from '../../utils/country.js'
 const PICKER_PAGE_SIZE = 5
 const PICKER_PAGE_WINDOW = 5
 const CATEGORIES = ['전기전자', '전자부품', '기계·장비', '화학·소재', '식품·의료', '기타']
+const DEMO_SCENARIOS = [
+  {
+    key: 'battery',
+    title: '창원 배터리팩',
+    gate: 'HOLD',
+    account: 'owner+battery@growgate.local',
+    productId: 'a2e2360b-c6ac-57c3-8e3b-61b303faf36c',
+    diagnosisId: '2b52340c-d51d-50dc-b6cb-592627abb62d',
+    region: '경남 창원',
+    industry: '전기전자·이차전지 부품 제조',
+    buyerRequest: 'CE 적합성 선언, UN38.3, RoHS/REACH 선언, 영문 라벨링, 배터리 회수/리콜 대응 프로세스, 독일어 안전주의 문구, 6주 이내 샘플 20대 제출 요청.',
+    buyerDeadline: '2026-07-18',
+    expectedShipmentDate: '2026-09-05',
+    requestedCertifications: 'CE Technical File, RoHS/REACH Declaration, EU Battery Regulation labeling memo',
+    currentDocuments: 'BOM v3.2, UN38.3 Test Summary, KC Safety Certificate, Battery Safety Manual EN draft, EU CE Gap Memo',
+    exportExperience: 'EU 샘플 수출 1회, 양산 납품 경험 없음',
+    budgetLimitKrw: '18000000',
+  },
+  {
+    key: 'marine',
+    title: '부산 마린 액추에이터',
+    gate: 'CONDITIONAL_GO',
+    account: 'owner+marine@growgate.local',
+    productId: '9f7f291b-210a-5575-891a-bf6115bc7cce',
+    diagnosisId: '6bc9800e-755c-55f9-b9ce-87a69dc2c450',
+    region: '부산 강서',
+    industry: '조선기자재·스마트 밸브 액추에이터',
+    buyerRequest: 'UL/NRTL 적용 가능성 검토, FCC Part 15 해당 여부, IP67 시험성적서, 염수분무 720h 결과, ABS/DNV 선급 적용 가능성 메모, 납기 10주 견적 요청.',
+    buyerDeadline: '2026-07-24',
+    expectedShipmentDate: '2026-09-25',
+    requestedCertifications: 'UL/NRTL applicability memo, FCC applicability memo, ABS/DNV pre-check memo',
+    currentDocuments: 'IP67 Test Report, Salt Spray 720h Report, Firmware OTA Release Note, Assembly Drawing Rev.C, Buyer RFQ US-2026-07',
+    exportExperience: '동남아/중동 선박 부품 납품 4회, 미국 신규 바이어 첫 거래',
+    budgetLimitKrw: '26000000',
+  },
+  {
+    key: 'medical',
+    title: '대구 메디센서',
+    gate: 'STOP',
+    account: 'owner+medical@growgate.local',
+    productId: 'db88726d-1c62-56fa-94d5-4d147710c7ce',
+    diagnosisId: 'cf7d23b4-51d8-53f7-be26-a92bf6682a6d',
+    region: '대구 수성',
+    industry: '디지털헬스·웨어러블 센서 제조',
+    buyerRequest: '일본 PMDA 등급 분류, QMS 적합성, 일본어 IFU, 개인정보/클라우드 전송 설명, BLE 무선 인증, 임상적 성능 근거, 파일럿 100세트 견적 요청.',
+    buyerDeadline: '2026-07-15',
+    expectedShipmentDate: '2026-08-30',
+    requestedCertifications: 'PMDA classification memo, Japanese IFU, FTO counsel memo, Wireless approval Japan pre-check, Privacy impact memo',
+    currentDocuments: 'ISO13485 Certificate, BLE Module KC Registration, Clinical Evaluation Draft, IFU Korean Draft, Cloud Data Flow Diagram',
+    exportExperience: '일본 수출 경험 없음, 국내 병원 파일럿 2건',
+    budgetLimitKrw: '12000000',
+  },
+]
 
 function normalizeSearchValue(value) {
   return String(value ?? '').toLowerCase().replace(/\s+/g, '')
@@ -109,6 +162,26 @@ export default function DiagnosisNew() {
   const openPicker = () => { setPickerKeyword(''); setPickerPage(1); setPickerOpen(true) }
   const pickProduct = (p) => { setSelectedId(p.id); setPickerOpen(false); setSubmitError('') }
   const handlePickerSearch = (e) => { setPickerKeyword(e.target.value); setPickerPage(1) }
+  const loadDemoScenario = (scenario) => {
+    const product = savedProducts.find((p) => p.id === scenario.productId)
+    if (!product) {
+      setSubmitError(`${scenario.title} seed 제품이 현재 계정 제품 목록에 없습니다. ${scenario.account} / growgateadmin 계정으로 로그인해 주세요.`)
+      return
+    }
+    setSelectedId(product.id)
+    setFormData({
+      region: scenario.region,
+      industry: scenario.industry,
+      buyerRequest: scenario.buyerRequest,
+      buyerDeadline: scenario.buyerDeadline,
+      expectedShipmentDate: scenario.expectedShipmentDate,
+      requestedCertifications: scenario.requestedCertifications,
+      currentDocuments: scenario.currentDocuments,
+      exportExperience: scenario.exportExperience,
+      budgetLimitKrw: scenario.budgetLimitKrw,
+    })
+    setSubmitError('synthetic_demo_not_real_customer 시나리오가 로드되었습니다. Seed는 live 공공 API proof가 아닙니다.')
+  }
 
   // 새 제품 등록 (createMypageProduct = 마이페이지와 동일한 유일 생성 경로) → 등록 후 자동 선택
   const openAdd = () => {
@@ -195,6 +268,26 @@ export default function DiagnosisNew() {
               등록된 제품을 선택하고, 이번 수출 문의(바이어 요구사항)를 입력하면 견적 전 Gate 판단으로 정리합니다.
               제품 정보는 마이페이지에서 관리됩니다.
             </p>
+
+            <div className={styles.demoPanel}>
+              <div>
+                <div className={styles.demoTitle}>합성 시연 시나리오</div>
+                <p className={styles.demoDesc}>synthetic_demo_not_real_customer 데이터입니다. live 공공 API proof로 계산하지 않습니다.</p>
+              </div>
+              <div className={styles.demoGrid}>
+                {DEMO_SCENARIOS.map((scenario) => (
+                  <div key={scenario.key} className={styles.demoCard}>
+                    <strong>{scenario.title}</strong>
+                    <span>Gate {scenario.gate}</span>
+                    <span className={styles.demoAccount}>{scenario.account}</span>
+                    <div className={styles.demoActions}>
+                      <button type="button" onClick={() => loadDemoScenario(scenario)}>입력 로드</button>
+                      <button type="button" onClick={() => navigate(`/diagnosis/${scenario.diagnosisId}`)}>완료 결과 보기</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
 
             {/* ① 판단할 제품 */}
             <div className={styles.stepHead}>
