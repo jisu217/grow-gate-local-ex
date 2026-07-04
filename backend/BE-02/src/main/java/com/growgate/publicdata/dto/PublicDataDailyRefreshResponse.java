@@ -21,6 +21,12 @@ public class PublicDataDailyRefreshResponse {
     private int successCount;
     private int fallbackCount;
     private int cacheHitCount;
+    private int providerCount;
+    private int externalDataCount;
+    private boolean diagnosisUsable;
+    private String availabilityLabel;
+    private List<String> providers;
+    private List<String> failureReasons;
     private String startedAt;
     private String finishedAt;
     private List<Item> items;
@@ -40,6 +46,10 @@ public class PublicDataDailyRefreshResponse {
         private int successCount;
         private int fallbackCount;
         private int cacheHitCount;
+        private int providerCount;
+        private int externalDataCount;
+        private boolean diagnosisUsable;
+        private String availabilityLabel;
         private String reason;
     }
 }

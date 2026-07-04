@@ -24,6 +24,9 @@ import com.growgate.diagnosis.dto.DiagnosisSourcesResponse;
 import com.growgate.diagnosis.dto.DiagnosisSourcesResponse.SourceEntry;
 import com.growgate.diagnosis.entity.DiagnosisRun;
 import com.growgate.diagnosis.enums.DiagnosisStatus;
+import com.growgate.diagnosis.report.MarkdownReportRenderer;
+import com.growgate.diagnosis.report.ReportClaimVerifier;
+import com.growgate.diagnosis.report.ReportFrontMatterBuilder;
 import com.growgate.diagnosis.repository.DiagnosisRepository;
 import com.growgate.company.entity.Company;
 import com.growgate.exception.BusinessException;
@@ -326,10 +329,11 @@ public class DiagnosisService {
         DiagnosisRun run = findDiagnosisRun(user, diagnosisId);
         String markdown = null;
         boolean fastApiUsed = false;
+        Map<String, Object> resultMap = Map.of();
 
         if (run.getResult() != null) {
             try {
-                Map<String, Object> resultMap = objectMapper.readValue(run.getResult(),
+                resultMap = objectMapper.readValue(run.getResult(),
                         new TypeReference<Map<String, Object>>() {});
                 markdown = asString(resultMap.get("reportMarkdown"));
                 fastApiUsed = Boolean.TRUE.equals(resultMap.get("reportFastApiUsed"));
@@ -339,10 +343,21 @@ public class DiagnosisService {
         }
 
         if (markdown == null || markdown.isBlank()) {
-            markdown = "# GROW-GATE Local EX 진단 리포트\n\n"
-                    + "- 제품: " + resolveProductName(run) + "\n"
-                    + "- 대상국: " + run.getTargetCountry() + "\n"
-                    + "- 상태: " + run.getStatus().name() + "\n";
+            MarkdownReportRenderer renderer = new MarkdownReportRenderer(
+                    new ReportFrontMatterBuilder(),
+                    new ReportClaimVerifier()
+            );
+            markdown = renderer.render(MarkdownReportRenderer.ReportContext.builder()
+                    .diagnosisId(run.getId())
+                    .productName(resolveProductName(run))
+                    .hsCode(resolveHsCode(run))
+                    .targetCountry(run.getTargetCountry())
+                    .overallScore(extractOverallScore(run.getResult()) == null ? 0 : extractOverallScore(run.getResult()))
+                    .publicDataProofRunId(asString(resultMap.get("publicDataCollectionRunId")))
+                    .risks(parseMapList(resultMap, "riskItems"))
+                    .roadmap(parseObjectMap(resultMap, "actionRoadmap"))
+                    .sourceTrustSummary(parseObjectMap(resultMap, "sourceTrustSummary"))
+                    .build());
         }
 
         return new DiagnosisReportResponse(

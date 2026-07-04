@@ -1,6 +1,6 @@
 // 마이페이지 서비스 — 로그인 사용자 기준 DB API 연동
 import { apiFetch } from './apiClient.js'
-import { getDiagnosisList } from './diagnosisService.js'
+import { getDiagnosisList, getDiagnosisReport } from './diagnosisService.js'
 
 const ROLE_LABELS = {
   owner: '소유자',
@@ -50,9 +50,31 @@ function toMypageProduct(product) {
       : [{ task: '준비도 진단 실행하기', due: '30' }],
     kn: product.knowledgeStatus === 'valid' ? 100 : missingCount > 0 ? 60 : 30,
     miss: missingCount > 0 ? `누락 정보 ${missingCount}건` : '기본 정보 저장됨',
-    reports: [],
+    reports: product.reports ?? [],
     updatedAt: product.updatedAt,
   }
+}
+
+export function buildReportArchive(diagnoses = [], productId) {
+  return diagnoses
+    .filter((diagnosis) => diagnosis.productId === productId)
+    .filter((diagnosis) => String(diagnosis.status ?? '').toLowerCase() === 'done')
+    .map((diagnosis) => ({
+      diagnosisId: diagnosis.id,
+      file: `grow-gate-diagnosis-${diagnosis.id}.md`,
+      date: formatReportDate(diagnosis.requestedAt),
+      format: 'Markdown',
+      score: diagnosis.diagnosisScore ?? null,
+      targetMarket: diagnosis.targetMarket ?? '',
+      downloadLabel: 'Markdown 다운로드',
+    }))
+}
+
+function formatReportDate(value) {
+  if (!value) return ''
+  const parsed = new Date(value)
+  if (Number.isNaN(parsed.getTime())) return String(value).slice(0, 10)
+  return parsed.toISOString().slice(0, 10)
 }
 
 // 회사 정보 + 팀원 — 현재 로그인 사용자 기준
@@ -88,31 +110,43 @@ export async function getMypageOverview() {
 // 제품 목록 — 백엔드가 인증 사용자 기준으로 개인/회사 범위를 분리해서 반환
 export async function getMypageProducts() {
   const res = await apiFetch('/products')
-  const latestByProductId = await getLatestDiagnosisByProductId()
+  const diagnosisIndex = await getDiagnosisIndexByProductId()
   return (res.products ?? []).map((product) => {
-    const latest = latestByProductId.get(product.productId)
+    const index = diagnosisIndex.get(product.productId) ?? { latest: null, reports: [] }
+    const latest = index.latest
     return toMypageProduct({
       ...product,
       runId: latest?.id,
       diagnosisStatus: latest?.status,
       score: latest?.diagnosisScore,
+      reports: index.reports,
     })
   })
 }
 
-async function getLatestDiagnosisByProductId() {
+async function getDiagnosisIndexByProductId() {
   try {
     const diagnoses = await getDiagnosisList()
-    const latestByProductId = new Map()
+    const byProductId = new Map()
     diagnoses.forEach((diagnosis) => {
-      if (!diagnosis.productId || latestByProductId.has(diagnosis.productId)) return
-      latestByProductId.set(diagnosis.productId, diagnosis)
+      if (!diagnosis.productId) return
+      const current = byProductId.get(diagnosis.productId) ?? { latest: null, diagnoses: [] }
+      if (!current.latest) current.latest = diagnosis
+      current.diagnoses.push(diagnosis)
+      byProductId.set(diagnosis.productId, current)
     })
-    return latestByProductId
+    byProductId.forEach((value, productId) => {
+      value.reports = buildReportArchive(value.diagnoses, productId)
+    })
+    return byProductId
   } catch (err) {
     console.warn('[mypageService] 최신 진단 목록을 불러오지 못해 제품 기본 정보만 표시합니다.', err)
     return new Map()
   }
+}
+
+export async function getMypageReport(diagnosisId) {
+  return getDiagnosisReport(diagnosisId)
 }
 
 // 신규 제품 등록 — POST /api/products

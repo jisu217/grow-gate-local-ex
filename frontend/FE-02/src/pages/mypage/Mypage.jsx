@@ -6,9 +6,12 @@ import {
   getMypageProducts,
   createMypageProduct,
   deleteMypageProduct,
+  getMypageReport,
   rerunDiagnosis,
 } from '../../services/mypageService.js'
 import { COUNTRY_OPTIONS, normalizeTargetCountry } from '../../utils/country.js'
+import MarkdownReportPreview, { reportPreviewDocument } from '../../components/report/MarkdownReportPreview.jsx'
+import ReportDownloadButtons from '../../components/report/ReportDownloadButtons.jsx'
 
 // 내 제품 관리 목록: 한 페이지에 보여줄 제품 수
 const PRODUCTS_PER_PAGE = 5
@@ -24,6 +27,9 @@ export default function Mypage() {
   const [selectedId, setSelectedId] = useState('')
   const [loadError, setLoadError] = useState('')
   const [saveError, setSaveError] = useState('')
+  const [reportError, setReportError] = useState('')
+  const [reportBusyId, setReportBusyId] = useState('')
+  const [reportPreview, setReportPreview] = useState(null)
 
   // 제품 추가 모달 상태
   const [modalOpen, setModalOpen] = useState(false)
@@ -158,6 +164,68 @@ export default function Mypage() {
     }
   }
 
+  async function fetchReport(report) {
+    setReportError('')
+    setReportBusyId(report.diagnosisId)
+    try {
+      const payload = await getMypageReport(report.diagnosisId)
+      return {
+        ...report,
+        ...payload,
+        markdown: payload.markdown ?? '',
+        fileName: payload.fileName ?? report.file,
+        contentType: payload.contentType ?? 'text/markdown;charset=utf-8',
+      }
+    } finally {
+      setReportBusyId('')
+    }
+  }
+
+  async function downloadReport(report) {
+    try {
+      const payload = await fetchReport(report)
+      const blob = new Blob([payload.markdown], { type: payload.contentType })
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = payload.fileName
+      document.body.appendChild(link)
+      link.click()
+      link.remove()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      setReportError(err.message || 'Markdown 리포트 다운로드에 실패했습니다.')
+    }
+  }
+
+  async function previewReport(report) {
+    try {
+      const payload = await fetchReport(report)
+      setReportPreview(payload)
+    } catch (err) {
+      setReportError(err.message || 'HTML 미리보기를 불러오지 못했습니다.')
+    }
+  }
+
+  async function printReport(report) {
+    try {
+      const payload = await fetchReport(report)
+      const printWindow = window.open('', '_blank')
+      if (!printWindow) {
+        setReportPreview(payload)
+        setReportError('팝업이 차단되어 HTML 미리보기를 열었습니다. 미리보기에서 브라우저 인쇄를 사용하세요.')
+        return
+      }
+      printWindow.document.open()
+      printWindow.document.write(reportPreviewDocument(payload.markdown))
+      printWindow.document.close()
+      printWindow.focus()
+      window.setTimeout(() => printWindow.print(), 200)
+    } catch (err) {
+      setReportError(err.message || '브라우저 인쇄 화면을 열지 못했습니다.')
+    }
+  }
+
   return (
     <div className={styles.root}>
       <div className={styles.bgfx}>
@@ -245,14 +313,22 @@ export default function Mypage() {
                 <div className={styles.files}>
                   {current.reports.length
                     ? current.reports.map((r) => (
-                      <div key={r.file} className={styles.f}>
-                        <span className={styles.ic}>⬢</span>
-                        <span>{r.file}</span>
+                      <div key={r.diagnosisId} className={styles.f}>
+                        <span className={styles.ic}>MD</span>
+                        <span className={styles.reportName}>{r.file}</span>
                         <span className={styles.dt}>{r.date}</span>
+                        <ReportDownloadButtons
+                          report={r}
+                          onDownload={downloadReport}
+                          onPreview={previewReport}
+                          onPrint={printReport}
+                          disabled={reportBusyId === r.diagnosisId}
+                        />
                       </div>
                     ))
                     : <div className={styles.empty}>아직 생성된 리포트가 없습니다.</div>}
                 </div>
+                {reportError && <div className={styles.reportError}>{reportError}</div>}
               </div>
             </div>
 
@@ -431,6 +507,31 @@ export default function Mypage() {
             <button className={styles.cancel} onClick={() => setDeleteTarget(null)} disabled={deleting}>취소</button>
             <button className={styles.saveDanger} onClick={confirmDelete} disabled={deleting}>
               {deleting ? '삭제 중…' : '삭제'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Markdown 리포트 HTML 미리보기 */}
+      <div
+        className={`${styles.modal} ${reportPreview ? styles.open : ''}`}
+        onClick={(e) => { if (e.target === e.currentTarget) setReportPreview(null) }}
+      >
+        <div className={`${styles.sheet} ${styles.previewSheet}`}>
+          <div className={styles.previewHead}>
+            <div>
+              <h3>HTML 미리보기</h3>
+              <div className={styles.desc}>공식 원본은 Markdown입니다. PDF 보관은 브라우저 인쇄를 사용하세요.</div>
+            </div>
+            <button className={styles.cancel} onClick={() => setReportPreview(null)}>닫기</button>
+          </div>
+          <div className={styles.previewBody}>
+            <MarkdownReportPreview markdown={reportPreview?.markdown ?? ''} />
+          </div>
+          <div className={styles.foot}>
+            <button className={styles.cancel} onClick={() => setReportPreview(null)}>닫기</button>
+            <button className={styles.save} onClick={() => printReport(reportPreview)}>
+              브라우저에서 PDF로 인쇄
             </button>
           </div>
         </div>

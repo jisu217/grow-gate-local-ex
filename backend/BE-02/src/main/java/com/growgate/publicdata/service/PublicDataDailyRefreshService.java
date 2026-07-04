@@ -5,6 +5,8 @@ import com.growgate.product.entity.Product;
 import com.growgate.product.repository.ProductRepository;
 import com.growgate.publicdata.dto.PublicDataDailyRefreshResponse;
 import com.growgate.publicdata.entity.PublicDataCollectionRun;
+import com.growgate.publicdata.entity.PublicDataRecord;
+import com.growgate.publicdata.enums.PublicDataProvider;
 import com.growgate.publicdata.repository.PublicDataRecordRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +18,8 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.LinkedHashSet;
+import java.util.Set;
 
 @Slf4j
 @Service
@@ -36,7 +40,7 @@ public class PublicDataDailyRefreshService {
     @Value("${public-data.daily-refresh.freshness-hours:20}")
     private long freshnessHours;
 
-    @Scheduled(cron = "${public-data.daily-refresh.cron:0 20 3 * * *}",
+    @Scheduled(cron = "${public-data.daily-refresh.cron:0 0 8 * * *}",
             zone = "${public-data.daily-refresh.zone:Asia/Seoul}")
     public void scheduledDailyRefresh() {
         if (!enabled) {
@@ -75,21 +79,25 @@ public class PublicDataDailyRefreshService {
         int successCount = 0;
         int fallbackCount = 0;
         int cacheHitCount = 0;
+        int externalDataCount = 0;
+        Set<String> failureReasons = new LinkedHashSet<>();
 
         for (Product product : products) {
             String hsCode = normalizeHsCode(product.getHsCode());
             String targetCountry = normalizeCountry(product.getTargetCountry());
             if (hsCode.length() < 6 || targetCountry.isBlank()) {
+                String reason = "HS code 6자리 이상과 대상국이 필요합니다.";
                 skippedFreshCount++;
                 items.add(item(product, hsCode, targetCountry, "skipped", null,
-                        "HS code 6자리 이상과 대상국이 필요합니다."));
+                        0, reason));
+                failureReasons.add(reason);
                 continue;
             }
 
             if (hasFreshCoverage(hsCode, targetCountry)) {
                 skippedFreshCount++;
                 items.add(item(product, hsCode, targetCountry, "skipped_fresh", null,
-                        "최근 " + freshnessHours + "시간 내 provider coverage가 존재합니다."));
+                        0, "최근 " + freshnessHours + "시간 내 provider coverage가 존재합니다."));
                 continue;
             }
 
@@ -106,10 +114,18 @@ public class PublicDataDailyRefreshService {
                 successCount += run.getSuccessCount();
                 fallbackCount += run.getFallbackCount();
                 cacheHitCount += run.getCacheHitCount();
-                items.add(item(product, hsCode, targetCountry, run.getStatus().name(), run, null));
+                int itemExternalDataCount = externalDataCount(result.getRecords());
+                externalDataCount += itemExternalDataCount;
+                if (run.getErrorSummary() != null && !run.getErrorSummary().isBlank()) {
+                    failureReasons.add(run.getErrorSummary());
+                }
+                items.add(item(product, hsCode, targetCountry, run.getStatus().name(), run,
+                        itemExternalDataCount, null));
             } catch (Exception e) {
+                String reason = safeReason(e);
                 failedCount++;
-                items.add(item(product, hsCode, targetCountry, "failed", null, safeReason(e)));
+                failureReasons.add(reason);
+                items.add(item(product, hsCode, targetCountry, "failed", null, 0, reason));
                 log.warn("public data daily refresh failed productId={} hsCode={} targetCountry={}",
                         product.getId(), hsCode, targetCountry, e);
             }
@@ -124,6 +140,12 @@ public class PublicDataDailyRefreshService {
                 .successCount(successCount)
                 .fallbackCount(fallbackCount)
                 .cacheHitCount(cacheHitCount)
+                .providerCount(connectors.size())
+                .externalDataCount(externalDataCount)
+                .diagnosisUsable(successCount + cacheHitCount > 0)
+                .availabilityLabel(successCount + cacheHitCount > 0 ? "진단 반영 가능" : "확인 필요")
+                .providers(connectors.stream().map(connector -> connector.provider().name()).sorted().toList())
+                .failureReasons(new ArrayList<>(failureReasons))
                 .startedAt(DateTimeUtils.formatUtc(startedAt))
                 .finishedAt(DateTimeUtils.formatUtc(LocalDateTime.now()))
                 .items(items)
@@ -141,7 +163,9 @@ public class PublicDataDailyRefreshService {
     }
 
     private PublicDataDailyRefreshResponse.Item item(Product product, String hsCode, String targetCountry,
-                                                    String status, PublicDataCollectionRun run, String reason) {
+                                                    String status, PublicDataCollectionRun run,
+                                                    int externalDataCount, String reason) {
+        int liveOrCacheCount = run == null ? 0 : run.getSuccessCount() + run.getCacheHitCount();
         return PublicDataDailyRefreshResponse.Item.builder()
                 .productId(product.getId())
                 .productName(product.getName())
@@ -153,8 +177,20 @@ public class PublicDataDailyRefreshService {
                 .successCount(run == null ? 0 : run.getSuccessCount())
                 .fallbackCount(run == null ? 0 : run.getFallbackCount())
                 .cacheHitCount(run == null ? 0 : run.getCacheHitCount())
+                .providerCount(run == null ? 0 : run.getProviderCount())
+                .externalDataCount(externalDataCount)
+                .diagnosisUsable(liveOrCacheCount > 0)
+                .availabilityLabel(liveOrCacheCount > 0 ? "진단 반영 가능" : "확인 필요")
                 .reason(reason)
                 .build();
+    }
+
+    private int externalDataCount(List<PublicDataRecord> records) {
+        if (records == null) return 0;
+        return (int) records.stream()
+                .filter(record -> record.getProvider() == PublicDataProvider.EXPORT_EVIDENCE_FEED)
+                .filter(record -> !record.isFallbackUsed())
+                .count();
     }
 
     private String safeReason(Exception e) {

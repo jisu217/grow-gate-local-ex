@@ -2,7 +2,7 @@
 
 Official report output is Markdown.
 
-PDF is optional print/export output generated from Markdown or browser print. Do not present automatic PDF generation as a core feature.
+PDF is optional print/export output generated from Markdown or browser print. Do not present PDF generation as a core feature. 필요한 경우 브라우저 인쇄 또는 CI 변환으로 PDF 보관이 가능합니다.
 
 ## Allowed Wording
 
@@ -19,3 +19,10 @@ PDF is optional print/export output generated from Markdown or browser print. Do
 ## Required Front Matter
 
 Reports should include `diagnosisId`, `publicDataProofRunId`, `mlModelVersion`, `reportFormat=markdown`, and limitations.
+
+Each Markdown report must include:
+
+- Front matter with `publicDataProofRunId`, `modelVersion`, `reportFormat`, and `limitation`
+- Source Appendix
+- Claim Verification result
+- Synthetic Validation Disclaimer

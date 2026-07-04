@@ -13,6 +13,7 @@ import DiagnosisList    from './pages/diagnosis/DiagnosisList.jsx'
 import DiagnosisNew     from './pages/diagnosis/DiagnosisNew.jsx'
 import DiagnosisResult  from './pages/diagnosis/DiagnosisResult.jsx'
 import DiagnosisSources from './pages/diagnosis/DiagnosisSources.jsx'
+import DailyPublicData  from './pages/publicdata/DailyPublicData.jsx'
 
 import Mypage          from './pages/mypage/Mypage.jsx'
 import DiagnosisDetail from './pages/mypage/DiagnosisDetail.jsx'
@@ -46,6 +47,7 @@ export default function App() {
 
             <Route path="/diagnosis"              element={<DiagnosisList />} />
             <Route path="/diagnosis/new"          element={<DiagnosisNew />} />
+            <Route path="/public-data/daily-refresh" element={<DailyPublicData />} />
 
             <Route path="/mypage"                        element={<Mypage />} />
             <Route path="/mypage/diagnosis/:productId"   element={<DiagnosisDetail />} />

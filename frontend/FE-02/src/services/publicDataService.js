@@ -4,10 +4,24 @@ export function getPublicDataDashboard() {
   return apiFetch('/public-data/dashboard')
 }
 
+export function getPublicDataRuns() {
+  return apiFetch('/public-data/runs')
+}
+
+export function getPublicDataRecords() {
+  return apiFetch('/public-data/records')
+}
+
 export function collectPublicData(payload) {
   return apiFetch('/public-data/collect', {
     method: 'POST',
     body: JSON.stringify(payload),
+  })
+}
+
+export function refreshDailyPublicData() {
+  return apiFetch('/public-data/daily-refresh', {
+    method: 'POST',
   })
 }
 

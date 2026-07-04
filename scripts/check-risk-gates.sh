@@ -152,7 +152,7 @@ search_quiet '외부기관 문의' "$ROOT_DIR/frontend/FE-02/src/services/diagno
   || fail "decision brief must include external-inquiry action bucket"
 search_quiet 'fallback.*담당자 검토' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/GateDecisionHero.jsx" \
   || fail "Gate area must warn when fallback sources require owner review"
-search_quiet 'Markdown 메모 다운로드' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/S09Report.jsx" \
+search_quiet 'Markdown 다운로드' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/S09Report.jsx" \
   || fail "report UI must describe the default customer artifact as Markdown, not ambiguous PDF"
 if [[ -f "$ROOT_DIR/GROW_GATE_Local_EX_standalone.html" || -d "$ROOT_DIR/grow_gate_local_ex_demo/frontend" ]]; then
   fail "legacy standalone/static demo must be removed from the judged repository tree"

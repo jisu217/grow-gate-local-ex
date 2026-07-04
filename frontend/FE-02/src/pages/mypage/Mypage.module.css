@@ -108,10 +108,12 @@
 
 /* reports */
 .rep .files { margin-top: 14px; display: flex; flex-direction: column; gap: 9px; }
-.rep .f { display: flex; align-items: center; gap: 9px; font-size: 13.5px; color: var(--ink); padding: 9px 12px; border: 1px solid var(--line); border-radius: 10px; transition: .15s; cursor: pointer; }
+.rep .f { display: flex; align-items: center; flex-wrap: wrap; gap: 9px; font-size: 13.5px; color: var(--ink); padding: 10px 12px; border: 1px solid var(--line); border-radius: 10px; transition: .15s; }
 .rep .f:hover { border-color: #d6e3ff; background: #f7faff; }
-.rep .f .ic { color: var(--red); }
-.rep .f .dt { margin-left: auto; font-size: 12px; color: var(--dim); }
+.rep .f .ic { color: var(--blue); font-family: var(--en); font-size: 11px; font-weight: 800; border: 1px solid #d6e3ff; background: #f4f8ff; border-radius: 6px; padding: 2px 5px; }
+.rep .f .dt { font-size: 12px; color: var(--dim); }
+.reportName { min-width: 180px; flex: 1 1 190px; font-weight: 600; overflow-wrap: anywhere; }
+.reportError { margin-top: 12px; padding: 10px 12px; border: 1.5px solid #f5bcb5; border-radius: 10px; background: #fff4f2; color: var(--red); font-size: 12.5px; font-weight: 700; }
 .empty { font-size: 13px; color: var(--dim); padding: 8px 2px; }
 .notice { margin: 0 0 16px; padding: 14px 16px; border: 1.5px solid #f5d98c; border-radius: 14px; background: #fff8ec; color: #9a5b00; font-size: 13.5px; font-weight: 600; }
 
@@ -195,6 +197,10 @@
 .saveDanger { background: #e2504a; color: #fff; box-shadow: 0 8px 20px rgba(226,80,74,.3); }
 .saveDanger:hover { transform: translateY(-1px); }
 .saveDanger:disabled, .cancel:disabled { opacity: .6; cursor: default; transform: none; }
+.previewSheet { max-width: 920px; max-height: 86vh; display: flex; flex-direction: column; }
+.previewHead { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.previewHead .cancel { border: none; padding: 10px 16px; border-radius: 10px; font-weight: 700; cursor: pointer; }
+.previewBody { margin-top: 12px; padding: 18px 20px; border: 1px solid var(--line); border-radius: 14px; background: #fff; overflow: auto; }
 
 /* footer */
 .footer { border-top: 1px solid var(--line); margin-top: 50px; padding: 26px 0 50px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }

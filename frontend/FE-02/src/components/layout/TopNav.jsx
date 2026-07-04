@@ -13,6 +13,7 @@ export default function TopNav() {
   // 현재 경로 기준 활성 메뉴 판별
   const isHome = pathname === '/'
   const isDiagnosis = pathname.startsWith('/diagnosis')
+  const isPublicData = pathname.startsWith('/public-data')
   const isMypage = pathname.startsWith('/mypage')
 
   const handleLogout = async () => {
@@ -28,6 +29,7 @@ export default function TopNav() {
         <div className={styles.links}>
           <Link to="/" className={`${styles.link} ${isHome ? styles.active : ''}`}>홈</Link>
           <Link to="/diagnosis" className={`${styles.link} ${isDiagnosis ? styles.active : ''}`}>Gate 판단</Link>
+          <Link to="/public-data/daily-refresh" className={`${styles.link} ${isPublicData ? styles.active : ''}`}>데이터 수집</Link>
           <Link to="/mypage" className={`${styles.link} ${isMypage ? styles.active : ''}`}>마이페이지</Link>
 
           {user

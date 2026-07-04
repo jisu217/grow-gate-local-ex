@@ -1,13 +1,43 @@
 {
   "classification": "synthetic_persona_validation_not_real_customer_interview",
+  "disclaimerPhrase": "synthetic, not real customer data, persona-based validation",
+  "notRealCustomerData": true,
   "estimateType": "synthetic_persona_assumption",
   "personaCount": 5,
   "taskSessionCount": 15,
   "taskSuccessCount": 15,
   "medianManualBaselineMinutes": 150,
   "medianGrowGateMinutes": 15,
-  "disclaimer": "실제 고객 인터뷰가 아니라 가상 페르소나 기반 모의 검증입니다.",
-  "safePresentationSentence": "실제 고객 검증 전 단계로, 3개 가상 제조기업과 5개 사용자 페르소나를 설계해 바이어 문의, 진단, 출처 검증, 보고서 작성 흐름을 모의 검증했습니다.",
+  "displayDisclaimer": "실제 고객 인터뷰가 아니라 가상 페르소나 기반 모의 검증입니다.",
+  "safePresentationSentence": "실제 고객 검증 전 단계로, 3개 가상 제조기업과 5개 사용자 페르소나를 설계해 바이어 문의, 진단, 출처 검증, 보고서 작성까지의 모의 사용자 검증을 수행했습니다. 실제 인터뷰 데이터가 아니라 synthetic persona validation입니다.",
+  "riskySentenceToAvoid": "실제 고객 인터뷰 5건을 완료했습니다.",
+  "adminSummary": {
+    "title": "Synthetic Persona Validation Summary",
+    "audience": "admin_and_presentation",
+    "mustDisplayDisclaimer": true,
+    "disclaimerPhrase": "synthetic, not real customer data, persona-based validation",
+    "doNotLabelAs": ["actual customer interview", "real customer validation", "paid customer evidence", "field-verified ROI"]
+  },
+  "impactEstimate": {
+    "estimateType": "synthetic_persona_assumption",
+    "notRealCustomerData": true,
+    "calculationBasis": "PV-01~PV-05 persona task simulation",
+    "confidence": "low_to_medium",
+    "manualBaselineMinutes": 150,
+    "growgateMinutes": 15,
+    "timeReductionPct": 90.0,
+    "limitations": [
+      "실제 기업 인터뷰가 아니라 가상 페르소나 기반 모의 검증입니다.",
+      "금액 절감은 실제 계약·인증 비용이 아닌 업무시간 가정 기반입니다."
+    ]
+  },
+  "taskMetrics": {
+    "baselineManualTimeMin": "90~240 persona assumption",
+    "growGateTimeMin": "8~25 persona simulation",
+    "taskSuccess": "15/15 synthetic sessions",
+    "sourceTrustScoreMedian": 4,
+    "reportUsefulnessMedian": 4
+  },
   "topFindings": [
     "FTO/KIPRIS 결과는 전문가 검토 대체가 아니라는 한계 문구가 더 앞에 필요합니다.",
     "S10 proof 화면에서 live/cache/fallback 차이를 바로 보여야 합니다.",

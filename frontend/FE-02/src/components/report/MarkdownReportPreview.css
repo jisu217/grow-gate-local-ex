@@ -1,0 +1,76 @@
+.markdown-report-preview {
+  color: #17213a;
+  font-size: 14px;
+  line-height: 1.65;
+}
+
+.markdown-report-preview h1 {
+  font-size: 22px;
+  line-height: 1.25;
+  margin: 0 0 14px;
+}
+
+.markdown-report-preview h2 {
+  font-size: 16px;
+  margin: 22px 0 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid #e7ebf3;
+}
+
+.markdown-report-preview h3 {
+  font-size: 14px;
+  margin: 18px 0 8px;
+}
+
+.markdown-report-preview p {
+  margin: 9px 0;
+}
+
+.markdown-report-preview ul {
+  margin: 8px 0 12px 18px;
+  padding: 0;
+}
+
+.markdown-report-preview li {
+  margin: 5px 0;
+}
+
+.markdown-report-preview code {
+  background: #f2f5fb;
+  border-radius: 5px;
+  padding: 2px 5px;
+}
+
+.markdown-report-preview hr {
+  border: none;
+  border-top: 1px solid #e7ebf3;
+  margin: 12px 0;
+}
+
+.report-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-left: auto;
+}
+
+.report-actions button {
+  font-family: inherit;
+  font-size: 12px;
+  font-weight: 700;
+  color: #2f6bff;
+  background: #f4f8ff;
+  border: 1px solid #d6e3ff;
+  border-radius: 8px;
+  padding: 7px 10px;
+  cursor: pointer;
+}
+
+.report-actions button:hover:not(:disabled) {
+  background: #e8f0ff;
+}
+
+.report-actions button:disabled {
+  opacity: .55;
+  cursor: wait;
+}

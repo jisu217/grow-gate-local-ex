@@ -19,6 +19,8 @@ public class PublicDataRunResponse {
     private int successCount;
     private int fallbackCount;
     private int cacheHitCount;
+    private boolean diagnosisUsable;
+    private String availabilityLabel;
     private double fallbackRatio;
     private double liveRatio;
     private String errorSummary;
@@ -37,6 +39,8 @@ public class PublicDataRunResponse {
                 .successCount(run.getSuccessCount())
                 .fallbackCount(run.getFallbackCount())
                 .cacheHitCount(run.getCacheHitCount())
+                .diagnosisUsable(run.getSuccessCount() + run.getCacheHitCount() > 0)
+                .availabilityLabel(run.getSuccessCount() + run.getCacheHitCount() > 0 ? "진단 반영 가능" : "확인 필요")
                 .fallbackRatio(ratio(run.getFallbackCount(), run.getProviderCount()))
                 .liveRatio(ratio(run.getSuccessCount(), run.getProviderCount()))
                 .errorSummary(run.getErrorSummary())

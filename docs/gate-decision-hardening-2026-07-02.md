@@ -26,7 +26,7 @@
 | 공공데이터가 실패하면 어떻게 되는가? | fallback은 `sourceType=fallback`으로 표시되고 점수를 올리지 않는다. 결과 상단 confidence panel과 S10 source card에서 담당자 확인 대상으로 표시된다. |
 | AI 예측 모델인가? | 메인 제출 앱은 XGBoost/성과확률 예측을 주장하지 않는다. 현재는 source-traced rule scoring, agent loop, 담당자 승인형 self-loop wiki를 사용한다. |
 | 결과가 실제 업무로 이어지는가? | 리스크마다 담당자, 필요 산출물, 기한, 다음 행동을 만들고 ActionPlan을 이번 주/견적 전/출하 전으로 나눈다. |
-| 리포트가 PDF인가? | 현재 제출 경로는 Markdown 기반 바이어 대응 메모다. PDF 생성은 후속 확장으로 분리한다. |
+| 리포트가 PDF인가? | 현재 제출 경로는 Markdown 기반 바이어 대응 메모다. PDF 보관은 필요 시 브라우저 인쇄 또는 CI 변환으로만 설명한다. |
 
 ## 검증 체크리스트
 

@@ -1,16 +1,16 @@
 session_id,persona_id,company_id,task_id,scenario_id,baseline_manual_time_min,growgate_time_min,task_success,confidence_before,confidence_after,source_trust_score,report_usefulness,willingness_to_pay_monthly_krw,top_objection,synthetic_disclaimer
-SV-001,PV-01,COMP-BATTERY,TASK-A,DE-BATTERY-850760,180,12,true,2,4,4,5,150000,"KIPRIS 결과가 법률검토를 대체하지 않는다는 안내가 더 명확해야 함",true
-SV-002,PV-01,COMP-BATTERY,TASK-B,DE-BATTERY-850760,70,8,true,2,4,4,4,150000,"raw hash가 무엇인지 도움말 필요",true
-SV-003,PV-01,COMP-BATTERY,TASK-C,DE-BATTERY-850760,120,18,true,3,4,3,5,150000,"바이어 회신 문구를 더 짧게",true
-SV-004,PV-02,COMP-BATTERY,TASK-A,DE-BATTERY-850760,160,14,true,2,4,3,4,120000,"인증서 만료일 입력 UX 보강 필요",true
-SV-005,PV-02,COMP-BATTERY,TASK-B,DE-BATTERY-850760,90,10,true,2,4,4,4,120000,"fallback 영향이 점수에 어떻게 반영되는지 더 명확히",true
-SV-006,PV-02,COMP-BATTERY,TASK-C,DE-BATTERY-850760,150,22,true,3,4,3,5,120000,"Markdown 편집 미리보기 필요",true
-SV-007,PV-03,COMP-MARINE,TASK-A,US-MARINE-848180,210,15,true,2,5,4,5,200000,"지원사업 추천의 신청 마감일 강조 필요",true
-SV-008,PV-03,COMP-MARINE,TASK-B,US-MARINE-848180,100,9,true,2,4,4,4,200000,"KOTRA live proof가 없으면 경고가 더 커야 함",true
-SV-009,PV-03,COMP-MARINE,TASK-C,US-MARINE-848180,130,19,true,3,5,4,5,200000,"대표용 요약 1페이지 필요",true
-SV-010,PV-04,COMP-MEDICAL,TASK-A,JP-MEDICAL-902519,240,15,true,1,4,3,4,180000,"PMDA와 FTO 전문가 검토 필요 문구가 더 앞에 와야 함",true
-SV-011,PV-04,COMP-MEDICAL,TASK-B,JP-MEDICAL-902519,130,12,true,1,4,4,4,180000,"특허 검색 결과의 한계 설명 필요",true
-SV-012,PV-04,COMP-MEDICAL,TASK-C,JP-MEDICAL-902519,160,25,true,2,4,3,4,180000,"STOP일 때 바이어 대응 문구가 더 조심스러워야 함",true
-SV-013,PV-05,CONSULTANT,TASK-A,MULTI-COMPANY,180,16,true,2,4,4,4,250000,"기업별 비교 화면 필요",true
-SV-014,PV-05,CONSULTANT,TASK-B,MULTI-COMPANY,150,14,true,2,5,5,4,250000,"public-data proof pack export가 필요",true
-SV-015,PV-05,CONSULTANT,TASK-C,MULTI-COMPANY,120,20,true,3,4,4,5,250000,"상담 리포트 템플릿 커스터마이징 필요",true
+SV-001,PV-01,COMP-BATTERY,TASK-A,DE-BATTERY-850760,180,12,true,2,4,4,5,150000,"synthetic, not real customer data, persona-based validation; KIPRIS 결과가 실제 특허 법률검토를 대체하지 않는다는 안내가 더 명확해야 함",true
+SV-002,PV-01,COMP-BATTERY,TASK-B,DE-BATTERY-850760,70,8,true,2,4,4,4,150000,"synthetic, not real customer data, persona-based validation; raw hash가 무엇인지 도움말 필요",true
+SV-003,PV-01,COMP-BATTERY,TASK-C,DE-BATTERY-850760,120,18,true,3,4,3,5,150000,"synthetic, not real customer data, persona-based validation; 바이어 회신 문구를 더 짧게",true
+SV-004,PV-02,COMP-BATTERY,TASK-A,DE-BATTERY-850760,160,14,true,2,4,3,4,120000,"synthetic, not real customer data, persona-based validation; 인증서 만료일 입력 UX 보강 필요",true
+SV-005,PV-02,COMP-BATTERY,TASK-B,DE-BATTERY-850760,90,10,true,2,4,4,4,120000,"synthetic, not real customer data, persona-based validation; fallback 영향이 점수에 어떻게 반영되는지 더 명확히",true
+SV-006,PV-02,COMP-BATTERY,TASK-C,DE-BATTERY-850760,150,22,true,3,4,3,5,120000,"synthetic, not real customer data, persona-based validation; Markdown 편집 미리보기 필요",true
+SV-007,PV-03,COMP-MARINE,TASK-A,US-MARINE-848180,210,15,true,2,5,4,5,200000,"synthetic, not real customer data, persona-based validation; 지원사업 추천의 신청 마감일 강조 필요",true
+SV-008,PV-03,COMP-MARINE,TASK-B,US-MARINE-848180,100,9,true,2,4,4,4,200000,"synthetic, not real customer data, persona-based validation; KOTRA live proof가 없으면 경고가 더 커야 함",true
+SV-009,PV-03,COMP-MARINE,TASK-C,US-MARINE-848180,130,19,true,3,5,4,5,200000,"synthetic, not real customer data, persona-based validation; 대표용 요약 1페이지 필요",true
+SV-010,PV-04,COMP-MEDICAL,TASK-A,JP-MEDICAL-902519,240,15,true,1,4,3,4,180000,"synthetic, not real customer data, persona-based validation; PMDA와 FTO 전문가 검토 필요 문구가 더 앞에 와야 함",true
+SV-011,PV-04,COMP-MEDICAL,TASK-B,JP-MEDICAL-902519,130,12,true,1,4,4,4,180000,"synthetic, not real customer data, persona-based validation; 특허 검색 결과의 한계 설명 필요",true
+SV-012,PV-04,COMP-MEDICAL,TASK-C,JP-MEDICAL-902519,160,25,true,2,4,3,4,180000,"synthetic, not real customer data, persona-based validation; STOP일 때 바이어 대응 문구가 더 조심스러워야 함",true
+SV-013,PV-05,CONSULTANT,TASK-A,MULTI-COMPANY,180,16,true,2,4,4,4,250000,"synthetic, not real customer data, persona-based validation; 기업별 비교 화면 필요",true
+SV-014,PV-05,CONSULTANT,TASK-B,MULTI-COMPANY,150,14,true,2,5,5,4,250000,"synthetic, not real customer data, persona-based validation; public-data proof pack export가 필요",true
+SV-015,PV-05,CONSULTANT,TASK-C,MULTI-COMPANY,120,20,true,3,4,4,5,250000,"synthetic, not real customer data, persona-based validation; 상담 리포트 템플릿 커스터마이징 필요",true

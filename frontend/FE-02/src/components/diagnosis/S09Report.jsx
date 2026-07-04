@@ -6,7 +6,7 @@ export default function S09Report({ scoreBars, summary, onDownload, fastApiUsed 
     <DiagnosisStage
       eyebrow="S09 EXPORT READINESS REPORT"
       title="분석 결과 요약 · 항목별 점수"
-      right={<button className="s-btn" onClick={onDownload}>Markdown 메모 다운로드 ↓</button>}
+      right={<button className="s-btn" onClick={onDownload}>Markdown 다운로드 ↓</button>}
     >
 
       <div className="rep">
@@ -19,6 +19,7 @@ export default function S09Report({ scoreBars, summary, onDownload, fastApiUsed 
 
           <div className="highlight-list">
             <div className="hl-item"><b>산출물:</b> {fastApiUsed ? '선택형 report bridge 결과를 병합한 Markdown 바이어 대응 메모입니다.' : 'Spring 로컬 생성기의 Markdown 바이어 대응 메모입니다.'}</div>
+            <div className="hl-item"><b>보관:</b> PDF가 필요하면 다운로드한 Markdown을 HTML 미리보기 또는 브라우저 인쇄로 보관합니다.</div>
             <div className="hl-item"><b>근거:</b> 점수별 source trace와 fallback 여부를 함께 확인할 수 있습니다.</div>
             <div className="hl-item"><b>실행:</b> 30·60·90일 보드의 태스크를 기준으로 담당자와 산출물을 배정하십시오.</div>
           </div>

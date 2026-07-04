@@ -13,7 +13,7 @@
 
 ## 실행 경로
 
-1. `PublicDataDailyRefreshService`가 매일 `Asia/Seoul 03:20`에 실행된다.
+1. `PublicDataDailyRefreshService`가 매일 `Asia/Seoul 08:00`에 실행된다.
 2. 제품별 `hsCode`, `targetCountry`를 정규화한다.
 3. 최근 `PUBLIC_DATA_DAILY_REFRESH_FRESHNESS_HOURS` 안에 모든 provider coverage가 있으면 `skipped_fresh`로 스킵한다.
 4. fresh coverage가 부족하면 기존 `PublicDataCollectionService.collectForDiagnosis()`를 재사용한다.
@@ -28,14 +28,26 @@
 POST /api/public-data/daily-refresh
 ```
 
-응답에는 `plannedCount`, `collectedCount`, `skippedFreshCount`, `failedCount`, `successCount`, `fallbackCount`, `cacheHitCount`, 제품별 `status/runId/reason`이 포함된다.
+응답에는 `plannedCount`, `collectedCount`, `skippedFreshCount`, `failedCount`, `successCount`, `fallbackCount`, `cacheHitCount`, `providerCount`, `externalDataCount`, `availabilityLabel`, `failureReasons`, 제품별 `status/runId/reason`이 포함된다.
+
+## 화면 확인
+
+프론트엔드 `/public-data/daily-refresh` 화면에서 최근 run을 날짜별로 묶어 확인한다.
+
+- 수집일, 전체 수집 대상, 호출 provider
+- live/cache/fallback 건수
+- 허용된 RSS/API feed 수집 건수
+- 진단 반영 가능 여부
+- API key 없음, operation endpoint 아님, timeout 등 실패 사유
+- proofRunId, raw response hash, schema validation 상태
+- diagnosisId/evidence record ID 단위의 점수 반영 연결
 
 ## 운영 설정
 
 | 환경변수 | 기본값 | 설명 |
 | --- | --- | --- |
 | `PUBLIC_DATA_DAILY_REFRESH_ENABLED` | `true` | 스케줄러 실행 여부 |
-| `PUBLIC_DATA_DAILY_REFRESH_CRON` | `0 20 3 * * *` | 일별 실행 cron |
+| `PUBLIC_DATA_DAILY_REFRESH_CRON` | `0 0 8 * * *` | 일별 실행 cron |
 | `PUBLIC_DATA_DAILY_REFRESH_ZONE` | `Asia/Seoul` | 스케줄 기준 시간대 |
 | `PUBLIC_DATA_DAILY_REFRESH_MAX_PRODUCTS` | `30` | 한 번에 처리할 최대 제품 수 |
 | `PUBLIC_DATA_DAILY_REFRESH_FRESHNESS_HOURS` | `20` | 같은 HS/국가 provider coverage 스킵 기준 |
@@ -46,3 +58,9 @@ POST /api/public-data/daily-refresh
 - 중복 수집은 provider coverage 기준으로 줄인다.
 - 수동 endpoint는 로그인한 사용자 제품만 대상으로 하므로 다른 사용자 제품을 수집 대상으로 노출하지 않는다.
 - 스케줄러는 기존 parser/normalizer/scoreContribution 경로를 재사용하므로 진단 결과와 데이터 의미가 분리되지 않는다.
+
+## 심사장 답변
+
+질문: "공공데이터를 실제로 수집했다는 증거가 어디 있나요?"
+
+답변: "데이터 수집 화면에서 일자별 수집 run, provider별 live/cache/fallback 상태, raw response hash, schema validation 결과를 확인할 수 있습니다. 진단 실행분은 같은 proof run의 score waterfall에서 diagnosisId와 evidence record ID까지 연결되어 어떤 데이터가 Gate 점수에 반영됐는지 추적됩니다."

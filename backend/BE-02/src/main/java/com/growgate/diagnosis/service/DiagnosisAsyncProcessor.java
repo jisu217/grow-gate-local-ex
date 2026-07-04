@@ -10,6 +10,9 @@ import com.growgate.agent.service.ClaimVerificationService;
 import com.growgate.agent.service.EvidenceContextBuilder;
 import com.growgate.diagnosis.entity.DiagnosisRun;
 import com.growgate.diagnosis.enums.DiagnosisStatus;
+import com.growgate.diagnosis.report.MarkdownReportRenderer;
+import com.growgate.diagnosis.report.ReportClaimVerifier;
+import com.growgate.diagnosis.report.ReportFrontMatterBuilder;
 import com.growgate.diagnosis.repository.DiagnosisRepository;
 import com.growgate.knowledge.entity.BuyerRequirement;
 import com.growgate.knowledge.entity.Certification;
@@ -359,7 +362,8 @@ public class DiagnosisAsyncProcessor {
                     regulation, recall, fto, support, riskItems, actionRoadmap, sources, agentResult.orElse(null),
                     llmResult, loopSuggestions));
             resultMap.put("reportMarkdown", extractReportMarkdown(reportResult.orElse(null),
-                    productName, hsCode, targetCountry, overall, riskItems, actionRoadmap));
+                    run.getId(), productName, hsCode, targetCountry, overall, riskItems, actionRoadmap,
+                    publicDataResult.getRun().getId(), objectMapOrDefault(resultMap.get("sourceTrustSummary"), Map.of())));
             resultMap.put("reportFastApiUsed", reportResult.isPresent());
             resultMap.put("agentInference", Map.of(
                     "succeeded", llmResult.isSucceeded(),
@@ -1299,32 +1303,37 @@ public class DiagnosisAsyncProcessor {
     }
 
     @SuppressWarnings("unchecked")
-    private String extractReportMarkdown(Map<String, Object> reportResult, String productName, String hsCode,
+    private String extractReportMarkdown(Map<String, Object> reportResult, String diagnosisId,
+                                         String productName, String hsCode,
                                          String targetCountry, int overall,
                                          List<Map<String, Object>> risks,
-                                         Map<String, Object> roadmap) {
+                                         Map<String, Object> roadmap,
+                                         String publicDataProofRunId,
+                                         Map<String, Object> sourceTrustSummary) {
+        MarkdownReportRenderer renderer = new MarkdownReportRenderer(
+                new ReportFrontMatterBuilder(),
+                new ReportClaimVerifier()
+        );
+        String officialMarkdown = renderer.render(MarkdownReportRenderer.ReportContext.builder()
+                .diagnosisId(diagnosisId)
+                .productName(productName)
+                .hsCode(hsCode)
+                .targetCountry(targetCountry)
+                .overallScore(overall)
+                .publicDataProofRunId(publicDataProofRunId)
+                .risks(risks)
+                .roadmap(roadmap)
+                .sourceTrustSummary(sourceTrustSummary)
+                .build());
         if (reportResult != null && reportResult.get("markdown") instanceof String markdown && !markdown.isBlank()) {
-            return markdown;
+            if (markdown.contains("publicDataProofRunId:") && markdown.contains("## Source Appendix")) {
+                return markdown;
+            }
+            return officialMarkdown
+                    + "\n## Optional Report Bridge Draft\n\n"
+                    + markdown;
         }
-        String topRisk = risks.isEmpty() ? "출처 최신성 점검" : stringValue(risks.get(0).get("label"));
-        String firstAction = risks.isEmpty() ? "공공데이터 source trace 최신성을 확인하십시오." : stringValue(risks.get(0).get("nextAction"));
-        return "# GROW-GATE Local EX 바이어 대응 메모\n\n"
-                + "- 제품: " + (nullToEmpty(productName).isBlank() ? "입력 제품" : productName) + "\n"
-                + "- HS Code: " + (nullToEmpty(hsCode).isBlank() ? "미등록" : hsCode) + "\n"
-                + "- 대상국: " + targetCountry + "\n"
-                + "- Gate 판단 점수: " + overall + "/100\n\n"
-                + "## 바이어에게 보낼 1차 회신 초안\n"
-                + "현재 제품의 인증·리콜·FTO·공공데이터 근거를 확인 중입니다. "
-                + "견적과 납기 확정 전 `" + topRisk + "` 항목을 우선 점검하고, 확인 결과와 보완 자료를 함께 회신드리겠습니다.\n\n"
-                + "## 담당자 즉시 할 일\n"
-                + "- 이번 주: " + actionTitles(roadmap, "thisWeek") + "\n"
-                + "- 견적 전: " + actionTitles(roadmap, "beforeQuote") + "\n"
-                + "- 출하 전: " + actionTitles(roadmap, "beforeShipment") + "\n\n"
-                + "## 우선 보완 근거\n"
-                + topRisk + " 때문에 `" + firstAction + "` 조치가 필요합니다.\n\n"
-                + "## 유의사항\n"
-                + "- 본 메모는 등록 제품 지식과 공공데이터 출처 신호 기반 Gate 판단입니다.\n"
-                + "- 최종 인증·특허 판단은 전문가 검토가 필요합니다.\n";
+        return officialMarkdown;
     }
 
     private String actionTitles(Map<String, Object> roadmap, String key) {

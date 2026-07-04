@@ -3,6 +3,7 @@ package com.growgate.publicdata.service;
 import com.growgate.product.entity.Product;
 import com.growgate.product.repository.ProductRepository;
 import com.growgate.publicdata.entity.PublicDataCollectionRun;
+import com.growgate.publicdata.entity.PublicDataRecord;
 import com.growgate.publicdata.enums.PublicDataCollectionStatus;
 import com.growgate.publicdata.enums.PublicDataProvider;
 import com.growgate.publicdata.repository.PublicDataRecordRepository;
@@ -43,6 +44,8 @@ class PublicDataDailyRefreshServiceTest {
         var response = service.refreshForUser("user-1");
 
         assertThat(response.getPlannedCount()).isEqualTo(1);
+        assertThat(response.getProviderCount()).isEqualTo(1);
+        assertThat(response.getProviders()).containsExactly("KCS_TRADE");
         assertThat(response.getCollectedCount()).isZero();
         assertThat(response.getSkippedFreshCount()).isEqualTo(1);
         assertThat(response.getItems().get(0).getStatus()).isEqualTo("skipped_fresh");
@@ -55,6 +58,7 @@ class PublicDataDailyRefreshServiceTest {
         PublicDataCollectionService collectionService = mock(PublicDataCollectionService.class);
         PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
         PublicDataConnector connector = connector(PublicDataProvider.KCS_TRADE);
+        PublicDataConnector externalConnector = connector(PublicDataProvider.EXPORT_EVIDENCE_FEED);
         User user = user("user-1");
         Product product = product("product-1", user, "850760", "DE");
         PublicDataCollectionRun run = PublicDataCollectionRun.builder()
@@ -64,12 +68,20 @@ class PublicDataDailyRefreshServiceTest {
                 .targetCountry("DE")
                 .productName("배터리팩")
                 .status(PublicDataCollectionStatus.partial_failed)
-                .providerCount(1)
+                .providerCount(2)
                 .successCount(1)
                 .fallbackCount(1)
                 .cacheHitCount(0)
                 .startedAt(LocalDateTime.now())
                 .finishedAt(LocalDateTime.now())
+                .build();
+        PublicDataRecord externalRecord = PublicDataRecord.builder()
+                .run(run)
+                .provider(PublicDataProvider.EXPORT_EVIDENCE_FEED)
+                .sourceType("external_feed")
+                .fallbackUsed(false)
+                .cacheHit(false)
+                .fetchedAt(LocalDateTime.now())
                 .build();
 
         when(productRepository.findDailyRefreshCandidatesByOwnerId(eq("user-1"), any(Pageable.class)))
@@ -77,10 +89,10 @@ class PublicDataDailyRefreshServiceTest {
         when(recordRepository.countDistinctProvidersCollectedSince(eq("850760"), eq("DE"), any(LocalDateTime.class)))
                 .thenReturn(0L);
         when(collectionService.collectForDiagnosis(null, "user-1", "850760", "DE", "배터리팩"))
-                .thenReturn(new PublicDataCollectionResult(run, List.of()));
+                .thenReturn(new PublicDataCollectionResult(run, List.of(externalRecord)));
 
         PublicDataDailyRefreshService service = service(
-                productRepository, collectionService, recordRepository, List.of(connector));
+                productRepository, collectionService, recordRepository, List.of(connector, externalConnector));
 
         var response = service.refreshForUser("user-1");
 
@@ -88,7 +100,12 @@ class PublicDataDailyRefreshServiceTest {
         assertThat(response.getCollectedCount()).isEqualTo(1);
         assertThat(response.getSuccessCount()).isEqualTo(1);
         assertThat(response.getFallbackCount()).isEqualTo(1);
+        assertThat(response.getExternalDataCount()).isEqualTo(1);
+        assertThat(response.isDiagnosisUsable()).isTrue();
+        assertThat(response.getAvailabilityLabel()).isEqualTo("진단 반영 가능");
         assertThat(response.getItems().get(0).getRunId()).isEqualTo("run-1");
+        assertThat(response.getItems().get(0).getExternalDataCount()).isEqualTo(1);
+        assertThat(response.getItems().get(0).getAvailabilityLabel()).isEqualTo("진단 반영 가능");
         verify(collectionService).collectForDiagnosis(null, "user-1", "850760", "DE", "배터리팩");
     }
 

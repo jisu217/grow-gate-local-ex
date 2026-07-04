@@ -30,7 +30,7 @@
 | --- | --- | --- |
 | Spring 메인 앱과 선택형 FastAPI worker 백엔드 통합 | 부분 완료 | `APP_FASTAPI_ENABLED=true`일 때 Spring 진단 프로세서가 FastAPI `/analyze`, `/report`를 호출해 결과 JSON에 병합한다. 단, FastAPI 운영 배포/장애 모니터링까지는 아님 |
 | bounded workflow planning/tool/retry loop | 완료 | Spring 진단 경로에 `AgentLoop`를 추가해 고정 계획, tool execution, verifier, retry, fallback, `complete_task`를 기록한다. 단, LLM이 런타임에 임의 도구를 새로 발견하지 않는다 |
-| PDF 리포트 생성의 제출용 연동 | 부분 완료 | React/Spring 진단 상세에서 `/diagnosis/{id}/report` 리포트 다운로드를 연결했다. 현재는 Markdown/PDF-ready report이며 서버 binary PDF 생성은 아님 |
+| Markdown 리포트 생성의 제출용 연동 | 완료 | React/Spring 진단 상세와 마이페이지 리포트 보관함에서 `/diagnosis/{id}/report` Markdown 리포트 다운로드를 연결했다. PDF 보관은 브라우저 인쇄 또는 CI 변환 전략으로 분리한다. |
 | 진단 진행 상태 polling/WebSocket | 완료 | 진단 상세 페이지가 `pending/running` 상태를 2.5초 간격으로 polling하고 완료 시 자동 갱신한다 |
 | 진단 결과 상세 카드의 완전한 API 데이터화 | 완료 | S00~S10 상세 카드를 backend `stageCards` 기반으로 매핑한다. S04~S07도 backend 점수/source trace 기반으로 치환 |
 | API 재시도 정책 | 완료 | GET 요청에 기본 retry/backoff를 추가했고 timeout/error parsing과 함께 동작한다 |
@@ -70,7 +70,7 @@
 | `DiagnosisResult` | 없는 `diag-001`도 mock으로 정상 표시 가능 | 완료 | 기본 mock fallback 비활성화로 실제 실패가 드러나도록 변경 |
 | `DiagnosisResult` | 단계별 상세 결과가 실제 산출물인지 불명확 | 완료 | S00~S10을 backend stageCards 기반으로 매핑하고 S04~S07 mock 기본 주입 제거 |
 | `DiagnosisResult` | 진단 완료까지 자동 갱신 없음 | 완료 | `pending/running` 상태 polling 추가 |
-| `DiagnosisResult` | 리포트 다운로드 없음 | 부분 완료 | Markdown/PDF-ready 리포트 다운로드 추가. 서버 binary PDF는 남음 |
+| `DiagnosisResult` | 리포트 다운로드 없음 | 완료 | Markdown 리포트 다운로드를 추가했다. 서버 binary PDF는 제출 기능으로 노출하지 않는다. |
 | `DiagnosisList` | `running` 상태 없음 | 완료 | 진행 중 상태 표시 추가 |
 | `apiClient` | timeout 없음 | 완료 | 기본 15초 timeout 추가 |
 | `apiClient` | `/api/api` 중복 가능 | 완료 | base URL 정규화 추가 |
