@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test:mappers": "node src/services/diagnosisService.mapper.test.js",
+    "test:mappers": "node src/services/diagnosisService.mapper.test.js && node src/services/authSession.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

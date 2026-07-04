@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Navigate, Outlet } from 'react-router-dom'
 import { getAuthUser, refreshAuthUser } from '../../services/authService.js'
-import { clearAccessToken, getAccessToken } from '../../services/apiClient.js'
 import StatusMessage from '../ui/StatusMessage.jsx'
 
 // requireCompany: 회사 계정 전용
@@ -9,29 +8,32 @@ import StatusMessage from '../ui/StatusMessage.jsx'
 export default function ProtectedRoute({ requireCompany = false }) {
   const [user, setUser] = useState(getAuthUser())
   const [state, setState] = useState('checking')
-  const token = getAccessToken()
 
   useEffect(() => {
-    if (!token) {
-      setState('anonymous')
-      return
-    }
+    let mounted = true
+
     refreshAuthUser()
       .then((freshUser) => {
+        if (!mounted) return
         setUser(freshUser)
         setState('ok')
       })
       .catch(() => {
-        clearAccessToken()
+        if (!mounted) return
+        setUser(null)
         setState('anonymous')
       })
-  }, [token])
+
+    return () => {
+      mounted = false
+    }
+  }, [])
 
   if (state === 'checking') {
     return <StatusMessage type="loading" message="권한 정보를 확인하는 중입니다." />
   }
 
-  if (!user || !token) {
+  if (!user) {
     return <Navigate to="/login" replace />
   }
   if (requireCompany && user.userType !== 'company') {
