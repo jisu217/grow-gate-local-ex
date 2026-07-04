@@ -132,6 +132,15 @@ export default function KnowledgeDetail() {
         {activeTab === 0 && (
           <div className={styles.card}>
             <div className={styles.sectionTitle}>제품 지식 품질</div>
+            <div className={styles.registrationPanel}>
+              <div>
+                <div className={styles.registrationLabel}>데이터 기준 등록률</div>
+                <div className={styles.registrationValue}>{product.registrationRate}%</div>
+              </div>
+              <div className={styles.registrationTrack}>
+                <div style={{ width: `${product.registrationRate}%` }} />
+              </div>
+            </div>
             <div className={styles.qualityPanel}>
               <span className={`pill ${toGradeClass(product.trustGrade)}`}>
                 신뢰도 {toGradeLabel(product.trustGrade)}

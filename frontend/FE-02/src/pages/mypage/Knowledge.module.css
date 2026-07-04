@@ -35,6 +35,24 @@
 /* 만료 임박 뱃지 */
 .expiring { font-family: var(--en); font-size: 12px; font-weight: 700; color: var(--red); background: #fbe0dd; padding: 3px 10px; border-radius: 999px; }
 
+/* 데이터 기준 등록률 */
+.registration { margin-top: 14px; }
+.registrationHead {
+  display: flex; align-items: center; justify-content: space-between;
+  font-size: 12px; font-weight: 700; color: var(--slate);
+}
+.registrationHead strong { color: var(--navy); font-size: 13px; }
+.registrationBar {
+  height: 7px; overflow: hidden; background: #edf2f7;
+  border-radius: 999px; margin-top: 7px;
+}
+.registrationBar div {
+  height: 100%; border-radius: 999px;
+  background: linear-gradient(90deg, var(--green), #3bd99a);
+  transition: width .35s ease;
+}
+.registrationNote { margin-top: 6px; font-size: 11.5px; color: var(--slate-2); }
+
 /* 누락 항목 경고 */
 .missingHint {
   font-size: 12px; color: var(--amber); font-weight: 600;

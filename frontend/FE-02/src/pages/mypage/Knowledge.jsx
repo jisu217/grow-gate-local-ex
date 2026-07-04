@@ -76,6 +76,17 @@ export default function Knowledge() {
                 )}
               </div>
 
+              <div className={styles.registration}>
+                <div className={styles.registrationHead}>
+                  <span>등록률</span>
+                  <strong>{p.registrationRate}%</strong>
+                </div>
+                <div className={styles.registrationBar}>
+                  <div style={{ width: `${p.registrationRate}%` }} />
+                </div>
+                <div className={styles.registrationNote}>{p.registrationLabel}</div>
+              </div>
+
               {p.missingFields?.length > 0 && (
                 <div className={styles.missingHint}>
                   누락 {p.missingFields.length}건 · 진단 신뢰도에 영향

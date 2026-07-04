@@ -98,6 +98,40 @@
   padding: 14px 0 16px; border-bottom: 1px dashed var(--line); margin-bottom: 16px;
 }
 
+.registrationPanel {
+  display: grid;
+  grid-template-columns: minmax(120px, auto) 1fr;
+  gap: 16px;
+  align-items: center;
+  padding-bottom: 16px;
+  border-bottom: 1px dashed var(--line);
+}
+.registrationLabel {
+  color: var(--slate-2);
+  font-size: 12px;
+  font-weight: 700;
+}
+.registrationValue {
+  color: var(--navy);
+  font-family: var(--en);
+  font-size: 26px;
+  font-weight: 800;
+  line-height: 1.1;
+  margin-top: 3px;
+}
+.registrationTrack {
+  height: 8px;
+  overflow: hidden;
+  background: #edf2f7;
+  border-radius: 999px;
+}
+.registrationTrack div {
+  height: 100%;
+  background: linear-gradient(90deg, var(--green), #3bd99a);
+  border-radius: 999px;
+  transition: width .35s ease;
+}
+
 /* 누락 항목 목록 */
 .missingList {
   margin-top: 14px; padding: 12px 14px;

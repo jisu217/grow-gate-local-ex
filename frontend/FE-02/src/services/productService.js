@@ -1,5 +1,9 @@
 // 제품 지식 서비스
 import { apiFetch } from './apiClient.js'
+import {
+  calculateKnowledgeRegistrationRate,
+  describeKnowledgeRegistration,
+} from '../utils/knowledgeRegistration.js'
 
 // 백엔드 knowledgeStatus(snake_case) → FE 표시용 key 변환
 const STATUS_MAP = {
@@ -12,20 +16,31 @@ const STATUS_MAP = {
 
 // 제품 목록 항목 매핑
 function mapProductSummary(p) {
-  return {
+  const mapped = {
     id: p.productId,
     name: p.name,
     category: p.category,
     hsCode: p.hsCode,
     targetCountry: p.targetCountry,
     description: p.description,
+    trustGrade: p.trustGrade,
     grade: p.trustGrade,
     expiringCerts: p.expiringCertCount,
+    certificationCount: p.certificationCount,
+    ftoCount: p.ftoCount,
+    buyerRequirementCount: p.buyerRequirementCount,
     updatedAt: p.updatedAt,
     knowledgeStatus: STATUS_MAP[p.knowledgeStatus] ?? p.knowledgeStatus,
     sourceBasis: undefined,
     // 목록 응답은 누락 필드명이 아닌 건수만 제공 → 건수만큼 채운 배열로 .length 사용처 호환
     missingFields: Array(p.missingFieldCount ?? 0).fill(null),
+    missingFieldCount: p.missingFieldCount ?? 0,
+  }
+  const registrationRate = calculateKnowledgeRegistrationRate(mapped)
+  return {
+    ...mapped,
+    registrationRate,
+    registrationLabel: describeKnowledgeRegistration({ ...mapped, registrationRate }),
   }
 }
 
@@ -52,13 +67,14 @@ function mapProductDetail(p) {
           ? 'valid'
           : 'missing'
 
-  return {
+  const mapped = {
     id: p.productId,
     name: p.name,
     category: p.category,
     hsCode: p.hsCode,
     targetCountry: p.targetCountry,
     description: p.description,
+    trustGrade: p.knowledge?.trustGrade,
     grade: p.knowledge?.trustGrade,
     knowledgeStatus,
     sourceBasis: p.knowledge?.sourceType,
@@ -85,6 +101,16 @@ function mapProductDetail(p) {
       requirements: b.requirements,
     })),
     auditLog: [],
+  }
+  const registrationRate = calculateKnowledgeRegistrationRate(mapped)
+  return {
+    ...mapped,
+    registrationRate,
+    registrationLabel: describeKnowledgeRegistration({
+      ...mapped,
+      registrationRate,
+      missingFieldCount: missingFields.length,
+    }),
   }
 }
 
