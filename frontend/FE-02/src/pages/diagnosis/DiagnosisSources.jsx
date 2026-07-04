@@ -33,7 +33,7 @@ export default function DiagnosisSources() {
     return () => { cancelled = true }
   }, [id])
 
-  const publicSources = sources.filter((source) => ['live', 'cache', 'fallback'].includes(source.sourceType))
+  const publicSources = sources.filter((source) => ['live', 'cache', 'fallback', 'seed', 'empty'].includes(source.sourceType))
   const reconstructedSources = sources.filter((source) => ['crawl', 'external_feed', 'external_reconstructed'].includes(source.sourceType))
   const ruleSources = sources.filter((source) => source.sourceType === 'heuristic')
   const traceSources = sources.filter((source) => source.sourceType === 'agent')
@@ -45,6 +45,9 @@ export default function DiagnosisSources() {
       </button>
       <h1 className={styles.title}>진단 근거 및 출처</h1>
       <p className={styles.sub}>진단 ID: {id}</p>
+      <div className={styles.notice}>
+        sourceType은 live(실제 API), cache(이전 수집), fallback(장애/미설정 대체), seed(데모 데이터), empty(조회 결과 없음)로 구분합니다. 이용조건이 미확인인 제공자는 원문 링크 제공을 우선하고 요약/재가공/재배포 제한 가능성을 보수적으로 표시합니다.
+      </div>
 
       {loadError && <div className={styles.error}>{loadError}</div>}
 
@@ -120,6 +123,14 @@ function SourceSection({ title, items }) {
             {isAuxiliarySource(item.sourceType) && (
               <div className={styles.notice}>보조근거입니다. 공식 공공 API live 증거 수에는 포함하지 않습니다.</div>
             )}
+            {(item.licenseName || item.usageWarning || item.officialUrl || item.termsUrl) && (
+              <div className={styles.usageBox}>
+                <span>license: {item.licenseName || '미확인'}</span>
+                <span>storage {item.storageAllowed || 'unknown'} · reprocessing {item.reprocessingAllowed || 'unknown'} · redistribution {item.redistributionAllowed || 'unknown'} · attribution {item.attributionRequired || 'unknown'}</span>
+                <span>{item.usageWarning || '공식 이용조건 확인 전 재배포 금지'}</span>
+                <span>verified {item.licenseLastVerifiedAt || '미확인'} · <SourceLink href={item.officialUrl}>official</SourceLink> · <SourceLink href={item.termsUrl}>terms</SourceLink></span>
+              </div>
+            )}
             {(item.metricSummary || item.decisionImpact) && (
               <div className={styles.formula}>
                 {item.metricSummary ? `metric: ${item.metricSummary}` : ''}
@@ -154,4 +165,9 @@ function proofClass(value) {
 
 function isAuxiliarySource(sourceType) {
   return ['crawl', 'external_feed', 'external_reconstructed', 'heuristic', 'agent'].includes(sourceType)
+}
+
+function SourceLink({ href, children }) {
+  if (!href) return <span>{children} 없음</span>
+  return <a href={href} target="_blank" rel="noreferrer">{children}</a>
 }

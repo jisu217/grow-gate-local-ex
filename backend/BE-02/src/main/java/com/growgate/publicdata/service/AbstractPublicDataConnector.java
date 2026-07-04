@@ -7,11 +7,17 @@ import com.growgate.publicdata.enums.PublicDataProvider;
 import com.growgate.publicdata.dto.PublicDataSignal;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.slf4j.MDC;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.ResourceAccessException;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -20,6 +26,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Locale;
 import java.util.OptionalDouble;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 
 @Slf4j
@@ -30,23 +37,39 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
             "(?i)([?&](?:serviceKey|servicekey|apiKey|apikey|key|token|access_token|client_secret)=)([^&\\s]+)");
     private static final Pattern ISO_DATE = Pattern.compile("\\b20\\d{2}[-./]\\d{1,2}[-./]\\d{1,2}\\b");
     private static final String REDACTED = "[REDACTED]";
+    private static final Map<PublicDataProvider, CircuitState> CIRCUITS = new ConcurrentHashMap<>();
 
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
 
+    @Value("${public-data.http.retry.max-attempts:2}")
+    private int retryMaxAttempts = 2;
+
+    @Value("${public-data.circuit.failure-threshold:3}")
+    private int circuitFailureThreshold = 3;
+
+    @Value("${public-data.circuit.open-seconds:60}")
+    private long circuitOpenSeconds = 60;
+
     protected PublicDataConnectorResult getJson(PublicDataRequest request, String endpoint, String apiKey,
                                                 Map<String, String> params) {
         if (endpoint == null || endpoint.isBlank()) {
-            return fallback(request, endpoint, apiKey, "API endpoint is not configured");
+            return fallback(request, endpoint, apiKey, "OPERATION_ENDPOINT_NOT_CONFIGURED", null, 0);
         }
         if (apiKey == null || apiKey.isBlank()) {
-            return fallback(request, endpoint, apiKey, provider().name() + " API key is not configured");
+            return fallback(request, endpoint, apiKey, "API_KEY_NOT_CONFIGURED", null, 0);
         }
         if (isCatalogOrApplicationPage(endpoint)) {
             return fallback(request, endpoint, apiKey,
-                    "Official catalog/application URL is configured; set the provider operation endpoint after API approval");
+                    "CATALOG_PAGE_ENDPOINT", null, 0);
+        }
+        if (isCircuitOpen()) {
+            return fallback(request, endpoint, apiKey, "CIRCUIT_OPEN", null, 0);
         }
 
+        long started = System.nanoTime();
+        int attempts = Math.max(1, retryMaxAttempts);
+        RestClientException lastException = null;
         try {
             UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
             params.forEach((key, value) -> {
@@ -54,18 +77,38 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
             });
             builder.queryParam("serviceKey", apiKey);
             URI uri = builder.build().encode().toUri();
-            String body = restTemplate.getForObject(uri, String.class);
-            return success(request, endpoint, apiKey, body);
-        } catch (IllegalArgumentException | RestClientException e) {
+            for (int attempt = 1; attempt <= attempts; attempt++) {
+                try {
+                    ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
+                    markSuccess();
+                    return success(request, endpoint, apiKey, params, response.getBody(),
+                            response.getStatusCode().value(), elapsedMs(started));
+                } catch (RestClientException e) {
+                    lastException = e;
+                    if (attempt >= attempts || !isRetryable(e)) break;
+                }
+            }
+            markFailure();
+            String reason = failureReason(lastException);
+            log.warn("Public data connector failed: provider={}, reason={}", provider(), reason);
+            return fallback(request, endpoint, apiKey, reason, httpStatus(lastException), elapsedMs(started));
+        } catch (IllegalArgumentException e) {
+            markFailure();
             String reason = sanitizeErrorMessage(e.getMessage());
             log.warn("Public data connector failed: provider={}, reason={}", provider(), reason);
-            return fallback(request, endpoint, apiKey, reason);
+            return fallback(request, endpoint, apiKey, "HTTP_ERROR", null, elapsedMs(started));
         }
     }
 
-    protected PublicDataConnectorResult success(PublicDataRequest request, String endpoint, String apiKey, String rawPayload) {
+    protected PublicDataConnectorResult success(PublicDataRequest request, String endpoint, String apiKey,
+                                                Map<String, String> requestParams, String rawPayload,
+                                                Integer httpStatus, long elapsedMs) {
         Map<String, Object> normalized = normalize(request, rawPayload, false, null);
         normalized.put("collectionEvidence", collectionEvidence(endpoint, apiKey, false, null));
+        normalized.put("requestParamsMasked", maskedParams(requestParams, apiKey));
+        addZeroDiagnostics(normalized, rawPayload, false, null, httpStatus, elapsedMs);
+        String sourceType = sourceTypeFromDiagnostics(normalized, false);
+        logPublicDataEvent(normalized, sourceType);
         return PublicDataConnectorResult.builder()
                 .provider(provider())
                 .endpoint(endpoint)
@@ -78,19 +121,43 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
                 .normalizedPayload(normalized)
                 .scoreContribution(scoreContribution(request, false, normalized))
                 .confidence(asDouble(normalized.get("confidence"), 0.0))
-                .sourceType("live")
+                .sourceType(sourceType)
                 .fallbackUsed(false)
                 .build();
     }
 
     protected PublicDataConnectorResult fallback(PublicDataRequest request, String reason) {
-        return fallback(request, endpointLabel(), "", reason);
+        return fallback(request, endpointLabel(), "", reason, null, 0);
     }
 
     protected PublicDataConnectorResult fallback(PublicDataRequest request, String endpoint, String apiKey, String reason) {
+        return fallback(request, endpoint, apiKey, reason, null, 0);
+    }
+
+    protected PublicDataConnectorResult fallback(PublicDataRequest request, String endpoint, String apiKey,
+                                                 String reason, Integer httpStatus, long elapsedMs) {
         String safeReason = sanitizeErrorMessage(reason);
         Map<String, Object> normalized = normalize(request, null, true, safeReason);
         normalized.put("collectionEvidence", collectionEvidence(endpoint, apiKey, true, safeReason));
+        normalized.put("requestParamsMasked", maskedParams(Map.of(), apiKey));
+        addZeroDiagnostics(normalized, null, true, safeReason, httpStatus, elapsedMs);
+        String sourceType = sourceTypeFromDiagnostics(normalized, true);
+        boolean fallbackUsed = "fallback".equals(sourceType);
+        normalized.put("fallbackUsed", fallbackUsed);
+        Object evidenceValue = normalized.get("collectionEvidence");
+        if (evidenceValue instanceof Map<?, ?> evidence) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> mutable = (Map<String, Object>) evidence;
+            mutable.put("fallbackUsed", fallbackUsed);
+        }
+        Object diagnosticsValue = normalized.get("zeroResultDiagnostics");
+        if (diagnosticsValue instanceof Map<?, ?> diagnostics) {
+            @SuppressWarnings("unchecked")
+            Map<String, Object> mutable = (Map<String, Object>) diagnostics;
+            mutable.put("sourceType", sourceType);
+            mutable.put("fallbackUsed", fallbackUsed);
+        }
+        logPublicDataEvent(normalized, sourceType);
         return PublicDataConnectorResult.builder()
                 .provider(provider())
                 .endpoint(endpoint)
@@ -99,12 +166,12 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
                 .targetCountry(request.getTargetCountry())
                 .matchedKey(matchedKey(request))
                 .usedFor(usedFor())
-                .rawPayload(toJson(Map.of("fallback", true, "reason", safeReason)))
+                .rawPayload(toJson(Map.of("fallback", fallbackUsed, "sourceType", sourceType, "reason", safeReason)))
                 .normalizedPayload(normalized)
-                .scoreContribution(scoreContribution(request, true, normalized))
+                .scoreContribution(scoreContribution(request, fallbackUsed, normalized))
                 .confidence(asDouble(normalized.get("confidence"), 0.0))
-                .sourceType("fallback")
-                .fallbackUsed(true)
+                .sourceType(sourceType)
+                .fallbackUsed(fallbackUsed)
                 .errorMessage(safeReason)
                 .build();
     }
@@ -127,6 +194,9 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
         normalized.put("dataFamily", provider().dataFamily());
         normalized.put("motieRelated", provider().motieRelated());
         normalized.put("refreshCycleHours", provider().refreshCycleHours());
+        normalized.put("sourceName", provider().sourceName());
+        normalized.put("officialUrl", provider().officialUrl());
+        normalized.put("dataUsagePolicy", dataUsagePolicy());
         normalized.put("domainSignals", extractDomainSignals(request, rawPayload, fallbackUsed));
         PublicDataSignal signal = extractSignal(request, rawPayload, fallbackUsed);
         normalized.put("metrics", signal.getMetrics());
@@ -137,6 +207,207 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
         addSourcePeriod(normalized, rawPayload);
         normalized.put("scoreFormula", "scoreContribution is calculated from provider-specific metrics; diagnosis uses confidence-adjusted contribution");
         return normalized;
+    }
+
+    protected Map<String, Object> dataUsagePolicy() {
+        Map<String, Object> policy = new LinkedHashMap<>();
+        policy.put("provider", provider().agency());
+        policy.put("sourceName", provider().sourceName());
+        policy.put("officialUrl", provider().officialUrl());
+        policy.put("operationEndpoint", provider().operationEndpoint());
+        policy.put("apiKeyRequired", provider().apiKeyRequired());
+        policy.put("licenseName", provider().licenseName());
+        policy.put("termsUrl", provider().termsUrl());
+        policy.put("redistributionAllowed", provider().redistributionAllowed());
+        policy.put("storageAllowed", provider().storageAllowed());
+        policy.put("reprocessingAllowed", provider().reprocessingAllowed());
+        policy.put("attributionRequired", provider().attributionRequired());
+        policy.put("usageWarning", provider().usageWarning());
+        policy.put("lastVerifiedAt", provider().lastVerifiedAt());
+        return policy;
+    }
+
+    @SuppressWarnings("unchecked")
+    private void addZeroDiagnostics(Map<String, Object> normalized, String rawPayload,
+                                    boolean fallbackUsed, String reason, Integer httpStatus, long elapsedMs) {
+        int rawCount = fallbackUsed ? 0 : estimateRecordCount(rawPayload);
+        int normalizedCount = 0;
+        Object metricsValue = normalized.get("metrics");
+        if (metricsValue instanceof Map<?, ?> metrics) {
+            Object recordCount = metrics.get("recordCount");
+            if (recordCount instanceof Number number) {
+                normalizedCount = Math.max(0, number.intValue());
+            }
+        }
+        int filteredCount = normalizedCount;
+        String zeroReason = zeroReason(rawCount, normalizedCount, fallbackUsed, reason);
+
+        normalized.put("rawCount", rawCount);
+        normalized.put("normalizedCount", normalizedCount);
+        normalized.put("filteredCount", filteredCount);
+        normalized.put("zeroReason", zeroReason);
+        normalized.put("sampleRawKeys", sampleRawKeys(rawPayload));
+        normalized.put("httpStatus", httpStatus);
+        normalized.put("elapsedMs", elapsedMs);
+
+        Map<String, Object> diagnostics = new LinkedHashMap<>();
+        diagnostics.put("provider", provider().name());
+        diagnostics.put("endpointType", endpointType(normalized));
+        diagnostics.put("usedFor", usedFor());
+        diagnostics.put("sourceType", fallbackUsed ? "fallback" : normalizedCount == 0 ? "empty" : "live");
+        diagnostics.put("httpStatus", httpStatus);
+        diagnostics.put("elapsedMs", elapsedMs);
+        diagnostics.put("rawCount", rawCount);
+        diagnostics.put("normalizedCount", normalizedCount);
+        diagnostics.put("filteredCount", filteredCount);
+        diagnostics.put("zeroReason", zeroReason);
+        diagnostics.put("sampleRawKeys", normalized.get("sampleRawKeys"));
+        diagnostics.put("fallbackUsed", fallbackUsed);
+        normalized.put("zeroResultDiagnostics", diagnostics);
+    }
+
+    private String zeroReason(int rawCount, int normalizedCount, boolean fallbackUsed, String reason) {
+        if (fallbackUsed) {
+            String safeReason = safe(reason).toLowerCase(Locale.ROOT);
+            if (safeReason.contains("public_data_enabled=false")) return "PUBLIC_DATA_DISABLED";
+            if (safeReason.contains("operation_endpoint_not_configured")
+                    || safeReason.contains("api endpoint is not configured")) return "OPERATION_ENDPOINT_NOT_CONFIGURED";
+            if (safeReason.contains("api_key_not_configured")
+                    || safeReason.contains("api key is not configured")) return "API_KEY_NOT_CONFIGURED";
+            if (safeReason.contains("catalog_page_endpoint")
+                    || safeReason.contains("catalog/application url")) return "CATALOG_PAGE_ENDPOINT";
+            if (safeReason.contains("timed out") || safeReason.contains("timeout")) return "TIMEOUT";
+            if (safeReason.contains("429")) return "RATE_LIMITED";
+            if (safeReason.contains("circuit_open")) return "CIRCUIT_OPEN";
+            if (safeReason.contains("parser")) return "PARSER_ERROR";
+            return "HTTP_ERROR";
+        }
+        if (normalizedCount > 0) return "";
+        if (rawCount > 0) return "NORMALIZER_SCHEMA_MISMATCH";
+        return "EMPTY_LIVE_RESPONSE";
+    }
+
+    private Map<String, String> maskedParams(Map<String, String> params, String apiKey) {
+        Map<String, String> masked = new LinkedHashMap<>();
+        if (params != null) {
+            params.forEach((key, value) -> masked.put(key, value == null ? "" : value));
+        }
+        masked.put("serviceKey", apiKey == null || apiKey.isBlank() ? "" : REDACTED);
+        return masked;
+    }
+
+    private String sourceTypeFromDiagnostics(Map<String, Object> normalized, boolean fallbackPath) {
+        Object zeroReasonValue = normalized.get("zeroReason");
+        String zeroReason = zeroReasonValue == null ? "" : zeroReasonValue.toString();
+        if (!fallbackPath) {
+            return zeroReason.isBlank() ? "live" : "empty";
+        }
+        if (zeroReason.equals("API_KEY_NOT_CONFIGURED")
+                || zeroReason.equals("OPERATION_ENDPOINT_NOT_CONFIGURED")
+                || zeroReason.equals("CATALOG_PAGE_ENDPOINT")
+                || zeroReason.equals("PUBLIC_DATA_DISABLED")) {
+            return "empty";
+        }
+        return "fallback";
+    }
+
+    private String endpointType(Map<String, Object> normalized) {
+        Object value = normalized.get("collectionEvidence");
+        if (!(value instanceof Map<?, ?> evidence)) return "";
+        Object endpointType = evidence.get("endpointType");
+        return endpointType == null ? "" : endpointType.toString();
+    }
+
+    private void logPublicDataEvent(Map<String, Object> normalized, String sourceType) {
+        Map<String, Object> event = new LinkedHashMap<>();
+        event.put("event", "public_data_provider_call");
+        event.put("correlationId", MDC.get("correlationId"));
+        event.put("provider", provider().name());
+        event.put("endpointType", endpointType(normalized));
+        event.put("sourceType", sourceType);
+        event.put("httpStatus", normalized.get("httpStatus"));
+        event.put("elapsedMs", normalized.get("elapsedMs"));
+        event.put("rawCount", normalized.get("rawCount"));
+        event.put("normalizedCount", normalized.get("normalizedCount"));
+        event.put("fallbackUsed", normalized.get("fallbackUsed"));
+        event.put("zeroReason", normalized.get("zeroReason"));
+        log.info("{}", toJson(event));
+    }
+
+    private boolean isRetryable(RestClientException e) {
+        if (e instanceof ResourceAccessException) return true;
+        Integer status = httpStatus(e);
+        return status != null && (status == 408 || status == 429 || status >= 500);
+    }
+
+    private Integer httpStatus(RestClientException e) {
+        if (e instanceof HttpStatusCodeException statusException) {
+            return statusException.getStatusCode().value();
+        }
+        return null;
+    }
+
+    private String failureReason(RestClientException e) {
+        if (e == null) return "HTTP_ERROR";
+        Integer status = httpStatus(e);
+        if (status != null) {
+            if (status == 429) return "RATE_LIMITED";
+            return "HTTP_ERROR status=" + status;
+        }
+        if (e instanceof ResourceAccessException) return "TIMEOUT";
+        return sanitizeErrorMessage(e.getMessage());
+    }
+
+    private long elapsedMs(long startedNanos) {
+        return Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000);
+    }
+
+    private boolean isCircuitOpen() {
+        CircuitState state = CIRCUITS.get(provider());
+        if (state == null || state.openedAt == null) return false;
+        long openUntil = state.openedAt.plusSeconds(Math.max(1, circuitOpenSeconds)).toEpochMilli();
+        if (Instant.now().toEpochMilli() < openUntil) return true;
+        CIRCUITS.remove(provider());
+        return false;
+    }
+
+    private void markSuccess() {
+        CIRCUITS.remove(provider());
+    }
+
+    private void markFailure() {
+        CIRCUITS.compute(provider(), (provider, previous) -> {
+            int failures = previous == null ? 1 : previous.failures + 1;
+            Instant openedAt = failures >= Math.max(1, circuitFailureThreshold) ? Instant.now() : null;
+            return new CircuitState(failures, openedAt);
+        });
+    }
+
+    private List<String> sampleRawKeys(String rawPayload) {
+        if (rawPayload == null || rawPayload.isBlank()) return List.of();
+        JsonNode root = readTree(rawPayload);
+        List<String> keys = new ArrayList<>();
+        if (root.isObject()) {
+            Iterator<String> names = root.fieldNames();
+            while (names.hasNext() && keys.size() < 12) keys.add(names.next());
+        }
+        if (!keys.isEmpty()) return keys;
+        java.util.regex.Matcher matcher = Pattern.compile("<([A-Za-z][A-Za-z0-9_:-]*)\\b").matcher(rawPayload);
+        while (matcher.find() && keys.size() < 12) {
+            String key = matcher.group(1);
+            if (!keys.contains(key)) keys.add(key);
+        }
+        return keys;
+    }
+
+    private static class CircuitState {
+        private final int failures;
+        private final Instant openedAt;
+
+        private CircuitState(int failures, Instant openedAt) {
+            this.failures = failures;
+            this.openedAt = openedAt;
+        }
     }
 
     protected Map<String, String> fieldMapping() {

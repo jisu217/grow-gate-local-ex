@@ -302,6 +302,12 @@ public class ExportEvidenceFeedConnector implements PublicDataConnector {
         normalized.put("refreshCycleHours", provider().refreshCycleHours());
         normalized.put("metrics", Map.of("recordCount", 0));
         normalized.put("metricSchema", List.of("recordCount"));
+        normalized.put("rawCount", 0);
+        normalized.put("normalizedCount", 0);
+        normalized.put("filteredCount", 0);
+        normalized.put("zeroReason", zeroReason(safeReason));
+        normalized.put("requestParamsMasked", Map.of());
+        normalized.put("sampleRawKeys", List.of());
         normalized.put("scoreContribution", -1);
         normalized.put("confidence", 0.0);
         normalized.put("reason", safeReason);
@@ -309,6 +315,17 @@ public class ExportEvidenceFeedConnector implements PublicDataConnector {
                 "collectionMode", "allowlisted_rss_or_json_feed",
                 "fallbackUsed", true,
                 "reason", safeReason
+        ));
+        normalized.put("zeroResultDiagnostics", Map.of(
+                "provider", provider().name(),
+                "agent", usedFor(),
+                "sourceType", "fallback",
+                "rawCount", 0,
+                "normalizedCount", 0,
+                "filteredCount", 0,
+                "zeroReason", zeroReason(safeReason),
+                "sampleRawKeys", List.of(),
+                "fallbackUsed", true
         ));
         normalized.put("scoreFormula", "failed external feed collection contributes fallback penalty and zero confidence");
         return PublicDataConnectorResult.builder()
@@ -446,6 +463,14 @@ public class ExportEvidenceFeedConnector implements PublicDataConnector {
 
     private String sanitize(String value) {
         return SECRET.matcher(safe(value)).replaceAll("$1=[REDACTED]");
+    }
+
+    private String zeroReason(String reason) {
+        String lower = safe(reason).toLowerCase(Locale.ROOT);
+        if (lower.contains("urls is empty")) return "FEED_URLS_EMPTY";
+        if (lower.contains("allowlist")) return "FEED_URL_NOT_ALLOWLISTED";
+        if (lower.contains("no items")) return "FEED_RAW_COUNT_ZERO";
+        return "FEED_FETCH_FAILED";
     }
 
     private String toJson(Object value) {

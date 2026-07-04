@@ -129,7 +129,7 @@ class ProviderSchemaNormalizationTest {
 
     private RestTemplate restTemplateReturning(String path) {
         RestTemplate restTemplate = mock(RestTemplate.class);
-        when(restTemplate.getForObject(any(URI.class), eq(String.class))).thenReturn(resource(path));
+        when(restTemplate.getForEntity(any(URI.class), eq(String.class))).thenReturn(ResponseEntity.ok(resource(path)));
         return restTemplate;
     }
 

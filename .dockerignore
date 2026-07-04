@@ -1,0 +1,12 @@
+.git
+.DS_Store
+.gradle-home
+.pytest_cache
+.venv*
+artifacts
+reports
+frontend/FE-02/node_modules
+frontend/FE-02/dist
+backend/BE-02/build
+backend/BE-02/.gradle
+grow_gate_local_ex_demo/.venv*

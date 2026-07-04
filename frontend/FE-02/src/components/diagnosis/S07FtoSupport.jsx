@@ -40,7 +40,10 @@ export default function S07FtoSupport({ patents, supports }) {
       </div>
 
       <MemoBox style={{ marginTop: 14 }}>
-        <b>AI 제안</b> · BMS·방열 키워드는 회피설계 검토 필요. 마감 임박한 해외규격인증 지원(D-14)을 즉시 신청 준비하세요.
+        <b>FTO 사전 탐색</b> · 본 결과는 공개 특허·상표 데이터와 입력 정보를 기반으로 한 1차 위험 신호입니다. 특허 침해 여부, 실시 가능성, 권리 유효성에 대한 법률 판단이 아니며, 최종 의사결정 전 변리사 또는 법률 전문가 검토가 필요합니다.
+      </MemoBox>
+      <MemoBox style={{ marginTop: 10 }}>
+        <b>AI 보조 해석</b> · BMS·방열 키워드는 전문가 검토가 필요한 후보 항목입니다. 지원사업 매칭은 원문 공고와 이용조건을 확인한 뒤 담당자가 신청 여부를 결정해야 합니다.
       </MemoBox>
     </DiagnosisStage>
   )

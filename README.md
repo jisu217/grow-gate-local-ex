@@ -115,6 +115,8 @@ GROW-GATE Local EX는 이 질문을 바이어 회신 가능한 Gate 판단과 �
 
 발표장에서 공식 live 공공 API 증거로 설명할 수 있는 record는 `sourceType=live/cache`, `operationEndpoint=true`, `apiKeyConfigured=true`, `collectionRunId`, `fetchedAt/retrievedAt`, `metricSummary/metrics`가 함께 있어야 합니다. S10 화면과 `/diagnosis/{id}/sources` 화면은 이 값을 직접 표시하고, `fallback`, `crawl`, `external_feed`, `heuristic`은 공식 API 연결 성공으로 표시하지 않습니다.
 
+Provider별 이용조건과 재배포 보수 원칙은 [docs/public-data-license-and-usage-matrix.md](docs/public-data-license-and-usage-matrix.md)에 고정했습니다. 공식 이용조건을 확인하지 못한 provider는 화면/보고서에서 “원문 링크 제공, 요약/재가공 제한 가능성 있음”으로 표시하며, `fallback`, `seed`, `empty`를 `live`처럼 설명하지 않습니다.
+
 일별 자동 수집은 `PUBLIC_DATA_DAILY_REFRESH_CRON=0 0 8 * * *`, `PUBLIC_DATA_DAILY_REFRESH_ZONE=Asia/Seoul`, `PUBLIC_DATA_DAILY_REFRESH_MAX_PRODUCTS=30`이 기본값입니다. 자동 수집은 진단 실행과 분리되어 cache/live/fallback 근거를 미리 쌓고, 사용자가 진단을 실행할 때 최신 수집 결과를 활용합니다. `/public-data/daily-refresh`는 공개 read-only 화면으로 열리며, 수동 재수집과 proof run 생성 버튼은 로그인 상태에서만 노출됩니다.
 
 공식 proof run은 기존 `public_data_records`를 재가공해 별도 proof table에 저장합니다.
@@ -151,18 +153,94 @@ frontend/FE-02/src/
 
 ## 6. Quick Start
 
-### 1. 제출용 메인 앱 실행
+### 0. Production-like one-command demo
+
+루트에서 Docker Compose 하나로 최소 시연 환경을 실행합니다.
+
+```bash
+cp .env.example .env
+docker compose up --build
+```
+
+Open:
+
+```text
+Frontend: http://localhost:5173
+Backend health: http://localhost:8080/health
+Public data health: http://localhost:8080/api/public-data/health
+```
+
+Live API key가 없는 provider는 실패시키지 않고 `apiKeyConfigured=false`, `sourceType=empty`, `zeroReason=API_KEY_NOT_CONFIGURED` 또는 `CATALOG_PAGE_ENDPOINT`로 표시합니다. 이 상태는 live proof가 아닙니다.
+
+Root Compose는 새 노트북 시연을 우선해 `JPA_DDL_AUTO=update` 기본값을 사용합니다. 수동 Spring 실행과 제출/운영 설명 기준은 `ddl-auto=validate`이며, 기존 DB schema 변경 자동화는 Flyway/Liquibase가 아니라 Docker 최초 init SQL과 수동 SQL 관리 상태입니다.
+
+서버가 뜬 뒤 smoke/proof 파일을 남깁니다.
+
+```bash
+./scripts/smoke-local.sh
+```
+
+결과 파일:
+
+```text
+reports/deploy-proof/latest-smoke-result.json
+reports/deploy-proof/latest-smoke-result.md
+```
+
+운영/배포/관측성 보강 내역은 [docs/ops-deploy-observability-report.md](docs/ops-deploy-observability-report.md), 체크리스트는 [docs/production-readiness-checklist.md](docs/production-readiness-checklist.md)에 정리했습니다.
+
+### 1. Clean machine verification
+
+심사위원 새 노트북에서는 먼저 아래 한 줄을 권장합니다.
+
+```bash
+./scripts/verify-local.sh
+```
+
+이 스크립트는 시스템 Gradle이 아니라 `backend/BE-02/gradlew`를 사용합니다. 첫 실행에서 Gradle 8.13 distribution을 내려받아야 하므로 `services.gradle.org` 접근이 막혀 있으면 실패할 수 있습니다. 이 경우 네트워크를 열거나 Gradle wrapper cache를 미리 준비한 뒤 재실행합니다.
+
+필수 로컬 도구:
+
+| Tool | Purpose | Failure Signal |
+| :--- | :--- | :--- |
+| JDK 17 | Spring Boot test/run | `java not found` 또는 Java version 오류 |
+| Docker | MySQL local DB | `docker not found` 또는 MySQL healthcheck 실패 |
+| Node/npm | React build | `npm not found` |
+
+환경변수와 secret 정책은 [.env.example](.env.example), [docs/env-and-secret-runbook.md](docs/env-and-secret-runbook.md)에 정리했습니다. DB/migration 상태는 [docs/database-migration-readiness.md](docs/database-migration-readiness.md), auth/CSRF/admin proof 정책은 [docs/security-auth-policy.md](docs/security-auth-policy.md), 전체 readiness 결론은 [docs/backend-api-security-readiness-report.md](docs/backend-api-security-readiness-report.md)를 기준으로 설명합니다.
+
+### 2. 제출용 메인 앱 실행
 
 Spring Boot와 React를 함께 실행합니다.
 
+먼저 MySQL을 올립니다.
+
+```bash
+cd database
+cp .env.example .env
+docker compose up -d
+```
+
+그 다음 Spring Boot를 실행합니다. 로컬/데모에서는 아래 unsafe secret으로도 뜨지만, 운영에서는 금지됩니다.
+
 ```bash
 cd backend/BE-02
-export DB_PASSWORD=your_local_db_password
-export JWT_SECRET=$(openssl rand -base64 32)
-export JPA_DDL_AUTO=update   # 빈 로컬 DB에서 빠르게 실행할 때만 사용. 제출/운영 기본값은 validate
+export DB_URL="jdbc:mysql://127.0.0.1:3306/growgate?useSSL=false&serverTimezone=Asia/Seoul&allowPublicKeyRetrieval=true&characterEncoding=UTF-8"
+export DB_USERNAME=growgate_app
+export DB_PASSWORD=growgate_app
+export JWT_SECRET=unsafe-local-demo-secret-change-before-prod-32bytes
 export PUBLIC_DATA_ENABLED=true
 ./gradlew bootRun
 ```
+
+운영 또는 실제 배포 smoke에서는 반드시 별도 secret을 사용합니다.
+
+```bash
+export SPRING_PROFILES_ACTIVE=prod
+export JWT_SECRET=$(openssl rand -base64 32)
+```
+
+`prod`/`production` profile에서 `JWT_SECRET`이 없거나 너무 짧거나 local demo 값이면 애플리케이션이 fail-fast로 뜨지 않습니다.
 
 ```bash
 cd frontend/FE-02
@@ -176,7 +254,14 @@ Open:
 http://localhost:5173
 ```
 
-### 2. Python 데이터/AI Worker 실행
+Backend health:
+
+```bash
+curl -s http://localhost:8080/api/health
+curl -s http://localhost:8080/api/public-data/health
+```
+
+### 3. Python 데이터/AI Worker 실행
 
 `grow_gate_local_ex_demo`는 더 이상 정적 데모가 아니라 Spring 메인 앱이 선택적으로 호출하는 Python 데이터/AI worker입니다. 공공데이터 응답 정규화, evidence compile, source-bound claim verification, bounded planning/tool/verification/retry loop를 담당합니다.
 
@@ -401,6 +486,8 @@ BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/smoke-prod.sh
 - 공공 API/LLM key는 환경변수 또는 secret manager로만 주입하고 repository에 저장하지 않습니다.
 - Gemini/OpenRouter 보조 추론은 기본 비활성화(`APP_AGENT_ENABLED=false`)이며, 활성화 시에도 사용자별/전체 일일 호출량, prompt 크기, output token 상한을 서버에서 강제합니다.
 - 회원가입은 서비스 이용약관 필수 동의, 개인정보 수집·이용 필수 동의, 마케팅 선택 동의를 분리하고 `user_consent_records`에 정책 버전과 선택 내역을 저장합니다.
+- 데모 환경에는 주민등록번호, 연락처, 계약서, 도면, 원가, 거래처명, 미공개 인증문서 등 개인정보 또는 영업비밀에 해당할 수 있는 정보를 입력하지 않습니다. 실제 개인정보가 포함될 경우 별도 동의와 처리방침이 필요합니다.
+- AI/LLM 책임 범위와 FTO 고지는 [docs/ai-responsibility-and-disclaimer.md](docs/ai-responsibility-and-disclaimer.md), 법적/윤리적 리스크 대응은 [docs/legal-ethical-risk-register.md](docs/legal-ethical-risk-register.md)에 정리했습니다.
 - Google Sign-In은 제출 서버 기본값에서 비활성화(`GOOGLE_SSO_ENABLED=false`)합니다. 정식 도메인, OAuth consent screen, 개인정보 처리방침 URL, 서버측 ID token 검증이 준비된 release에서만 켭니다.
 - 현재 제출 서버는 결제/환불 기능을 제공하지 않습니다. 유료화 시에는 결제 API, 환불 정책, 정산 로그, 관리자 승인 flow를 별도 release gate로 추가해야 합니다.
 - fallback 공공데이터는 `sourceType=fallback`으로 표시되며 점수를 올리지 않습니다.

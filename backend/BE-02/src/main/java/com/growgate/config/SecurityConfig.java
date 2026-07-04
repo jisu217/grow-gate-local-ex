@@ -48,11 +48,13 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/auth/login").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/auth/signup").permitAll()
                         .requestMatchers(HttpMethod.GET, "/health").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public-data/dashboard").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public-data/runs").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public-data/records").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public-data/health").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/public-data/proof-runs/latest").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/admin/**").hasAnyRole("OWNER", "ADMIN")
                         .anyRequest().authenticated()
                 )
                 .exceptionHandling(ex -> ex

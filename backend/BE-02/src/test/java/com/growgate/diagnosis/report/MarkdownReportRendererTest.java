@@ -37,6 +37,12 @@ class MarkdownReportRendererTest {
                 "limitation:",
                 "## Source Appendix",
                 "KCS_TRADE:850760:DE",
+                "## 근거 데이터와 AI 보조 해석 구분",
+                "sourceType: live/cache/fallback/seed/empty",
+                "## FTO 사전 탐색 고지",
+                "법률 판단이 아니며",
+                "변리사 또는 법률 전문가 검토가 필요합니다",
+                "## 개인정보·영업비밀 입력 제한",
                 "## Synthetic Validation Disclaimer",
                 "synthetic persona validation은 실제 고객 인터뷰가 아닙니다."
         );

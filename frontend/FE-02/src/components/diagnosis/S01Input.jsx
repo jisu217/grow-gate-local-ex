@@ -23,6 +23,9 @@ export default function S01Input({ data }) {
       <MemoBox style={{ marginTop: 14 }}>
         <b>제품 특성</b> · 배터리 탑재 · 산업재 · 디지털 기능 일부 → AI Planner가 5단계 분석 계획을 생성했습니다.
       </MemoBox>
+      <MemoBox style={{ marginTop: 10 }}>
+        <b>민감정보 입력 금지</b> · 데모 환경에는 주민등록번호, 연락처, 계약서, 도면, 원가, 거래처명, 미공개 인증문서 등 개인정보 또는 영업비밀에 해당할 수 있는 정보를 입력하지 마십시오. 실제 기업 데이터 입력 시 별도 동의와 처리방침이 필요합니다.
+      </MemoBox>
     </DiagnosisStage>
   )
 }

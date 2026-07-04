@@ -1,0 +1,77 @@
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    ports:
+      - "${MYSQL_PORT:-3306}:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-growgate_root}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-growgate}
+      MYSQL_USER: ${MYSQL_USER:-growgate_app}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-growgate_app}
+      TZ: Asia/Seoul
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --default-time-zone=+09:00
+    volumes:
+      - growgate_mysql_data:/var/lib/mysql
+      - ./database/mysql/init:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$${MYSQL_ROOT_PASSWORD} --silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  backend:
+    build:
+      context: .
+      dockerfile: backend/BE-02/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${BACKEND_PORT:-8080}:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: docker
+      DB_URL: jdbc:mysql://db:3306/${MYSQL_DATABASE:-growgate}?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true&characterEncoding=UTF-8
+      DB_USERNAME: ${MYSQL_USER:-growgate_app}
+      DB_PASSWORD: ${MYSQL_PASSWORD:-growgate_app}
+      JPA_DDL_AUTO: ${JPA_DDL_AUTO:-update}
+      JWT_SECRET: ${JWT_SECRET:-unsafe-local-demo-secret-change-before-prod-32bytes}
+      APP_CORS_ORIGINS: ${APP_CORS_ORIGINS:-http://localhost:5173,http://localhost:8080,http://localhost:3000}
+      APP_VERSION: ${APP_VERSION:-docker-local}
+      PUBLIC_DATA_ENABLED: ${PUBLIC_DATA_ENABLED:-true}
+      PUBLIC_DATA_CONNECT_TIMEOUT_MS: ${PUBLIC_DATA_CONNECT_TIMEOUT_MS:-3000}
+      PUBLIC_DATA_READ_TIMEOUT_MS: ${PUBLIC_DATA_READ_TIMEOUT_MS:-20000}
+      PUBLIC_DATA_RETRY_MAX_ATTEMPTS: ${PUBLIC_DATA_RETRY_MAX_ATTEMPTS:-2}
+      PUBLIC_DATA_CIRCUIT_FAILURE_THRESHOLD: ${PUBLIC_DATA_CIRCUIT_FAILURE_THRESHOLD:-3}
+      PUBLIC_DATA_CIRCUIT_OPEN_SECONDS: ${PUBLIC_DATA_CIRCUIT_OPEN_SECONDS:-60}
+      DATAGO_SERVICE_KEY: ${DATAGO_SERVICE_KEY:-}
+      KCS_TRADE_API_KEY: ${KCS_TRADE_API_KEY:-}
+      KOTRA_MARKET_API_KEY: ${KOTRA_MARKET_API_KEY:-}
+      SAFETY_RECALL_API_KEY: ${SAFETY_RECALL_API_KEY:-}
+      KIPRIS_API_KEY: ${KIPRIS_API_KEY:-}
+      BIZINFO_API_KEY: ${BIZINFO_API_KEY:-}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://127.0.0.1:8080/health | grep -q '\"status\":\"ok\"'"]
+      interval: 15s
+      timeout: 5s
+      retries: 20
+      start_period: 60s
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend/FE-02/Dockerfile
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "${FRONTEND_PORT:-5173}:80"
+
+volumes:
+  growgate_mysql_data:

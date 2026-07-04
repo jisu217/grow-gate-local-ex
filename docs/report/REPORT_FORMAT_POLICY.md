@@ -25,4 +25,7 @@ Each Markdown report must include:
 - Front matter with `publicDataProofRunId`, `modelVersion`, `reportFormat`, and `limitation`
 - Source Appendix
 - Claim Verification result
+- 근거 데이터와 AI 보조 해석 구분
+- FTO 사전 탐색 고지
+- 개인정보·영업비밀 입력 제한
 - Synthetic Validation Disclaimer
