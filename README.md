@@ -6,7 +6,7 @@
 ![Java](https://img.shields.io/badge/Java-17-007396)
 ![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4-6DB33F)
 ![React](https://img.shields.io/badge/React-18-61DAFB)
-![Public Data](https://img.shields.io/badge/Public%20Data-KCS%20%7C%20KOTRA%20%7C%20KATS%20%7C%20KIPRIS-blue)
+![Public Data](https://img.shields.io/badge/Public%20Data-KCS%20%7C%20KOTRA%20%7C%20SafetyKorea%20%7C%20KIPRIS-blue)
 ![Status](https://img.shields.io/badge/Submission-Gate%20Decision-green)
 
 ---
@@ -44,13 +44,16 @@
 
 실제 공공 API 증거는 `/api/admin/public-data/proof-runs`가 생성하는 `proofRunId`, `rawResponseSha256`, `schemaValidationStatus`, `operationEndpoint`, `apiKeyConfigured` 기준으로만 인정합니다. Synthetic persona validation은 [docs/validation/README_SYNTHETIC_VALIDATION.md](docs/validation/README_SYNTHETIC_VALIDATION.md)에 분리했고, 실제 고객 검증 자료처럼 표현하지 않습니다. 보고서 공식 산출물은 Markdown이며 PDF는 [docs/report/REPORT_FORMAT_POLICY.md](docs/report/REPORT_FORMAT_POLICY.md)의 선택 인쇄/변환 전략만 사용합니다. Pilot ML artifact는 `python3 ml/pipelines/train_all.py`로 생성하며 `/api/ml/models/latest`에서 버전과 한계를 조회합니다.
 
-2026-07-04 기준 GitHub `main`에는 심사용 방어 패키지가 포함되어 있습니다.
+2026-07-04 기준 GitHub `main`에는 심사용 방어 패키지와 공개 proof 뷰어가 포함되어 있습니다.
 
 - 3개 합성 seed 기업, 지역산업 profile, agent trace event schema, synthetic persona validation
 - public-data proof run API와 S10 proof surface
+- `/public-data/daily-refresh` 공개 read-only proof 화면
+- 매일 08:00 KST, 최근 활성 제품 최대 30개 대상 daily public-data refresh
 - raw response hash, schema validation status, live/cache/fallback waterfall
-- Markdown report policy와 proof pack 생성/검증 스크립트
+- Markdown report archive, HTML preview, browser print-to-PDF flow
 - synthetic rule-assisted ML artifact와 `/api/ml/models/latest` 제한 고지
+- HttpOnly cookie 기반 로그인 세션 복원
 - `scripts/check-risk-gates.sh` 기반 제출 리스크 회귀 차단
 
 심사 대응 기준 문서는 [docs/top15-resolution-2026-07-01.md](docs/top15-resolution-2026-07-01.md)입니다. 15개 치명 항목의 처리 상태, code reference, 남은 상용화 과제를 이 문서에 고정했습니다.
@@ -90,6 +93,9 @@ GROW-GATE Local EX는 이 질문을 바이어 회신 가능한 Gate 판단과 �
 | Workflow trace | Spring `AgentLoop`가 plan, tool call, observation, verifier, retry, fallback, complete task를 기록 |
 | Decision Brief | 결과 첫 화면에서 Gate 판단, 핵심 위험 3개, `오늘 할 일`/`이번 주 할 일`/`외부기관 문의` 3개 행동을 먼저 표시 |
 | Gate 업무 보드 | 이번 주, 견적 전, 출하 전 단위로 담당자, 산출물, 시험·인증 태스크를 정리 |
+| 리포트 보관함 | 완료된 진단의 공식 Markdown 리포트를 마이페이지에서 다운로드하고 HTML 미리보기와 브라우저 PDF 인쇄로 확인 |
+| 아침 자동 수집 | 매일 08:00 KST에 최근 활성 제품 최대 30개를 대상으로 공공데이터 provider와 허용된 RSS/API feed 수집 |
+| 공개 proof 뷰어 | `/public-data/daily-refresh`에서 로그인 없이 최신 proof run의 provider 상태, raw hash, schema validation, waterfall 확인 |
 | 팀 운영실 | 데이터 활용도, 부족 데이터, 역할자별 기획 완성도, 입상 가능성, 개선 액션을 점수화 |
 | 코드 게이트 | 리뷰 체크리스트, 커밋 전 확인, 로컬 Git 커밋, GitHub push 가이드를 제공 |
 
@@ -108,6 +114,8 @@ GROW-GATE Local EX는 이 질문을 바이어 회신 가능한 Gate 판단과 �
 현재 제출용 Spring 앱은 `PUBLIC_DATA_ENABLED=true`가 기본값입니다. API key와 실제 operation endpoint가 있으면 live 공공 API를 호출하고, key가 없거나 호출이 실패하면 `public_data_collection_runs`, `public_data_records`에 fallback 사유를 저장합니다. 공식 카탈로그/신청 페이지 URL은 출처 추적용 기본값으로 보존하되, HTML 상세 페이지를 API 응답으로 저장하지 않도록 fallback 처리합니다. 메인 진단 결과에는 `live`, `cache`, `fallback`, `heuristic`, `agent` sourceType과 confidence-adjusted 점수 기여도, provider별 metric signal이 표시됩니다. 여기서 `agent`는 점수 산출 주체가 아니라 선택형 분석 bridge와 workflow trace를 나타내는 보조 출처입니다.
 
 발표장에서 공식 live 공공 API 증거로 설명할 수 있는 record는 `sourceType=live/cache`, `operationEndpoint=true`, `apiKeyConfigured=true`, `collectionRunId`, `fetchedAt/retrievedAt`, `metricSummary/metrics`가 함께 있어야 합니다. S10 화면과 `/diagnosis/{id}/sources` 화면은 이 값을 직접 표시하고, `fallback`, `crawl`, `external_feed`, `heuristic`은 공식 API 연결 성공으로 표시하지 않습니다.
+
+일별 자동 수집은 `PUBLIC_DATA_DAILY_REFRESH_CRON=0 0 8 * * *`, `PUBLIC_DATA_DAILY_REFRESH_ZONE=Asia/Seoul`, `PUBLIC_DATA_DAILY_REFRESH_MAX_PRODUCTS=30`이 기본값입니다. 자동 수집은 진단 실행과 분리되어 cache/live/fallback 근거를 미리 쌓고, 사용자가 진단을 실행할 때 최신 수집 결과를 활용합니다. `/public-data/daily-refresh`는 공개 read-only 화면으로 열리며, 수동 재수집과 proof run 생성 버튼은 로그인 상태에서만 노출됩니다.
 
 공식 proof run은 기존 `public_data_records`를 재가공해 별도 proof table에 저장합니다.
 
@@ -260,8 +268,11 @@ frontend/FE-02/
 ├─ src/pages/auth/Home.jsx                   # Before/After와 Gate Decision 첫 화면
 ├─ src/pages/diagnosis/DiagnosisNew.jsx      # 제품 + 바이어 문의 입력
 ├─ src/pages/diagnosis/DiagnosisResult.jsx   # Gate 판단 결과 뷰어
+├─ src/pages/publicdata/DailyPublicData.jsx  # 공개 daily refresh proof 뷰어
+├─ src/pages/mypage/Mypage.jsx               # Markdown 리포트 보관함
 ├─ src/components/diagnosis/GateDecisionHero.jsx
 ├─ src/components/diagnosis/S08ExecBoard.jsx # 이번 주/견적 전/출하 전 업무 보드
+├─ src/components/route/ProtectedRoute.jsx   # HttpOnly cookie 기반 세션 복원
 └─ src/services/diagnosisService.js          # BE response mapper
 
 scripts/
@@ -345,19 +356,23 @@ PRESENTATION_REQUIRE_OPERATION_API=true \
 
 ## 12. Deployment Status
 
-GitHub `main`은 최신 심사 방어 코드가 반영된 기준 브랜치입니다. Lightsail에는 HTTPS 서비스가 올라가 있으나, 서버 SSH 배포는 현재 인스턴스 인증키 등록이 필요합니다.
+GitHub `main`은 최신 심사 방어 코드가 반영된 기준 브랜치입니다. Lightsail HTTPS 서비스는 최신 커밋으로 배포되어 있고, smoke test가 통과한 상태입니다.
 
 | Item | Current State |
 | :--- | :--- |
-| GitHub main | 최신 proof workflow 커밋 반영 |
+| GitHub main | `080be92fed785e251990dd9ad7fd7778552fe235` |
+| Deployed commit | `080be92fed785e251990dd9ad7fd7778552fe235` |
 | Lightsail static IP | `54.180.56.24` |
 | Current public URL | `https://growgate.54.180.56.24.sslip.io` |
 | Attached instance | `growgate-fresh-20260703-2134` |
 | SSH firewall | 현재 작업자 IP allowlist와 Lightsail Connect 허용 |
-| SSH auth | 로컬 public key를 서버 `~/.ssh/authorized_keys`에 추가해야 배포 가능 |
-| Live public API proof | 서버에 operation endpoint/API key 주입 후 smoke와 proof export 필요 |
+| Service status | `growgate-backend=active`, `/health=200`, production smoke PASS |
+| Public proof viewer | `/public-data/daily-refresh` returns `200` without login |
+| Auth session restore | admin login and cookie-only `/api/users/me=200` verified |
+| Synthetic validation seed | personas `5`, sessions `15`, findings `3` |
+| Live public API proof | 현재 운영 서버는 provider key 미주입 상태라 `liveCount=0`, `fallbackCount=5` |
 
-배포 재개 순서:
+배포 재실행 순서:
 
 ```bash
 git pull origin main
@@ -369,6 +384,8 @@ BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/smoke-prod.sh
 ```
 
 `PUBLIC_DATA_ENABLED=true`는 기본값이지만, `SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true`는 실제 provider operation endpoint와 API key가 서버에 주입된 뒤에만 사용합니다.
+
+현재 운영 smoke는 앱 배포와 fallback-aware diagnosis 경로를 검증합니다. 공식 live 공공 API proof를 올리려면 서버에 provider operation endpoint/API key를 주입한 뒤 proof run을 다시 생성해야 합니다.
 
 ---
 
