@@ -35,6 +35,11 @@ export default function App() {
         <Route path="/signup/personal"   element={<SignupPersonal />} />
         <Route path="/signup/company"    element={<SignupCompany />} />
 
+        {/* 공개 proof 뷰어: 심사장/데모에서 로그인 없이 수집 증거 확인 */}
+        <Route element={<AppLayout />}>
+          <Route path="/public-data/daily-refresh" element={<DailyPublicData />} />
+        </Route>
+
         {/* 로그인 필요 */}
         <Route element={<ProtectedRoute />}>
 
@@ -47,7 +52,6 @@ export default function App() {
 
             <Route path="/diagnosis"              element={<DiagnosisList />} />
             <Route path="/diagnosis/new"          element={<DiagnosisNew />} />
-            <Route path="/public-data/daily-refresh" element={<DailyPublicData />} />
 
             <Route path="/mypage"                        element={<Mypage />} />
             <Route path="/mypage/diagnosis/:productId"   element={<DiagnosisDetail />} />

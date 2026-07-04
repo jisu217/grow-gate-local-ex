@@ -100,16 +100,30 @@ public class PublicDataProofRunService {
 
     @Transactional(readOnly = true)
     public Map<String, Object> latest(String userId) {
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList("""
-                SELECT proof_run_id FROM public_api_proof_runs
-                WHERE requested_by = ?
-                ORDER BY created_at DESC
-                LIMIT 1
-                """, userId);
+        List<Map<String, Object>> rows;
+        if (userId == null || userId.isBlank()) {
+            rows = jdbcTemplate.queryForList("""
+                    SELECT proof_run_id FROM public_api_proof_runs
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                    """);
+        } else {
+            rows = jdbcTemplate.queryForList("""
+                    SELECT proof_run_id FROM public_api_proof_runs
+                    WHERE requested_by = ?
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                    """, userId);
+        }
         if (rows.isEmpty()) {
             return Map.of("proofStatus", "EMPTY", "message", "public data proof run이 아직 없습니다.");
         }
-        return detail(String.valueOf(rows.get(0).get("proof_run_id")));
+        Map<String, Object> result = detail(String.valueOf(rows.get(0).get("proof_run_id")));
+        if (userId == null || userId.isBlank()) {
+            result.remove("requested_by");
+            result.remove("requestedBy");
+        }
+        return result;
     }
 
     @Transactional(readOnly = true)

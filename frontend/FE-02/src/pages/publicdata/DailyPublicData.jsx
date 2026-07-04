@@ -9,8 +9,11 @@ import {
   getPublicDataRuns,
   refreshDailyPublicData,
 } from '../../services/publicDataService.js'
+import { getAuthUser } from '../../services/authService.js'
 
 export default function DailyPublicData() {
+  const authUser = getAuthUser()
+  const canRunManualCollection = Boolean(authUser?.userId)
   const [dashboard, setDashboard] = useState(null)
   const [runs, setRuns] = useState([])
   const [records, setRecords] = useState([])
@@ -93,14 +96,16 @@ export default function DailyPublicData() {
             매일 08:00 KST에 최근 활성 제품 최대 30개를 대상으로 공공데이터와 허용된 RSS/API feed를 수집합니다.
           </p>
         </div>
-        <div className={styles.actions}>
-          <button className={styles.secondaryBtn} onClick={handleProofRun} disabled={proofState === 'running'}>
-            {proofState === 'running' ? 'Proof 생성 중' : 'Proof run 생성'}
-          </button>
-          <button className={styles.refreshBtn} onClick={handleRefresh} disabled={refreshState === 'running'}>
-            {refreshState === 'running' ? '수집 중' : '수동 재수집'}
-          </button>
-        </div>
+        {canRunManualCollection && (
+          <div className={styles.actions}>
+            <button className={styles.secondaryBtn} onClick={handleProofRun} disabled={proofState === 'running'}>
+              {proofState === 'running' ? 'Proof 생성 중' : 'Proof run 생성'}
+            </button>
+            <button className={styles.refreshBtn} onClick={handleRefresh} disabled={refreshState === 'running'}>
+              {refreshState === 'running' ? '수집 중' : '수동 재수집'}
+            </button>
+          </div>
+        )}
       </div>
 
       {pageState === 'loading' && <StatusMessage type="loading" message="수집 로그를 불러오는 중입니다." />}

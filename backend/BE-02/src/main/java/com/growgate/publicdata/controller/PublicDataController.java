@@ -26,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Map;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/public-data")
@@ -52,6 +53,11 @@ public class PublicDataController {
     @GetMapping("/runs")
     public ResponseEntity<PublicDataRunsResponse> getRuns(
             @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.ok(PublicDataRunsResponse.builder()
+                    .runs(List.of())
+                    .build());
+        }
         return ResponseEntity.ok(PublicDataRunsResponse.builder()
                 .runs(collectionService.getRecentRuns(userDetails.getUsername()).stream()
                         .map(PublicDataRunResponse::from)
@@ -64,6 +70,11 @@ public class PublicDataController {
             @AuthenticationPrincipal UserDetails userDetails,
             @RequestParam(required = false) String hsCode,
             @RequestParam(required = false) String targetCountry) {
+        if (userDetails == null) {
+            return ResponseEntity.ok(PublicDataRecordsResponse.builder()
+                    .records(List.of())
+                    .build());
+        }
         return ResponseEntity.ok(PublicDataRecordsResponse.builder()
                 .records(collectionService.getRecentRecords(userDetails.getUsername(), hsCode, targetCountry).stream()
                         .map(PublicDataRecordResponse::from)
@@ -74,14 +85,26 @@ public class PublicDataController {
     @GetMapping("/dashboard")
     public ResponseEntity<PublicDataDashboardResponse> getDashboard(
             @AuthenticationPrincipal UserDetails userDetails) {
+        if (userDetails == null) {
+            return ResponseEntity.ok(PublicDataDashboardResponse.builder()
+                    .providers(List.of())
+                    .build());
+        }
         return ResponseEntity.ok(collectionService.getDashboard(userDetails.getUsername()));
     }
 
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> getHealth(
             @AuthenticationPrincipal UserDetails userDetails) {
-        Map<String, Object> health = new java.util.LinkedHashMap<>(collectionService.getHealth(userDetails.getUsername()));
-        health.put("latestProofRun", proofRunService.latest(userDetails.getUsername()));
+        if (userDetails == null) {
+            return ResponseEntity.ok(Map.of(
+                    "scope", "public-proof-only",
+                    "latestProofRun", proofRunService.latest(null)
+            ));
+        }
+        String userId = usernameOrNull(userDetails);
+        Map<String, Object> health = new java.util.LinkedHashMap<>(collectionService.getHealth(userId));
+        health.put("latestProofRun", proofRunService.latest(userId));
         return ResponseEntity.ok(health);
     }
 
@@ -95,7 +118,7 @@ public class PublicDataController {
     @GetMapping("/proof-runs/latest")
     public ResponseEntity<Map<String, Object>> getLatestProofRun(
             @AuthenticationPrincipal UserDetails userDetails) {
-        return ResponseEntity.ok(proofRunService.latest(userDetails.getUsername()));
+        return ResponseEntity.ok(proofRunService.latest(usernameOrNull(userDetails)));
     }
 
     @GetMapping("/proof-runs/{proofRunId}")
@@ -120,5 +143,9 @@ public class PublicDataController {
                 "proofRunId", proofRunId,
                 "scoreWaterfall", proofRunService.scoreContributions(proofRunId)
         ));
+    }
+
+    private String usernameOrNull(UserDetails userDetails) {
+        return userDetails == null ? null : userDetails.getUsername();
     }
 }
