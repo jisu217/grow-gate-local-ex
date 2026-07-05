@@ -255,7 +255,7 @@ CREATE TABLE IF NOT EXISTS public_data_records (
   target_country VARCHAR(40) NULL,
   matched_key VARCHAR(500) NULL,
   used_for VARCHAR(60) NULL,
-  raw_payload TEXT NULL,
+  raw_payload LONGTEXT NULL,
   normalized_payload TEXT NULL,
   score_contribution INT NULL,
   confidence DOUBLE PRECISION NULL,

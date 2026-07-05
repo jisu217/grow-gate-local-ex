@@ -59,7 +59,7 @@ public class PublicDataRecord {
     @Column(name = "used_for", length = 60)
     private String usedFor;
 
-    @Column(name = "raw_payload", columnDefinition = "TEXT")
+    @Column(name = "raw_payload", columnDefinition = "LONGTEXT")
     private String rawPayload;
 
     @Column(name = "normalized_payload", columnDefinition = "TEXT")
