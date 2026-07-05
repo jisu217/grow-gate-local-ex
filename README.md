@@ -112,6 +112,7 @@ GROW-GATE Local EX는 이 질문을 바이어 회신 가능한 Gate 판단과 �
 | MOTIE 제품 리콜처분현황 | 첨부 CSV `data/public/motie_product_recall_dispositions_20251231.csv`를 먼저 읽고, 차기 등록 예정일이 도래하면 endpoint/key 구성 시 odcloud API refresh 시도 | 연도별 리콜 처분 aggregate 참고. 특정 제품 리콜 없음 proof로 사용하지 않음 |
 | MOTIE 제품안전인증 신규등록현황 | 첨부 CSV `data/public/motie_product_safety_cert_new_registrations_20251231.csv`를 먼저 읽고, 차기 등록 예정일이 도래하면 endpoint/key 구성 시 odcloud API refresh 시도 | 연도별 KC 안전인증 신규등록 aggregate 참고. 특정 제품 인증 적합성 proof로 사용하지 않음 |
 | MOTIE 금속표준용어 | 첨부 DOCX `data/public/motie_metal_standard_terms_20140514.docx`를 지식화 source로 보관 | 용어사전/동의어 정규화/보고서 문구 보조. 인증·법정 표준 준수 proof로 사용하지 않음 |
+| MOTIE FTA추진현황정보 | 첨부 PDF `data/public/motie_fta_status_20260531.pdf`를 지식화 source로 보관 | 대상국 FTA 추진 단계, 발효/서명/협상 context와 보고서 문구 보조. 관세율 확정, 원산지 판정, 법률 자문, 수출 실행 판단 proof로 사용하지 않음 |
 | Safety Korea 제품 안전인증 및 리콜 정보 | 기본 공식 안내 `https://www.safetykorea.kr/release/openapi`, 실제 operation endpoint 설정 시 live 수집 | 규제·리콜 점수 contribution |
 | KATS 국내리콜정보 | 첨부 CSV `data/public/kats_domestic_recall_20230809.csv`를 먼저 읽고, CSV 기준일이 공식 수정일보다 오래되면 API key 구성 시 odcloud API refresh 시도 | 리콜 참고 목록. 최신 리콜 clearance나 진단 점수 proof로 사용하지 않음 |
 | KATS 인증제품 첨부파일 | 첨부 CSV `data/public/kats_certified_product_attachments_20230809.csv`를 먼저 읽고, CSV 기준일이 공식 수정일보다 오래되면 endpoint/key 구성 시 odcloud API refresh 시도 | 인증제품 관련 첨부파일 경로/파일명 참고. 인증 적합성·안전성 proof로 사용하지 않음 |

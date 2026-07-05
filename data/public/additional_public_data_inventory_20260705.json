@@ -45,6 +45,12 @@
       "reason": "Existing branch already includes annual aggregate reference."
     },
     {
+      "dataset": "산업통상부_FTA추진현황정보_20260531.pdf",
+      "status": "knowledge_source_registered",
+      "target": "public_data_sources.json + proof script",
+      "reason": "FTA status is useful as source-bound target-country context, but must not be used as tariff-rate proof, origin determination, legal advice, or final export readiness evidence."
+    },
+    {
       "dataset": "KOTRA 권역별 경제 지표, 글로벌 무역현황, 수출입동향, 일반기계산업 동향",
       "status": "reference_only_deferred",
       "target": "future country/industry profile module",

@@ -59,6 +59,14 @@ public class PublicDataOperationalStatusService {
                         prop("public-data.motie-mpe-production-index.csv-resource"),
                         prop("public-data.motie-mpe-production-index.url"),
                         prop("public-data.motie-mpe-production-index.key")),
+                fileDataStatus(PublicDataProvider.MOTIE_MPE_INVENTORY_INDEX,
+                        prop("public-data.motie-mpe-inventory-index.csv-resource"),
+                        prop("public-data.motie-mpe-inventory-index.url"),
+                        prop("public-data.motie-mpe-inventory-index.key")),
+                fileDataStatus(PublicDataProvider.MOTIE_MPE_SHIPMENT_INDEX,
+                        prop("public-data.motie-mpe-shipment-index.csv-resource"),
+                        prop("public-data.motie-mpe-shipment-index.url"),
+                        prop("public-data.motie-mpe-shipment-index.key")),
                 fileDataStatus(PublicDataProvider.TRADE_SECURITY_HSK_LINKAGE,
                         prop("public-data.trade-security-hsk-linkage.csv-resource"),
                         prop("public-data.trade-security-hsk-linkage.url"),
@@ -191,6 +199,8 @@ public class PublicDataOperationalStatusService {
             case "MOTIE_IMPORT_REGULATION" -> "motieImportRegulation";
             case "MOTIE_MPE_TRADE_STATISTICS" -> "motieMpeTradeStatistics";
             case "MOTIE_MPE_PRODUCTION_INDEX" -> "motieMpeProductionIndex";
+            case "MOTIE_MPE_INVENTORY_INDEX" -> "motieMpeInventoryIndex";
+            case "MOTIE_MPE_SHIPMENT_INDEX" -> "motieMpeShipmentIndex";
             case "TRADE_SECURITY_HSK_LINKAGE" -> "tradeSecurityHskLinkage";
             case "TRADE_SECURITY_ITEM_KEYWORD" -> "tradeSecurityItemKeyword";
             case "KIPRIS_FTO" -> "kipris";

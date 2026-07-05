@@ -18,6 +18,12 @@
 - `PublicDataCollectionServiceTest.collectForDiagnosisClampsFallbackPositiveContributionBeforePersisting()`가 fallback 양수 기여 저장을 막는다.
 - `scripts/check-risk-gates.sh`가 fixture, field mapping, retry API 연결, seed watermark, export feed 설정 문서화를 검사한다.
 
+## 2026-07-05 Follow-up
+
+- File-data 공공데이터를 런타임 커넥터로 승격할 때는 CSV/cache 경로, scheduled API refresh 조건, `collectionEvidence.operationEndpoint`, provider별 conservative `decisionImpact`를 함께 추가한다.
+- PDF/DOCX 지식화 source는 `NOT_RUNTIME_CONNECTED`로 분리하고, `sourceTrace`와 보고서 문구 보조에만 사용한다.
+- MOTIE MPE 재고/출하지수처럼 시장 참고 신호를 추가하더라도 최종 Gate는 deterministic rule score와 risk/fallback 조건이 소유한다.
+
 ## Presentation Rule
 
 - `external_feed`는 "수출 뉴스·보고서 최신성 보조 근거"로만 설명한다.

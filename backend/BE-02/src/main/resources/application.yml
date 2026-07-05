@@ -126,6 +126,26 @@ public-data:
     portal-detail-total-rows: ${MOTIE_MPE_PRODUCTION_INDEX_PORTAL_DETAIL_TOTAL_ROWS:124}
     local-total-rows: ${MOTIE_MPE_PRODUCTION_INDEX_LOCAL_TOTAL_ROWS:128}
     api-per-page: ${MOTIE_MPE_PRODUCTION_INDEX_API_PER_PAGE:1000}
+  motie-mpe-inventory-index:
+    url: ${MOTIE_MPE_INVENTORY_INDEX_API_URL:https://api.odcloud.kr/api/15099629/v1/uddi:f48b90d3-4b80-4492-a9ab-de45471d408e}
+    key: ${MOTIE_MPE_INVENTORY_INDEX_API_KEY:${DATAGO_SERVICE_KEY:}}
+    csv-resource: ${MOTIE_MPE_INVENTORY_INDEX_CSV_RESOURCE:classpath:publicdata/motie-mpe-inventory-index-20251231.csv}
+    dataset-date: ${MOTIE_MPE_INVENTORY_INDEX_DATASET_DATE:2025-12-31}
+    next-update-date: ${MOTIE_MPE_INVENTORY_INDEX_NEXT_UPDATE_DATE:2026-06-27}
+    portal-detail-dataset-date: ${MOTIE_MPE_INVENTORY_INDEX_PORTAL_DETAIL_DATASET_DATE:2025-12-31}
+    portal-detail-total-rows: ${MOTIE_MPE_INVENTORY_INDEX_PORTAL_DETAIL_TOTAL_ROWS:128}
+    local-total-rows: ${MOTIE_MPE_INVENTORY_INDEX_LOCAL_TOTAL_ROWS:128}
+    api-per-page: ${MOTIE_MPE_INVENTORY_INDEX_API_PER_PAGE:1000}
+  motie-mpe-shipment-index:
+    url: ${MOTIE_MPE_SHIPMENT_INDEX_API_URL:https://api.odcloud.kr/api/15099630/v1/uddi:3207d943-60f7-42eb-bb7f-cb6d1a827384}
+    key: ${MOTIE_MPE_SHIPMENT_INDEX_API_KEY:${DATAGO_SERVICE_KEY:}}
+    csv-resource: ${MOTIE_MPE_SHIPMENT_INDEX_CSV_RESOURCE:classpath:publicdata/motie-mpe-shipment-index-20251231.csv}
+    dataset-date: ${MOTIE_MPE_SHIPMENT_INDEX_DATASET_DATE:2025-12-31}
+    next-update-date: ${MOTIE_MPE_SHIPMENT_INDEX_NEXT_UPDATE_DATE:2026-06-27}
+    portal-detail-dataset-date: ${MOTIE_MPE_SHIPMENT_INDEX_PORTAL_DETAIL_DATASET_DATE:2025-12-31}
+    portal-detail-total-rows: ${MOTIE_MPE_SHIPMENT_INDEX_PORTAL_DETAIL_TOTAL_ROWS:128}
+    local-total-rows: ${MOTIE_MPE_SHIPMENT_INDEX_LOCAL_TOTAL_ROWS:128}
+    api-per-page: ${MOTIE_MPE_SHIPMENT_INDEX_API_PER_PAGE:1000}
   trade-security-hsk-linkage:
     url: ${TRADE_SECURITY_HSK_LINKAGE_API_URL:https://api.odcloud.kr/api/15034135/v1/uddi:80b756b5-9d5f-4369-8a38-ad5ac43534e5}
     key: ${TRADE_SECURITY_HSK_LINKAGE_API_KEY:${DATAGO_SERVICE_KEY:}}

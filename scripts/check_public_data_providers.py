@@ -133,6 +133,21 @@ def providers(args):
             "officialUpdatedAt": env("MOTIE_METAL_STANDARD_TERMS_OFFICIAL_UPDATED_AT", "2025-08-18"),
         },
         {
+            "provider": "MOTIE FTA추진현황정보",
+            "runtimeProvider": "NOT_RUNTIME_CONNECTED",
+            "agent": "knowledge-fta-status-reference",
+            "endpoint": env("MOTIE_FTA_STATUS_SOURCE_URL", "https://www.data.go.kr/data/3074066/fileData.do"),
+            "apiKey": "",
+            "apiKeyEnv": "none",
+            "params": {},
+            "defaultZeroReason": "FILE_DATA_NOT_CONFIGURED",
+            "fileData": True,
+            "fileKind": "pdf",
+            "filePath": env("MOTIE_FTA_STATUS_FILE_PATH", "data/public/motie_fta_status_20260531.pdf"),
+            "fileAsOf": env("MOTIE_FTA_STATUS_FILE_AS_OF", "2026-05-31"),
+            "officialUpdatedAt": env("MOTIE_FTA_STATUS_OFFICIAL_UPDATED_AT", "2026-05-31"),
+        },
+        {
             "provider": "무역/수출입 통계",
             "runtimeProvider": "KCS_TRADE",
             "agent": "market",
@@ -502,6 +517,8 @@ def call_file_data(provider, timeout):
         return result(provider, "empty", "FILE_DATA_NOT_FOUND", error=file_path)
     if provider.get("fileKind") == "docx":
         return call_docx_file_data(provider, file_path)
+    if provider.get("fileKind") == "pdf":
+        return call_pdf_file_data(provider, file_path)
     errors = []
     for encoding in provider.get("fileEncodings", ["utf-8-sig"]):
         try:
@@ -577,6 +594,38 @@ def call_docx_file_data(provider, file_path):
         )
     except Exception as exc:
         return result(provider, "fallback", "DOCX_READ_ERROR", error=str(exc))
+
+
+def call_pdf_file_data(provider, file_path):
+    try:
+        with open(file_path, "rb") as handle:
+            header = handle.read(5)
+            handle.seek(0)
+            data = handle.read()
+        valid = header == b"%PDF-"
+        page_count = len(re.findall(rb"/Type\s*/Page\b", data))
+        return result(
+            provider,
+            "cache" if valid else "fallback",
+            "" if valid else "PDF_HEADER_MISSING",
+            raw_count=page_count if valid and page_count > 0 else 1 if valid else 0,
+            normalized_count=page_count if valid and page_count > 0 else 1 if valid else 0,
+            sample_raw_keys=["pdf", "pages", "sha256"],
+            metadata={
+                "fileAsOf": provider.get("fileAsOf", ""),
+                "officialUpdatedAt": provider.get("officialUpdatedAt", ""),
+                "knowledgeUse": "fta_status_context",
+                "sha256": sha256_bytes(data),
+                "pageCount": page_count if page_count > 0 else 1 if valid else 0,
+            },
+        )
+    except Exception as exc:
+        return result(provider, "fallback", "PDF_READ_ERROR", error=str(exc))
+
+
+def sha256_bytes(data):
+    import hashlib
+    return hashlib.sha256(data).hexdigest()
 
 
 def is_refresh_required(provider):

@@ -747,6 +747,8 @@ public class DiagnosisAsyncProcessor {
             case MOTIE_IMPORT_REGULATION -> "산업통상부 수입규제현황 CSV/API 수집";
             case MOTIE_MPE_TRADE_STATISTICS -> "산업통상부 소재부품장비 무역통계 CSV/API 수집";
             case MOTIE_MPE_PRODUCTION_INDEX -> "산업통상부 소재부품장비 생산지수 CSV/API 수집";
+            case MOTIE_MPE_INVENTORY_INDEX -> "산업통상부 소재부품장비 재고지수 CSV/API 수집";
+            case MOTIE_MPE_SHIPMENT_INDEX -> "산업통상부 소재부품장비 출하지수 CSV/API 수집";
             case TRADE_SECURITY_HSK_LINKAGE -> "무역안보관리원 HSK 연계표 CSV/API 수집";
             case TRADE_SECURITY_ITEM_KEYWORD -> "무역안보관리원 전략물자 품목키워드 CSV/API 수집";
             case KIPRIS_FTO -> "KIPRIS Plus 특허/FTO live/cache 수집";
