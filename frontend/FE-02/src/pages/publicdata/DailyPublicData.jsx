@@ -109,7 +109,13 @@ export default function DailyPublicData() {
       </div>
 
       {pageState === 'loading' && <StatusMessage type="loading" message="수집 로그를 불러오는 중입니다." />}
-      {pageState === 'error' && <StatusMessage type="error" message="수집 로그를 불러오지 못했습니다." />}
+      {pageState === 'error' && (
+        <StatusMessage
+          type="error"
+          message="수집 로그를 불러오지 못했습니다. 네트워크를 확인하고 다시 시도해주세요."
+          onAction={load}
+        />
+      )}
 
       {pageState === 'ok' && (
         <>

@@ -18,6 +18,18 @@
 }
 .editBtn:hover { border-color: var(--blue); color: var(--blue); }
 
+/* 제품 정보가 판단에 재사용됨을 알리는 안내 */
+.reuseHint { margin-top: 10px; font-size: 13px; color: var(--slate-2); line-height: 1.5; }
+
+/* 이 제품으로 바로 Gate 판단 시작 (제품 정보 → 판단 동선) */
+.diagnoseBtn {
+  font-family: var(--kr); font-size: 14px; font-weight: 700;
+  color: #fff; background: var(--blue); border: none;
+  padding: 11px 20px; border-radius: 10px; cursor: pointer;
+  margin: 4px 0 18px; transition: .15s;
+}
+.diagnoseBtn:hover { filter: brightness(1.06); }
+
 /* 제품명·신뢰도 행 */
 .titleRow { display: flex; align-items: center; gap: 12px; }
 

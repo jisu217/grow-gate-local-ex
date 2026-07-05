@@ -26,7 +26,7 @@ export default function S09Report({ scoreBars, summary, onDownload, fastApiUsed 
           </div>
 
           <div className="guardrail">
-            본 내용은 자동 생성된 의사결정 보조 정보이며, 법률/인증/수출 실행 여부의 최종 판단이 아닙니다. fallback/seed는 live 공공 API 결과처럼 표시하지 않으며, 최종 판단은 인증 전문가·변리사·법률 전문가와 함께 하십시오.
+            모든 규제·인증 답변은 추천 근거, 최신성, 전문가 확인 필요 여부를 함께 확인하십시오. 본 내용은 등록 제품 정보와 공공데이터 출처 신호 기반의 자동 생성 의사결정 보조 정보이며, 법률/인증/수출 실행 여부의 최종 판단이 아닙니다. fallback/seed 데이터는 live 공공 API 결과처럼 표시하지 않으며, 최종 판단은 인증 전문가·변리사·법률 전문가와 함께 하십시오.
           </div>
         </div>
 

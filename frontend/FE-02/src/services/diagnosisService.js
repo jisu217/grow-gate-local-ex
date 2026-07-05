@@ -349,7 +349,7 @@ function normalizeTopRisks(riskItems, mustFixBeforeQuote) {
 
   return padded.slice(0, 3).length
     ? padded.slice(0, 3)
-    : [{ level: 'medium', label: 'source trace와 등록 제품 지식을 담당자가 최종 확인해야 합니다.' }]
+    : [{ level: 'medium', label: 'source trace와 등록 제품 정보를 담당자가 최종 확인해야 합니다.' }]
 }
 
 function normalizeNextActions(roadmapStage, mustFixBeforeQuote, topRisks) {
@@ -597,7 +597,7 @@ function mapRoadmapStage(stageData) {
       tasks: Array.from({ length: Math.max(1, Math.min(count, 5)) }, (_, i) => ({
         tag: bucket.tag,
         title: `${bucket.label} 태스크 ${i + 1}`,
-        who: '수출 담당자 · 제품 지식 관리자',
+        who: '수출 담당자 · 제품 정보 관리자',
         urgent: bucket.key === 'd30' && i === 0,
       })),
     }

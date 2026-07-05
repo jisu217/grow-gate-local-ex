@@ -48,6 +48,7 @@ export default function DiagnosisDetail() {
   const [state, setState] = useState('loading') // loading | empty | error | ok
   const [data, setData] = useState(null)
   const [animate, setAnimate] = useState(false)
+  const [reloadKey, setReloadKey] = useState(0)
 
   useEffect(() => {
     let alive = true
@@ -70,7 +71,7 @@ export default function DiagnosisDetail() {
       }
     })()
     return () => { alive = false }
-  }, [productId])
+  }, [productId, reloadKey])
 
   if (state === 'loading') {
     return (
@@ -84,7 +85,13 @@ export default function DiagnosisDetail() {
     return (
       <div className={styles.wrap}>
         <button className={styles.back} onClick={() => navigate('/mypage')}>← 마이페이지</button>
-        <StatusMessage type="error" message="판단 근거를 불러오지 못했습니다. 잠시 후 다시 시도해주세요." />
+        <StatusMessage
+          type="error"
+          message="판단 근거를 불러오지 못했습니다. 네트워크를 확인하고 다시 시도해주세요."
+          onAction={() => setReloadKey((k) => k + 1)}
+          onSecondary={() => navigate('/mypage')}
+          secondaryLabel="마이페이지로"
+        />
       </div>
     )
   }

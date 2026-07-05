@@ -28,7 +28,7 @@ const KNOWLEDGE_IDEAS = [
   'fallback 원인과 재수집 조치를 남기는 error-book 항목',
 ]
 
-// 제품 지식 상세 페이지 컴포넌트
+// 제품 정보 상세 페이지 컴포넌트
 export default function KnowledgeDetail() {
   const { productId } = useParams()
   const navigate = useNavigate()
@@ -39,6 +39,7 @@ export default function KnowledgeDetail() {
   const [loopState, setLoopState] = useState('idle')
   const [pageState, setPageState] = useState('loading')
   const [activeTab, setActiveTab] = useState(0)
+  const [reloadKey, setReloadKey] = useState(0)
 
   // audit:view 권한 없으면 변경 이력 탭 제외
   const canViewAudit = can('audit:view')
@@ -61,7 +62,7 @@ export default function KnowledgeDetail() {
           .catch(() => setLoopItems([]))
       })
       .catch(() => setPageState('error'))
-  }, [productId, canViewAudit])
+  }, [productId, canViewAudit, reloadKey])
 
   const refreshLoopItems = async () => {
     const items = await getKnowledgeLoopItems(productId)
@@ -82,13 +83,19 @@ export default function KnowledgeDetail() {
 
   if (pageState === 'loading') return (
     <div className={styles.wrap}>
-      <StatusMessage type="loading" message="제품 지식을 불러오는 중입니다." />
+      <StatusMessage type="loading" message="제품 정보를 불러오는 중입니다." />
     </div>
   )
   if (pageState === 'error') return (
     <div className={styles.wrap}>
-      <button className={styles.back} onClick={() => navigate('/mypage/knowledge')}>← 제품 지식 관리</button>
-      <StatusMessage type="error" message="제품 정보를 불러오지 못했습니다. 잠시 후 다시 시도해주세요." />
+      <button className={styles.back} onClick={() => navigate('/mypage')}>← 마이페이지</button>
+      <StatusMessage
+        type="error"
+        message="제품 정보를 불러오지 못했습니다. 네트워크를 확인하고 다시 시도해주세요."
+        onAction={() => setReloadKey((k) => k + 1)}
+        onSecondary={() => navigate('/mypage')}
+        secondaryLabel="마이페이지로"
+      />
     </div>
   )
 
@@ -96,8 +103,8 @@ export default function KnowledgeDetail() {
     <div className={styles.wrap}>
 
       <div className={styles.topRow}>
-        <button className={styles.back} onClick={() => navigate('/mypage/knowledge')}>
-          ← 제품 지식 관리
+        <button className={styles.back} onClick={() => navigate('/mypage')}>
+          ← 마이페이지
         </button>
         {can('knowledge:edit') && (
           <button
@@ -114,6 +121,14 @@ export default function KnowledgeDetail() {
         <span className={styles.grade}>신뢰도 {toGradeLabel(product.trustGrade)}</span>
       </div>
       <div className={styles.meta}>{product.category} · 최근 수정 {product.updatedAt}</div>
+      <p className={styles.reuseHint}>여기 저장한 인증서·FTO·바이어 요구사항은 Gate 판단에 자동으로 반영됩니다.</p>
+
+      <button
+        className={styles.diagnoseBtn}
+        onClick={() => navigate(`/diagnosis/new?productId=${productId}`)}
+      >
+        이 제품으로 Gate 판단하기 →
+      </button>
 
       <div className={styles.tabs}>
         {tabs.map((tab, i) => (
@@ -131,7 +146,7 @@ export default function KnowledgeDetail() {
 
         {activeTab === 0 && (
           <div className={styles.card}>
-            <div className={styles.sectionTitle}>제품 지식 품질</div>
+            <div className={styles.sectionTitle}>제품 정보 품질</div>
             <div className={styles.registrationPanel}>
               <div>
                 <div className={styles.registrationLabel}>데이터 기준 등록률</div>
@@ -231,7 +246,7 @@ export default function KnowledgeDetail() {
           <div className={styles.card}>
             <div className={styles.sectionTitle}>담당자 승인형 근거 지식화 루프</div>
             <div className={styles.loopIntro}>
-              workflow trace와 source timeline에서 다음 진단에 재사용할 만한 항목입니다. 담당자가 승인한 항목만 제품 지식 출처로 반영됩니다.
+              workflow trace와 source timeline에서 다음 진단에 재사용할 만한 항목입니다. 담당자가 승인한 항목만 제품 정보 출처로 반영됩니다.
             </div>
             {loopItems.length === 0 ? (
               <div className={styles.ideaPanel}>

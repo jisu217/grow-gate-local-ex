@@ -89,6 +89,23 @@
 .chips { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 18px; }
 .chip { font-size: 12.5px; font-weight: 600; background: rgba(255,255,255,.16); padding: 6px 12px; border-radius: 999px; backdrop-filter: blur(4px); }
 
+/* 판정 중심 카드: 판정 배지 + 핵심 리스크 + 참고 점수 (파란 카드 위에서 읽히게) */
+.gateRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 4px; flex-wrap: wrap; }
+.gateBadge { display: inline-flex; align-items: center; gap: 8px; font-size: 17px; font-weight: 800; padding: 9px 16px; border-radius: 12px; }
+.gateDot { width: 9px; height: 9px; border-radius: 50%; background: currentColor; flex-shrink: 0; }
+.gateGo { background: #E3F7EF; color: #0E805D; }
+.gateCond { background: #FDF3DC; color: #9A6800; }
+.gateNo { background: #FCECE8; color: #B23A28; }
+.refScore { font-size: 13px; color: rgba(255,255,255,.8); font-weight: 600; }
+.refScore b { color: #fff; font-size: 15px; }
+.gateReason { margin-top: 12px; font-size: 14px; line-height: 1.5; color: rgba(255,255,255,.92); font-weight: 500; }
+.riskList { margin-top: 16px; display: flex; flex-direction: column; gap: 8px; border-top: 1px solid rgba(255,255,255,.18); padding-top: 14px; }
+.riskHead { font-size: 12px; font-weight: 700; color: rgba(255,255,255,.75); letter-spacing: .01em; }
+.riskItem { display: flex; gap: 9px; align-items: flex-start; font-size: 13.5px; line-height: 1.45; color: rgba(255,255,255,.95); }
+.riskNum { flex-shrink: 0; width: 19px; height: 19px; border-radius: 50%; background: rgba(255,255,255,.22); font-size: 11px; font-weight: 800; display: grid; place-items: center; margin-top: 1px; }
+.fullResultBtn { margin-top: 18px; font-family: var(--kr); font-size: 13px; font-weight: 700; color: #fff; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.35); padding: 9px 16px; border-radius: 10px; cursor: pointer; transition: .15s; }
+.fullResultBtn:hover { background: rgba(255,255,255,.26); }
+
 /* todo */
 .todo .list { margin-top: 14px; display: flex; flex-direction: column; gap: 11px; }
 .item { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--ink); padding: 4px 6px; margin: 0 -6px; border-radius: 8px; }
@@ -211,4 +228,12 @@
   .hero, .two, .companyRow { grid-template-columns: 1fr; }
   .navLinks { display: none; }
   .phead h1 { font-size: 27px; }
+}
+
+/* 좁은 폭: 제품 행이 한 줄에 안 들어가 넘치지 않도록 줄바꿈 */
+@media (max-width: 640px) {
+  .prow { flex-wrap: wrap; gap: 10px 12px; }
+  .prow > div:first-child { flex: 1 1 100%; }
+  .acts { margin-left: auto; }
+  .gateRow { gap: 8px; }
 }

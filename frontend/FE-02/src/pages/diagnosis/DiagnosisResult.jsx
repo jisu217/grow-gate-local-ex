@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { useParams, useSearchParams } from 'react-router-dom'
+import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 
 import Sidebar from '../../components/layout/Sidebar.jsx'
 import Topbar  from '../../components/layout/Topbar.jsx'
@@ -29,6 +29,7 @@ import { collectPublicData } from '../../services/publicDataService.js'
 // 진단 결과 뷰어 페이지 컴포넌트
 export default function DiagnosisResult() {
   const { id } = useParams()
+  const navigate = useNavigate()
   const [searchParams] = useSearchParams()
 
   // ?step=N 으로 진입하면 해당 단계부터 시작 (예: 마이페이지 "오늘 할 일" → 08 실행 보드)
@@ -41,6 +42,7 @@ export default function DiagnosisResult() {
   const [isCollapsed, setIsCollapsed] = useState(false)
   const [reportError, setReportError] = useState('')
   const [retryStatus, setRetryStatus] = useState('')
+  const [reloadKey, setReloadKey] = useState(0)
 
   const scrollRef = useRef(null)
 
@@ -68,7 +70,7 @@ export default function DiagnosisResult() {
       cancelled = true
       if (timeoutId) window.clearTimeout(timeoutId)
     }
-  }, [id])
+  }, [id, reloadKey])
 
   // 단계 이동
   const go = (i) => {
@@ -144,7 +146,7 @@ export default function DiagnosisResult() {
     <div className="app">
       <div className="content">
         <div className="scroll">
-          <StatusMessage type="loading" message="공공데이터와 제품 지식을 대조 중입니다." />
+          <StatusMessage type="loading" message="공공데이터와 제품 정보를 대조 중입니다." />
         </div>
       </div>
     </div>
@@ -154,7 +156,13 @@ export default function DiagnosisResult() {
     <div className="app">
       <div className="content">
         <div className="scroll">
-          <StatusMessage type="error" message="진단 결과를 불러오지 못했습니다. 잠시 후 다시 시도해주세요." />
+          <StatusMessage
+            type="error"
+            message="진단 결과를 불러오지 못했습니다. 네트워크를 확인하고 다시 시도해주세요."
+            onAction={() => setReloadKey((k) => k + 1)}
+            onSecondary={() => navigate('/diagnosis')}
+            secondaryLabel="판단 이력으로"
+          />
         </div>
       </div>
     </div>
@@ -164,7 +172,14 @@ export default function DiagnosisResult() {
     <div className="app">
       <div className="content">
         <div className="scroll">
-          <StatusMessage type="error" message="진단 실행이 실패했습니다. 입력값과 백엔드 로그를 확인해주세요." />
+          <StatusMessage
+            type="error"
+            message="진단 실행이 실패했습니다. 입력값을 확인하고 새 판단을 실행해주세요."
+            actionLabel="새 판단 실행"
+            onAction={() => navigate('/diagnosis/new')}
+            onSecondary={() => navigate('/diagnosis')}
+            secondaryLabel="판단 이력으로"
+          />
         </div>
       </div>
     </div>
@@ -198,7 +213,7 @@ export default function DiagnosisResult() {
           <SourceTrustBar summary={result.session.sourceTrustSummary} onRetry={retryPublicData} retryStatus={retryStatus} />
 
           {['pending', 'running'].includes(String(result.session?.status ?? '').toLowerCase()) && (
-            <StatusMessage type="loading" message="공공데이터와 제품 지식을 대조 중입니다. 완료되면 이 화면이 자동으로 갱신됩니다." />
+            <StatusMessage type="loading" message="공공데이터와 제품 정보를 대조 중입니다. 완료되면 이 화면이 자동으로 갱신됩니다." />
           )}
           {reportError && <StatusMessage type="error" message={reportError} />}
 

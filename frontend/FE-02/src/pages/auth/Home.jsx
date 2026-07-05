@@ -114,7 +114,7 @@ export default function Home() {
           </h1>
 
           <p className={styles.lead}>
-            제품명과 HS Code를 입력하면 공공데이터 수집 상태, 제품 지식, 인증·특허·리콜 신호를 연결해
+            제품명과 HS Code를 입력하면 공공데이터 수집 상태, 제품 정보, 인증·특허·리콜 신호를 연결해
             <b style={{color:'var(--blue)'}}> Gate 판단·근거·업무 보드</b>로 정리합니다.
           </p>
 
@@ -148,7 +148,7 @@ export default function Home() {
         <section className={styles.sec}>
           <div className={styles.secEyebrow}>How it works</div>
           <h2 className={styles.secH2}>조회가 아니라, 실행 근거입니다</h2>
-          <p className={styles.secSub}>흩어진 공공데이터 수집 상태와 제품 지식을 연결해, 기업이 검토할 실행 후보로 정리합니다.</p>
+          <p className={styles.secSub}>흩어진 공공데이터 수집 상태와 제품 정보를 연결해, 기업이 검토할 실행 후보로 정리합니다.</p>
           <div className={styles.featGrid}>
             {FEATURES.map(f => (
               <div key={f.no} className={styles.feat}>
