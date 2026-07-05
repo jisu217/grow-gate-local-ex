@@ -69,6 +69,24 @@
       "reason": "Swagger namespace 15085508/v1 latest endpoint matches the attached 20260331/26-row CSV. Use as regional/industry density context only, not specific company capacity or final Gate proof."
     },
     {
+      "dataset": "산업통상부_무역구제제도 발생현황_20251231.csv",
+      "status": "runtime_connected_csv_then_api",
+      "target": "MOTIE_TRADE_REMEDY_OCCURRENCE",
+      "reason": "Swagger namespace 3039967/v1 latest endpoint matches the attached 20251231/22-row CSV. Use as annual trade-remedy aggregate context only, not product petition/legal/export execution or final Gate proof."
+    },
+    {
+      "dataset": "산업통상부_무역구제_자유무역협정 목록자료_20250825.csv",
+      "status": "runtime_connected_csv_then_api",
+      "target": "MOTIE_TRADE_REMEDY_FTA_LIST",
+      "reason": "Swagger namespace 15117950/v1 latest endpoint matches the attached 20250825/16-row CSV. Use as FTA list context only, not tariff-rate proof, origin determination, legal advice, or final Gate proof."
+    },
+    {
+      "dataset": "한국무역보험공사_77개국 업종별 연체율_20211231.csv",
+      "status": "runtime_connected_csv_then_api",
+      "target": "KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE",
+      "reason": "Swagger namespace 15104444/v1 latest endpoint matches the attached 20211231/1217-row CSV. Use as country/industry overdue-rate context only, not buyer credit, insurance underwriting, transaction approval, or final Gate proof."
+    },
+    {
       "dataset": "KOTRA 권역별 경제 지표, 글로벌 무역현황, 수출입동향, 일반기계산업 동향",
       "status": "reference_only_deferred",
       "target": "future country/industry profile module",

@@ -117,14 +117,37 @@ pass "public data defaults to enabled"
 search_quiet 'KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY' \
   "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/enums/PublicDataProvider.java" \
   || fail "KICOX factory registration provider enum must be registered"
+for provider in MOTIE_TRADE_REMEDY_OCCURRENCE MOTIE_TRADE_REMEDY_FTA_LIST KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE; do
+  search_quiet "$provider" "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/enums/PublicDataProvider.java" \
+    || fail "$provider enum must be registered"
+  search_quiet "$provider" "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataOperationalStatusService.java" \
+    || fail "$provider must appear in public-data health"
+  search_quiet "$provider" "$ROOT_DIR/scripts/check_public_data_providers.py" \
+    || fail "$provider must appear in public data provider smoke"
+done
 require_file "backend/BE-02/src/main/java/com/growgate/publicdata/service/KicoxFactoryRegistrationConnector.java"
 require_file "backend/BE-02/src/test/java/com/growgate/publicdata/service/KicoxFactoryRegistrationConnectorTest.java"
+require_file "backend/BE-02/src/main/java/com/growgate/publicdata/service/MotieTradeRemedyOccurrenceConnector.java"
+require_file "backend/BE-02/src/main/java/com/growgate/publicdata/service/MotieTradeRemedyFtaListConnector.java"
+require_file "backend/BE-02/src/main/java/com/growgate/publicdata/service/KsureCountryIndustryOverdueRateConnector.java"
+require_file "backend/BE-02/src/test/java/com/growgate/publicdata/service/MotieTradeRemedyOccurrenceConnectorTest.java"
+require_file "backend/BE-02/src/test/java/com/growgate/publicdata/service/MotieTradeRemedyFtaListConnectorTest.java"
+require_file "backend/BE-02/src/test/java/com/growgate/publicdata/service/KsureCountryIndustryOverdueRateConnectorTest.java"
+require_file "backend/BE-02/src/main/resources/publicdata/motie-trade-remedy-occurrences-20251231.csv"
+require_file "backend/BE-02/src/main/resources/publicdata/motie-trade-remedy-fta-list-20250825.csv"
+require_file "backend/BE-02/src/main/resources/publicdata/ksure-country-industry-overdue-rates-20211231.csv"
 search_quiet 'kicox-factory-registration' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml" \
   || fail "KICOX factory registration config must exist"
+search_quiet 'motie-trade-remedy-occurrence|motie-trade-remedy-fta-list|ksure-country-industry-overdue-rate' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml" \
+  || fail "MOTIE trade-remedy and KSURE overdue-rate config must exist"
 search_quiet 'KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataOperationalStatusService.java" \
   || fail "KICOX factory registration must appear in public-data health"
 search_quiet 'kicox_factory_registration_region_industry' "$ROOT_DIR/data/public_data_sources.json" \
   || fail "public data source catalog must include KICOX factory registration"
+for source_id in motie_trade_remedy_occurrence motie_trade_remedy_fta_list ksure_country_industry_overdue_rate; do
+  search_quiet "$source_id" "$ROOT_DIR/data/public_data_sources.json" \
+    || fail "public data source catalog must include $source_id"
+done
 search_quiet 'KICOX_OPERATION_RATE|KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY' "$ROOT_DIR/scripts/check_public_data_providers.py" \
   || fail "public data provider smoke must include KICOX runtime providers"
 search_quiet 'KICOX_OPERATION_RATE' \
@@ -133,6 +156,9 @@ search_quiet 'KICOX_OPERATION_RATE' \
 search_quiet 'KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY' \
   "$ROOT_DIR/docs/judge-solution-pack/04_codex_prompts/CODEX_PROMPT_13_multi_agent_public_data_harness.md" \
   || fail "multi-agent harness prompt must name KICOX factory registration runtime provider"
+search_quiet 'MOTIE_TRADE_REMEDY_OCCURRENCE|MOTIE_TRADE_REMEDY_FTA_LIST|KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE' \
+  "$ROOT_DIR/docs/agent-public-data-harness-playbook-2026-07-05.md" \
+  || fail "agent public-data harness playbook must name MOTIE trade-remedy and KSURE overdue runtime providers"
 search_quiet 'llmInfluencedGate=false' "$ROOT_DIR/docs/agent-public-data-harness-playbook-2026-07-05.md" \
   || fail "agent public-data harness playbook must preserve rule-owned Gate policy"
 pass "KICOX CSV/API providers and multi-agent public-data harness are wired"

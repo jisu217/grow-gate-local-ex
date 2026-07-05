@@ -27,10 +27,12 @@
 - `fallback`: 호출 실패, key 없음, endpoint 미구성, schema mismatch.
 - `seed`: 합성 데모. public API proof 아님.
 - KICOX runtime provider `KICOX_OPERATION_RATE`와 `KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY`는 시장/지역 aggregate 참고 신호이며 특정 기업 생산능력, 수요, 입주 가능성, 공급 안정성, 최종 Gate를 확정하지 않는다.
+- MOTIE/KSURE runtime provider `MOTIE_TRADE_REMEDY_OCCURRENCE`, `MOTIE_TRADE_REMEDY_FTA_LIST`, `KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE`는 CSV fast path + update-due API refresh 참고 신호이며 품목 제소, 관세율/원산지, 바이어 신용도, 보험 인수, 최종 Gate를 확정하지 않는다.
 - FTA PDF와 KEA HWPX는 지식화 context이며 점수/Gate proof로 쓰지 않는다.
 
 하네스 수용 조건:
 - `scripts/check_public_data_providers.py --json`에서 KICOX 두 provider가 `cache` 또는 key 구성 시 `live`로 설명 가능해야 한다.
+- `scripts/check_public_data_providers.py --json`에서 MOTIE 무역구제/FTA 목록 및 KSURE 연체율 provider가 `cache`, `stale cache`, 또는 key 구성 시 `live`로 설명 가능해야 한다.
 - `scripts/check-risk-gates.sh`가 provider enum, connector, test, source catalog, 문서 matrix, prompt를 모두 확인해야 한다.
 - 진단 detail payload는 `evidenceRetrieval`, `evidenceGuardrails`, `sourceTrace`, `llmFallbackReasons`, `gateDecision`, `claimVerifications`를 보존해야 한다.
 - `gateDecision.llmInfluencedGate=false`가 유지되어야 한다.

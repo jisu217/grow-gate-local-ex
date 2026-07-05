@@ -35,6 +35,24 @@ KICOX factory registration:
 - API refresh: only after update due and `KICOX_FACTORY_REGISTRATION_API_KEY` or `DATAGO_SERVICE_KEY`.
 - Use: regional/industry factory-density context only.
 
+MOTIE trade remedy occurrence:
+- Runtime provider: `MOTIE_TRADE_REMEDY_OCCURRENCE`.
+- Fast path: `backend/BE-02/src/main/resources/publicdata/motie-trade-remedy-occurrences-20251231.csv`.
+- API refresh: only after update due and `MOTIE_TRADE_REMEDY_OCCURRENCE_API_KEY` or `DATAGO_SERVICE_KEY`.
+- Use: annual trade-remedy aggregate context only; never product petition/legal/final Gate proof.
+
+MOTIE trade remedy FTA list:
+- Runtime provider: `MOTIE_TRADE_REMEDY_FTA_LIST`.
+- Fast path: `backend/BE-02/src/main/resources/publicdata/motie-trade-remedy-fta-list-20250825.csv`.
+- API refresh: only after update due and `MOTIE_TRADE_REMEDY_FTA_LIST_API_KEY` or `DATAGO_SERVICE_KEY`.
+- Use: target-country FTA list context only; never tariff-rate, origin, legal, or final Gate proof.
+
+KSURE country/industry overdue rate:
+- Runtime provider: `KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE`.
+- Fast path: `backend/BE-02/src/main/resources/publicdata/ksure-country-industry-overdue-rates-20211231.csv`.
+- API refresh: update due has passed, so call odcloud only when `KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE_API_KEY` or `DATAGO_SERVICE_KEY` is configured.
+- Use: country/industry historical overdue-rate context only; never buyer creditworthiness, insurance approval, transaction feasibility, or final Gate proof.
+
 Knowledge-only sources:
 - FTA PDF: target-country FTA context and sourceTrace support only.
 - KEA HWPX: industry energy/GHG context and ESG explanation only.

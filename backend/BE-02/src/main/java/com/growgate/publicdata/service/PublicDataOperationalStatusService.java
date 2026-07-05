@@ -59,10 +59,22 @@ public class PublicDataOperationalStatusService {
                 providerStatus(PublicDataProvider.MOTIE_DEALING_BUSINESS_INFO,
                         prop("public-data.motie-dealing-business-info.url"),
                         prop("public-data.motie-dealing-business-info.key")),
+                fileDataStatus(PublicDataProvider.MOTIE_TRADE_REMEDY_OCCURRENCE,
+                        prop("public-data.motie-trade-remedy-occurrence.csv-resource"),
+                        prop("public-data.motie-trade-remedy-occurrence.url"),
+                        prop("public-data.motie-trade-remedy-occurrence.key")),
+                fileDataStatus(PublicDataProvider.MOTIE_TRADE_REMEDY_FTA_LIST,
+                        prop("public-data.motie-trade-remedy-fta-list.csv-resource"),
+                        prop("public-data.motie-trade-remedy-fta-list.url"),
+                        prop("public-data.motie-trade-remedy-fta-list.key")),
                 fileDataStatus(PublicDataProvider.KSURE_OVERSEAS_BRANCHES,
                         prop("public-data.ksure-overseas-branches.csv-resource"),
                         prop("public-data.ksure-overseas-branches.url"),
                         prop("public-data.ksure-overseas-branches.key")),
+                fileDataStatus(PublicDataProvider.KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE,
+                        prop("public-data.ksure-country-industry-overdue-rate.csv-resource"),
+                        prop("public-data.ksure-country-industry-overdue-rate.url"),
+                        prop("public-data.ksure-country-industry-overdue-rate.key")),
                 providerStatus(PublicDataProvider.SAFETY_RECALL, prop("public-data.safety-recall.url"), prop("public-data.safety-recall.key")),
                 fileDataStatus(PublicDataProvider.KATS_PRODUCT_SAFETY_HAZARD_INFO,
                         prop("public-data.kats-product-safety-hazard-info.csv-resource"),
@@ -243,7 +255,10 @@ public class PublicDataOperationalStatusService {
             case "KIAT_TECH_BANK_PATENT" -> "kiatTechBankPatent";
             case "MOTIE_EXPORT_PREARRANGE" -> "motieExportPrearrange";
             case "MOTIE_DEALING_BUSINESS_INFO" -> "motieDealingBusinessInfo";
+            case "MOTIE_TRADE_REMEDY_OCCURRENCE" -> "motieTradeRemedyOccurrence";
+            case "MOTIE_TRADE_REMEDY_FTA_LIST" -> "motieTradeRemedyFtaList";
             case "KSURE_OVERSEAS_BRANCHES" -> "ksureOverseasBranches";
+            case "KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE" -> "ksureCountryIndustryOverdueRate";
             case "SAFETY_RECALL" -> "safetyKorea";
             case "KATS_PRODUCT_SAFETY_HAZARD_INFO" -> "katsProductSafetyHazardInfo";
             case "KATS_DOMESTIC_RECALL_REPORT" -> "katsDomesticRecallReport";

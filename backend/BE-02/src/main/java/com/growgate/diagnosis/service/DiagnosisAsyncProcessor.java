@@ -747,7 +747,10 @@ public class DiagnosisAsyncProcessor {
             case KIAT_TECH_BANK_PATENT -> "한국산업기술진흥원 기술은행 등록기술 특허 API 수집";
             case MOTIE_EXPORT_PREARRANGE -> "산업통상부 수출예정정보 API 수집";
             case MOTIE_DEALING_BUSINESS_INFO -> "산업통상부 거래업체정보 API 수집";
+            case MOTIE_TRADE_REMEDY_OCCURRENCE -> "산업통상부 무역구제제도 발생현황 CSV/API 수집";
+            case MOTIE_TRADE_REMEDY_FTA_LIST -> "산업통상부 무역구제 자유무역협정 목록 CSV/API 수집";
             case KSURE_OVERSEAS_BRANCHES -> "한국무역보험공사 해외지사 현황 CSV/API 수집";
+            case KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE -> "한국무역보험공사 77개국 업종별 연체율 CSV/API 수집";
             case SAFETY_RECALL -> "제품안전·리콜 live/cache 수집";
             case KATS_PRODUCT_SAFETY_HAZARD_INFO -> "국가기술표준원 제품안전 위해정보 CSV/API 수집";
             case KATS_DOMESTIC_RECALL_REPORT -> "국가기술표준원 제품안전 국내리콜 보고서 CSV/API 수집";

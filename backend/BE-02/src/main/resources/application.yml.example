@@ -112,6 +112,24 @@ public-data:
     key: ${MOTIE_DEALING_BUSINESS_INFO_API_KEY:${DATAGO_SERVICE_KEY:}}
     key-param: ${MOTIE_DEALING_BUSINESS_INFO_KEY_PARAM:ServiceKey}
     operation: ${MOTIE_DEALING_BUSINESS_INFO_OPERATION:getDelngSttusInqire}
+  motie-trade-remedy-occurrence:
+    url: ${MOTIE_TRADE_REMEDY_OCCURRENCE_API_URL:https://api.odcloud.kr/api/3039967/v1/uddi:aaf4da5b-3469-4e43-9e45-ef834a9a2de0_202002211020}
+    key: ${MOTIE_TRADE_REMEDY_OCCURRENCE_API_KEY:${DATAGO_SERVICE_KEY:}}
+    csv-resource: ${MOTIE_TRADE_REMEDY_OCCURRENCE_CSV_RESOURCE:classpath:publicdata/motie-trade-remedy-occurrences-20251231.csv}
+    dataset-date: ${MOTIE_TRADE_REMEDY_OCCURRENCE_DATASET_DATE:2025-12-31}
+    next-update-date: ${MOTIE_TRADE_REMEDY_OCCURRENCE_NEXT_UPDATE_DATE:2026-12-31}
+    swagger-latest-dataset-date: ${MOTIE_TRADE_REMEDY_OCCURRENCE_SWAGGER_LATEST_DATASET_DATE:2025-12-31}
+    portal-total-rows: ${MOTIE_TRADE_REMEDY_OCCURRENCE_PORTAL_TOTAL_ROWS:22}
+    api-per-page: ${MOTIE_TRADE_REMEDY_OCCURRENCE_API_PER_PAGE:100}
+  motie-trade-remedy-fta-list:
+    url: ${MOTIE_TRADE_REMEDY_FTA_LIST_API_URL:https://api.odcloud.kr/api/15117950/v1/uddi:dd7abd3f-f7fc-4064-9377-ffd563de8d12}
+    key: ${MOTIE_TRADE_REMEDY_FTA_LIST_API_KEY:${DATAGO_SERVICE_KEY:}}
+    csv-resource: ${MOTIE_TRADE_REMEDY_FTA_LIST_CSV_RESOURCE:classpath:publicdata/motie-trade-remedy-fta-list-20250825.csv}
+    dataset-date: ${MOTIE_TRADE_REMEDY_FTA_LIST_DATASET_DATE:2025-08-25}
+    next-update-date: ${MOTIE_TRADE_REMEDY_FTA_LIST_NEXT_UPDATE_DATE:2026-08-25}
+    swagger-latest-dataset-date: ${MOTIE_TRADE_REMEDY_FTA_LIST_SWAGGER_LATEST_DATASET_DATE:2025-08-25}
+    portal-total-rows: ${MOTIE_TRADE_REMEDY_FTA_LIST_PORTAL_TOTAL_ROWS:16}
+    api-per-page: ${MOTIE_TRADE_REMEDY_FTA_LIST_API_PER_PAGE:100}
   ksure-overseas-branches:
     url: ${KSURE_OVERSEAS_BRANCHES_API_URL:https://api.odcloud.kr/api/15044855/v1/uddi:99a3f676-337f-439c-8ccd-c70ac08efcd9}
     key: ${KSURE_OVERSEAS_BRANCHES_API_KEY:${DATAGO_SERVICE_KEY:}}
@@ -120,6 +138,15 @@ public-data:
     next-update-date: ${KSURE_OVERSEAS_BRANCHES_NEXT_UPDATE_DATE:2099-12-31}
     portal-total-rows: ${KSURE_OVERSEAS_BRANCHES_PORTAL_TOTAL_ROWS:23}
     api-per-page: ${KSURE_OVERSEAS_BRANCHES_API_PER_PAGE:100}
+  ksure-country-industry-overdue-rate:
+    url: ${KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE_API_URL:https://api.odcloud.kr/api/15104444/v1/uddi:8deb1668-3932-4323-93bf-fad271cfdb0c}
+    key: ${KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE_API_KEY:${DATAGO_SERVICE_KEY:}}
+    csv-resource: ${KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE_CSV_RESOURCE:classpath:publicdata/ksure-country-industry-overdue-rates-20211231.csv}
+    dataset-date: ${KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE_DATASET_DATE:2021-12-31}
+    next-update-date: ${KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE_NEXT_UPDATE_DATE:2022-12-31}
+    swagger-latest-dataset-date: ${KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE_SWAGGER_LATEST_DATASET_DATE:2021-12-31}
+    portal-total-rows: ${KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE_PORTAL_TOTAL_ROWS:1217}
+    api-per-page: ${KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE_API_PER_PAGE:1500}
   safety-recall:
     url: ${SAFETY_RECALL_API_URL:https://www.safetykorea.kr/release/openapi}
     key: ${SAFETY_RECALL_API_KEY:${DATAGO_SERVICE_KEY:}}
