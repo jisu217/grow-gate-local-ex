@@ -468,21 +468,22 @@ PRESENTATION_REQUIRE_OPERATION_API=true \
 
 ## 12. Deployment Status
 
-GitHub `main`은 최신 심사 방어 코드가 반영된 기준 브랜치입니다. Lightsail HTTPS 서비스는 최신 커밋으로 배포되어 있고, smoke test가 통과한 상태입니다.
+GitHub `main`은 최신 public-data/provider 및 source-bound evidence 코드가 반영된 기준 브랜치입니다. Lightsail HTTPS 서비스는 접근 가능한 운영 smoke가 통과하지만, 현재 작업자 IP가 SSH allowlist에 없어 `main` pull/restart 배포 완료 여부는 서버에서 직접 확인해야 합니다.
 
 | Item | Current State |
 | :--- | :--- |
-| GitHub main | `080be92fed785e251990dd9ad7fd7778552fe235` |
-| Deployed commit | `080be92fed785e251990dd9ad7fd7778552fe235` |
+| GitHub main | `3eae6e5cbf21a1242cb4c02ae08ed1826040de6d` |
+| Deployed commit | 서버 SSH 재접속 후 확인 필요 |
 | Lightsail static IP | `54.180.56.24` |
 | Current public URL | `https://growgate.54.180.56.24.sslip.io` |
 | Attached instance | `growgate-fresh-20260703-2134` |
-| SSH firewall | 현재 작업자 IP allowlist와 Lightsail Connect 허용 |
-| Service status | `growgate-backend=active`, `/health=200`, production smoke PASS |
+| SSH firewall | `lightsail-connect`는 허용, 현재 작업자 IP `1.234.247.45/32`는 미등록이라 SSH timeout |
+| Service status | production smoke PASS |
 | Public proof viewer | `/public-data/daily-refresh` returns `200` without login |
 | Auth session restore | admin login and cookie-only `/api/users/me=200` verified |
 | Synthetic validation seed | personas `5`, sessions `15`, findings `3` |
-| Live public API proof | 현재 운영 서버는 provider key 미주입 상태라 `liveCount=0`, `fallbackCount=5` |
+| Latest smoke | `2026-07-05 19:12 KST`, `diagnosisId=5d0c643d-7b5b-4dd9-bab8-cf5027d36621`, `collectionRunId=ce610676-9adc-4769-80ac-07daf7c98da1`, `cacheCount=8`, `fallbackCount=5` |
+| Live public API proof | 현재 운영 smoke 기준 source trace는 `liveCount=0`, `cacheCount=8`, `fallbackCount=5`, operation endpoint/API key proof count `0` |
 
 배포 재실행 순서:
 
@@ -497,7 +498,7 @@ BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/smoke-prod.sh
 
 `PUBLIC_DATA_ENABLED=true`는 기본값이지만, `SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true`는 실제 provider operation endpoint와 API key가 서버에 주입된 뒤에만 사용합니다.
 
-현재 운영 smoke는 앱 배포와 fallback-aware diagnosis 경로를 검증합니다. 공식 live 공공 API proof를 올리려면 서버에 provider operation endpoint/API key를 주입한 뒤 proof run을 다시 생성해야 합니다.
+현재 운영 smoke는 앱 배포와 fallback-aware diagnosis 경로를 검증합니다. 공식 live 공공 API proof를 올리려면 서버 SSH 또는 Lightsail browser shell 접속을 복구하고 provider operation endpoint/API key를 secret/env로 주입한 뒤 proof run을 다시 생성해야 합니다. API key는 repository에 저장하지 않습니다.
 
 ---
 
