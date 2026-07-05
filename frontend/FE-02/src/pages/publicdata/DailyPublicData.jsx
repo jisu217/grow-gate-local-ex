@@ -37,8 +37,9 @@ export default function DailyPublicData() {
     const runData = valueOrNull(runResult)
     const recordData = valueOrNull(recordResult)
     const proofData = valueOrNull(proofResult)
+    const proofFallbackDashboard = proofDashboard(proofData)
 
-    setDashboard(dashboardData ?? proofDashboard(proofData))
+    setDashboard(hasDashboardEvidence(dashboardData) ? dashboardData : (proofFallbackDashboard ?? dashboardData))
     setRuns(runData?.runs ?? [])
     setRecords(recordData?.records ?? [])
 
@@ -65,6 +66,7 @@ export default function DailyPublicData() {
 
   const dailyGroups = useMemo(() => groupRunsByDate(runs, records), [runs, records])
   const latestRun = runs[0]
+  const recentTargetCount = dashboard?.runCount ?? runs.length
   const providerNames = (dashboard?.providers ?? []).map((provider) => provider.provider)
   const externalCount = records.filter((record) => isExternalRecord(record) && !record.fallbackUsed).length
   const failureReasons = collectFailureReasons(runs, records).slice(0, 4)
@@ -140,7 +142,7 @@ export default function DailyPublicData() {
 
           <section className={styles.summaryGrid} aria-label="daily refresh summary">
             <Metric label="수집일" value={formatDateTime(latestRun?.startedAt ?? dashboard?.newestFetchedAt)} />
-            <Metric label="최근 수집 대상" value={`${runs.length}개`} />
+            <Metric label="최근 수집 대상" value={`${recentTargetCount}개`} />
             <Metric label="성공" value={`live ${dashboard?.successCount ?? 0}건`} tone="ok" />
             <Metric label="캐시" value={`cache ${dashboard?.cacheHitCount ?? 0}건`} />
             <Metric label="실패" value={`fallback ${dashboard?.fallbackCount ?? 0}건`} tone="warn" />
@@ -305,6 +307,18 @@ function valueOrNull(result) {
 
 function errorMessage(result) {
   return result.status === 'rejected' ? result.reason?.message : ''
+}
+
+function hasDashboardEvidence(dashboard) {
+  if (!dashboard) return false
+  return Boolean(
+    (dashboard.runCount ?? 0) > 0 ||
+    (dashboard.recordCount ?? 0) > 0 ||
+    (dashboard.successCount ?? 0) > 0 ||
+    (dashboard.cacheHitCount ?? 0) > 0 ||
+    (dashboard.fallbackCount ?? 0) > 0 ||
+    (dashboard.providers?.length ?? 0) > 0,
+  )
 }
 
 function proofDashboard(proofRun) {
