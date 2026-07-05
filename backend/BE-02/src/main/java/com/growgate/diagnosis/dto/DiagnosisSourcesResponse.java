@@ -23,6 +23,18 @@ public class DiagnosisSourcesResponse {
         private String ministry;
         private String dataFamily;
         private Boolean motieRelated;
+        private String sourceName;
+        private String officialUrl;
+        private Boolean providerOperationEndpoint;
+        private Boolean providerApiKeyRequired;
+        private String licenseName;
+        private String termsUrl;
+        private String redistributionAllowed;
+        private String storageAllowed;
+        private String reprocessingAllowed;
+        private String attributionRequired;
+        private String usageWarning;
+        private String licenseLastVerifiedAt;
         private String datasetName;
         private String documentName;
         private String url;

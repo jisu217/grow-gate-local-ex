@@ -10,6 +10,9 @@ import java.util.Map;
 public class MarkdownReportRenderer {
 
     public static final String DEFAULT_MODEL_VERSION = "growgate-gate-risk-v0.1.0";
+    public static final String FTO_LEGAL_BOUNDARY = "본 결과는 공개 특허·상표 데이터와 입력 정보를 기반으로 한 사전 탐색 결과입니다. "
+            + "특허 침해 여부, 실시 가능성, 권리 유효성에 대한 법률 판단이 아니며, "
+            + "최종 의사결정 전 변리사 또는 법률 전문가 검토가 필요합니다.";
 
     private final ReportFrontMatterBuilder frontMatterBuilder;
     private final ReportClaimVerifier claimVerifier;
@@ -59,7 +62,25 @@ public class MarkdownReportRenderer {
                 + topRisk + " 때문에 `" + firstAction + "` 조치가 필요합니다.\n\n"
                 + "## Public Data Proof\n\n"
                 + "- proofRunId: " + safe(context.getPublicDataProofRunId(), "not-available") + "\n"
-                + "- source count: " + sourceIds.size() + "\n\n";
+                + "- source count: " + sourceIds.size() + "\n\n"
+                + "## 근거 데이터와 AI 보조 해석 구분\n\n"
+                + "### 근거 데이터\n\n"
+                + "- Provider: Source Appendix의 provider/sourceId별 확인\n"
+                + "- sourceType: live/cache/fallback/seed/empty를 구분해 확인\n"
+                + "- 조회일: fetchedAt 또는 proofRun 생성 시각 기준\n"
+                + "- 원문 링크: provider officialUrl 또는 record endpoint 기준\n"
+                + "- rawCount/normalizedCount: public-data normalized payload 기준\n\n"
+                + "### AI 보조 해석\n\n"
+                + "- 요약: source trace와 규칙 점수 설명을 사람이 읽기 쉽게 정리\n"
+                + "- 리스크 후보: 전문가 검토가 필요한 후보 항목 표시\n"
+                + "- 확인 필요 사항: 담당자·인증기관·변리사 검토 전 확정 금지\n\n"
+                + "주의: 본 내용은 자동 생성된 의사결정 보조 정보이며, 법률/인증/수출 실행 여부의 최종 판단이 아닙니다.\n\n"
+                + "## FTO 사전 탐색 고지\n\n"
+                + FTO_LEGAL_BOUNDARY + "\n\n"
+                + "## 개인정보·영업비밀 입력 제한\n\n"
+                + "데모 환경에는 주민등록번호, 연락처, 계약서, 도면, 원가, 거래처명, 미공개 인증문서 등 "
+                + "개인정보 또는 영업비밀에 해당할 수 있는 정보를 입력하지 마십시오. "
+                + "실제 개인정보가 포함될 경우 별도 동의와 처리방침이 필요하며, 로그에는 개인정보/API key/영업비밀을 남기지 않습니다.\n\n";
     }
 
     private String verificationList(List<ReportClaimVerifier.ClaimVerification> verifications) {

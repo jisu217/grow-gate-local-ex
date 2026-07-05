@@ -300,6 +300,12 @@ public class MotieWebCrawlConnector implements PublicDataConnector {
         normalized.put("fallbackUsed", true);
         normalized.put("signal", "fallback");
         normalized.put("metrics", Map.of("recordCount", 0, "pageCount", 0));
+        normalized.put("rawCount", 0);
+        normalized.put("normalizedCount", 0);
+        normalized.put("filteredCount", 0);
+        normalized.put("zeroReason", zeroReason(safeReason));
+        normalized.put("requestParamsMasked", Map.of());
+        normalized.put("sampleRawKeys", List.of());
         normalized.put("scoreContribution", -1);
         normalized.put("confidence", 0.0);
         normalized.put("reason", safeReason);
@@ -307,6 +313,17 @@ public class MotieWebCrawlConnector implements PublicDataConnector {
                 "collectionMode", "safe_public_web_crawl",
                 "fallbackUsed", true,
                 "reason", safeReason
+        ));
+        normalized.put("zeroResultDiagnostics", Map.of(
+                "provider", provider().name(),
+                "agent", usedFor(),
+                "sourceType", "fallback",
+                "rawCount", 0,
+                "normalizedCount", 0,
+                "filteredCount", 0,
+                "zeroReason", zeroReason(safeReason),
+                "sampleRawKeys", List.of(),
+                "fallbackUsed", true
         ));
         normalized.put("scoreFormula", "crawl fallback contributes no positive score");
         return PublicDataConnectorResult.builder()
@@ -335,6 +352,14 @@ public class MotieWebCrawlConnector implements PublicDataConnector {
 
     private String sanitize(String value) {
         return mask(safe(value));
+    }
+
+    private String zeroReason(String reason) {
+        String lower = safe(reason).toLowerCase(Locale.ROOT);
+        if (lower.contains("urls is empty")) return "CRAWL_URLS_EMPTY";
+        if (lower.contains("allowlist")) return "CRAWL_URL_NOT_ALLOWLISTED";
+        if (lower.contains("all crawl urls failed")) return "CRAWL_FETCH_FAILED";
+        return "CRAWL_SKIPPED_OR_FAILED";
     }
 
     private String canonicalProduct(PublicDataRequest request) {

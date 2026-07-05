@@ -1,6 +1,7 @@
 package com.growgate.config;
 
 import org.springframework.boot.web.client.RestTemplateBuilder;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.client.RestTemplate;
@@ -11,10 +12,13 @@ import java.time.Duration;
 public class HttpClientConfig {
 
     @Bean
-    public RestTemplate restTemplate(RestTemplateBuilder builder) {
+    public RestTemplate restTemplate(
+            RestTemplateBuilder builder,
+            @Value("${public-data.http.connect-timeout-ms:3000}") long connectTimeoutMs,
+            @Value("${public-data.http.read-timeout-ms:20000}") long readTimeoutMs) {
         return builder
-                .setConnectTimeout(Duration.ofSeconds(3))
-                .setReadTimeout(Duration.ofSeconds(20))
+                .setConnectTimeout(Duration.ofMillis(connectTimeoutMs))
+                .setReadTimeout(Duration.ofMillis(readTimeoutMs))
                 .build();
     }
 }

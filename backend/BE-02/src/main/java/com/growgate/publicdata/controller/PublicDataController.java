@@ -10,6 +10,7 @@ import com.growgate.publicdata.dto.PublicDataRecordResponse;
 import com.growgate.publicdata.dto.PublicDataRunResponse;
 import com.growgate.publicdata.service.PublicDataCollectionService;
 import com.growgate.publicdata.service.PublicDataDailyRefreshService;
+import com.growgate.publicdata.service.PublicDataOperationalStatusService;
 import com.growgate.publicdata.service.PublicDataProofRunService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -35,6 +36,7 @@ public class PublicDataController {
 
     private final PublicDataCollectionService collectionService;
     private final PublicDataDailyRefreshService dailyRefreshService;
+    private final PublicDataOperationalStatusService operationalStatusService;
     private final PublicDataProofRunService proofRunService;
 
     @PostMapping("/collect")
@@ -96,14 +98,16 @@ public class PublicDataController {
     @GetMapping("/health")
     public ResponseEntity<Map<String, Object>> getHealth(
             @AuthenticationPrincipal UserDetails userDetails) {
+        Map<String, Object> operationalStatus = operationalStatusService.status();
         if (userDetails == null) {
-            return ResponseEntity.ok(Map.of(
-                    "scope", "public-proof-only",
-                    "latestProofRun", proofRunService.latest(null)
-            ));
+            Map<String, Object> response = new java.util.LinkedHashMap<>(operationalStatus);
+            response.put("scope", "public-proof-and-configuration");
+            response.put("latestProofRun", proofRunService.latest(null));
+            return ResponseEntity.ok(response);
         }
         String userId = usernameOrNull(userDetails);
         Map<String, Object> health = new java.util.LinkedHashMap<>(collectionService.getHealth(userId));
+        health.put("configuration", operationalStatus);
         health.put("latestProofRun", proofRunService.latest(userId));
         return ResponseEntity.ok(health);
     }

@@ -79,8 +79,8 @@ public class PublicDataCollectionService {
                 PublicDataRecord cacheRecord = cloneCacheRecord(run, record);
                 records.add(recordRepository.save(cacheRecord));
                 cacheHitCount++;
-                if (cacheRecord.isFallbackUsed()) fallbackCount++;
-                else successCount++;
+                if (isFallbackRecord(cacheRecord)) fallbackCount++;
+                else if (isSuccessRecord(cacheRecord)) successCount++;
                 continue;
             }
 
@@ -89,11 +89,13 @@ public class PublicDataCollectionService {
                     : disabledResult(connector, request);
             PublicDataRecord newRecord = toRecord(run, result);
             records.add(recordRepository.save(newRecord));
-            if (newRecord.isFallbackUsed()) {
+            if (isFallbackRecord(newRecord)) {
                 fallbackCount++;
                 if (newRecord.getErrorMessage() != null) errors.add(connector.provider() + ": " + newRecord.getErrorMessage());
-            } else {
+            } else if (isSuccessRecord(newRecord)) {
                 successCount++;
+            } else if (newRecord.getErrorMessage() != null) {
+                errors.add(connector.provider() + ": " + newRecord.getErrorMessage());
             }
         }
 
@@ -266,6 +268,12 @@ public class PublicDataCollectionService {
         payload.put("refreshCycleHours", connector.provider().refreshCycleHours());
         payload.put("metrics", java.util.Map.of("recordCount", 0));
         payload.put("metricSchema", List.of("recordCount"));
+        payload.put("rawCount", 0);
+        payload.put("normalizedCount", 0);
+        payload.put("filteredCount", 0);
+        payload.put("zeroReason", "PUBLIC_DATA_DISABLED");
+        payload.put("requestParamsMasked", java.util.Map.of());
+        payload.put("sampleRawKeys", List.of());
         payload.put("scoreContribution", -1);
         payload.put("confidence", 0.0);
         payload.put("fallbackUsed", true);
@@ -277,6 +285,17 @@ public class PublicDataCollectionService {
                 "apiKeyStored", false,
                 "fallbackUsed", true,
                 "reason", "PUBLIC_DATA_ENABLED=false"
+        ));
+        payload.put("zeroResultDiagnostics", java.util.Map.of(
+                "provider", connector.provider().name(),
+                "agent", connector.usedFor(),
+                "sourceType", "fallback",
+                "rawCount", 0,
+                "normalizedCount", 0,
+                "filteredCount", 0,
+                "zeroReason", "PUBLIC_DATA_DISABLED",
+                "sampleRawKeys", List.of(),
+                "fallbackUsed", true
         ));
         payload.put("scoreFormula", "disabled public data contributes fallback penalty and zero confidence");
         payload.put("reason", "PUBLIC_DATA_ENABLED=false");
@@ -342,6 +361,15 @@ public class PublicDataCollectionService {
         return "live";
     }
 
+    private boolean isSuccessRecord(PublicDataRecord record) {
+        String sourceType = sourceType(record);
+        return "live".equals(sourceType) || "cache".equals(sourceType);
+    }
+
+    private boolean isFallbackRecord(PublicDataRecord record) {
+        return "fallback".equals(sourceType(record));
+    }
+
     private PublicDataCollectionStatus resolveStatus(int successCount, int fallbackCount) {
         if (successCount > 0 && fallbackCount == 0) return PublicDataCollectionStatus.done;
         if (successCount > 0) return PublicDataCollectionStatus.partial_failed;
@@ -363,10 +391,12 @@ public class PublicDataCollectionService {
                             .filter(record -> record.getProvider() == provider)
                             .toList();
                     int recordCount = providerRecords.size();
-                    int fallbackCount = (int) providerRecords.stream().filter(PublicDataRecord::isFallbackUsed).count();
-                    int cacheCount = (int) providerRecords.stream().filter(PublicDataRecord::isCacheHit).count();
+                    int fallbackCount = (int) providerRecords.stream().filter(this::isFallbackRecord).count();
+                    int cacheCount = (int) providerRecords.stream()
+                            .filter(record -> "cache".equals(sourceType(record)))
+                            .count();
                     int liveCount = (int) providerRecords.stream()
-                            .filter(record -> !record.isFallbackUsed() && !record.isCacheHit())
+                            .filter(record -> "live".equals(sourceType(record)))
                             .count();
                     double avgConfidence = providerRecords.stream()
                             .map(PublicDataRecord::getConfidence)

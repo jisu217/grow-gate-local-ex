@@ -16,6 +16,18 @@ public class PublicDataRecordResponse {
     private String ministry;
     private String dataFamily;
     private boolean motieRelated;
+    private String sourceName;
+    private String officialUrl;
+    private Boolean providerOperationEndpoint;
+    private Boolean providerApiKeyRequired;
+    private String licenseName;
+    private String termsUrl;
+    private String redistributionAllowed;
+    private String storageAllowed;
+    private String reprocessingAllowed;
+    private String attributionRequired;
+    private String usageWarning;
+    private String licenseLastVerifiedAt;
     private String endpoint;
     private Boolean endpointConfigured;
     private Boolean operationEndpoint;
@@ -37,6 +49,12 @@ public class PublicDataRecordResponse {
     private String normalizedPayload;
     private String metricSchema;
     private String scoreFormula;
+    private Integer rawCount;
+    private Integer normalizedCount;
+    private Integer filteredCount;
+    private String zeroReason;
+    private String requestParamsMasked;
+    private String sampleRawKeys;
 
     public static PublicDataRecordResponse from(PublicDataRecord record) {
         RecordEvidence evidence = RecordEvidence.from(record.getNormalizedPayload());
@@ -48,6 +66,18 @@ public class PublicDataRecordResponse {
                 .ministry(record.getProvider().ministry())
                 .dataFamily(record.getProvider().dataFamily())
                 .motieRelated(record.getProvider().motieRelated())
+                .sourceName(record.getProvider().sourceName())
+                .officialUrl(record.getProvider().officialUrl())
+                .providerOperationEndpoint(record.getProvider().operationEndpoint())
+                .providerApiKeyRequired(record.getProvider().apiKeyRequired())
+                .licenseName(record.getProvider().licenseName())
+                .termsUrl(record.getProvider().termsUrl())
+                .redistributionAllowed(record.getProvider().redistributionAllowed())
+                .storageAllowed(record.getProvider().storageAllowed())
+                .reprocessingAllowed(record.getProvider().reprocessingAllowed())
+                .attributionRequired(record.getProvider().attributionRequired())
+                .usageWarning(record.getProvider().usageWarning())
+                .licenseLastVerifiedAt(record.getProvider().lastVerifiedAt())
                 .endpoint(record.getEndpoint())
                 .endpointConfigured(evidence.endpointConfigured())
                 .operationEndpoint(evidence.operationEndpoint())
@@ -69,6 +99,12 @@ public class PublicDataRecordResponse {
                 .normalizedPayload(record.getNormalizedPayload())
                 .metricSchema(evidence.metricSchema())
                 .scoreFormula(evidence.scoreFormula())
+                .rawCount(evidence.rawCount())
+                .normalizedCount(evidence.normalizedCount())
+                .filteredCount(evidence.filteredCount())
+                .zeroReason(evidence.zeroReason())
+                .requestParamsMasked(evidence.requestParamsMasked())
+                .sampleRawKeys(evidence.sampleRawKeys())
                 .build();
     }
 
@@ -77,10 +113,16 @@ public class PublicDataRecordResponse {
                                   String endpointType,
                                   Boolean apiKeyConfigured,
                                   String metricSchema,
-                                  String scoreFormula) {
+                                  String scoreFormula,
+                                  Integer rawCount,
+                                  Integer normalizedCount,
+                                  Integer filteredCount,
+                                  String zeroReason,
+                                  String requestParamsMasked,
+                                  String sampleRawKeys) {
         private static RecordEvidence from(String normalizedPayload) {
             if (normalizedPayload == null || normalizedPayload.isBlank()) {
-                return new RecordEvidence(null, null, null, null, null, null);
+                return new RecordEvidence(null, null, null, null, null, null, null, null, null, null, null, null);
             }
             try {
                 com.fasterxml.jackson.databind.JsonNode root = new com.fasterxml.jackson.databind.ObjectMapper()
@@ -92,10 +134,16 @@ public class PublicDataRecordResponse {
                         evidence.path("endpointType").asText(null),
                         evidence.has("apiKeyConfigured") ? evidence.path("apiKeyConfigured").asBoolean() : null,
                         root.path("metricSchema").isMissingNode() ? null : root.path("metricSchema").toString(),
-                        root.path("scoreFormula").asText(null)
+                        root.path("scoreFormula").asText(null),
+                        root.has("rawCount") ? root.path("rawCount").asInt() : null,
+                        root.has("normalizedCount") ? root.path("normalizedCount").asInt() : null,
+                        root.has("filteredCount") ? root.path("filteredCount").asInt() : null,
+                        root.path("zeroReason").asText(null),
+                        root.path("requestParamsMasked").isMissingNode() ? null : root.path("requestParamsMasked").toString(),
+                        root.path("sampleRawKeys").isMissingNode() ? null : root.path("sampleRawKeys").toString()
                 );
             } catch (Exception e) {
-                return new RecordEvidence(null, null, null, null, null, null);
+                return new RecordEvidence(null, null, null, null, null, null, null, null, null, null, null, null);
             }
         }
     }

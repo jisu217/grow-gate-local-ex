@@ -60,6 +60,7 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
           const status = pipe.status ?? 'fallback'
           const statusText = status === 'live' ? 'Live'
             : status === 'cache' ? 'Cache'
+            : status === 'empty' ? 'Empty'
             : status === 'crawl' ? 'Crawl'
               : status === 'external_feed' ? 'Feed'
                 : status === 'seed' ? 'Seed'
@@ -69,6 +70,7 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
                     : 'Fallback'
           const chipType = status === 'live' || status === 'cache' ? 'ok'
             : status === 'crawl' || status === 'external_feed' || status === 'heuristic' || status === 'agent' || status === 'user_input' ? 'warn'
+              : status === 'empty' || status === 'seed' ? 'warn'
               : 'req'
           return (
           <div key={pipe.source} className="pipe-card">

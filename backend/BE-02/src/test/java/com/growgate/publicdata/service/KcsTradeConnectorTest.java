@@ -2,6 +2,7 @@ package com.growgate.publicdata.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
 
@@ -20,13 +21,13 @@ class KcsTradeConnectorTest {
     @SuppressWarnings("unchecked")
     void parsesTradeMetricsIntoNormalizedPayloadAndScoreContribution() {
         RestTemplate restTemplate = mock(RestTemplate.class);
-        when(restTemplate.getForObject(any(URI.class), eq(String.class)))
-                .thenReturn("""
+        when(restTemplate.getForEntity(any(URI.class), eq(String.class)))
+                .thenReturn(ResponseEntity.ok("""
                         {"items":[
                           {"hsCode":"850760","country":"DE","importAmountUsd":123456,"exportAmountUsd":45678,"yoyGrowthPct":12.4},
                           {"hsCode":"850760","country":"DE","importAmountUsd":1000,"exportAmountUsd":2000,"yoyGrowthPct":8.0}
                         ]}
-                        """);
+                        """));
 
         KcsTradeConnector connector = new KcsTradeConnector(restTemplate, new ObjectMapper());
         ReflectionTestUtils.setField(connector, "endpoint", "https://api.example.test/kcs");

@@ -21,11 +21,12 @@ export default function S09Report({ scoreBars, summary, onDownload, fastApiUsed 
             <div className="hl-item"><b>산출물:</b> {fastApiUsed ? '선택형 report bridge 결과를 병합한 Markdown 바이어 대응 메모입니다.' : 'Spring 로컬 생성기의 Markdown 바이어 대응 메모입니다.'}</div>
             <div className="hl-item"><b>보관:</b> PDF가 필요하면 다운로드한 Markdown을 HTML 미리보기 또는 브라우저 인쇄로 보관합니다.</div>
             <div className="hl-item"><b>근거:</b> 점수별 source trace와 fallback 여부를 함께 확인할 수 있습니다.</div>
+            <div className="hl-item"><b>구분:</b> 공공데이터 원문 근거, 정규화/필터링 결과, AI 보조 해석, 사람이 최종 확인해야 하는 항목을 분리해 확인하십시오.</div>
             <div className="hl-item"><b>실행:</b> 30·60·90일 보드의 태스크를 기준으로 담당자와 산출물을 배정하십시오.</div>
           </div>
 
           <div className="guardrail">
-            모든 규제 답변에는 추천·최신성·전문가 확인 여부를 함께 확인하십시오. 본 결과는 등록 제품 정보와 공공데이터 출처 신호 기반 분석이며, 최종 판단은 인증 전문가와 함께 하십시오.
+            모든 규제·인증 답변은 추천 근거, 최신성, 전문가 확인 필요 여부를 함께 확인하십시오. 본 내용은 등록 제품 정보와 공공데이터 출처 신호 기반의 자동 생성 의사결정 보조 정보이며, 법률/인증/수출 실행 여부의 최종 판단이 아닙니다. fallback/seed 데이터는 live 공공 API 결과처럼 표시하지 않으며, 최종 판단은 인증 전문가·변리사·법률 전문가와 함께 하십시오.
           </div>
         </div>
 

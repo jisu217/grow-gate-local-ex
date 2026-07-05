@@ -447,6 +447,18 @@ public class DiagnosisAsyncProcessor {
             source.put("ministry", record.getProvider().ministry());
             source.put("dataFamily", record.getProvider().dataFamily());
             source.put("motieRelated", record.getProvider().motieRelated());
+            source.put("sourceName", record.getProvider().sourceName());
+            source.put("officialUrl", record.getProvider().officialUrl());
+            source.put("providerOperationEndpoint", record.getProvider().operationEndpoint());
+            source.put("providerApiKeyRequired", record.getProvider().apiKeyRequired());
+            source.put("licenseName", record.getProvider().licenseName());
+            source.put("termsUrl", record.getProvider().termsUrl());
+            source.put("redistributionAllowed", record.getProvider().redistributionAllowed());
+            source.put("storageAllowed", record.getProvider().storageAllowed());
+            source.put("reprocessingAllowed", record.getProvider().reprocessingAllowed());
+            source.put("attributionRequired", record.getProvider().attributionRequired());
+            source.put("usageWarning", record.getProvider().usageWarning());
+            source.put("licenseLastVerifiedAt", record.getProvider().lastVerifiedAt());
             source.put("datasetName", publicDataDatasetName(record));
             source.put("documentName", publicDataDatasetName(record));
             source.put("url", record.getEndpoint());
@@ -491,6 +503,14 @@ public class DiagnosisAsyncProcessor {
                 source.put("apiKeyConfigured", evidence.get("apiKeyConfigured"));
                 source.put("apiKeyStored", evidence.get("apiKeyStored"));
             }
+            putIfPresent(source, "rawCount", normalizedPayload.get("rawCount"));
+            putIfPresent(source, "normalizedCount", normalizedPayload.get("normalizedCount"));
+            putIfPresent(source, "filteredCount", normalizedPayload.get("filteredCount"));
+            putIfPresent(source, "zeroReason", normalizedPayload.get("zeroReason"));
+            putIfPresent(source, "requestParamsMasked", normalizedPayload.get("requestParamsMasked"));
+            putIfPresent(source, "sampleRawKeys", normalizedPayload.get("sampleRawKeys"));
+            putIfPresent(source, "httpStatus", normalizedPayload.get("httpStatus"));
+            putIfPresent(source, "zeroResultDiagnostics", normalizedPayload.get("zeroResultDiagnostics"));
             putIfPresent(source, "publishedAt", normalizedPayload.get("publishedAt"));
             putIfPresent(source, "sourcePeriodStart", normalizedPayload.get("sourcePeriodStart"));
             putIfPresent(source, "sourcePeriodEnd", normalizedPayload.get("sourcePeriodEnd"));
