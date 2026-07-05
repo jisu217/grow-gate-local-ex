@@ -11,11 +11,11 @@ import java.util.Optional;
 @Repository
 public interface DiagnosisRepository extends JpaRepository<DiagnosisRun, String> {
 
-    List<DiagnosisRun> findByUserIdOrderByCreatedAtDesc(String userId);
+    List<DiagnosisRun> findByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(String userId);
 
-    Optional<DiagnosisRun> findByIdAndUserId(String id, String userId);
+    Optional<DiagnosisRun> findByIdAndUserIdAndDeletedAtIsNull(String id, String userId);
 
-    List<DiagnosisRun> findByCompanyIdOrderByCreatedAtDesc(String companyId);
+    List<DiagnosisRun> findByCompanyIdAndDeletedAtIsNullOrderByCreatedAtDesc(String companyId);
 
-    Optional<DiagnosisRun> findByIdAndCompanyId(String id, String companyId);
+    Optional<DiagnosisRun> findByIdAndCompanyIdAndDeletedAtIsNull(String id, String companyId);
 }

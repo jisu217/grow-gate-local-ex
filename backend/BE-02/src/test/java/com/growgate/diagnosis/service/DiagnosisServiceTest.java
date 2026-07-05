@@ -280,7 +280,7 @@ class DiagnosisServiceTest {
         var run = diagnosisRun("diag-detail", user, objectMapper.writeValueAsString(result));
 
         when(userRepository.findById("user-detail")).thenReturn(Optional.of(user));
-        when(diagnosisRepository.findByIdAndUserId("diag-detail", "user-detail")).thenReturn(Optional.of(run));
+        when(diagnosisRepository.findByIdAndUserIdAndDeletedAtIsNull("diag-detail", "user-detail")).thenReturn(Optional.of(run));
 
         var response = diagnosisService.getDetail("user-detail", "diag-detail");
 
@@ -316,7 +316,7 @@ class DiagnosisServiceTest {
 
         when(userRepository.findById("admin-user")).thenReturn(Optional.of(user));
         when(membershipRepository.findFirstByUserId("admin-user")).thenReturn(Optional.of(membership));
-        when(diagnosisRepository.findByIdAndCompanyId("synthetic-demo-diag", "current-company"))
+        when(diagnosisRepository.findByIdAndCompanyIdAndDeletedAtIsNull("synthetic-demo-diag", "current-company"))
                 .thenReturn(Optional.empty());
         when(diagnosisRepository.findById("synthetic-demo-diag")).thenReturn(Optional.of(run));
 
@@ -340,7 +340,7 @@ class DiagnosisServiceTest {
 
         when(userRepository.findById("admin-user")).thenReturn(Optional.of(user));
         when(membershipRepository.findFirstByUserId("admin-user")).thenReturn(Optional.of(membership));
-        when(diagnosisRepository.findByIdAndCompanyId("real-other-company-diag", "current-company"))
+        when(diagnosisRepository.findByIdAndCompanyIdAndDeletedAtIsNull("real-other-company-diag", "current-company"))
                 .thenReturn(Optional.empty());
         when(diagnosisRepository.findById("real-other-company-diag")).thenReturn(Optional.of(run));
 
@@ -348,6 +348,46 @@ class DiagnosisServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .extracting(e -> ((BusinessException) e).getErrorCode())
                 .isEqualTo(ErrorCode.NOT_FOUND);
+    }
+
+    @Test
+    void deleteDiagnosisMarksOwnedPersonalRunDeleted() throws Exception {
+        setUp();
+        User user = user("delete-user", UserType.personal);
+        Map<String, Object> result = Map.of("summary", "삭제 가능한 실제 진단");
+        var run = diagnosisRun("delete-diag", user, objectMapper.writeValueAsString(result));
+
+        when(userRepository.findById("delete-user")).thenReturn(Optional.of(user));
+        when(diagnosisRepository.findByIdAndUserIdAndDeletedAtIsNull("delete-diag", "delete-user"))
+                .thenReturn(Optional.of(run));
+
+        diagnosisService.delete("delete-user", "delete-diag");
+
+        assertThat(run.getDeletedAt()).isNotNull();
+        assertThat(run.getDeletedBy()).isEqualTo("delete-user");
+        verify(diagnosisRepository).save(run);
+    }
+
+    @Test
+    void deleteDiagnosisRejectsWatermarkedSyntheticDemoRun() throws Exception {
+        setUp();
+        User user = user("delete-user", UserType.personal);
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("demoWatermark", "synthetic_demo_not_real_customer");
+        result.put("summary", "합성 시연 seed");
+        var run = diagnosisRun("synthetic-delete-diag", user, objectMapper.writeValueAsString(result));
+
+        when(userRepository.findById("delete-user")).thenReturn(Optional.of(user));
+        when(diagnosisRepository.findByIdAndUserIdAndDeletedAtIsNull("synthetic-delete-diag", "delete-user"))
+                .thenReturn(Optional.of(run));
+
+        assertThatThrownBy(() -> diagnosisService.delete("delete-user", "synthetic-delete-diag"))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.FORBIDDEN);
+
+        assertThat(run.getDeletedAt()).isNull();
+        verify(diagnosisRepository, never()).save(any());
     }
 
     @Test
@@ -373,7 +413,7 @@ class DiagnosisServiceTest {
         var run = diagnosisRun("diag-gate", user, objectMapper.writeValueAsString(result));
 
         when(userRepository.findById("user-gate")).thenReturn(Optional.of(user));
-        when(diagnosisRepository.findByIdAndUserId("diag-gate", "user-gate")).thenReturn(Optional.of(run));
+        when(diagnosisRepository.findByIdAndUserIdAndDeletedAtIsNull("diag-gate", "user-gate")).thenReturn(Optional.of(run));
 
         var response = diagnosisService.getDetail("user-gate", "diag-gate");
 
@@ -423,7 +463,7 @@ class DiagnosisServiceTest {
         var run = diagnosisRun("diag-sources", user, objectMapper.writeValueAsString(result));
 
         when(userRepository.findById("user-sources")).thenReturn(Optional.of(user));
-        when(diagnosisRepository.findByIdAndUserId("diag-sources", "user-sources")).thenReturn(Optional.of(run));
+        when(diagnosisRepository.findByIdAndUserIdAndDeletedAtIsNull("diag-sources", "user-sources")).thenReturn(Optional.of(run));
 
         var response = diagnosisService.getSources("user-sources", "diag-sources");
         var source = response.getSources().get(0);

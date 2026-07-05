@@ -52,6 +52,7 @@ import org.springframework.transaction.support.TransactionSynchronization;
 import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
@@ -88,9 +89,9 @@ public class DiagnosisService {
 
         Company company = resolveCompany(userId);
         if (company != null) {
-            runs = diagnosisRepository.findByCompanyIdOrderByCreatedAtDesc(company.getId());
+            runs = diagnosisRepository.findByCompanyIdAndDeletedAtIsNullOrderByCreatedAtDesc(company.getId());
         } else {
-            runs = diagnosisRepository.findByUserIdOrderByCreatedAtDesc(userId);
+            runs = diagnosisRepository.findByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(userId);
         }
 
         List<DiagnosisSummary> summaries = runs.stream().map(run -> {
@@ -111,6 +112,19 @@ public class DiagnosisService {
         }).collect(Collectors.toList());
 
         return DiagnosisListResponse.builder().diagnoses(summaries).build();
+    }
+
+    public void delete(String userId, String diagnosisId) {
+        User user = findUser(userId);
+        DiagnosisRun run = findOwnedDiagnosisRun(user, diagnosisId);
+
+        if (SyntheticDemoAccess.isSyntheticDemoRun(run)) {
+            throw new BusinessException(ErrorCode.FORBIDDEN, "합성 시연 진단은 삭제할 수 없습니다.");
+        }
+
+        run.setDeletedAt(LocalDateTime.now());
+        run.setDeletedBy(user.getId());
+        diagnosisRepository.save(run);
     }
 
     public CreateDiagnosisResponse create(String userId, CreateDiagnosisRequest request) {
@@ -452,9 +466,9 @@ public class DiagnosisService {
         Company company = resolveCompany(user.getId());
         Optional<DiagnosisRun> scopedRun;
         if (company != null) {
-            scopedRun = diagnosisRepository.findByIdAndCompanyId(diagnosisId, company.getId());
+            scopedRun = diagnosisRepository.findByIdAndCompanyIdAndDeletedAtIsNull(diagnosisId, company.getId());
         } else {
-            scopedRun = diagnosisRepository.findByIdAndUserId(diagnosisId, user.getId());
+            scopedRun = diagnosisRepository.findByIdAndUserIdAndDeletedAtIsNull(diagnosisId, user.getId());
         }
 
         if (scopedRun.isPresent()) {
@@ -462,7 +476,18 @@ public class DiagnosisService {
         }
 
         return diagnosisRepository.findById(diagnosisId)
+                .filter(run -> run.getDeletedAt() == null)
                 .filter(SyntheticDemoAccess::isSyntheticDemoRun)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "진단 결과를 찾을 수 없습니다."));
+    }
+
+    private DiagnosisRun findOwnedDiagnosisRun(User user, String diagnosisId) {
+        Company company = resolveCompany(user.getId());
+        if (company != null) {
+            return diagnosisRepository.findByIdAndCompanyIdAndDeletedAtIsNull(diagnosisId, company.getId())
+                    .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "진단 결과를 찾을 수 없습니다."));
+        }
+        return diagnosisRepository.findByIdAndUserIdAndDeletedAtIsNull(diagnosisId, user.getId())
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "진단 결과를 찾을 수 없습니다."));
     }
 

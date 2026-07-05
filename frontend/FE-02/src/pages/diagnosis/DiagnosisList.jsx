@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import styles from './DiagnosisList.module.css'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
-import { getDiagnosisList } from '../../services/diagnosisService.js'
+import { deleteDiagnosis, getDiagnosisList } from '../../services/diagnosisService.js'
 
 // Gate 판단 상태 → 레이블 맵
 const STATUS_MAP = {
@@ -22,6 +22,8 @@ export default function DiagnosisList() {
   const [pageState, setPageState] = useState('loading')
   const [page, setPage] = useState(0)
   const [reloadKey, setReloadKey] = useState(0)
+  const [deleteTarget, setDeleteTarget] = useState(null)
+  const [deleteStatus, setDeleteStatus] = useState({ type: 'idle', message: '' })
 
   useEffect(() => {
     setPageState('loading')
@@ -29,6 +31,38 @@ export default function DiagnosisList() {
       .then((data) => { setList(data); setPageState('ok') })
       .catch(() => setPageState('error'))
   }, [reloadKey])
+
+  const openDeleteConfirm = (diag, event) => {
+    event.stopPropagation()
+    setDeleteStatus({ type: 'idle', message: '' })
+    setDeleteTarget(diag)
+  }
+
+  const closeDeleteConfirm = () => {
+    if (deleteStatus.type === 'deleting') return
+    setDeleteTarget(null)
+  }
+
+  const confirmDelete = async () => {
+    if (!deleteTarget) return
+    setDeleteStatus({ type: 'deleting', message: '진단 이력을 삭제하고 있습니다.' })
+    try {
+      await deleteDiagnosis(deleteTarget.id)
+      setList((items) => items.filter((item) => item.id !== deleteTarget.id))
+      setDeleteTarget(null)
+      setDeleteStatus({ type: 'success', message: '진단 이력을 삭제했습니다.' })
+      setPage((current) => {
+        const nextLength = Math.max(0, list.length - 1)
+        const nextPageCount = Math.max(1, Math.ceil(nextLength / ITEMS_PER_PAGE))
+        return Math.min(current, nextPageCount - 1)
+      })
+    } catch (err) {
+      setDeleteStatus({
+        type: 'error',
+        message: err?.message || '진단 이력을 삭제하지 못했습니다. 잠시 후 다시 시도해주세요.',
+      })
+    }
+  }
 
   // 페이지네이션 (범위 자동 보정)
   const pageCount = Math.max(1, Math.ceil(list.length / ITEMS_PER_PAGE))
@@ -60,6 +94,12 @@ export default function DiagnosisList() {
           message="현재 진단을 불러오지 못했습니다. 네트워크를 확인하고 다시 시도해주세요."
           onAction={() => setReloadKey((k) => k + 1)}
         />
+      )}
+      {deleteStatus.type === 'success' && (
+        <div className={styles.noticeSuccess} role="status">{deleteStatus.message}</div>
+      )}
+      {deleteStatus.type === 'error' && (
+        <div className={styles.noticeError} role="alert">{deleteStatus.message}</div>
       )}
       {pageState === 'ok' && list.length === 0 && (
         <div className={styles.empty}>
@@ -108,6 +148,15 @@ export default function DiagnosisList() {
                       <div className={styles.score}>{overallScore}<span>/100</span></div>
                     )}
                     <span className={`${styles.badge} ${status.cls}`}>{status.label}</span>
+                    <button
+                      type="button"
+                      className={styles.deleteBtn}
+                      aria-label={`${diag.productName || '진단'} 이력 삭제`}
+                      title="진단 이력 삭제"
+                      onClick={(event) => openDeleteConfirm(diag, event)}
+                    >
+                      삭제
+                    </button>
                   </div>
                 </div>
 
@@ -155,6 +204,44 @@ export default function DiagnosisList() {
         </div>
       )}
       </div>
+      {deleteTarget && (
+        <div className={styles.modalBackdrop} onClick={closeDeleteConfirm}>
+          <div
+            className={styles.modal}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="delete-diagnosis-title"
+            onClick={(event) => event.stopPropagation()}
+          >
+            <h2 id="delete-diagnosis-title" className={styles.modalTitle}>진단 이력 삭제</h2>
+            <p className={styles.modalDesc}>
+              {deleteTarget.productName || '선택한 진단'} 이력을 목록에서 삭제합니다.
+              삭제 후에는 해당 결과 화면과 근거 데이터를 다시 열 수 없습니다.
+            </p>
+            <div className={styles.modalMeta}>
+              HS {deleteTarget.hsCode || '미등록'} · {deleteTarget.targetMarket || '대상국 미정'} · {deleteTarget.requestedAt || '일시 미등록'}
+            </div>
+            <div className={styles.modalActions}>
+              <button
+                type="button"
+                className={styles.cancelBtn}
+                onClick={closeDeleteConfirm}
+                disabled={deleteStatus.type === 'deleting'}
+              >
+                취소
+              </button>
+              <button
+                type="button"
+                className={styles.confirmDeleteBtn}
+                onClick={confirmDelete}
+                disabled={deleteStatus.type === 'deleting'}
+              >
+                {deleteStatus.type === 'deleting' ? '삭제 중' : '삭제'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

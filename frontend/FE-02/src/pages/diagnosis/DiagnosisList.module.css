@@ -157,7 +157,7 @@
 .meta { font-size: 12.5px; color: var(--slate); margin-top: 4px; }
 
 /* 카드 우측 점수·뱃지 영역 */
-.cardRight { display: flex; align-items: center; gap: 14px; }
+.cardRight { display: flex; align-items: center; justify-content: flex-end; gap: 10px; flex-wrap: wrap; min-width: 170px; }
 
 /* 진단 점수 */
 .score {
@@ -251,12 +251,120 @@
 /* 실패 상태 */
 .failed  { color: var(--red);   background: #fbe0dd; }
 
+/* 삭제 버튼 */
+.deleteBtn {
+  font-family: var(--kr);
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--red);
+  background: #fff;
+  border: 1px solid #f3b8b0;
+  border-radius: 8px;
+  padding: 6px 10px;
+  cursor: pointer;
+  transition: .15s;
+}
+.deleteBtn:hover { background: #fff5f4; border-color: var(--red); }
+
+.noticeSuccess,
+.noticeError {
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-size: 13px;
+  font-weight: 700;
+  margin-bottom: 16px;
+}
+.noticeSuccess {
+  color: var(--green);
+  background: #e9f8ef;
+  border: 1px solid #bfe8cf;
+}
+.noticeError {
+  color: var(--red);
+  background: #fff3f1;
+  border: 1px solid #f4b6af;
+}
+
+/* 삭제 확인 모달 */
+.modalBackdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: rgba(10, 20, 45, .42);
+}
+.modal {
+  width: min(440px, 100%);
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  box-shadow: 0 24px 70px rgba(15, 23, 42, .22);
+  padding: 24px;
+}
+.modalTitle {
+  font-family: var(--en);
+  font-size: 20px;
+  font-weight: 800;
+  color: var(--navy);
+}
+.modalDesc {
+  margin-top: 10px;
+  font-size: 14px;
+  color: var(--ink);
+  line-height: 1.6;
+}
+.modalMeta {
+  margin-top: 14px;
+  padding: 11px 12px;
+  border-radius: 10px;
+  background: var(--bg);
+  color: var(--slate);
+  font-size: 12.5px;
+  line-height: 1.4;
+}
+.modalActions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 22px;
+}
+.cancelBtn,
+.confirmDeleteBtn {
+  font-family: var(--kr);
+  font-size: 14px;
+  font-weight: 800;
+  border-radius: 10px;
+  padding: 10px 18px;
+  cursor: pointer;
+  transition: .15s;
+}
+.cancelBtn {
+  color: var(--ink);
+  background: #fff;
+  border: 1px solid var(--line);
+}
+.confirmDeleteBtn {
+  color: #fff;
+  background: var(--red);
+  border: 1px solid var(--red);
+}
+.cancelBtn:disabled,
+.confirmDeleteBtn:disabled {
+  opacity: .6;
+  cursor: default;
+}
+
 /* ===== 모바일: 헤더 세로 배치 + 요약 수치 2열 ===== */
 @media (max-width: 640px) {
   .wrap { padding: 28px 18px; }
   .header { flex-direction: column; gap: 14px; }
   .title { font-size: 23px; }
   .newBtn { align-self: flex-start; }
+  .cardTop { flex-direction: column; gap: 14px; }
+  .cardRight { justify-content: flex-start; min-width: 0; }
   /* 4단 수치가 좁은 폭에서 찌그러지지 않게 2×2로, 세로 구분선 제거 */
   .summaryRow { grid-template-columns: 1fr 1fr; gap: 14px 8px; }
   .sumItem { padding: 0; border-right: none; }

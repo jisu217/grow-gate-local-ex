@@ -49,14 +49,16 @@ public class AgentTraceQueryService {
             Company company = membershipRepository.findFirstByUserId(user.getId())
                     .map(membership -> membership.getCompany())
                     .orElse(null);
-            if (company != null && diagnosisRepository.findByIdAndCompanyId(diagnosisId, company.getId()).isPresent()) {
+            if (company != null
+                    && diagnosisRepository.findByIdAndCompanyIdAndDeletedAtIsNull(diagnosisId, company.getId()).isPresent()) {
                 return;
             }
         }
-        if (diagnosisRepository.findByIdAndUserId(diagnosisId, user.getId()).isPresent()) {
+        if (diagnosisRepository.findByIdAndUserIdAndDeletedAtIsNull(diagnosisId, user.getId()).isPresent()) {
             return;
         }
         if (diagnosisRepository.findById(diagnosisId)
+                .filter(run -> run.getDeletedAt() == null)
                 .filter(SyntheticDemoAccess::isSyntheticDemoRun)
                 .isPresent()) {
             return;

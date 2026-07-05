@@ -68,6 +68,12 @@ public class DiagnosisRun {
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
 
+    @Column(name = "deleted_at")
+    private LocalDateTime deletedAt;
+
+    @Column(name = "deleted_by", length = 36)
+    private String deletedBy;
+
     @PrePersist
     private void prePersist() {
         if (this.id == null) this.id = UUID.randomUUID().toString();

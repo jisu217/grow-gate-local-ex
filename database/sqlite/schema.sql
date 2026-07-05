@@ -144,6 +144,8 @@ CREATE TABLE IF NOT EXISTS diagnosis_runs (
   status TEXT NOT NULL CHECK (status IN ('pending', 'running', 'done', 'failed')),
   target_country TEXT NOT NULL,
   created_at TEXT NOT NULL,
+  deleted_at TEXT,
+  deleted_by TEXT,
   FOREIGN KEY (user_id) REFERENCES users (id),
   FOREIGN KEY (company_id) REFERENCES companies (id),
   FOREIGN KEY (product_id) REFERENCES products (id)
@@ -202,6 +204,7 @@ CREATE INDEX IF NOT EXISTS idx_knowledge_sources_knowledge_id ON knowledge_sourc
 CREATE INDEX IF NOT EXISTS idx_audit_logs_product_id ON audit_logs (product_id);
 CREATE INDEX IF NOT EXISTS idx_diagnosis_runs_product_id ON diagnosis_runs (product_id);
 CREATE INDEX IF NOT EXISTS idx_diagnosis_runs_created_at ON diagnosis_runs (created_at);
+CREATE INDEX IF NOT EXISTS idx_diagnosis_runs_deleted_at ON diagnosis_runs (deleted_at);
 CREATE INDEX IF NOT EXISTS idx_public_data_runs_diagnosis_id ON public_data_collection_runs (diagnosis_id);
 CREATE INDEX IF NOT EXISTS idx_public_data_runs_started_at ON public_data_collection_runs (started_at);
 CREATE INDEX IF NOT EXISTS idx_public_data_records_provider_request ON public_data_records (provider, request_key);

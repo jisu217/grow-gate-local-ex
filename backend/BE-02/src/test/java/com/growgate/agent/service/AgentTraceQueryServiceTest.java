@@ -53,9 +53,9 @@ class AgentTraceQueryServiceTest {
 
         when(userRepository.findById("admin-user")).thenReturn(Optional.of(user));
         when(membershipRepository.findFirstByUserId("admin-user")).thenReturn(Optional.of(membership));
-        when(diagnosisRepository.findByIdAndCompanyId("synthetic-demo-diag", "current-company"))
+        when(diagnosisRepository.findByIdAndCompanyIdAndDeletedAtIsNull("synthetic-demo-diag", "current-company"))
                 .thenReturn(Optional.empty());
-        when(diagnosisRepository.findByIdAndUserId("synthetic-demo-diag", "admin-user"))
+        when(diagnosisRepository.findByIdAndUserIdAndDeletedAtIsNull("synthetic-demo-diag", "admin-user"))
                 .thenReturn(Optional.empty());
         when(diagnosisRepository.findById("synthetic-demo-diag")).thenReturn(Optional.of(run));
         when(traceRepository.findByDiagnosisIdOrderByStepNoAscCreatedAtAsc("synthetic-demo-diag"))
@@ -83,9 +83,9 @@ class AgentTraceQueryServiceTest {
 
         when(userRepository.findById("admin-user")).thenReturn(Optional.of(user));
         when(membershipRepository.findFirstByUserId("admin-user")).thenReturn(Optional.of(membership));
-        when(diagnosisRepository.findByIdAndCompanyId("real-other-company-diag", "current-company"))
+        when(diagnosisRepository.findByIdAndCompanyIdAndDeletedAtIsNull("real-other-company-diag", "current-company"))
                 .thenReturn(Optional.empty());
-        when(diagnosisRepository.findByIdAndUserId("real-other-company-diag", "admin-user"))
+        when(diagnosisRepository.findByIdAndUserIdAndDeletedAtIsNull("real-other-company-diag", "admin-user"))
                 .thenReturn(Optional.empty());
         when(diagnosisRepository.findById("real-other-company-diag")).thenReturn(Optional.of(run));
 

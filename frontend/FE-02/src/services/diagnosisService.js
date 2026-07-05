@@ -81,6 +81,11 @@ export async function getDiagnosisList() {
   return res.diagnoses.map(mapDiagnosisSummary)
 }
 
+// 진단 이력 삭제 (soft delete)
+export async function deleteDiagnosis(id) {
+  await apiFetch(`/diagnosis/${id}`, { method: 'DELETE' })
+}
+
 // 진단 결과 상세 매핑
 export function mapDiagnosisDetail(d, evidenceSources, sourceEntries = []) {
   const diagnosisScore = normalizeDiagnosisScore(d.result?.diagnosisScore)
