@@ -31,7 +31,7 @@
   mask-image: radial-gradient(900px 700px at 75% 18%, #000, transparent 80%);
 }
 
-.page { position: relative; z-index: 2; max-width: 1240px; margin: 0 auto; padding: 0 32px; }
+.page { position: relative; z-index: 2; max-width: 1120px; margin: 0 auto; padding: 0 32px; }
 
 /* NAV */
 .nav { display: flex; align-items: center; justify-content: space-between; padding: 26px 0; }
@@ -48,7 +48,7 @@
 
 /* page head */
 .phead { display: flex; align-items: flex-end; justify-content: space-between; flex-wrap: wrap; gap: 18px; padding: 30px 0 22px; }
-.phead h1 { font-size: 34px; font-weight: 800; letter-spacing: -.025em; color: var(--navy); }
+.phead h1 { font-size: 32px; font-weight: 800; letter-spacing: -.025em; color: var(--navy); }
 .sub { font-size: 14.5px; color: var(--mute); margin-top: 8px; }
 
 /* product switcher */

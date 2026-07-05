@@ -2,7 +2,7 @@
 
 /* 페이지 래퍼 */
 .wrap {
-  max-width: 900px;
+  max-width: 1120px;
   margin: 0 auto;
   padding: 40px 28px;
 }
@@ -18,16 +18,17 @@
 /* 페이지 타이틀 */
 .title {
   font-family: var(--en);
-  font-size: 28px;
+  font-size: 32px;
   font-weight: 800;
   color: var(--navy);
+  letter-spacing: -0.02em;
 }
 
 /* 부제 */
 .sub {
-  font-size: 14px;
+  font-size: 14.5px;
   color: var(--slate);
-  margin-top: 6px;
+  margin-top: 8px;
 }
 
 /* 새 진단 시작 버튼 */
