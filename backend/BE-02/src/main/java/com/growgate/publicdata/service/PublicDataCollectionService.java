@@ -356,7 +356,10 @@ public class PublicDataCollectionService {
 
     private String sourceType(PublicDataRecord record) {
         if (record.isFallbackUsed() || "fallback".equals(record.getSourceType())) return "fallback";
-        if (record.isCacheHit() || "cache".equals(record.getSourceType())) return "cache";
+        if (record.isCacheHit()
+                || "cache".equals(record.getSourceType())
+                || "file".equals(record.getSourceType())
+                || "file_stale".equals(record.getSourceType())) return "cache";
         if (record.getSourceType() != null && !record.getSourceType().isBlank()) return record.getSourceType();
         return "live";
     }

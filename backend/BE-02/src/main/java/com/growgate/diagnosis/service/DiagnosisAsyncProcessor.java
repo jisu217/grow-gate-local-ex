@@ -744,10 +744,16 @@ public class DiagnosisAsyncProcessor {
             case KCS_TRADE -> "관세청 수출입무역통계 live/cache 수집";
             case KOTRA_MARKET -> "KOTRA 시장·뉴스 live/cache 수집";
             case SAFETY_RECALL -> "제품안전·리콜 live/cache 수집";
+            case MOTIE_IMPORT_REGULATION -> "산업통상부 수입규제현황 CSV/API 수집";
+            case MOTIE_MPE_TRADE_STATISTICS -> "산업통상부 소재부품장비 무역통계 CSV/API 수집";
+            case MOTIE_MPE_PRODUCTION_INDEX -> "산업통상부 소재부품장비 생산지수 CSV/API 수집";
+            case TRADE_SECURITY_HSK_LINKAGE -> "무역안보관리원 HSK 연계표 CSV/API 수집";
+            case TRADE_SECURITY_ITEM_KEYWORD -> "무역안보관리원 전략물자 품목키워드 CSV/API 수집";
             case KIPRIS_FTO -> "KIPRIS Plus 특허/FTO live/cache 수집";
             case BIZINFO_SUPPORT -> "기업마당 지원사업 live/cache 수집";
             case MOTIE_WEB_CRAWL -> "산업부 공개 웹 안전 크롤링 수집";
             case EXPORT_EVIDENCE_FEED -> "수출 뉴스·보고서 RSS/API feed 수집";
+            default -> record.getProvider().sourceName() + " live/cache 수집";
         };
     }
 

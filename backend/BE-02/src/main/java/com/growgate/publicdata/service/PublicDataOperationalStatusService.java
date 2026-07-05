@@ -47,6 +47,26 @@ public class PublicDataOperationalStatusService {
                 providerStatus(PublicDataProvider.KCS_TRADE, prop("public-data.kcs-trade.url"), prop("public-data.kcs-trade.key")),
                 providerStatus(PublicDataProvider.KOTRA_MARKET, prop("public-data.kotra-market.url"), prop("public-data.kotra-market.key")),
                 providerStatus(PublicDataProvider.SAFETY_RECALL, prop("public-data.safety-recall.url"), prop("public-data.safety-recall.key")),
+                fileDataStatus(PublicDataProvider.MOTIE_IMPORT_REGULATION,
+                        prop("public-data.motie-import-regulation.csv-resource"),
+                        prop("public-data.motie-import-regulation.url"),
+                        prop("public-data.motie-import-regulation.key")),
+                fileDataStatus(PublicDataProvider.MOTIE_MPE_TRADE_STATISTICS,
+                        prop("public-data.motie-mpe-trade-statistics.csv-resource"),
+                        prop("public-data.motie-mpe-trade-statistics.url"),
+                        prop("public-data.motie-mpe-trade-statistics.key")),
+                fileDataStatus(PublicDataProvider.MOTIE_MPE_PRODUCTION_INDEX,
+                        prop("public-data.motie-mpe-production-index.csv-resource"),
+                        prop("public-data.motie-mpe-production-index.url"),
+                        prop("public-data.motie-mpe-production-index.key")),
+                fileDataStatus(PublicDataProvider.TRADE_SECURITY_HSK_LINKAGE,
+                        prop("public-data.trade-security-hsk-linkage.csv-resource"),
+                        prop("public-data.trade-security-hsk-linkage.url"),
+                        prop("public-data.trade-security-hsk-linkage.key")),
+                fileDataStatus(PublicDataProvider.TRADE_SECURITY_ITEM_KEYWORD,
+                        prop("public-data.trade-security-item-keyword.csv-resource"),
+                        prop("public-data.trade-security-item-keyword.url"),
+                        prop("public-data.trade-security-item-keyword.key")),
                 providerStatus(PublicDataProvider.KIPRIS_FTO, prop("public-data.kipris-fto.url"), prop("public-data.kipris-fto.key")),
                 providerStatus(PublicDataProvider.BIZINFO_SUPPORT, prop("public-data.bizinfo-support.url"), prop("public-data.bizinfo-support.key")),
                 feedStatus(PublicDataProvider.MOTIE_WEB_CRAWL, bool("public-data.crawl.enabled", false), prop("public-data.crawl.urls")),
@@ -77,6 +97,24 @@ public class PublicDataOperationalStatusService {
         Map<String, Object> row = baseProvider(provider, status, sourceType, zeroReason);
         row.put("endpointConfigured", endpointConfigured);
         row.put("endpointType", endpointConfigured ? operationEndpoint ? "operation" : "catalog" : "missing");
+        row.put("apiKeyConfigured", apiKeyConfigured);
+        row.put("apiKeyMasked", apiKeyConfigured ? mask(apiKey) : "");
+        row.put("rawCount", 0);
+        row.put("normalizedCount", 0);
+        row.put("fallbackUsed", false);
+        return row;
+    }
+
+    private Map<String, Object> fileDataStatus(PublicDataProvider provider, String csvResource,
+                                               String refreshEndpoint, String apiKey) {
+        boolean csvConfigured = csvResource != null && !csvResource.isBlank();
+        boolean endpointConfigured = refreshEndpoint != null && !refreshEndpoint.isBlank();
+        boolean apiKeyConfigured = apiKey != null && !apiKey.isBlank();
+        Map<String, Object> row = baseProvider(provider, csvConfigured ? "file_ready" : "not_configured",
+                csvConfigured ? "file" : "empty", csvConfigured ? "" : "CSV_RESOURCE_NOT_CONFIGURED");
+        row.put("endpointConfigured", csvConfigured);
+        row.put("endpointType", csvConfigured ? "csv_resource" : "missing");
+        row.put("refreshEndpointConfigured", endpointConfigured);
         row.put("apiKeyConfigured", apiKeyConfigured);
         row.put("apiKeyMasked", apiKeyConfigured ? mask(apiKey) : "");
         row.put("rawCount", 0);
@@ -150,6 +188,11 @@ public class PublicDataOperationalStatusService {
             case "KCS_TRADE" -> "trade";
             case "KOTRA_MARKET" -> "kotra";
             case "SAFETY_RECALL" -> "safetyKorea";
+            case "MOTIE_IMPORT_REGULATION" -> "motieImportRegulation";
+            case "MOTIE_MPE_TRADE_STATISTICS" -> "motieMpeTradeStatistics";
+            case "MOTIE_MPE_PRODUCTION_INDEX" -> "motieMpeProductionIndex";
+            case "TRADE_SECURITY_HSK_LINKAGE" -> "tradeSecurityHskLinkage";
+            case "TRADE_SECURITY_ITEM_KEYWORD" -> "tradeSecurityItemKeyword";
             case "KIPRIS_FTO" -> "kipris";
             case "BIZINFO_SUPPORT" -> "bizinfo";
             case "MOTIE_WEB_CRAWL" -> "motie";

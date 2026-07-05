@@ -87,15 +87,66 @@ public-data:
   kcs-trade:
     url: ${KCS_TRADE_API_URL:http://apis.data.go.kr/1220000/Newtrade/getNewtradeList}
     key: ${KCS_TRADE_API_KEY:${DATAGO_SERVICE_KEY:}}
+  kcs-tariff-logistics:
+    csv-resource: ${KCS_TARIFF_LOGISTICS_CSV_RESOURCE:classpath:publicdata/kcs-tariff-logistics-reference-20260531.csv}
+    dataset-date: ${KCS_TARIFF_LOGISTICS_DATASET_DATE:2026-05-31}
+    source-hs-date: ${KCS_TARIFF_LOGISTICS_SOURCE_HS_DATE:2026-01-01}
+    source-tariff-date: ${KCS_TARIFF_LOGISTICS_SOURCE_TARIFF_DATE:2026-02-11}
   kotra-market:
     url: ${KOTRA_MARKET_API_URL:https://www.data.go.kr/data/15122648/openapi.do}
     key: ${KOTRA_MARKET_API_KEY:${DATAGO_SERVICE_KEY:}}
   safety-recall:
     url: ${SAFETY_RECALL_API_URL:https://www.safetykorea.kr/release/openapi}
     key: ${SAFETY_RECALL_API_KEY:${DATAGO_SERVICE_KEY:}}
+  motie-import-regulation:
+    url: ${MOTIE_IMPORT_REGULATION_API_URL:https://api.odcloud.kr/api/3039436/v1/uddi:e460a8d2-9074-45b1-b5eb-c3cd169cbe2a_201703291030}
+    key: ${MOTIE_IMPORT_REGULATION_API_KEY:${DATAGO_SERVICE_KEY:}}
+    csv-resource: ${MOTIE_IMPORT_REGULATION_CSV_RESOURCE:classpath:publicdata/motie-import-regulations-20260508.csv}
+    dataset-date: ${MOTIE_IMPORT_REGULATION_DATASET_DATE:2026-05-08}
+    next-update-date: ${MOTIE_IMPORT_REGULATION_NEXT_UPDATE_DATE:2027-05-14}
+    portal-total-rows: ${MOTIE_IMPORT_REGULATION_PORTAL_TOTAL_ROWS:235}
+    api-per-page: ${MOTIE_IMPORT_REGULATION_API_PER_PAGE:1000}
+  motie-mpe-trade-statistics:
+    url: ${MOTIE_MPE_TRADE_STATISTICS_API_URL:https://api.odcloud.kr/api/15099627/v1/uddi:64f277d4-70bb-49a7-bb50-a4d56466ea3e}
+    key: ${MOTIE_MPE_TRADE_STATISTICS_API_KEY:${DATAGO_SERVICE_KEY:}}
+    csv-resource: ${MOTIE_MPE_TRADE_STATISTICS_CSV_RESOURCE:classpath:publicdata/motie-mpe-trade-statistics-20251231.csv}
+    dataset-date: ${MOTIE_MPE_TRADE_STATISTICS_DATASET_DATE:2025-12-31}
+    registered-date: ${MOTIE_MPE_TRADE_STATISTICS_REGISTERED_DATE:2026-06-17}
+    modified-date: ${MOTIE_MPE_TRADE_STATISTICS_MODIFIED_DATE:2026-06-18}
+    next-update-date: ${MOTIE_MPE_TRADE_STATISTICS_NEXT_UPDATE_DATE:2027-06-17}
+    portal-total-rows: ${MOTIE_MPE_TRADE_STATISTICS_PORTAL_TOTAL_ROWS:20352}
+    api-per-page: ${MOTIE_MPE_TRADE_STATISTICS_API_PER_PAGE:25000}
+  motie-mpe-production-index:
+    url: ${MOTIE_MPE_PRODUCTION_INDEX_API_URL:https://api.odcloud.kr/api/15099628/v1/uddi:811bd1e3-f6f3-43ef-99ee-9f7d767f94b3}
+    key: ${MOTIE_MPE_PRODUCTION_INDEX_API_KEY:${DATAGO_SERVICE_KEY:}}
+    csv-resource: ${MOTIE_MPE_PRODUCTION_INDEX_CSV_RESOURCE:classpath:publicdata/motie-mpe-production-index-20251231.csv}
+    dataset-date: ${MOTIE_MPE_PRODUCTION_INDEX_DATASET_DATE:2025-12-31}
+    next-update-date: ${MOTIE_MPE_PRODUCTION_INDEX_NEXT_UPDATE_DATE:2026-06-27}
+    portal-detail-dataset-date: ${MOTIE_MPE_PRODUCTION_INDEX_PORTAL_DETAIL_DATASET_DATE:2024-12-31}
+    portal-detail-total-rows: ${MOTIE_MPE_PRODUCTION_INDEX_PORTAL_DETAIL_TOTAL_ROWS:124}
+    local-total-rows: ${MOTIE_MPE_PRODUCTION_INDEX_LOCAL_TOTAL_ROWS:128}
+    api-per-page: ${MOTIE_MPE_PRODUCTION_INDEX_API_PER_PAGE:1000}
+  trade-security-hsk-linkage:
+    url: ${TRADE_SECURITY_HSK_LINKAGE_API_URL:https://api.odcloud.kr/api/15034135/v1/uddi:80b756b5-9d5f-4369-8a38-ad5ac43534e5}
+    key: ${TRADE_SECURITY_HSK_LINKAGE_API_KEY:${DATAGO_SERVICE_KEY:}}
+    csv-resource: ${TRADE_SECURITY_HSK_LINKAGE_CSV_RESOURCE:classpath:publicdata/trade-security-hsk-linkage-20260522.csv}
+    dataset-date: ${TRADE_SECURITY_HSK_LINKAGE_DATASET_DATE:2026-05-22}
+    next-update-date: ${TRADE_SECURITY_HSK_LINKAGE_NEXT_UPDATE_DATE:2027-05-22}
+    portal-total-rows: ${TRADE_SECURITY_HSK_LINKAGE_PORTAL_TOTAL_ROWS:2161}
+    api-per-page: ${TRADE_SECURITY_HSK_LINKAGE_API_PER_PAGE:3000}
+  trade-security-item-keyword:
+    url: ${TRADE_SECURITY_ITEM_KEYWORD_API_URL:https://api.odcloud.kr/api/15042113/v1/uddi:40a03829-dfb8-4e40-b6c5-e10345ee462d}
+    key: ${TRADE_SECURITY_ITEM_KEYWORD_API_KEY:${DATAGO_SERVICE_KEY:}}
+    csv-resource: ${TRADE_SECURITY_ITEM_KEYWORD_CSV_RESOURCE:classpath:publicdata/trade-security-item-keywords-20260522.csv}
+    dataset-date: ${TRADE_SECURITY_ITEM_KEYWORD_DATASET_DATE:2026-05-22}
+    next-update-date: ${TRADE_SECURITY_ITEM_KEYWORD_NEXT_UPDATE_DATE:2027-05-22}
+    portal-total-rows: ${TRADE_SECURITY_ITEM_KEYWORD_PORTAL_TOTAL_ROWS:1006}
+    api-per-page: ${TRADE_SECURITY_ITEM_KEYWORD_API_PER_PAGE:1500}
   kipris-fto:
-    url: ${KIPRIS_API_URL:https://plus.kipris.or.kr/eng/main/contents.do?menuNo=300024}
-    key: ${KIPRIS_API_KEY:${KIPRIS_PLUS_KEY:}}
+    url: ${KIPRIS_API_URL:${KIPRIS_PLUS_OPERATION_URL:http://plus.kipris.or.kr/kipo-api/kipi/patUtiModInfoSearchSevice/getAdvancedSearch}}
+    key: ${KIPRIS_API_KEY:${KIPRIS_PLUS_ACCESSKEY:${KIPRIS_PLUS_KEY:}}}
+    key-param: ${KIPRIS_PLUS_KEY_PARAM:ServiceKey}
+    page-size: ${KIPRIS_PLUS_PAGE_SIZE:10}
   bizinfo-support:
     url: ${BIZINFO_API_URL:https://www.exportvoucher.com/}
     key: ${BIZINFO_API_KEY:${DATAGO_SERVICE_KEY:}}

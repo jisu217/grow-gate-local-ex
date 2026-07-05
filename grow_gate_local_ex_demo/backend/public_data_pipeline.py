@@ -163,6 +163,7 @@ class PublicDataPipeline:
         tables: Dict[str, List[Dict[str, Any]]] = {
             "trade_signal": [],
             "country_profile": [],
+            "tariff_logistics_reference": [],
             "recall_case": [],
             "patent_signal": [],
             "support_program": [],
@@ -205,6 +206,15 @@ class PublicDataPipeline:
             }
         if table == "country_profile":
             return {**base, "country_code": record.get("country_code", "DE"), **record}
+        if table == "tariff_logistics_reference":
+            return {
+                **base,
+                "hs_code": record.get("hs_code", ""),
+                "route": record.get("route", ""),
+                "tariff_rate_pct": float(record.get("tariff_rate_pct", 0) or 0),
+                "latest_freight_index": float(record.get("latest_cost_index", 0) or 0),
+                **record,
+            }
         if table == "recall_case":
             return {
                 **base,

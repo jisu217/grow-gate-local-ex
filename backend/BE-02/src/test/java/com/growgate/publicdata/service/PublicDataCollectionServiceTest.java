@@ -169,6 +169,56 @@ class PublicDataCollectionServiceTest {
     }
 
     @Test
+    void collectForDiagnosisCountsCsvFileRecordAsSuccessfulPublicDataRecord() {
+        PublicDataConnector connector = mock(PublicDataConnector.class);
+        when(connector.provider()).thenReturn(PublicDataProvider.MOTIE_IMPORT_REGULATION);
+        when(connector.usedFor()).thenReturn("regulation");
+        when(connector.requestKey(any(PublicDataRequest.class))).thenReturn("MOTIE_IMPORT_REGULATION:미국:강관");
+        when(connector.collect(any(PublicDataRequest.class))).thenReturn(PublicDataConnectorResult.builder()
+                .provider(PublicDataProvider.MOTIE_IMPORT_REGULATION)
+                .endpoint("csv:classpath:publicdata/motie-import-regulations-20260508.csv")
+                .requestKey("MOTIE_IMPORT_REGULATION:미국:강관")
+                .hsCode("730630")
+                .targetCountry("US")
+                .matchedKey("hsCode=730630;country=US")
+                .usedFor("regulation")
+                .rawPayload("{\"source\":\"csv\"}")
+                .normalizedPayload(Map.of(
+                        "collectionEvidence", Map.of("operationEndpoint", false),
+                        "metrics", Map.of("recordCount", 235)))
+                .scoreContribution(-3)
+                .confidence(0.72)
+                .sourceType("cache")
+                .fallbackUsed(false)
+                .build());
+
+        PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
+        PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        MembershipRepository membershipRepository = mock(MembershipRepository.class);
+        User user = user("user-1");
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(runRepository.save(any(PublicDataCollectionRun.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.save(any(PublicDataRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.findTopByProviderAndRequestKeyAndExpiresAtAfterOrderByFetchedAtDesc(
+                eq(PublicDataProvider.MOTIE_IMPORT_REGULATION), eq("MOTIE_IMPORT_REGULATION:미국:강관"), any(LocalDateTime.class)))
+                .thenReturn(Optional.empty());
+
+        PublicDataCollectionService service = service(
+                List.of(connector), runRepository, recordRepository, userRepository, membershipRepository);
+        ReflectionTestUtils.setField(service, "enabled", true);
+        ReflectionTestUtils.setField(service, "cacheTtlHours", 24L);
+
+        PublicDataCollectionResult result = service.collectForDiagnosis(
+                "diagnosis-1", "user-1", "730630", "US", "강관");
+
+        assertThat(result.getRun().getStatus()).isEqualTo(PublicDataCollectionStatus.done);
+        assertThat(result.getRun().getSuccessCount()).isEqualTo(1);
+        assertThat(result.getRecords().get(0).getSourceType()).isEqualTo("cache");
+    }
+
+    @Test
     void getRecentRunsScopesPersonalUsersToOwnPublicDataRuns() {
         PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
         PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);

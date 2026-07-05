@@ -1,0 +1,72 @@
+{
+  "checked_at": "2026-07-05",
+  "policy": "Only deterministic, source-bound public-data references may affect runtime metrics. LLM output does not override finalGate.",
+  "items": [
+    {
+      "dataset": "관세청_HS부호_20260101.xlsx",
+      "status": "runtime_connected_curated_extract",
+      "target": "KCS_TARIFF_LOGISTICS",
+      "reason": "HS prefix matching supports existing hsCode input without legal/tariff overclaim."
+    },
+    {
+      "dataset": "관세청_품목번호별 관세율표_20260211.xlsx",
+      "status": "runtime_connected_curated_extract",
+      "target": "KCS_TARIFF_LOGISTICS",
+      "reason": "MFN/preferential tariff rates are exposed as reference metrics only."
+    },
+    {
+      "dataset": "관세청_항공수입 운송비용_20260531.csv",
+      "status": "runtime_connected_curated_extract",
+      "target": "KCS_TARIFF_LOGISTICS",
+      "reason": "Route freight index supports market/logistics reference only."
+    },
+    {
+      "dataset": "관세청_해상수출입(수입) 운송비용_20260531.csv",
+      "status": "runtime_connected_curated_extract",
+      "target": "KCS_TARIFF_LOGISTICS",
+      "reason": "Route freight index supports market/logistics reference only."
+    },
+    {
+      "dataset": "관세청_해상수출입(수출) 운송비용_20260531.csv",
+      "status": "runtime_connected_curated_extract",
+      "target": "KCS_TARIFF_LOGISTICS",
+      "reason": "Route freight index supports market/logistics reference only."
+    },
+    {
+      "dataset": "KATS 국내리콜정보/국외리콜공표기관/인증제품 첨부파일/제조공장/민원접수",
+      "status": "already_registered_or_applied",
+      "target": "public_data_sources.json + proof script",
+      "reason": "Existing branch already registers these as not-runtime-connected cache/reference sources."
+    },
+    {
+      "dataset": "산업통상부_기술표준통계_제품안전인증 신규등록현황_20251231.csv",
+      "status": "already_registered_or_applied",
+      "target": "public_data_sources.json + proof script",
+      "reason": "Existing branch already includes annual aggregate reference."
+    },
+    {
+      "dataset": "KOTRA 권역별 경제 지표, 글로벌 무역현황, 수출입동향, 일반기계산업 동향",
+      "status": "reference_only_deferred",
+      "target": "future country/industry profile module",
+      "reason": "Useful macro/context data, but not product-specific Gate proof without explicit mapping and tests."
+    },
+    {
+      "dataset": "KOTRA 글로벌역량진단(GCL), 무역투자 질의응답 데이터셋",
+      "status": "not_runtime_connected",
+      "target": "none",
+      "reason": "Contains company/QA or AI-training style content; using it directly would risk customer-validation or ML overclaim."
+    },
+    {
+      "dataset": "KATS 인증제품 정보 대용량 원문, 해수부 출항허가정보",
+      "status": "not_runtime_connected",
+      "target": "none",
+      "reason": "Large product/company/logistics records need display minimization and purpose-bound mapping before import."
+    },
+    {
+      "dataset": "국가별_관세율표 folder",
+      "status": "not_runtime_connected",
+      "target": "future country tariff reference",
+      "reason": "43 country workbooks need per-country parsing/terms checks before exposing as tariff reference."
+    }
+  ]
+}

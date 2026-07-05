@@ -1,0 +1,4319 @@
+{
+  "provider": "KIPRIS Plus",
+  "sourceType": "cache",
+  "endpointType": "kipris-plus-catalog-page",
+  "checkedAt": "2026-07-05T04:00:25.969175+00:00",
+  "range": {
+    "startPage": 1,
+    "endPage": 13
+  },
+  "officialUrl": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1",
+  "termsUrl": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=200031",
+  "expectedTotalCount": 144,
+  "apiKeyEnv": "KIPRIS_PLUS_ACCESSKEY|KIPRIS_PLUS_KEY|KIPRIS_API_KEY",
+  "apiKeyConfigured": false,
+  "apiKeyStored": false,
+  "catalogTotalCount": null,
+  "pages": [
+    {
+      "pageIndex": 1,
+      "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1",
+      "httpStatus": 200,
+      "htmlSha256": "f322cd7c904a46a527abefb9ed626ebfd47ee14aebadd27ecf6dfc73fc71eecc",
+      "totalCount": null,
+      "candidateLinkCount": 74,
+      "candidateLinks": [
+        {
+          "label": "메뉴 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#firstMenu"
+        },
+        {
+          "label": "본문 영역 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#bodyFocus"
+        },
+        {
+          "label": "-->\n-->\n레이어팝업닫기 -->\n<!--",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#logos"
+        },
+        {
+          "label": "API 상태",
+          "url": "https://plus.kipris.or.kr/portal/main/apiStatus.do?menuNo=210157"
+        },
+        {
+          "label": "API 통합설명서(명세서)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210165"
+        },
+        {
+          "label": "회원가입",
+          "url": "https://plus.kipris.or.kr/portal/member/joinView.do?menuNo=200028"
+        },
+        {
+          "label": "서비스 유형별",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100&entYn=N"
+        },
+        {
+          "label": "API",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&entYn=N&menuNo=200100"
+        },
+        {
+          "label": "BULK",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC003&entYn=N&menuNo=200101"
+        },
+        {
+          "label": "분류 체계별",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "국내 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "해외 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&menuNo=200108"
+        },
+        {
+          "label": "무료 데이터 정보",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?&entYn=N&menuNo=210103"
+        },
+        {
+          "label": "BULK(갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC010&entYn=N&frUseYn=Y&menuNo=200130"
+        },
+        {
+          "label": "BULK(비갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC011&entYn=N&frUseYn=Y&menuNo=200131"
+        },
+        {
+          "label": "서비스 신청",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "Open API",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "벌크 데이터(기간제)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/bulkFsmtmList.do?menuNo=290006"
+        },
+        {
+          "label": "벌크 데이터(선택형)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/mtrtmList.do?menuNo=290008"
+        },
+        {
+          "label": "공지사항",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000004&menuNo=200019"
+        },
+        {
+          "label": "IP데이터 정정",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000023&menuNo=210137"
+        },
+        {
+          "label": "자료실",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000006&menuNo=210148"
+        },
+        {
+          "label": "API 서비스 맵(Beta)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210167"
+        },
+        {
+          "label": "데이터 기프트 제도",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000007&menuNo=200023"
+        },
+        {
+          "label": "민간서비스 홍보",
+          "url": "https://plus.kipris.or.kr/portal/data/enter/ListdataBiz.do?menuNo=210158"
+        },
+        {
+          "label": "공보",
+          "url": "javascript:menuController("
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&entYn=N&menuNo=210000"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010102&entYn=N&menuNo=210001"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010103&entYn=N&menuNo=210002"
+        },
+        {
+          "label": "정정공보",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010104&entYn=N&menuNo=210119"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010206&entYn=N&menuNo=210039"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010207&entYn=N&menuNo=210040"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010208&entYn=N&menuNo=210041"
+        },
+        {
+          "label": "심판",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010209&entYn=N&menuNo=210042"
+        },
+        {
+          "label": "공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010210&entYn=N&menuNo=210043"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010305&entYn=N&menuNo=210044"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010306&entYn=N&menuNo=210045"
+        },
+        {
+          "label": "인명",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010307&entYn=N&menuNo=210046"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010308&entYn=N&menuNo=210047"
+        },
+        {
+          "label": "언어학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010401&entYn=N&menuNo=210048"
+        },
+        {
+          "label": "이미지학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010402&entYn=N&menuNo=210049"
+        },
+        {
+          "label": "해외공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020600&entYn=N&menuNo=201018"
+        },
+        {
+          "label": "미국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020901&entYn=N&menuNo=210050"
+        },
+        {
+          "label": "유럽",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020902&entYn=N&menuNo=210051"
+        },
+        {
+          "label": "중국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020903&entYn=N&menuNo=210052"
+        },
+        {
+          "label": "일본",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020904&entYn=N&menuNo=210053"
+        },
+        {
+          "label": "WIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021000&menuNo=201025"
+        },
+        {
+          "label": "대만",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021101&entYn=N&menuNo=210054"
+        },
+        {
+          "label": "멕시코",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021102&entYn=N&menuNo=210055"
+        },
+        {
+          "label": "필리핀",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021103&entYn=N&menuNo=210056"
+        },
+        {
+          "label": "콜롬비아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021104&entYn=N&menuNo=210057"
+        },
+        {
+          "label": "러시아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021105&entYn=N&menuNo=210058"
+        },
+        {
+          "label": "스웨덴",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021106&entYn=N&menuNo=210059"
+        },
+        {
+          "label": "스페인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021107&entYn=N&menuNo=210060"
+        },
+        {
+          "label": "이스라엘",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021108&entYn=N&menuNo=210061"
+        },
+        {
+          "label": "인도",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021109&entYn=N&menuNo=210062"
+        },
+        {
+          "label": "베트남",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021110&entYn=N&menuNo=210063"
+        },
+        {
+          "label": "ARIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021111&entYn=N&menuNo=210064"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021112&entYn=N&menuNo=210065"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000007&searchCnd=&searchWrd=§ion=&sdate=&edate=&useAt=&replyAt=&menuNo=200023&viewType=&delCode=0&pageIndex=1&nttId=1256"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000004&nttId=612&menuNo=200019"
+        },
+        {
+          "label": "데이터 목록",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100"
+        },
+        {
+          "label": "<<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "2",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=2"
+        },
+        {
+          "label": "3",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=3"
+        },
+        {
+          "label": "4",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=4"
+        },
+        {
+          "label": "5",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=5"
+        },
+        {
+          "label": "6",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=6"
+        },
+        {
+          "label": "7",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=7"
+        },
+        {
+          "label": "8",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=8"
+        },
+        {
+          "label": "9",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=9"
+        },
+        {
+          "label": "10",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=10"
+        },
+        {
+          "label": ">",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=11"
+        },
+        {
+          "label": ">>",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        }
+      ],
+      "catalogHints": [
+        "API 상태",
+        "API 통합설명서(명세서)",
+        "API",
+        "BULK",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "Open API",
+        "API 서비스 맵(Beta)",
+        "API",
+        "BULK",
+        "공보",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "심판",
+        "특허·실용",
+        "디자인",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "A API",
+        "B BULK",
+        "A API",
+        "B BULK",
+        "B BULK(비갱신)"
+      ]
+    },
+    {
+      "pageIndex": 2,
+      "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=2",
+      "httpStatus": 200,
+      "htmlSha256": "99ecff8eea0ebc7a60d47072a68b74cdc53a1c3c8dd0877b373996a9ea5cd2a1",
+      "totalCount": null,
+      "candidateLinkCount": 74,
+      "candidateLinks": [
+        {
+          "label": "메뉴 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#firstMenu"
+        },
+        {
+          "label": "본문 영역 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#bodyFocus"
+        },
+        {
+          "label": "-->\n-->\n레이어팝업닫기 -->\n<!--",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#logos"
+        },
+        {
+          "label": "API 상태",
+          "url": "https://plus.kipris.or.kr/portal/main/apiStatus.do?menuNo=210157"
+        },
+        {
+          "label": "API 통합설명서(명세서)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210165"
+        },
+        {
+          "label": "회원가입",
+          "url": "https://plus.kipris.or.kr/portal/member/joinView.do?menuNo=200028"
+        },
+        {
+          "label": "서비스 유형별",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100&entYn=N"
+        },
+        {
+          "label": "API",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&entYn=N&menuNo=200100"
+        },
+        {
+          "label": "BULK",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC003&entYn=N&menuNo=200101"
+        },
+        {
+          "label": "분류 체계별",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "국내 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "해외 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&menuNo=200108"
+        },
+        {
+          "label": "무료 데이터 정보",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?&entYn=N&menuNo=210103"
+        },
+        {
+          "label": "BULK(갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC010&entYn=N&frUseYn=Y&menuNo=200130"
+        },
+        {
+          "label": "BULK(비갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC011&entYn=N&frUseYn=Y&menuNo=200131"
+        },
+        {
+          "label": "서비스 신청",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "Open API",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "벌크 데이터(기간제)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/bulkFsmtmList.do?menuNo=290006"
+        },
+        {
+          "label": "벌크 데이터(선택형)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/mtrtmList.do?menuNo=290008"
+        },
+        {
+          "label": "공지사항",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000004&menuNo=200019"
+        },
+        {
+          "label": "IP데이터 정정",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000023&menuNo=210137"
+        },
+        {
+          "label": "자료실",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000006&menuNo=210148"
+        },
+        {
+          "label": "API 서비스 맵(Beta)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210167"
+        },
+        {
+          "label": "데이터 기프트 제도",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000007&menuNo=200023"
+        },
+        {
+          "label": "민간서비스 홍보",
+          "url": "https://plus.kipris.or.kr/portal/data/enter/ListdataBiz.do?menuNo=210158"
+        },
+        {
+          "label": "공보",
+          "url": "javascript:menuController("
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&entYn=N&menuNo=210000"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010102&entYn=N&menuNo=210001"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010103&entYn=N&menuNo=210002"
+        },
+        {
+          "label": "정정공보",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010104&entYn=N&menuNo=210119"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010206&entYn=N&menuNo=210039"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010207&entYn=N&menuNo=210040"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010208&entYn=N&menuNo=210041"
+        },
+        {
+          "label": "심판",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010209&entYn=N&menuNo=210042"
+        },
+        {
+          "label": "공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010210&entYn=N&menuNo=210043"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010305&entYn=N&menuNo=210044"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010306&entYn=N&menuNo=210045"
+        },
+        {
+          "label": "인명",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010307&entYn=N&menuNo=210046"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010308&entYn=N&menuNo=210047"
+        },
+        {
+          "label": "언어학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010401&entYn=N&menuNo=210048"
+        },
+        {
+          "label": "이미지학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010402&entYn=N&menuNo=210049"
+        },
+        {
+          "label": "해외공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020600&entYn=N&menuNo=201018"
+        },
+        {
+          "label": "미국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020901&entYn=N&menuNo=210050"
+        },
+        {
+          "label": "유럽",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020902&entYn=N&menuNo=210051"
+        },
+        {
+          "label": "중국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020903&entYn=N&menuNo=210052"
+        },
+        {
+          "label": "일본",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020904&entYn=N&menuNo=210053"
+        },
+        {
+          "label": "WIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021000&menuNo=201025"
+        },
+        {
+          "label": "대만",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021101&entYn=N&menuNo=210054"
+        },
+        {
+          "label": "멕시코",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021102&entYn=N&menuNo=210055"
+        },
+        {
+          "label": "필리핀",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021103&entYn=N&menuNo=210056"
+        },
+        {
+          "label": "콜롬비아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021104&entYn=N&menuNo=210057"
+        },
+        {
+          "label": "러시아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021105&entYn=N&menuNo=210058"
+        },
+        {
+          "label": "스웨덴",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021106&entYn=N&menuNo=210059"
+        },
+        {
+          "label": "스페인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021107&entYn=N&menuNo=210060"
+        },
+        {
+          "label": "이스라엘",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021108&entYn=N&menuNo=210061"
+        },
+        {
+          "label": "인도",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021109&entYn=N&menuNo=210062"
+        },
+        {
+          "label": "베트남",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021110&entYn=N&menuNo=210063"
+        },
+        {
+          "label": "ARIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021111&entYn=N&menuNo=210064"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021112&entYn=N&menuNo=210065"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000007&searchCnd=&searchWrd=§ion=&sdate=&edate=&useAt=&replyAt=&menuNo=200023&viewType=&delCode=0&pageIndex=1&nttId=1256"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000004&nttId=612&menuNo=200019"
+        },
+        {
+          "label": "데이터 목록",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100"
+        },
+        {
+          "label": "<<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "1",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "3",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=3"
+        },
+        {
+          "label": "4",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=4"
+        },
+        {
+          "label": "5",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=5"
+        },
+        {
+          "label": "6",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=6"
+        },
+        {
+          "label": "7",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=7"
+        },
+        {
+          "label": "8",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=8"
+        },
+        {
+          "label": "9",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=9"
+        },
+        {
+          "label": "10",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=10"
+        },
+        {
+          "label": ">",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=11"
+        },
+        {
+          "label": ">>",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        }
+      ],
+      "catalogHints": [
+        "API 상태",
+        "API 통합설명서(명세서)",
+        "API",
+        "BULK",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "Open API",
+        "API 서비스 맵(Beta)",
+        "API",
+        "BULK",
+        "공보",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "심판",
+        "특허·실용",
+        "디자인",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "A API",
+        "B BULK",
+        "A API",
+        "B BULK",
+        "B BULK(비갱신)"
+      ]
+    },
+    {
+      "pageIndex": 3,
+      "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=3",
+      "httpStatus": 200,
+      "htmlSha256": "b00d6438cf437b1dc924523783310da6165a2077f18f879a002a336771e50de8",
+      "totalCount": null,
+      "candidateLinkCount": 74,
+      "candidateLinks": [
+        {
+          "label": "메뉴 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#firstMenu"
+        },
+        {
+          "label": "본문 영역 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#bodyFocus"
+        },
+        {
+          "label": "-->\n-->\n레이어팝업닫기 -->\n<!--",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#logos"
+        },
+        {
+          "label": "API 상태",
+          "url": "https://plus.kipris.or.kr/portal/main/apiStatus.do?menuNo=210157"
+        },
+        {
+          "label": "API 통합설명서(명세서)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210165"
+        },
+        {
+          "label": "회원가입",
+          "url": "https://plus.kipris.or.kr/portal/member/joinView.do?menuNo=200028"
+        },
+        {
+          "label": "서비스 유형별",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100&entYn=N"
+        },
+        {
+          "label": "API",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&entYn=N&menuNo=200100"
+        },
+        {
+          "label": "BULK",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC003&entYn=N&menuNo=200101"
+        },
+        {
+          "label": "분류 체계별",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "국내 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "해외 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&menuNo=200108"
+        },
+        {
+          "label": "무료 데이터 정보",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?&entYn=N&menuNo=210103"
+        },
+        {
+          "label": "BULK(갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC010&entYn=N&frUseYn=Y&menuNo=200130"
+        },
+        {
+          "label": "BULK(비갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC011&entYn=N&frUseYn=Y&menuNo=200131"
+        },
+        {
+          "label": "서비스 신청",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "Open API",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "벌크 데이터(기간제)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/bulkFsmtmList.do?menuNo=290006"
+        },
+        {
+          "label": "벌크 데이터(선택형)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/mtrtmList.do?menuNo=290008"
+        },
+        {
+          "label": "공지사항",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000004&menuNo=200019"
+        },
+        {
+          "label": "IP데이터 정정",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000023&menuNo=210137"
+        },
+        {
+          "label": "자료실",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000006&menuNo=210148"
+        },
+        {
+          "label": "API 서비스 맵(Beta)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210167"
+        },
+        {
+          "label": "데이터 기프트 제도",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000007&menuNo=200023"
+        },
+        {
+          "label": "민간서비스 홍보",
+          "url": "https://plus.kipris.or.kr/portal/data/enter/ListdataBiz.do?menuNo=210158"
+        },
+        {
+          "label": "공보",
+          "url": "javascript:menuController("
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&entYn=N&menuNo=210000"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010102&entYn=N&menuNo=210001"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010103&entYn=N&menuNo=210002"
+        },
+        {
+          "label": "정정공보",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010104&entYn=N&menuNo=210119"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010206&entYn=N&menuNo=210039"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010207&entYn=N&menuNo=210040"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010208&entYn=N&menuNo=210041"
+        },
+        {
+          "label": "심판",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010209&entYn=N&menuNo=210042"
+        },
+        {
+          "label": "공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010210&entYn=N&menuNo=210043"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010305&entYn=N&menuNo=210044"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010306&entYn=N&menuNo=210045"
+        },
+        {
+          "label": "인명",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010307&entYn=N&menuNo=210046"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010308&entYn=N&menuNo=210047"
+        },
+        {
+          "label": "언어학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010401&entYn=N&menuNo=210048"
+        },
+        {
+          "label": "이미지학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010402&entYn=N&menuNo=210049"
+        },
+        {
+          "label": "해외공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020600&entYn=N&menuNo=201018"
+        },
+        {
+          "label": "미국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020901&entYn=N&menuNo=210050"
+        },
+        {
+          "label": "유럽",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020902&entYn=N&menuNo=210051"
+        },
+        {
+          "label": "중국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020903&entYn=N&menuNo=210052"
+        },
+        {
+          "label": "일본",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020904&entYn=N&menuNo=210053"
+        },
+        {
+          "label": "WIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021000&menuNo=201025"
+        },
+        {
+          "label": "대만",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021101&entYn=N&menuNo=210054"
+        },
+        {
+          "label": "멕시코",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021102&entYn=N&menuNo=210055"
+        },
+        {
+          "label": "필리핀",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021103&entYn=N&menuNo=210056"
+        },
+        {
+          "label": "콜롬비아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021104&entYn=N&menuNo=210057"
+        },
+        {
+          "label": "러시아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021105&entYn=N&menuNo=210058"
+        },
+        {
+          "label": "스웨덴",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021106&entYn=N&menuNo=210059"
+        },
+        {
+          "label": "스페인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021107&entYn=N&menuNo=210060"
+        },
+        {
+          "label": "이스라엘",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021108&entYn=N&menuNo=210061"
+        },
+        {
+          "label": "인도",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021109&entYn=N&menuNo=210062"
+        },
+        {
+          "label": "베트남",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021110&entYn=N&menuNo=210063"
+        },
+        {
+          "label": "ARIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021111&entYn=N&menuNo=210064"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021112&entYn=N&menuNo=210065"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000007&searchCnd=&searchWrd=§ion=&sdate=&edate=&useAt=&replyAt=&menuNo=200023&viewType=&delCode=0&pageIndex=1&nttId=1256"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000004&nttId=612&menuNo=200019"
+        },
+        {
+          "label": "데이터 목록",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100"
+        },
+        {
+          "label": "<<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "1",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "2",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=2"
+        },
+        {
+          "label": "4",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=4"
+        },
+        {
+          "label": "5",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=5"
+        },
+        {
+          "label": "6",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=6"
+        },
+        {
+          "label": "7",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=7"
+        },
+        {
+          "label": "8",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=8"
+        },
+        {
+          "label": "9",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=9"
+        },
+        {
+          "label": "10",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=10"
+        },
+        {
+          "label": ">",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=11"
+        },
+        {
+          "label": ">>",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        }
+      ],
+      "catalogHints": [
+        "API 상태",
+        "API 통합설명서(명세서)",
+        "API",
+        "BULK",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "Open API",
+        "API 서비스 맵(Beta)",
+        "API",
+        "BULK",
+        "공보",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "심판",
+        "특허·실용",
+        "디자인",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "A API",
+        "B BULK",
+        "A API",
+        "B BULK",
+        "B BULK(비갱신)"
+      ]
+    },
+    {
+      "pageIndex": 4,
+      "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=4",
+      "httpStatus": 200,
+      "htmlSha256": "6c7a8490c26d8065cff281bdf2778f410fdbaf2396dc245d3584f6cf8e5d0428",
+      "totalCount": null,
+      "candidateLinkCount": 74,
+      "candidateLinks": [
+        {
+          "label": "메뉴 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#firstMenu"
+        },
+        {
+          "label": "본문 영역 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#bodyFocus"
+        },
+        {
+          "label": "-->\n-->\n레이어팝업닫기 -->\n<!--",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#logos"
+        },
+        {
+          "label": "API 상태",
+          "url": "https://plus.kipris.or.kr/portal/main/apiStatus.do?menuNo=210157"
+        },
+        {
+          "label": "API 통합설명서(명세서)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210165"
+        },
+        {
+          "label": "회원가입",
+          "url": "https://plus.kipris.or.kr/portal/member/joinView.do?menuNo=200028"
+        },
+        {
+          "label": "서비스 유형별",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100&entYn=N"
+        },
+        {
+          "label": "API",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&entYn=N&menuNo=200100"
+        },
+        {
+          "label": "BULK",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC003&entYn=N&menuNo=200101"
+        },
+        {
+          "label": "분류 체계별",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "국내 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "해외 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&menuNo=200108"
+        },
+        {
+          "label": "무료 데이터 정보",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?&entYn=N&menuNo=210103"
+        },
+        {
+          "label": "BULK(갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC010&entYn=N&frUseYn=Y&menuNo=200130"
+        },
+        {
+          "label": "BULK(비갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC011&entYn=N&frUseYn=Y&menuNo=200131"
+        },
+        {
+          "label": "서비스 신청",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "Open API",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "벌크 데이터(기간제)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/bulkFsmtmList.do?menuNo=290006"
+        },
+        {
+          "label": "벌크 데이터(선택형)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/mtrtmList.do?menuNo=290008"
+        },
+        {
+          "label": "공지사항",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000004&menuNo=200019"
+        },
+        {
+          "label": "IP데이터 정정",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000023&menuNo=210137"
+        },
+        {
+          "label": "자료실",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000006&menuNo=210148"
+        },
+        {
+          "label": "API 서비스 맵(Beta)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210167"
+        },
+        {
+          "label": "데이터 기프트 제도",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000007&menuNo=200023"
+        },
+        {
+          "label": "민간서비스 홍보",
+          "url": "https://plus.kipris.or.kr/portal/data/enter/ListdataBiz.do?menuNo=210158"
+        },
+        {
+          "label": "공보",
+          "url": "javascript:menuController("
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&entYn=N&menuNo=210000"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010102&entYn=N&menuNo=210001"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010103&entYn=N&menuNo=210002"
+        },
+        {
+          "label": "정정공보",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010104&entYn=N&menuNo=210119"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010206&entYn=N&menuNo=210039"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010207&entYn=N&menuNo=210040"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010208&entYn=N&menuNo=210041"
+        },
+        {
+          "label": "심판",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010209&entYn=N&menuNo=210042"
+        },
+        {
+          "label": "공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010210&entYn=N&menuNo=210043"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010305&entYn=N&menuNo=210044"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010306&entYn=N&menuNo=210045"
+        },
+        {
+          "label": "인명",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010307&entYn=N&menuNo=210046"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010308&entYn=N&menuNo=210047"
+        },
+        {
+          "label": "언어학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010401&entYn=N&menuNo=210048"
+        },
+        {
+          "label": "이미지학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010402&entYn=N&menuNo=210049"
+        },
+        {
+          "label": "해외공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020600&entYn=N&menuNo=201018"
+        },
+        {
+          "label": "미국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020901&entYn=N&menuNo=210050"
+        },
+        {
+          "label": "유럽",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020902&entYn=N&menuNo=210051"
+        },
+        {
+          "label": "중국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020903&entYn=N&menuNo=210052"
+        },
+        {
+          "label": "일본",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020904&entYn=N&menuNo=210053"
+        },
+        {
+          "label": "WIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021000&menuNo=201025"
+        },
+        {
+          "label": "대만",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021101&entYn=N&menuNo=210054"
+        },
+        {
+          "label": "멕시코",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021102&entYn=N&menuNo=210055"
+        },
+        {
+          "label": "필리핀",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021103&entYn=N&menuNo=210056"
+        },
+        {
+          "label": "콜롬비아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021104&entYn=N&menuNo=210057"
+        },
+        {
+          "label": "러시아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021105&entYn=N&menuNo=210058"
+        },
+        {
+          "label": "스웨덴",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021106&entYn=N&menuNo=210059"
+        },
+        {
+          "label": "스페인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021107&entYn=N&menuNo=210060"
+        },
+        {
+          "label": "이스라엘",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021108&entYn=N&menuNo=210061"
+        },
+        {
+          "label": "인도",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021109&entYn=N&menuNo=210062"
+        },
+        {
+          "label": "베트남",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021110&entYn=N&menuNo=210063"
+        },
+        {
+          "label": "ARIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021111&entYn=N&menuNo=210064"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021112&entYn=N&menuNo=210065"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000007&searchCnd=&searchWrd=§ion=&sdate=&edate=&useAt=&replyAt=&menuNo=200023&viewType=&delCode=0&pageIndex=1&nttId=1256"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000004&nttId=612&menuNo=200019"
+        },
+        {
+          "label": "데이터 목록",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100"
+        },
+        {
+          "label": "<<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "1",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "2",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=2"
+        },
+        {
+          "label": "3",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=3"
+        },
+        {
+          "label": "5",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=5"
+        },
+        {
+          "label": "6",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=6"
+        },
+        {
+          "label": "7",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=7"
+        },
+        {
+          "label": "8",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=8"
+        },
+        {
+          "label": "9",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=9"
+        },
+        {
+          "label": "10",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=10"
+        },
+        {
+          "label": ">",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=11"
+        },
+        {
+          "label": ">>",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        }
+      ],
+      "catalogHints": [
+        "API 상태",
+        "API 통합설명서(명세서)",
+        "API",
+        "BULK",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "Open API",
+        "API 서비스 맵(Beta)",
+        "API",
+        "BULK",
+        "공보",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "심판",
+        "특허·실용",
+        "디자인",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "A API",
+        "B BULK",
+        "A API",
+        "B BULK",
+        "B BULK(비갱신)"
+      ]
+    },
+    {
+      "pageIndex": 5,
+      "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=5",
+      "httpStatus": 200,
+      "htmlSha256": "616f20139981f82b867caf1021c0095b8e8e1275a1ba474c2ad3688f9b3b4a85",
+      "totalCount": null,
+      "candidateLinkCount": 74,
+      "candidateLinks": [
+        {
+          "label": "메뉴 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#firstMenu"
+        },
+        {
+          "label": "본문 영역 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#bodyFocus"
+        },
+        {
+          "label": "-->\n-->\n레이어팝업닫기 -->\n<!--",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#logos"
+        },
+        {
+          "label": "API 상태",
+          "url": "https://plus.kipris.or.kr/portal/main/apiStatus.do?menuNo=210157"
+        },
+        {
+          "label": "API 통합설명서(명세서)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210165"
+        },
+        {
+          "label": "회원가입",
+          "url": "https://plus.kipris.or.kr/portal/member/joinView.do?menuNo=200028"
+        },
+        {
+          "label": "서비스 유형별",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100&entYn=N"
+        },
+        {
+          "label": "API",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&entYn=N&menuNo=200100"
+        },
+        {
+          "label": "BULK",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC003&entYn=N&menuNo=200101"
+        },
+        {
+          "label": "분류 체계별",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "국내 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "해외 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&menuNo=200108"
+        },
+        {
+          "label": "무료 데이터 정보",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?&entYn=N&menuNo=210103"
+        },
+        {
+          "label": "BULK(갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC010&entYn=N&frUseYn=Y&menuNo=200130"
+        },
+        {
+          "label": "BULK(비갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC011&entYn=N&frUseYn=Y&menuNo=200131"
+        },
+        {
+          "label": "서비스 신청",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "Open API",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "벌크 데이터(기간제)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/bulkFsmtmList.do?menuNo=290006"
+        },
+        {
+          "label": "벌크 데이터(선택형)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/mtrtmList.do?menuNo=290008"
+        },
+        {
+          "label": "공지사항",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000004&menuNo=200019"
+        },
+        {
+          "label": "IP데이터 정정",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000023&menuNo=210137"
+        },
+        {
+          "label": "자료실",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000006&menuNo=210148"
+        },
+        {
+          "label": "API 서비스 맵(Beta)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210167"
+        },
+        {
+          "label": "데이터 기프트 제도",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000007&menuNo=200023"
+        },
+        {
+          "label": "민간서비스 홍보",
+          "url": "https://plus.kipris.or.kr/portal/data/enter/ListdataBiz.do?menuNo=210158"
+        },
+        {
+          "label": "공보",
+          "url": "javascript:menuController("
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&entYn=N&menuNo=210000"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010102&entYn=N&menuNo=210001"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010103&entYn=N&menuNo=210002"
+        },
+        {
+          "label": "정정공보",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010104&entYn=N&menuNo=210119"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010206&entYn=N&menuNo=210039"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010207&entYn=N&menuNo=210040"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010208&entYn=N&menuNo=210041"
+        },
+        {
+          "label": "심판",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010209&entYn=N&menuNo=210042"
+        },
+        {
+          "label": "공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010210&entYn=N&menuNo=210043"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010305&entYn=N&menuNo=210044"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010306&entYn=N&menuNo=210045"
+        },
+        {
+          "label": "인명",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010307&entYn=N&menuNo=210046"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010308&entYn=N&menuNo=210047"
+        },
+        {
+          "label": "언어학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010401&entYn=N&menuNo=210048"
+        },
+        {
+          "label": "이미지학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010402&entYn=N&menuNo=210049"
+        },
+        {
+          "label": "해외공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020600&entYn=N&menuNo=201018"
+        },
+        {
+          "label": "미국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020901&entYn=N&menuNo=210050"
+        },
+        {
+          "label": "유럽",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020902&entYn=N&menuNo=210051"
+        },
+        {
+          "label": "중국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020903&entYn=N&menuNo=210052"
+        },
+        {
+          "label": "일본",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020904&entYn=N&menuNo=210053"
+        },
+        {
+          "label": "WIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021000&menuNo=201025"
+        },
+        {
+          "label": "대만",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021101&entYn=N&menuNo=210054"
+        },
+        {
+          "label": "멕시코",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021102&entYn=N&menuNo=210055"
+        },
+        {
+          "label": "필리핀",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021103&entYn=N&menuNo=210056"
+        },
+        {
+          "label": "콜롬비아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021104&entYn=N&menuNo=210057"
+        },
+        {
+          "label": "러시아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021105&entYn=N&menuNo=210058"
+        },
+        {
+          "label": "스웨덴",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021106&entYn=N&menuNo=210059"
+        },
+        {
+          "label": "스페인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021107&entYn=N&menuNo=210060"
+        },
+        {
+          "label": "이스라엘",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021108&entYn=N&menuNo=210061"
+        },
+        {
+          "label": "인도",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021109&entYn=N&menuNo=210062"
+        },
+        {
+          "label": "베트남",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021110&entYn=N&menuNo=210063"
+        },
+        {
+          "label": "ARIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021111&entYn=N&menuNo=210064"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021112&entYn=N&menuNo=210065"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000007&searchCnd=&searchWrd=§ion=&sdate=&edate=&useAt=&replyAt=&menuNo=200023&viewType=&delCode=0&pageIndex=1&nttId=1256"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000004&nttId=612&menuNo=200019"
+        },
+        {
+          "label": "데이터 목록",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100"
+        },
+        {
+          "label": "<<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "1",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "2",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=2"
+        },
+        {
+          "label": "3",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=3"
+        },
+        {
+          "label": "4",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=4"
+        },
+        {
+          "label": "6",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=6"
+        },
+        {
+          "label": "7",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=7"
+        },
+        {
+          "label": "8",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=8"
+        },
+        {
+          "label": "9",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=9"
+        },
+        {
+          "label": "10",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=10"
+        },
+        {
+          "label": ">",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=11"
+        },
+        {
+          "label": ">>",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        }
+      ],
+      "catalogHints": [
+        "API 상태",
+        "API 통합설명서(명세서)",
+        "API",
+        "BULK",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "Open API",
+        "API 서비스 맵(Beta)",
+        "API",
+        "BULK",
+        "공보",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "심판",
+        "특허·실용",
+        "디자인",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "A API",
+        "B BULK",
+        "A API",
+        "B BULK",
+        "B BULK(비갱신)"
+      ]
+    },
+    {
+      "pageIndex": 6,
+      "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=6",
+      "httpStatus": 200,
+      "htmlSha256": "4d292f6f12ff586cf5e3e45eac8f14978dadf4b740f5a6c1e5c8204e67800589",
+      "totalCount": null,
+      "candidateLinkCount": 74,
+      "candidateLinks": [
+        {
+          "label": "메뉴 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#firstMenu"
+        },
+        {
+          "label": "본문 영역 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#bodyFocus"
+        },
+        {
+          "label": "-->\n-->\n레이어팝업닫기 -->\n<!--",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#logos"
+        },
+        {
+          "label": "API 상태",
+          "url": "https://plus.kipris.or.kr/portal/main/apiStatus.do?menuNo=210157"
+        },
+        {
+          "label": "API 통합설명서(명세서)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210165"
+        },
+        {
+          "label": "회원가입",
+          "url": "https://plus.kipris.or.kr/portal/member/joinView.do?menuNo=200028"
+        },
+        {
+          "label": "서비스 유형별",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100&entYn=N"
+        },
+        {
+          "label": "API",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&entYn=N&menuNo=200100"
+        },
+        {
+          "label": "BULK",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC003&entYn=N&menuNo=200101"
+        },
+        {
+          "label": "분류 체계별",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "국내 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "해외 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&menuNo=200108"
+        },
+        {
+          "label": "무료 데이터 정보",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?&entYn=N&menuNo=210103"
+        },
+        {
+          "label": "BULK(갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC010&entYn=N&frUseYn=Y&menuNo=200130"
+        },
+        {
+          "label": "BULK(비갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC011&entYn=N&frUseYn=Y&menuNo=200131"
+        },
+        {
+          "label": "서비스 신청",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "Open API",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "벌크 데이터(기간제)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/bulkFsmtmList.do?menuNo=290006"
+        },
+        {
+          "label": "벌크 데이터(선택형)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/mtrtmList.do?menuNo=290008"
+        },
+        {
+          "label": "공지사항",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000004&menuNo=200019"
+        },
+        {
+          "label": "IP데이터 정정",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000023&menuNo=210137"
+        },
+        {
+          "label": "자료실",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000006&menuNo=210148"
+        },
+        {
+          "label": "API 서비스 맵(Beta)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210167"
+        },
+        {
+          "label": "데이터 기프트 제도",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000007&menuNo=200023"
+        },
+        {
+          "label": "민간서비스 홍보",
+          "url": "https://plus.kipris.or.kr/portal/data/enter/ListdataBiz.do?menuNo=210158"
+        },
+        {
+          "label": "공보",
+          "url": "javascript:menuController("
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&entYn=N&menuNo=210000"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010102&entYn=N&menuNo=210001"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010103&entYn=N&menuNo=210002"
+        },
+        {
+          "label": "정정공보",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010104&entYn=N&menuNo=210119"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010206&entYn=N&menuNo=210039"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010207&entYn=N&menuNo=210040"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010208&entYn=N&menuNo=210041"
+        },
+        {
+          "label": "심판",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010209&entYn=N&menuNo=210042"
+        },
+        {
+          "label": "공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010210&entYn=N&menuNo=210043"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010305&entYn=N&menuNo=210044"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010306&entYn=N&menuNo=210045"
+        },
+        {
+          "label": "인명",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010307&entYn=N&menuNo=210046"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010308&entYn=N&menuNo=210047"
+        },
+        {
+          "label": "언어학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010401&entYn=N&menuNo=210048"
+        },
+        {
+          "label": "이미지학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010402&entYn=N&menuNo=210049"
+        },
+        {
+          "label": "해외공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020600&entYn=N&menuNo=201018"
+        },
+        {
+          "label": "미국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020901&entYn=N&menuNo=210050"
+        },
+        {
+          "label": "유럽",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020902&entYn=N&menuNo=210051"
+        },
+        {
+          "label": "중국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020903&entYn=N&menuNo=210052"
+        },
+        {
+          "label": "일본",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020904&entYn=N&menuNo=210053"
+        },
+        {
+          "label": "WIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021000&menuNo=201025"
+        },
+        {
+          "label": "대만",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021101&entYn=N&menuNo=210054"
+        },
+        {
+          "label": "멕시코",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021102&entYn=N&menuNo=210055"
+        },
+        {
+          "label": "필리핀",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021103&entYn=N&menuNo=210056"
+        },
+        {
+          "label": "콜롬비아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021104&entYn=N&menuNo=210057"
+        },
+        {
+          "label": "러시아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021105&entYn=N&menuNo=210058"
+        },
+        {
+          "label": "스웨덴",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021106&entYn=N&menuNo=210059"
+        },
+        {
+          "label": "스페인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021107&entYn=N&menuNo=210060"
+        },
+        {
+          "label": "이스라엘",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021108&entYn=N&menuNo=210061"
+        },
+        {
+          "label": "인도",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021109&entYn=N&menuNo=210062"
+        },
+        {
+          "label": "베트남",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021110&entYn=N&menuNo=210063"
+        },
+        {
+          "label": "ARIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021111&entYn=N&menuNo=210064"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021112&entYn=N&menuNo=210065"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000007&searchCnd=&searchWrd=§ion=&sdate=&edate=&useAt=&replyAt=&menuNo=200023&viewType=&delCode=0&pageIndex=1&nttId=1256"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000004&nttId=612&menuNo=200019"
+        },
+        {
+          "label": "데이터 목록",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100"
+        },
+        {
+          "label": "<<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "1",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "2",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=2"
+        },
+        {
+          "label": "3",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=3"
+        },
+        {
+          "label": "4",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=4"
+        },
+        {
+          "label": "5",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=5"
+        },
+        {
+          "label": "7",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=7"
+        },
+        {
+          "label": "8",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=8"
+        },
+        {
+          "label": "9",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=9"
+        },
+        {
+          "label": "10",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=10"
+        },
+        {
+          "label": ">",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=11"
+        },
+        {
+          "label": ">>",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        }
+      ],
+      "catalogHints": [
+        "API 상태",
+        "API 통합설명서(명세서)",
+        "API",
+        "BULK",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "Open API",
+        "API 서비스 맵(Beta)",
+        "API",
+        "BULK",
+        "공보",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "심판",
+        "특허·실용",
+        "디자인",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "A API",
+        "B BULK",
+        "A API",
+        "B BULK",
+        "B BULK(비갱신)"
+      ]
+    },
+    {
+      "pageIndex": 7,
+      "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=7",
+      "httpStatus": 200,
+      "htmlSha256": "481ada25116f53d39495f63e14ca7cb24373321e093eafe794cdddc18601fac8",
+      "totalCount": null,
+      "candidateLinkCount": 74,
+      "candidateLinks": [
+        {
+          "label": "메뉴 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#firstMenu"
+        },
+        {
+          "label": "본문 영역 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#bodyFocus"
+        },
+        {
+          "label": "-->\n-->\n레이어팝업닫기 -->\n<!--",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#logos"
+        },
+        {
+          "label": "API 상태",
+          "url": "https://plus.kipris.or.kr/portal/main/apiStatus.do?menuNo=210157"
+        },
+        {
+          "label": "API 통합설명서(명세서)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210165"
+        },
+        {
+          "label": "회원가입",
+          "url": "https://plus.kipris.or.kr/portal/member/joinView.do?menuNo=200028"
+        },
+        {
+          "label": "서비스 유형별",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100&entYn=N"
+        },
+        {
+          "label": "API",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&entYn=N&menuNo=200100"
+        },
+        {
+          "label": "BULK",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC003&entYn=N&menuNo=200101"
+        },
+        {
+          "label": "분류 체계별",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "국내 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "해외 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&menuNo=200108"
+        },
+        {
+          "label": "무료 데이터 정보",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?&entYn=N&menuNo=210103"
+        },
+        {
+          "label": "BULK(갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC010&entYn=N&frUseYn=Y&menuNo=200130"
+        },
+        {
+          "label": "BULK(비갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC011&entYn=N&frUseYn=Y&menuNo=200131"
+        },
+        {
+          "label": "서비스 신청",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "Open API",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "벌크 데이터(기간제)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/bulkFsmtmList.do?menuNo=290006"
+        },
+        {
+          "label": "벌크 데이터(선택형)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/mtrtmList.do?menuNo=290008"
+        },
+        {
+          "label": "공지사항",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000004&menuNo=200019"
+        },
+        {
+          "label": "IP데이터 정정",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000023&menuNo=210137"
+        },
+        {
+          "label": "자료실",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000006&menuNo=210148"
+        },
+        {
+          "label": "API 서비스 맵(Beta)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210167"
+        },
+        {
+          "label": "데이터 기프트 제도",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000007&menuNo=200023"
+        },
+        {
+          "label": "민간서비스 홍보",
+          "url": "https://plus.kipris.or.kr/portal/data/enter/ListdataBiz.do?menuNo=210158"
+        },
+        {
+          "label": "공보",
+          "url": "javascript:menuController("
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&entYn=N&menuNo=210000"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010102&entYn=N&menuNo=210001"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010103&entYn=N&menuNo=210002"
+        },
+        {
+          "label": "정정공보",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010104&entYn=N&menuNo=210119"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010206&entYn=N&menuNo=210039"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010207&entYn=N&menuNo=210040"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010208&entYn=N&menuNo=210041"
+        },
+        {
+          "label": "심판",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010209&entYn=N&menuNo=210042"
+        },
+        {
+          "label": "공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010210&entYn=N&menuNo=210043"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010305&entYn=N&menuNo=210044"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010306&entYn=N&menuNo=210045"
+        },
+        {
+          "label": "인명",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010307&entYn=N&menuNo=210046"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010308&entYn=N&menuNo=210047"
+        },
+        {
+          "label": "언어학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010401&entYn=N&menuNo=210048"
+        },
+        {
+          "label": "이미지학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010402&entYn=N&menuNo=210049"
+        },
+        {
+          "label": "해외공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020600&entYn=N&menuNo=201018"
+        },
+        {
+          "label": "미국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020901&entYn=N&menuNo=210050"
+        },
+        {
+          "label": "유럽",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020902&entYn=N&menuNo=210051"
+        },
+        {
+          "label": "중국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020903&entYn=N&menuNo=210052"
+        },
+        {
+          "label": "일본",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020904&entYn=N&menuNo=210053"
+        },
+        {
+          "label": "WIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021000&menuNo=201025"
+        },
+        {
+          "label": "대만",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021101&entYn=N&menuNo=210054"
+        },
+        {
+          "label": "멕시코",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021102&entYn=N&menuNo=210055"
+        },
+        {
+          "label": "필리핀",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021103&entYn=N&menuNo=210056"
+        },
+        {
+          "label": "콜롬비아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021104&entYn=N&menuNo=210057"
+        },
+        {
+          "label": "러시아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021105&entYn=N&menuNo=210058"
+        },
+        {
+          "label": "스웨덴",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021106&entYn=N&menuNo=210059"
+        },
+        {
+          "label": "스페인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021107&entYn=N&menuNo=210060"
+        },
+        {
+          "label": "이스라엘",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021108&entYn=N&menuNo=210061"
+        },
+        {
+          "label": "인도",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021109&entYn=N&menuNo=210062"
+        },
+        {
+          "label": "베트남",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021110&entYn=N&menuNo=210063"
+        },
+        {
+          "label": "ARIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021111&entYn=N&menuNo=210064"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021112&entYn=N&menuNo=210065"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000007&searchCnd=&searchWrd=§ion=&sdate=&edate=&useAt=&replyAt=&menuNo=200023&viewType=&delCode=0&pageIndex=1&nttId=1256"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000004&nttId=612&menuNo=200019"
+        },
+        {
+          "label": "데이터 목록",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100"
+        },
+        {
+          "label": "<<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "1",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "2",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=2"
+        },
+        {
+          "label": "3",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=3"
+        },
+        {
+          "label": "4",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=4"
+        },
+        {
+          "label": "5",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=5"
+        },
+        {
+          "label": "6",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=6"
+        },
+        {
+          "label": "8",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=8"
+        },
+        {
+          "label": "9",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=9"
+        },
+        {
+          "label": "10",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=10"
+        },
+        {
+          "label": ">",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=11"
+        },
+        {
+          "label": ">>",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        }
+      ],
+      "catalogHints": [
+        "API 상태",
+        "API 통합설명서(명세서)",
+        "API",
+        "BULK",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "Open API",
+        "API 서비스 맵(Beta)",
+        "API",
+        "BULK",
+        "공보",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "심판",
+        "특허·실용",
+        "디자인",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "A API",
+        "B BULK",
+        "A API",
+        "B BULK",
+        "B BULK(비갱신)"
+      ]
+    },
+    {
+      "pageIndex": 8,
+      "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=8",
+      "httpStatus": 200,
+      "htmlSha256": "33cc32764245b4c4e9f9fe95ab89aceeb0ef7565d759c9ca1e7303d12906a969",
+      "totalCount": null,
+      "candidateLinkCount": 74,
+      "candidateLinks": [
+        {
+          "label": "메뉴 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#firstMenu"
+        },
+        {
+          "label": "본문 영역 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#bodyFocus"
+        },
+        {
+          "label": "-->\n-->\n레이어팝업닫기 -->\n<!--",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#logos"
+        },
+        {
+          "label": "API 상태",
+          "url": "https://plus.kipris.or.kr/portal/main/apiStatus.do?menuNo=210157"
+        },
+        {
+          "label": "API 통합설명서(명세서)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210165"
+        },
+        {
+          "label": "회원가입",
+          "url": "https://plus.kipris.or.kr/portal/member/joinView.do?menuNo=200028"
+        },
+        {
+          "label": "서비스 유형별",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100&entYn=N"
+        },
+        {
+          "label": "API",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&entYn=N&menuNo=200100"
+        },
+        {
+          "label": "BULK",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC003&entYn=N&menuNo=200101"
+        },
+        {
+          "label": "분류 체계별",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "국내 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "해외 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&menuNo=200108"
+        },
+        {
+          "label": "무료 데이터 정보",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?&entYn=N&menuNo=210103"
+        },
+        {
+          "label": "BULK(갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC010&entYn=N&frUseYn=Y&menuNo=200130"
+        },
+        {
+          "label": "BULK(비갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC011&entYn=N&frUseYn=Y&menuNo=200131"
+        },
+        {
+          "label": "서비스 신청",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "Open API",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "벌크 데이터(기간제)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/bulkFsmtmList.do?menuNo=290006"
+        },
+        {
+          "label": "벌크 데이터(선택형)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/mtrtmList.do?menuNo=290008"
+        },
+        {
+          "label": "공지사항",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000004&menuNo=200019"
+        },
+        {
+          "label": "IP데이터 정정",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000023&menuNo=210137"
+        },
+        {
+          "label": "자료실",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000006&menuNo=210148"
+        },
+        {
+          "label": "API 서비스 맵(Beta)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210167"
+        },
+        {
+          "label": "데이터 기프트 제도",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000007&menuNo=200023"
+        },
+        {
+          "label": "민간서비스 홍보",
+          "url": "https://plus.kipris.or.kr/portal/data/enter/ListdataBiz.do?menuNo=210158"
+        },
+        {
+          "label": "공보",
+          "url": "javascript:menuController("
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&entYn=N&menuNo=210000"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010102&entYn=N&menuNo=210001"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010103&entYn=N&menuNo=210002"
+        },
+        {
+          "label": "정정공보",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010104&entYn=N&menuNo=210119"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010206&entYn=N&menuNo=210039"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010207&entYn=N&menuNo=210040"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010208&entYn=N&menuNo=210041"
+        },
+        {
+          "label": "심판",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010209&entYn=N&menuNo=210042"
+        },
+        {
+          "label": "공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010210&entYn=N&menuNo=210043"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010305&entYn=N&menuNo=210044"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010306&entYn=N&menuNo=210045"
+        },
+        {
+          "label": "인명",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010307&entYn=N&menuNo=210046"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010308&entYn=N&menuNo=210047"
+        },
+        {
+          "label": "언어학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010401&entYn=N&menuNo=210048"
+        },
+        {
+          "label": "이미지학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010402&entYn=N&menuNo=210049"
+        },
+        {
+          "label": "해외공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020600&entYn=N&menuNo=201018"
+        },
+        {
+          "label": "미국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020901&entYn=N&menuNo=210050"
+        },
+        {
+          "label": "유럽",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020902&entYn=N&menuNo=210051"
+        },
+        {
+          "label": "중국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020903&entYn=N&menuNo=210052"
+        },
+        {
+          "label": "일본",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020904&entYn=N&menuNo=210053"
+        },
+        {
+          "label": "WIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021000&menuNo=201025"
+        },
+        {
+          "label": "대만",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021101&entYn=N&menuNo=210054"
+        },
+        {
+          "label": "멕시코",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021102&entYn=N&menuNo=210055"
+        },
+        {
+          "label": "필리핀",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021103&entYn=N&menuNo=210056"
+        },
+        {
+          "label": "콜롬비아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021104&entYn=N&menuNo=210057"
+        },
+        {
+          "label": "러시아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021105&entYn=N&menuNo=210058"
+        },
+        {
+          "label": "스웨덴",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021106&entYn=N&menuNo=210059"
+        },
+        {
+          "label": "스페인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021107&entYn=N&menuNo=210060"
+        },
+        {
+          "label": "이스라엘",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021108&entYn=N&menuNo=210061"
+        },
+        {
+          "label": "인도",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021109&entYn=N&menuNo=210062"
+        },
+        {
+          "label": "베트남",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021110&entYn=N&menuNo=210063"
+        },
+        {
+          "label": "ARIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021111&entYn=N&menuNo=210064"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021112&entYn=N&menuNo=210065"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000007&searchCnd=&searchWrd=§ion=&sdate=&edate=&useAt=&replyAt=&menuNo=200023&viewType=&delCode=0&pageIndex=1&nttId=1256"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000004&nttId=612&menuNo=200019"
+        },
+        {
+          "label": "데이터 목록",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100"
+        },
+        {
+          "label": "<<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "1",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "2",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=2"
+        },
+        {
+          "label": "3",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=3"
+        },
+        {
+          "label": "4",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=4"
+        },
+        {
+          "label": "5",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=5"
+        },
+        {
+          "label": "6",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=6"
+        },
+        {
+          "label": "7",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=7"
+        },
+        {
+          "label": "9",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=9"
+        },
+        {
+          "label": "10",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=10"
+        },
+        {
+          "label": ">",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=11"
+        },
+        {
+          "label": ">>",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        }
+      ],
+      "catalogHints": [
+        "API 상태",
+        "API 통합설명서(명세서)",
+        "API",
+        "BULK",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "Open API",
+        "API 서비스 맵(Beta)",
+        "API",
+        "BULK",
+        "공보",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "심판",
+        "특허·실용",
+        "디자인",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "A API",
+        "B BULK",
+        "A API",
+        "B BULK",
+        "B BULK(비갱신)"
+      ]
+    },
+    {
+      "pageIndex": 9,
+      "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=9",
+      "httpStatus": 200,
+      "htmlSha256": "3aa33bdb9ff1da7e1f4e8c44602a15ff43836f87aaf59e3af74848ad86560b7b",
+      "totalCount": null,
+      "candidateLinkCount": 74,
+      "candidateLinks": [
+        {
+          "label": "메뉴 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#firstMenu"
+        },
+        {
+          "label": "본문 영역 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#bodyFocus"
+        },
+        {
+          "label": "-->\n-->\n레이어팝업닫기 -->\n<!--",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#logos"
+        },
+        {
+          "label": "API 상태",
+          "url": "https://plus.kipris.or.kr/portal/main/apiStatus.do?menuNo=210157"
+        },
+        {
+          "label": "API 통합설명서(명세서)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210165"
+        },
+        {
+          "label": "회원가입",
+          "url": "https://plus.kipris.or.kr/portal/member/joinView.do?menuNo=200028"
+        },
+        {
+          "label": "서비스 유형별",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100&entYn=N"
+        },
+        {
+          "label": "API",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&entYn=N&menuNo=200100"
+        },
+        {
+          "label": "BULK",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC003&entYn=N&menuNo=200101"
+        },
+        {
+          "label": "분류 체계별",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "국내 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "해외 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&menuNo=200108"
+        },
+        {
+          "label": "무료 데이터 정보",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?&entYn=N&menuNo=210103"
+        },
+        {
+          "label": "BULK(갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC010&entYn=N&frUseYn=Y&menuNo=200130"
+        },
+        {
+          "label": "BULK(비갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC011&entYn=N&frUseYn=Y&menuNo=200131"
+        },
+        {
+          "label": "서비스 신청",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "Open API",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "벌크 데이터(기간제)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/bulkFsmtmList.do?menuNo=290006"
+        },
+        {
+          "label": "벌크 데이터(선택형)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/mtrtmList.do?menuNo=290008"
+        },
+        {
+          "label": "공지사항",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000004&menuNo=200019"
+        },
+        {
+          "label": "IP데이터 정정",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000023&menuNo=210137"
+        },
+        {
+          "label": "자료실",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000006&menuNo=210148"
+        },
+        {
+          "label": "API 서비스 맵(Beta)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210167"
+        },
+        {
+          "label": "데이터 기프트 제도",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000007&menuNo=200023"
+        },
+        {
+          "label": "민간서비스 홍보",
+          "url": "https://plus.kipris.or.kr/portal/data/enter/ListdataBiz.do?menuNo=210158"
+        },
+        {
+          "label": "공보",
+          "url": "javascript:menuController("
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&entYn=N&menuNo=210000"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010102&entYn=N&menuNo=210001"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010103&entYn=N&menuNo=210002"
+        },
+        {
+          "label": "정정공보",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010104&entYn=N&menuNo=210119"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010206&entYn=N&menuNo=210039"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010207&entYn=N&menuNo=210040"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010208&entYn=N&menuNo=210041"
+        },
+        {
+          "label": "심판",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010209&entYn=N&menuNo=210042"
+        },
+        {
+          "label": "공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010210&entYn=N&menuNo=210043"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010305&entYn=N&menuNo=210044"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010306&entYn=N&menuNo=210045"
+        },
+        {
+          "label": "인명",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010307&entYn=N&menuNo=210046"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010308&entYn=N&menuNo=210047"
+        },
+        {
+          "label": "언어학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010401&entYn=N&menuNo=210048"
+        },
+        {
+          "label": "이미지학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010402&entYn=N&menuNo=210049"
+        },
+        {
+          "label": "해외공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020600&entYn=N&menuNo=201018"
+        },
+        {
+          "label": "미국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020901&entYn=N&menuNo=210050"
+        },
+        {
+          "label": "유럽",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020902&entYn=N&menuNo=210051"
+        },
+        {
+          "label": "중국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020903&entYn=N&menuNo=210052"
+        },
+        {
+          "label": "일본",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020904&entYn=N&menuNo=210053"
+        },
+        {
+          "label": "WIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021000&menuNo=201025"
+        },
+        {
+          "label": "대만",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021101&entYn=N&menuNo=210054"
+        },
+        {
+          "label": "멕시코",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021102&entYn=N&menuNo=210055"
+        },
+        {
+          "label": "필리핀",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021103&entYn=N&menuNo=210056"
+        },
+        {
+          "label": "콜롬비아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021104&entYn=N&menuNo=210057"
+        },
+        {
+          "label": "러시아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021105&entYn=N&menuNo=210058"
+        },
+        {
+          "label": "스웨덴",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021106&entYn=N&menuNo=210059"
+        },
+        {
+          "label": "스페인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021107&entYn=N&menuNo=210060"
+        },
+        {
+          "label": "이스라엘",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021108&entYn=N&menuNo=210061"
+        },
+        {
+          "label": "인도",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021109&entYn=N&menuNo=210062"
+        },
+        {
+          "label": "베트남",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021110&entYn=N&menuNo=210063"
+        },
+        {
+          "label": "ARIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021111&entYn=N&menuNo=210064"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021112&entYn=N&menuNo=210065"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000007&searchCnd=&searchWrd=§ion=&sdate=&edate=&useAt=&replyAt=&menuNo=200023&viewType=&delCode=0&pageIndex=1&nttId=1256"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000004&nttId=612&menuNo=200019"
+        },
+        {
+          "label": "데이터 목록",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100"
+        },
+        {
+          "label": "<<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "1",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "2",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=2"
+        },
+        {
+          "label": "3",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=3"
+        },
+        {
+          "label": "4",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=4"
+        },
+        {
+          "label": "5",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=5"
+        },
+        {
+          "label": "6",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=6"
+        },
+        {
+          "label": "7",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=7"
+        },
+        {
+          "label": "8",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=8"
+        },
+        {
+          "label": "10",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=10"
+        },
+        {
+          "label": ">",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=11"
+        },
+        {
+          "label": ">>",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        }
+      ],
+      "catalogHints": [
+        "API 상태",
+        "API 통합설명서(명세서)",
+        "API",
+        "BULK",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "Open API",
+        "API 서비스 맵(Beta)",
+        "API",
+        "BULK",
+        "공보",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "심판",
+        "특허·실용",
+        "디자인",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "A API",
+        "B BULK",
+        "A API",
+        "B BULK",
+        "B BULK(비갱신)"
+      ]
+    },
+    {
+      "pageIndex": 10,
+      "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=10",
+      "httpStatus": 200,
+      "htmlSha256": "2e11bd4f51a69b9cb2a81127cb2288e1b4cc26c4d5e7f780bc8217adf15e6378",
+      "totalCount": null,
+      "candidateLinkCount": 74,
+      "candidateLinks": [
+        {
+          "label": "메뉴 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#firstMenu"
+        },
+        {
+          "label": "본문 영역 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#bodyFocus"
+        },
+        {
+          "label": "-->\n-->\n레이어팝업닫기 -->\n<!--",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#logos"
+        },
+        {
+          "label": "API 상태",
+          "url": "https://plus.kipris.or.kr/portal/main/apiStatus.do?menuNo=210157"
+        },
+        {
+          "label": "API 통합설명서(명세서)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210165"
+        },
+        {
+          "label": "회원가입",
+          "url": "https://plus.kipris.or.kr/portal/member/joinView.do?menuNo=200028"
+        },
+        {
+          "label": "서비스 유형별",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100&entYn=N"
+        },
+        {
+          "label": "API",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&entYn=N&menuNo=200100"
+        },
+        {
+          "label": "BULK",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC003&entYn=N&menuNo=200101"
+        },
+        {
+          "label": "분류 체계별",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "국내 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "해외 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&menuNo=200108"
+        },
+        {
+          "label": "무료 데이터 정보",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?&entYn=N&menuNo=210103"
+        },
+        {
+          "label": "BULK(갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC010&entYn=N&frUseYn=Y&menuNo=200130"
+        },
+        {
+          "label": "BULK(비갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC011&entYn=N&frUseYn=Y&menuNo=200131"
+        },
+        {
+          "label": "서비스 신청",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "Open API",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "벌크 데이터(기간제)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/bulkFsmtmList.do?menuNo=290006"
+        },
+        {
+          "label": "벌크 데이터(선택형)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/mtrtmList.do?menuNo=290008"
+        },
+        {
+          "label": "공지사항",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000004&menuNo=200019"
+        },
+        {
+          "label": "IP데이터 정정",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000023&menuNo=210137"
+        },
+        {
+          "label": "자료실",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000006&menuNo=210148"
+        },
+        {
+          "label": "API 서비스 맵(Beta)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210167"
+        },
+        {
+          "label": "데이터 기프트 제도",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000007&menuNo=200023"
+        },
+        {
+          "label": "민간서비스 홍보",
+          "url": "https://plus.kipris.or.kr/portal/data/enter/ListdataBiz.do?menuNo=210158"
+        },
+        {
+          "label": "공보",
+          "url": "javascript:menuController("
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&entYn=N&menuNo=210000"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010102&entYn=N&menuNo=210001"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010103&entYn=N&menuNo=210002"
+        },
+        {
+          "label": "정정공보",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010104&entYn=N&menuNo=210119"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010206&entYn=N&menuNo=210039"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010207&entYn=N&menuNo=210040"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010208&entYn=N&menuNo=210041"
+        },
+        {
+          "label": "심판",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010209&entYn=N&menuNo=210042"
+        },
+        {
+          "label": "공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010210&entYn=N&menuNo=210043"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010305&entYn=N&menuNo=210044"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010306&entYn=N&menuNo=210045"
+        },
+        {
+          "label": "인명",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010307&entYn=N&menuNo=210046"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010308&entYn=N&menuNo=210047"
+        },
+        {
+          "label": "언어학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010401&entYn=N&menuNo=210048"
+        },
+        {
+          "label": "이미지학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010402&entYn=N&menuNo=210049"
+        },
+        {
+          "label": "해외공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020600&entYn=N&menuNo=201018"
+        },
+        {
+          "label": "미국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020901&entYn=N&menuNo=210050"
+        },
+        {
+          "label": "유럽",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020902&entYn=N&menuNo=210051"
+        },
+        {
+          "label": "중국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020903&entYn=N&menuNo=210052"
+        },
+        {
+          "label": "일본",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020904&entYn=N&menuNo=210053"
+        },
+        {
+          "label": "WIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021000&menuNo=201025"
+        },
+        {
+          "label": "대만",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021101&entYn=N&menuNo=210054"
+        },
+        {
+          "label": "멕시코",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021102&entYn=N&menuNo=210055"
+        },
+        {
+          "label": "필리핀",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021103&entYn=N&menuNo=210056"
+        },
+        {
+          "label": "콜롬비아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021104&entYn=N&menuNo=210057"
+        },
+        {
+          "label": "러시아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021105&entYn=N&menuNo=210058"
+        },
+        {
+          "label": "스웨덴",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021106&entYn=N&menuNo=210059"
+        },
+        {
+          "label": "스페인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021107&entYn=N&menuNo=210060"
+        },
+        {
+          "label": "이스라엘",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021108&entYn=N&menuNo=210061"
+        },
+        {
+          "label": "인도",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021109&entYn=N&menuNo=210062"
+        },
+        {
+          "label": "베트남",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021110&entYn=N&menuNo=210063"
+        },
+        {
+          "label": "ARIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021111&entYn=N&menuNo=210064"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021112&entYn=N&menuNo=210065"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000007&searchCnd=&searchWrd=§ion=&sdate=&edate=&useAt=&replyAt=&menuNo=200023&viewType=&delCode=0&pageIndex=1&nttId=1256"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000004&nttId=612&menuNo=200019"
+        },
+        {
+          "label": "데이터 목록",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100"
+        },
+        {
+          "label": "<<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "1",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "2",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=2"
+        },
+        {
+          "label": "3",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=3"
+        },
+        {
+          "label": "4",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=4"
+        },
+        {
+          "label": "5",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=5"
+        },
+        {
+          "label": "6",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=6"
+        },
+        {
+          "label": "7",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=7"
+        },
+        {
+          "label": "8",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=8"
+        },
+        {
+          "label": "9",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=9"
+        },
+        {
+          "label": ">",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=11"
+        },
+        {
+          "label": ">>",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        }
+      ],
+      "catalogHints": [
+        "API 상태",
+        "API 통합설명서(명세서)",
+        "API",
+        "BULK",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "Open API",
+        "API 서비스 맵(Beta)",
+        "API",
+        "BULK",
+        "공보",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "심판",
+        "특허·실용",
+        "디자인",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "A API",
+        "B BULK",
+        "A API",
+        "B BULK",
+        "B BULK(비갱신)"
+      ]
+    },
+    {
+      "pageIndex": 11,
+      "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=11",
+      "httpStatus": 200,
+      "htmlSha256": "b4404fa26ae466c03210ad277939be391cbf8e9de4afc10c82f0005e4bb11af0",
+      "totalCount": null,
+      "candidateLinkCount": 69,
+      "candidateLinks": [
+        {
+          "label": "메뉴 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#firstMenu"
+        },
+        {
+          "label": "본문 영역 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#bodyFocus"
+        },
+        {
+          "label": "-->\n-->\n레이어팝업닫기 -->\n<!--",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#logos"
+        },
+        {
+          "label": "API 상태",
+          "url": "https://plus.kipris.or.kr/portal/main/apiStatus.do?menuNo=210157"
+        },
+        {
+          "label": "API 통합설명서(명세서)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210165"
+        },
+        {
+          "label": "회원가입",
+          "url": "https://plus.kipris.or.kr/portal/member/joinView.do?menuNo=200028"
+        },
+        {
+          "label": "서비스 유형별",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100&entYn=N"
+        },
+        {
+          "label": "API",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&entYn=N&menuNo=200100"
+        },
+        {
+          "label": "BULK",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC003&entYn=N&menuNo=200101"
+        },
+        {
+          "label": "분류 체계별",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "국내 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "해외 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&menuNo=200108"
+        },
+        {
+          "label": "무료 데이터 정보",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?&entYn=N&menuNo=210103"
+        },
+        {
+          "label": "BULK(갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC010&entYn=N&frUseYn=Y&menuNo=200130"
+        },
+        {
+          "label": "BULK(비갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC011&entYn=N&frUseYn=Y&menuNo=200131"
+        },
+        {
+          "label": "서비스 신청",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "Open API",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "벌크 데이터(기간제)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/bulkFsmtmList.do?menuNo=290006"
+        },
+        {
+          "label": "벌크 데이터(선택형)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/mtrtmList.do?menuNo=290008"
+        },
+        {
+          "label": "공지사항",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000004&menuNo=200019"
+        },
+        {
+          "label": "IP데이터 정정",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000023&menuNo=210137"
+        },
+        {
+          "label": "자료실",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000006&menuNo=210148"
+        },
+        {
+          "label": "API 서비스 맵(Beta)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210167"
+        },
+        {
+          "label": "데이터 기프트 제도",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000007&menuNo=200023"
+        },
+        {
+          "label": "민간서비스 홍보",
+          "url": "https://plus.kipris.or.kr/portal/data/enter/ListdataBiz.do?menuNo=210158"
+        },
+        {
+          "label": "공보",
+          "url": "javascript:menuController("
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&entYn=N&menuNo=210000"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010102&entYn=N&menuNo=210001"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010103&entYn=N&menuNo=210002"
+        },
+        {
+          "label": "정정공보",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010104&entYn=N&menuNo=210119"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010206&entYn=N&menuNo=210039"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010207&entYn=N&menuNo=210040"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010208&entYn=N&menuNo=210041"
+        },
+        {
+          "label": "심판",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010209&entYn=N&menuNo=210042"
+        },
+        {
+          "label": "공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010210&entYn=N&menuNo=210043"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010305&entYn=N&menuNo=210044"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010306&entYn=N&menuNo=210045"
+        },
+        {
+          "label": "인명",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010307&entYn=N&menuNo=210046"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010308&entYn=N&menuNo=210047"
+        },
+        {
+          "label": "언어학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010401&entYn=N&menuNo=210048"
+        },
+        {
+          "label": "이미지학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010402&entYn=N&menuNo=210049"
+        },
+        {
+          "label": "해외공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020600&entYn=N&menuNo=201018"
+        },
+        {
+          "label": "미국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020901&entYn=N&menuNo=210050"
+        },
+        {
+          "label": "유럽",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020902&entYn=N&menuNo=210051"
+        },
+        {
+          "label": "중국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020903&entYn=N&menuNo=210052"
+        },
+        {
+          "label": "일본",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020904&entYn=N&menuNo=210053"
+        },
+        {
+          "label": "WIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021000&menuNo=201025"
+        },
+        {
+          "label": "대만",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021101&entYn=N&menuNo=210054"
+        },
+        {
+          "label": "멕시코",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021102&entYn=N&menuNo=210055"
+        },
+        {
+          "label": "필리핀",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021103&entYn=N&menuNo=210056"
+        },
+        {
+          "label": "콜롬비아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021104&entYn=N&menuNo=210057"
+        },
+        {
+          "label": "러시아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021105&entYn=N&menuNo=210058"
+        },
+        {
+          "label": "스웨덴",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021106&entYn=N&menuNo=210059"
+        },
+        {
+          "label": "스페인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021107&entYn=N&menuNo=210060"
+        },
+        {
+          "label": "이스라엘",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021108&entYn=N&menuNo=210061"
+        },
+        {
+          "label": "인도",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021109&entYn=N&menuNo=210062"
+        },
+        {
+          "label": "베트남",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021110&entYn=N&menuNo=210063"
+        },
+        {
+          "label": "ARIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021111&entYn=N&menuNo=210064"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021112&entYn=N&menuNo=210065"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000007&searchCnd=&searchWrd=§ion=&sdate=&edate=&useAt=&replyAt=&menuNo=200023&viewType=&delCode=0&pageIndex=1&nttId=1256"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000004&nttId=612&menuNo=200019"
+        },
+        {
+          "label": "데이터 목록",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100"
+        },
+        {
+          "label": "<<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=10"
+        },
+        {
+          "label": "12",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=12"
+        },
+        {
+          "label": "13",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=13"
+        },
+        {
+          "label": "14",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=14"
+        },
+        {
+          "label": "15",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        },
+        {
+          "label": ">>",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        }
+      ],
+      "catalogHints": [
+        "API 상태",
+        "API 통합설명서(명세서)",
+        "API",
+        "BULK",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "Open API",
+        "API 서비스 맵(Beta)",
+        "API",
+        "BULK",
+        "공보",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "심판",
+        "특허·실용",
+        "디자인",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "A API",
+        "B BULK",
+        "A API",
+        "B BULK",
+        "B BULK(비갱신)"
+      ]
+    },
+    {
+      "pageIndex": 12,
+      "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=12",
+      "httpStatus": 200,
+      "htmlSha256": "69bc3b14f64b2cf7a8d17d83113332185d0fe97c227d67967cdc5eee86e6f53b",
+      "totalCount": null,
+      "candidateLinkCount": 69,
+      "candidateLinks": [
+        {
+          "label": "메뉴 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#firstMenu"
+        },
+        {
+          "label": "본문 영역 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#bodyFocus"
+        },
+        {
+          "label": "-->\n-->\n레이어팝업닫기 -->\n<!--",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#logos"
+        },
+        {
+          "label": "API 상태",
+          "url": "https://plus.kipris.or.kr/portal/main/apiStatus.do?menuNo=210157"
+        },
+        {
+          "label": "API 통합설명서(명세서)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210165"
+        },
+        {
+          "label": "회원가입",
+          "url": "https://plus.kipris.or.kr/portal/member/joinView.do?menuNo=200028"
+        },
+        {
+          "label": "서비스 유형별",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100&entYn=N"
+        },
+        {
+          "label": "API",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&entYn=N&menuNo=200100"
+        },
+        {
+          "label": "BULK",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC003&entYn=N&menuNo=200101"
+        },
+        {
+          "label": "분류 체계별",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "국내 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "해외 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&menuNo=200108"
+        },
+        {
+          "label": "무료 데이터 정보",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?&entYn=N&menuNo=210103"
+        },
+        {
+          "label": "BULK(갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC010&entYn=N&frUseYn=Y&menuNo=200130"
+        },
+        {
+          "label": "BULK(비갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC011&entYn=N&frUseYn=Y&menuNo=200131"
+        },
+        {
+          "label": "서비스 신청",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "Open API",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "벌크 데이터(기간제)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/bulkFsmtmList.do?menuNo=290006"
+        },
+        {
+          "label": "벌크 데이터(선택형)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/mtrtmList.do?menuNo=290008"
+        },
+        {
+          "label": "공지사항",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000004&menuNo=200019"
+        },
+        {
+          "label": "IP데이터 정정",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000023&menuNo=210137"
+        },
+        {
+          "label": "자료실",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000006&menuNo=210148"
+        },
+        {
+          "label": "API 서비스 맵(Beta)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210167"
+        },
+        {
+          "label": "데이터 기프트 제도",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000007&menuNo=200023"
+        },
+        {
+          "label": "민간서비스 홍보",
+          "url": "https://plus.kipris.or.kr/portal/data/enter/ListdataBiz.do?menuNo=210158"
+        },
+        {
+          "label": "공보",
+          "url": "javascript:menuController("
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&entYn=N&menuNo=210000"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010102&entYn=N&menuNo=210001"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010103&entYn=N&menuNo=210002"
+        },
+        {
+          "label": "정정공보",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010104&entYn=N&menuNo=210119"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010206&entYn=N&menuNo=210039"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010207&entYn=N&menuNo=210040"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010208&entYn=N&menuNo=210041"
+        },
+        {
+          "label": "심판",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010209&entYn=N&menuNo=210042"
+        },
+        {
+          "label": "공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010210&entYn=N&menuNo=210043"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010305&entYn=N&menuNo=210044"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010306&entYn=N&menuNo=210045"
+        },
+        {
+          "label": "인명",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010307&entYn=N&menuNo=210046"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010308&entYn=N&menuNo=210047"
+        },
+        {
+          "label": "언어학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010401&entYn=N&menuNo=210048"
+        },
+        {
+          "label": "이미지학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010402&entYn=N&menuNo=210049"
+        },
+        {
+          "label": "해외공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020600&entYn=N&menuNo=201018"
+        },
+        {
+          "label": "미국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020901&entYn=N&menuNo=210050"
+        },
+        {
+          "label": "유럽",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020902&entYn=N&menuNo=210051"
+        },
+        {
+          "label": "중국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020903&entYn=N&menuNo=210052"
+        },
+        {
+          "label": "일본",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020904&entYn=N&menuNo=210053"
+        },
+        {
+          "label": "WIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021000&menuNo=201025"
+        },
+        {
+          "label": "대만",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021101&entYn=N&menuNo=210054"
+        },
+        {
+          "label": "멕시코",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021102&entYn=N&menuNo=210055"
+        },
+        {
+          "label": "필리핀",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021103&entYn=N&menuNo=210056"
+        },
+        {
+          "label": "콜롬비아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021104&entYn=N&menuNo=210057"
+        },
+        {
+          "label": "러시아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021105&entYn=N&menuNo=210058"
+        },
+        {
+          "label": "스웨덴",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021106&entYn=N&menuNo=210059"
+        },
+        {
+          "label": "스페인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021107&entYn=N&menuNo=210060"
+        },
+        {
+          "label": "이스라엘",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021108&entYn=N&menuNo=210061"
+        },
+        {
+          "label": "인도",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021109&entYn=N&menuNo=210062"
+        },
+        {
+          "label": "베트남",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021110&entYn=N&menuNo=210063"
+        },
+        {
+          "label": "ARIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021111&entYn=N&menuNo=210064"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021112&entYn=N&menuNo=210065"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000007&searchCnd=&searchWrd=§ion=&sdate=&edate=&useAt=&replyAt=&menuNo=200023&viewType=&delCode=0&pageIndex=1&nttId=1256"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000004&nttId=612&menuNo=200019"
+        },
+        {
+          "label": "데이터 목록",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100"
+        },
+        {
+          "label": "<<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=10"
+        },
+        {
+          "label": "11",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=11"
+        },
+        {
+          "label": "13",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=13"
+        },
+        {
+          "label": "14",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=14"
+        },
+        {
+          "label": "15",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        },
+        {
+          "label": ">>",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        }
+      ],
+      "catalogHints": [
+        "API 상태",
+        "API 통합설명서(명세서)",
+        "API",
+        "BULK",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "Open API",
+        "API 서비스 맵(Beta)",
+        "API",
+        "BULK",
+        "공보",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "심판",
+        "특허·실용",
+        "디자인",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "A API",
+        "B BULK",
+        "A API",
+        "B BULK",
+        "B BULK(비갱신)"
+      ]
+    },
+    {
+      "pageIndex": 13,
+      "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=13",
+      "httpStatus": 200,
+      "htmlSha256": "f1c919882441fc1675361549bdff268b0f9bf605acbdcf0825bd07604a0393c6",
+      "totalCount": null,
+      "candidateLinkCount": 69,
+      "candidateLinks": [
+        {
+          "label": "메뉴 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#firstMenu"
+        },
+        {
+          "label": "본문 영역 바로가기",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#bodyFocus"
+        },
+        {
+          "label": "-->\n-->\n레이어팝업닫기 -->\n<!--",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do#logos"
+        },
+        {
+          "label": "API 상태",
+          "url": "https://plus.kipris.or.kr/portal/main/apiStatus.do?menuNo=210157"
+        },
+        {
+          "label": "API 통합설명서(명세서)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210165"
+        },
+        {
+          "label": "회원가입",
+          "url": "https://plus.kipris.or.kr/portal/member/joinView.do?menuNo=200028"
+        },
+        {
+          "label": "서비스 유형별",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100&entYn=N"
+        },
+        {
+          "label": "API",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&entYn=N&menuNo=200100"
+        },
+        {
+          "label": "BULK",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC003&entYn=N&menuNo=200101"
+        },
+        {
+          "label": "분류 체계별",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "국내 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&menuNo=210000&entYn=N"
+        },
+        {
+          "label": "해외 IP데이터",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&menuNo=200108"
+        },
+        {
+          "label": "무료 데이터 정보",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?&entYn=N&menuNo=210103"
+        },
+        {
+          "label": "BULK(갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC010&entYn=N&frUseYn=Y&menuNo=200130"
+        },
+        {
+          "label": "BULK(비갱신)",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?subTab=SC011&entYn=N&frUseYn=Y&menuNo=200131"
+        },
+        {
+          "label": "서비스 신청",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "Open API",
+          "url": "https://plus.kipris.or.kr/portal/data/request/apiFsmtmList.do?menuNo=290005"
+        },
+        {
+          "label": "벌크 데이터(기간제)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/bulkFsmtmList.do?menuNo=290006"
+        },
+        {
+          "label": "벌크 데이터(선택형)",
+          "url": "https://plus.kipris.or.kr/portal/data/request/mtrtmList.do?menuNo=290008"
+        },
+        {
+          "label": "공지사항",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000004&menuNo=200019"
+        },
+        {
+          "label": "IP데이터 정정",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000023&menuNo=210137"
+        },
+        {
+          "label": "자료실",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000006&menuNo=210148"
+        },
+        {
+          "label": "API 서비스 맵(Beta)",
+          "url": "https://plus.kipris.or.kr/portal/main/contents.do?menuNo=210167"
+        },
+        {
+          "label": "데이터 기프트 제도",
+          "url": "https://plus.kipris.or.kr/portal/bbs/list.do?bbsId=B0000007&menuNo=200023"
+        },
+        {
+          "label": "민간서비스 홍보",
+          "url": "https://plus.kipris.or.kr/portal/data/enter/ListdataBiz.do?menuNo=210158"
+        },
+        {
+          "label": "공보",
+          "url": "javascript:menuController("
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010101&entYn=N&menuNo=210000"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010102&entYn=N&menuNo=210001"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010103&entYn=N&menuNo=210002"
+        },
+        {
+          "label": "정정공보",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010100&kppSCode=KPP010104&entYn=N&menuNo=210119"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010206&entYn=N&menuNo=210039"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010207&entYn=N&menuNo=210040"
+        },
+        {
+          "label": "상표",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010208&entYn=N&menuNo=210041"
+        },
+        {
+          "label": "심판",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010209&entYn=N&menuNo=210042"
+        },
+        {
+          "label": "공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010200&kppSCode=KPP010210&entYn=N&menuNo=210043"
+        },
+        {
+          "label": "특허·실용",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010305&entYn=N&menuNo=210044"
+        },
+        {
+          "label": "디자인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010306&entYn=N&menuNo=210045"
+        },
+        {
+          "label": "인명",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010307&entYn=N&menuNo=210046"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010300&kppSCode=KPP010308&entYn=N&menuNo=210047"
+        },
+        {
+          "label": "언어학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010401&entYn=N&menuNo=210048"
+        },
+        {
+          "label": "이미지학습",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP010000&kppMCode=KPP010400&kppSCode=KPP010402&entYn=N&menuNo=210049"
+        },
+        {
+          "label": "해외공통",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020600&entYn=N&menuNo=201018"
+        },
+        {
+          "label": "미국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020901&entYn=N&menuNo=210050"
+        },
+        {
+          "label": "유럽",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020902&entYn=N&menuNo=210051"
+        },
+        {
+          "label": "중국",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020903&entYn=N&menuNo=210052"
+        },
+        {
+          "label": "일본",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP020900&kppSCode=KPP020904&entYn=N&menuNo=210053"
+        },
+        {
+          "label": "WIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021000&menuNo=201025"
+        },
+        {
+          "label": "대만",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021101&entYn=N&menuNo=210054"
+        },
+        {
+          "label": "멕시코",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021102&entYn=N&menuNo=210055"
+        },
+        {
+          "label": "필리핀",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021103&entYn=N&menuNo=210056"
+        },
+        {
+          "label": "콜롬비아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021104&entYn=N&menuNo=210057"
+        },
+        {
+          "label": "러시아",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021105&entYn=N&menuNo=210058"
+        },
+        {
+          "label": "스웨덴",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021106&entYn=N&menuNo=210059"
+        },
+        {
+          "label": "스페인",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021107&entYn=N&menuNo=210060"
+        },
+        {
+          "label": "이스라엘",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021108&entYn=N&menuNo=210061"
+        },
+        {
+          "label": "인도",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021109&entYn=N&menuNo=210062"
+        },
+        {
+          "label": "베트남",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021110&entYn=N&menuNo=210063"
+        },
+        {
+          "label": "ARIPO",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021111&entYn=N&menuNo=210064"
+        },
+        {
+          "label": "기타",
+          "url": "https://plus.kipris.or.kr/portal/data/clas/List.do?kppBCode=KPP020000&kppMCode=KPP021100&kppSCode=KPP021112&entYn=N&menuNo=210065"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000007&searchCnd=&searchWrd=§ion=&sdate=&edate=&useAt=&replyAt=&menuNo=200023&viewType=&delCode=0&pageIndex=1&nttId=1256"
+        },
+        {
+          "label": "",
+          "url": "https://plus.kipris.or.kr/portal/bbs/view.do?bbsId=B0000004&nttId=612&menuNo=200019"
+        },
+        {
+          "label": "데이터 목록",
+          "url": "https://plus.kipris.or.kr/portal/data/service/List.do?subTab=SC001&menuNo=200100"
+        },
+        {
+          "label": "<<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=1"
+        },
+        {
+          "label": "<",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=10"
+        },
+        {
+          "label": "11",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=11"
+        },
+        {
+          "label": "12",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=12"
+        },
+        {
+          "label": "14",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=14"
+        },
+        {
+          "label": "15",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        },
+        {
+          "label": ">>",
+          "url": "https://plus.kipris.or.kr/portal/data/main/List.do?menuNo=210103&searchCondition=&clasKeyword=&orderTp=&frUseYn=&bulkfreeyn=&subTab=&pageIndex=15"
+        }
+      ],
+      "catalogHints": [
+        "API 상태",
+        "API 통합설명서(명세서)",
+        "API",
+        "BULK",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "Open API",
+        "API 서비스 맵(Beta)",
+        "API",
+        "BULK",
+        "공보",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "특허·실용",
+        "디자인",
+        "상표",
+        "심판",
+        "특허·실용",
+        "디자인",
+        "BULK(갱신)",
+        "BULK(비갱신)",
+        "A API",
+        "B BULK",
+        "A API",
+        "B BULK",
+        "B BULK(비갱신)"
+      ]
+    }
+  ],
+  "operationSmoke": {
+    "attempted": false,
+    "reason": "KIPRIS_PLUS_ACCESSKEY_NOT_CONFIGURED"
+  },
+  "usageWarning": "KIPRIS Plus catalog/API results are preliminary public IP data signals only. They are not an infringement, validity, or final FTO legal opinion."
+}

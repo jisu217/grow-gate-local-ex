@@ -121,7 +121,7 @@ GROW-GATE Local EX 제출용 메인 앱을 대대적으로 보완했습니다.
 | 관세청 수출입무역통계 | `KCS_TRADE_API_KEY` 또는 `DATAGO_SERVICE_KEY` | 기본 operation endpoint 반영 |
 | KOTRA 글로벌 공급망 | `KOTRA_MARKET_API_KEY` 또는 `DATAGO_SERVICE_KEY` | 공식 카탈로그 URL 기본값, 승인 후 operation endpoint 교체 필요 |
 | Safety Korea/KATS | `SAFETY_RECALL_API_KEY` 또는 `DATAGO_SERVICE_KEY` | 공식 안내 URL 기본값, operation endpoint 교체 필요 |
-| KIPRIS Plus | `KIPRIS_API_KEY` 또는 `KIPRIS_PLUS_KEY` | 공식 신청 페이지 기본값, operation endpoint 교체 필요 |
+| KIPRIS Plus | `KIPRIS_PLUS_ACCESSKEY`, `KIPRIS_PLUS_KEY`, 또는 `KIPRIS_API_KEY` | `특허·실용 공개·등록공보`의 `getAdvancedSearch` operation endpoint와 `ServiceKey` 파라미터 확인 완료. key 주입 후 live smoke 필요 |
 | 기업마당/수출바우처 | `BIZINFO_API_KEY` 또는 `DATAGO_SERVICE_KEY` | 공식 포털 기본값, operation endpoint 교체 필요 |
 
 중요한 방어 로직:

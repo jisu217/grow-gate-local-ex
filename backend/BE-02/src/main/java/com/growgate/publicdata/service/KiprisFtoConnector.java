@@ -20,6 +20,12 @@ public class KiprisFtoConnector extends AbstractPublicDataConnector {
     @Value("${public-data.kipris-fto.key:}")
     private String apiKey;
 
+    @Value("${public-data.kipris-fto.key-param:ServiceKey}")
+    private String keyParam;
+
+    @Value("${public-data.kipris-fto.page-size:10}")
+    private int pageSize;
+
     public KiprisFtoConnector(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(restTemplate, objectMapper);
     }
@@ -41,9 +47,14 @@ public class KiprisFtoConnector extends AbstractPublicDataConnector {
 
     @Override
     public PublicDataConnectorResult collect(PublicDataRequest request) {
-        return getJson(request, endpoint, apiKey, Map.of(
-                "keyword", safe(request.getProductName()),
-                "country", safe(request.getTargetCountry())
+        String keyword = safe(request.getProductName());
+        return getJsonWithKeyParam(request, endpoint, apiKey, keyParam, Map.of(
+                "inventionTitle", keyword,
+                "astrtCont", keyword,
+                "pageNo", "1",
+                "numOfRows", String.valueOf(Math.max(1, pageSize)),
+                "patent", "true",
+                "utility", "false"
         ));
     }
 
@@ -60,19 +71,20 @@ public class KiprisFtoConnector extends AbstractPublicDataConnector {
     @Override
     protected Map<String, String> fieldMapping() {
         return Map.of(
-                "patentCount", "patents[]/items[]/data[] patent objects",
-                "claimsCount", "claimCount/claims/청구항수 numeric fields",
-                "productMentions", "keyword/productName/title/abstract/claim text",
-                "recordCount", "provider response patent result count"
+                "patentCount", "XML <item> rows or JSON patents[]/items[]/data[] patent objects",
+                "claimsCount", "claimCount/claims/청구항수 numeric fields when present",
+                "productMentions", "inventionTitle/abstract/claim text contains product keyword",
+                "recordCount", "KIPRIS Plus getAdvancedSearch result item count"
         );
     }
 
     @Override
     protected PublicDataSignal extractSignal(PublicDataRequest request, String rawPayload, boolean fallbackUsed) {
         JsonNode root = readTree(rawPayload);
-        int patentCount = Math.max(maxArraySize(root), Math.max(0, objectCount(root) - 1));
+        int patentCount = Math.max(estimateRecordCount(rawPayload), Math.max(maxArraySize(root), Math.max(0, objectCount(root) - 1)));
         int claimsCount = (int) sumNumericFields(root, "claimCount", "claims", "청구항수");
-        int productMentions = textHitCount(root, safe(request.getProductName()));
+        int productMentions = Math.max(textHitCount(root, safe(request.getProductName())),
+                textHitCount(rawPayload, safe(request.getProductName())));
 
         Map<String, Object> metrics = new LinkedHashMap<>();
         metrics.put("patentCount", patentCount);
@@ -86,5 +98,18 @@ public class KiprisFtoConnector extends AbstractPublicDataConnector {
                         + Math.min(0.15, productMentions * 0.05)
                         + (claimsCount > 0 ? 0.10 : 0));
         return signal(request, metrics, contribution, confidence);
+    }
+
+    private int textHitCount(String rawPayload, String keyword) {
+        if (rawPayload == null || rawPayload.isBlank() || keyword == null || keyword.isBlank()) return 0;
+        String lowerBody = rawPayload.toLowerCase(java.util.Locale.ROOT);
+        String lowerKeyword = keyword.toLowerCase(java.util.Locale.ROOT);
+        int count = 0;
+        int index = lowerBody.indexOf(lowerKeyword);
+        while (index >= 0 && count < 50) {
+            count++;
+            index = lowerBody.indexOf(lowerKeyword, index + lowerKeyword.length());
+        }
+        return count;
     }
 }

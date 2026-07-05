@@ -53,18 +53,23 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
 
     protected PublicDataConnectorResult getJson(PublicDataRequest request, String endpoint, String apiKey,
                                                 Map<String, String> params) {
+        return getJsonWithKeyParam(request, endpoint, apiKey, "serviceKey", params);
+    }
+
+    protected PublicDataConnectorResult getJsonWithKeyParam(PublicDataRequest request, String endpoint, String apiKey,
+                                                            String keyParam, Map<String, String> params) {
         if (endpoint == null || endpoint.isBlank()) {
-            return fallback(request, endpoint, apiKey, "OPERATION_ENDPOINT_NOT_CONFIGURED", null, 0);
+            return fallback(request, endpoint, apiKey, keyParam, "OPERATION_ENDPOINT_NOT_CONFIGURED", null, 0);
         }
         if (apiKey == null || apiKey.isBlank()) {
-            return fallback(request, endpoint, apiKey, "API_KEY_NOT_CONFIGURED", null, 0);
+            return fallback(request, endpoint, apiKey, keyParam, "API_KEY_NOT_CONFIGURED", null, 0);
         }
         if (isCatalogOrApplicationPage(endpoint)) {
-            return fallback(request, endpoint, apiKey,
+            return fallback(request, endpoint, apiKey, keyParam,
                     "CATALOG_PAGE_ENDPOINT", null, 0);
         }
         if (isCircuitOpen()) {
-            return fallback(request, endpoint, apiKey, "CIRCUIT_OPEN", null, 0);
+            return fallback(request, endpoint, apiKey, keyParam, "CIRCUIT_OPEN", null, 0);
         }
 
         long started = System.nanoTime();
@@ -75,13 +80,13 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
             params.forEach((key, value) -> {
                 if (value != null && !value.isBlank()) builder.queryParam(key, value);
             });
-            builder.queryParam("serviceKey", apiKey);
+            builder.queryParam(keyParam == null || keyParam.isBlank() ? "serviceKey" : keyParam, apiKey);
             URI uri = builder.build().encode().toUri();
             for (int attempt = 1; attempt <= attempts; attempt++) {
                 try {
                     ResponseEntity<String> response = restTemplate.getForEntity(uri, String.class);
                     markSuccess();
-                    return success(request, endpoint, apiKey, params, response.getBody(),
+                    return success(request, endpoint, apiKey, keyParam, params, response.getBody(),
                             response.getStatusCode().value(), elapsedMs(started));
                 } catch (RestClientException e) {
                     lastException = e;
@@ -91,21 +96,27 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
             markFailure();
             String reason = failureReason(lastException);
             log.warn("Public data connector failed: provider={}, reason={}", provider(), reason);
-            return fallback(request, endpoint, apiKey, reason, httpStatus(lastException), elapsedMs(started));
+            return fallback(request, endpoint, apiKey, keyParam, reason, httpStatus(lastException), elapsedMs(started));
         } catch (IllegalArgumentException e) {
             markFailure();
             String reason = sanitizeErrorMessage(e.getMessage());
             log.warn("Public data connector failed: provider={}, reason={}", provider(), reason);
-            return fallback(request, endpoint, apiKey, "HTTP_ERROR", null, elapsedMs(started));
+            return fallback(request, endpoint, apiKey, keyParam, "HTTP_ERROR", null, elapsedMs(started));
         }
     }
 
     protected PublicDataConnectorResult success(PublicDataRequest request, String endpoint, String apiKey,
                                                 Map<String, String> requestParams, String rawPayload,
                                                 Integer httpStatus, long elapsedMs) {
+        return success(request, endpoint, apiKey, "serviceKey", requestParams, rawPayload, httpStatus, elapsedMs);
+    }
+
+    protected PublicDataConnectorResult success(PublicDataRequest request, String endpoint, String apiKey,
+                                                String keyParam, Map<String, String> requestParams, String rawPayload,
+                                                Integer httpStatus, long elapsedMs) {
         Map<String, Object> normalized = normalize(request, rawPayload, false, null);
         normalized.put("collectionEvidence", collectionEvidence(endpoint, apiKey, false, null));
-        normalized.put("requestParamsMasked", maskedParams(requestParams, apiKey));
+        normalized.put("requestParamsMasked", maskedParams(requestParams, apiKey, keyParam));
         addZeroDiagnostics(normalized, rawPayload, false, null, httpStatus, elapsedMs);
         String sourceType = sourceTypeFromDiagnostics(normalized, false);
         logPublicDataEvent(normalized, sourceType);
@@ -136,10 +147,15 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
 
     protected PublicDataConnectorResult fallback(PublicDataRequest request, String endpoint, String apiKey,
                                                  String reason, Integer httpStatus, long elapsedMs) {
+        return fallback(request, endpoint, apiKey, "serviceKey", reason, httpStatus, elapsedMs);
+    }
+
+    protected PublicDataConnectorResult fallback(PublicDataRequest request, String endpoint, String apiKey,
+                                                 String keyParam, String reason, Integer httpStatus, long elapsedMs) {
         String safeReason = sanitizeErrorMessage(reason);
         Map<String, Object> normalized = normalize(request, null, true, safeReason);
         normalized.put("collectionEvidence", collectionEvidence(endpoint, apiKey, true, safeReason));
-        normalized.put("requestParamsMasked", maskedParams(Map.of(), apiKey));
+        normalized.put("requestParamsMasked", maskedParams(Map.of(), apiKey, keyParam));
         addZeroDiagnostics(normalized, null, true, safeReason, httpStatus, elapsedMs);
         String sourceType = sourceTypeFromDiagnostics(normalized, true);
         boolean fallbackUsed = "fallback".equals(sourceType);
@@ -288,11 +304,16 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
     }
 
     private Map<String, String> maskedParams(Map<String, String> params, String apiKey) {
+        return maskedParams(params, apiKey, "serviceKey");
+    }
+
+    private Map<String, String> maskedParams(Map<String, String> params, String apiKey, String keyParam) {
         Map<String, String> masked = new LinkedHashMap<>();
         if (params != null) {
             params.forEach((key, value) -> masked.put(key, value == null ? "" : value));
         }
-        masked.put("serviceKey", apiKey == null || apiKey.isBlank() ? "" : REDACTED);
+        masked.put(keyParam == null || keyParam.isBlank() ? "serviceKey" : keyParam,
+                apiKey == null || apiKey.isBlank() ? "" : REDACTED);
         return masked;
     }
 
