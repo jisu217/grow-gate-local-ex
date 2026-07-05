@@ -1,6 +1,7 @@
 // S07 FTO·지원사업 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 import MemoBox from '../ui/MemoBox.jsx'
+import ExplainableStatus from '../ui/ExplainableStatus.jsx'
 
 export default function S07FtoSupport({ patents, supports }) {
   const supportCount = Array.isArray(supports) ? supports.length : 0
@@ -19,9 +20,15 @@ export default function S07FtoSupport({ patents, supports }) {
           {patents.map((p) => (
             <div key={p.name} className="patent-card">
 
-              <span className={`patent-badge ${p.riskClass}`}>{p.badge}</span>
+              <ExplainableStatus status={p.badge} explanation={p.statusExplanation}>
+                <span className={`patent-badge ${p.riskClass}`}>{p.badge}</span>
+              </ExplainableStatus>
               <div className="patent-name">{p.name}</div>
-              <div className="patent-sub">{p.sub}</div>
+              <div className="patent-sub">
+                <ExplainableStatus status={p.sub} explanation={p.traceExplanation}>
+                  <span>{p.sub}</span>
+                </ExplainableStatus>
+              </div>
             </div>
           ))}
         </div>
@@ -35,7 +42,9 @@ export default function S07FtoSupport({ patents, supports }) {
                 <div className="support-org">{s.org}</div>
               </div>
 
-              <span className={`deadline-chip ${s.isGreen ? 'g' : ''}`}>{s.dday}</span>
+              <ExplainableStatus status={s.dday} explanation={s.statusExplanation}>
+                <span className={`deadline-chip ${s.isGreen ? 'g' : ''}`}>{s.dday}</span>
+              </ExplainableStatus>
             </div>
           ))}
         </div>

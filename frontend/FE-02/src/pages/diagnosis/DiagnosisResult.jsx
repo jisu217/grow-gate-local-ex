@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react'
+import { useState, useRef, useEffect, useCallback } from 'react'
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom'
 
 import Sidebar from '../../components/layout/Sidebar.jsx'
@@ -46,6 +46,33 @@ export default function DiagnosisResult() {
 
   const scrollRef = useRef(null)
 
+  const stepIndexFromHash = useCallback(() => {
+    const sectionId = window.location.hash.replace('#', '')
+    if (!sectionId) return -1
+    return DIAGNOSIS_STEPS.findIndex((step) => step.sectionId === sectionId)
+  }, [])
+
+  const scrollToStep = useCallback((i, options = {}) => {
+    const { updateHash = true, behavior = 'smooth' } = options
+    if (i < 0 || i >= DIAGNOSIS_STEPS.length) return
+
+    setCurrentStep(i)
+
+    const sectionId = DIAGNOSIS_STEPS[i].sectionId
+    const target = sectionId ? document.getElementById(sectionId) : null
+
+    if (target) {
+      target.scrollIntoView({ behavior, block: 'start' })
+      if (updateHash) {
+        const nextUrl = `${window.location.pathname}${window.location.search}#${sectionId}`
+        window.history.replaceState(null, '', nextUrl)
+      }
+      return
+    }
+
+    scrollRef.current?.scrollTo({ top: 0, behavior })
+  }, [])
+
   useEffect(() => {
     let timeoutId = null
     let cancelled = false
@@ -74,9 +101,7 @@ export default function DiagnosisResult() {
 
   // 단계 이동
   const go = (i) => {
-    if (i < 0 || i >= DIAGNOSIS_STEPS.length) return
-    setCurrentStep(i)
-    scrollRef.current?.scrollTo({ top: 0, behavior: 'smooth' })
+    scrollToStep(i)
   }
 
   // 키보드 방향키 내비게이션
@@ -89,23 +114,86 @@ export default function DiagnosisResult() {
     return () => window.removeEventListener('keydown', handleKey)
   }, [currentStep])
 
+  useEffect(() => {
+    if (pageState !== 'ok') return
+    const hashStep = stepIndexFromHash()
+    const targetStep = hashStep >= 0 ? hashStep : initialStep
+    window.requestAnimationFrame(() => {
+      scrollToStep(targetStep, {
+        updateHash: hashStep >= 0,
+        behavior: 'auto',
+      })
+    })
+  }, [id, pageState, reloadKey, initialStep, scrollToStep, stepIndexFromHash])
+
+  useEffect(() => {
+    if (pageState !== 'ok') return undefined
+
+    const sectionNodes = DIAGNOSIS_STEPS
+      .map((step, index) => {
+        const node = document.getElementById(step.sectionId)
+        return node ? { node, index } : null
+      })
+      .filter(Boolean)
+
+    if (sectionNodes.length === 0) return undefined
+
+    const observer = new IntersectionObserver((entries) => {
+      const visible = entries
+        .filter((entry) => entry.isIntersecting)
+        .sort((a, b) => a.boundingClientRect.top - b.boundingClientRect.top)
+
+      const firstVisible = visible[0]
+      if (!firstVisible) return
+
+      const index = Number(firstVisible.target.dataset.stepIndex)
+      if (Number.isInteger(index)) setCurrentStep(index)
+    }, {
+      root: null,
+      rootMargin: '-96px 0px -58% 0px',
+      threshold: [0.12, 0.35, 0.6],
+    })
+
+    sectionNodes.forEach(({ node }) => observer.observe(node))
+    return () => observer.disconnect()
+  }, [pageState, result])
+
   // 스텝 → 컴포넌트 매핑
-  const renderStage = (stages) => {
-    const key = currentStep
-    switch (currentStep) {
-      case 0:  return <S00Overview   key={key} data={stages.s00} />
-      case 1:  return <S01Input      key={key} data={stages.s01} />
-      case 2:  return <S02Connectors key={key} data={stages.s02} />
-      case 3:  return <S03PredLab    key={key} predictions={stages.s03.predictions} features={stages.s03.features} />
-      case 4:  return <S04Market     key={key} markets={stages.s04} />
-      case 5:  return <S05RegMatrix  key={key} regulations={stages.s05} />
-      case 6:  return <S06Recall     key={key} recalls={stages.s06} />
-      case 7:  return <S07FtoSupport key={key} patents={stages.s07.patents} supports={stages.s07.supports} />
-      case 8:  return <S08ExecBoard  key={key} execData={stages.s08} />
-      case 9:  return <S09Report     key={key} scoreBars={stages.s09.scoreBars} summary={stages.s09.summary} onDownload={downloadReport} fastApiUsed={result.session.reportFastApiUsed} />
-      case 10: return <S10Sources    key={key} data={stages.s10} sourceTrustSummary={result.session.sourceTrustSummary} onRetry={retryPublicData} retryStatus={retryStatus} />
-      default: return null
-    }
+  const buildStages = (stages) => {
+    const s03 = stages.s03 ?? {}
+    const s07 = stages.s07 ?? {}
+    const s09 = stages.s09 ?? {}
+    return [
+      <S00Overview data={stages.s00 ?? {}} />,
+      <S01Input data={stages.s01 ?? {}} />,
+      <S02Connectors data={stages.s02 ?? []} />,
+      <S03PredLab predictions={s03.predictions ?? []} features={s03.features ?? []} />,
+      <S04Market markets={stages.s04 ?? []} />,
+      <S05RegMatrix regulations={stages.s05 ?? []} />,
+      <S06Recall recalls={stages.s06 ?? []} />,
+      <S07FtoSupport patents={s07.patents ?? []} supports={s07.supports ?? []} />,
+      <S08ExecBoard execData={stages.s08 ?? []} />,
+      <S09Report scoreBars={s09.scoreBars ?? []} summary={s09.summary} onDownload={downloadReport} fastApiUsed={result.session.reportFastApiUsed} />,
+      <S10Sources data={stages.s10 ?? {}} sourceTrustSummary={result.session.sourceTrustSummary} onRetry={retryPublicData} retryStatus={retryStatus} />,
+    ]
+  }
+
+  const renderStages = (stages) => {
+    const stageComponents = buildStages(stages)
+    return stageComponents.map((stage, index) => {
+      const step = DIAGNOSIS_STEPS[index]
+      return (
+        <section
+          key={step.sectionId}
+          id={step.sectionId}
+          className="diagnosis-section"
+          data-step-index={index}
+          aria-label={`${step.no} ${step.nm}`}
+        >
+          {stage}
+        </section>
+      )
+    })
   }
 
   const downloadReport = async () => {
@@ -217,7 +305,7 @@ export default function DiagnosisResult() {
           )}
           {reportError && <StatusMessage type="error" message={reportError} />}
 
-          {renderStage(result.stages)}
+          {renderStages(result.stages)}
 
           <Pager
             currentStep={currentStep}

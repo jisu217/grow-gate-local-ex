@@ -34,8 +34,14 @@ export default function S03PredLab({ predictions, features }) {
       <div className="fi">
         <h3>통합 Feature Importance</h3>
         {features.map((feat) => (
-          <div key={feat.label} className="row">
-            <div className="lab">{feat.label}</div>
+          <div key={feat.key ?? feat.label} className="row">
+            <div className="lab">
+              <strong>{feat.label}</strong>
+              <span className="feature-meta">
+                {feat.sourceType ?? 'unknown'} · evidence {feat.evidenceCount ?? 0}건
+              </span>
+              {feat.description && <span className="feature-desc">{feat.description}</span>}
+            </div>
 
             <div className="tk">
               <i style={{ width: `${feat.value}%` }} />

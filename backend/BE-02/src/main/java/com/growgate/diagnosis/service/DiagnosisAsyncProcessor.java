@@ -1365,9 +1365,11 @@ public class DiagnosisAsyncProcessor {
                         Map.of("name", "FTO", "value", fto),
                         Map.of("name", "지원 적합도", "value", support)
                 ),
-                "features", List.of("hsCode=" + nullToEmpty(hsCode), "country=" + targetCountry,
-                        "agent=" + (llmResult.isSucceeded() ? llmResult.getProvider()
-                                : agentResult != null ? "fastapi" : "spring-local"))
+                "features", buildFeatureImportance(
+                        productName, hsCode, targetCountry,
+                        market, regulation, recall, fto, support,
+                        sources, agentResult, llmResult
+                )
         ));
         cards.put("s04", buildMarketStageCard(targetCountry, market, sources));
         cards.put("s05", buildRegulationStageCard(targetCountry, regulation, sources));
@@ -1387,6 +1389,179 @@ public class DiagnosisAsyncProcessor {
         cards.put("s10", sources);
         cards.put("knowledgeLoop", loopSuggestions);
         return cards;
+    }
+
+    private List<Map<String, Object>> buildFeatureImportance(String productName, String hsCode, String targetCountry,
+                                                             int market, int regulation, int recall,
+                                                             int fto, int support,
+                                                             List<Map<String, Object>> sources,
+                                                             Map<String, Object> agentResult,
+                                                             AgentInferenceResult llmResult) {
+        int marketEvidence = sourceCount(sources, "market", "live", "cache", "external_feed", "external_reconstructed", "crawl", "fallback");
+        int regulationEvidence = sourceCount(sources, "regulation", "live", "cache", "external_feed", "external_reconstructed", "crawl", "fallback", "heuristic");
+        int recallEvidence = sourceCount(sources, "recall", "live", "cache", "external_feed", "external_reconstructed", "crawl", "fallback");
+        int ftoEvidence = sourceCount(sources, "fto", "live", "cache", "external_feed", "external_reconstructed", "crawl", "fallback");
+        int supportEvidence = sourceCount(sources, "support", "live", "cache", "external_feed", "external_reconstructed", "crawl", "fallback");
+        int liveCount = sourceTypeCount(sources, "live");
+        int cacheCount = sourceTypeCount(sources, "cache");
+        int fallbackCount = sourceTypeCount(sources, "fallback");
+        int externalCount = sourceTypeCount(sources, "external_feed") + sourceTypeCount(sources, "external_reconstructed")
+                + sourceTypeCount(sources, "crawl");
+        int verifiedCount = liveCount + cacheCount;
+        int totalEvidence = sources.size();
+        String agentProvider = llmResult != null && llmResult.isSucceeded()
+                ? defaultString(llmResult.getProvider(), "llm-assisted")
+                : agentResult != null ? "fastapi" : "spring-local";
+
+        List<Map<String, Object>> features = new ArrayList<>();
+        features.add(feature("hsCodeMatch", "HS Code 품목 적합도",
+                normalizeHsCode(hsCode).isBlank() ? 0 : normalizeHsCode(hsCode).length() >= 6 ? 90 : 60,
+                "input", normalizeHsCode(hsCode).isBlank() ? 0 : 1,
+                normalizeHsCode(hsCode).isBlank()
+                        ? "HS Code가 없어 품목 기준 feature를 만들 수 없습니다."
+                        : "HS " + normalizeHsCode(hsCode) + "가 " + defaultString(productName, "진단 제품") + " 진단 기준으로 사용됨"));
+        features.add(feature("targetCountryDemand", "대상국 시장 수요",
+                marketEvidence > 0 ? market : 0,
+                dominantSourceType(sources, "market", "insufficient_evidence"),
+                marketEvidence,
+                marketEvidence > 0
+                        ? "대상국 " + targetCountry + " 시장성 trace " + marketEvidence + "건과 시장성 점수 " + market + "/100 기반"
+                        : "대상국 시장 수요 live/cache/source trace가 없어 점수 기여 없음"));
+        features.add(feature("exportTrend", "수출 흐름",
+                sourceCount(sources, "market", "live", "cache") > 0 ? clamp(market + sourceContribution(sources, "market")) : 0,
+                dominantSourceType(sources, "market", "insufficient_evidence"),
+                sourceCount(sources, "market", "live", "cache"),
+                firstSourceSummary(sources, "market", "수출액·증가율 live/cache 지표가 없어 추세 feature는 보류")));
+        features.add(feature("marketNewsSignal", "시장 뉴스 신호",
+                externalCount > 0 ? Math.min(80, 45 + (externalCount * 10)) : 0,
+                externalCount > 0 ? "external_feed" : "insufficient_evidence",
+                externalCount,
+                externalCount > 0
+                        ? "허용된 외부 feed/crawl 시장 신호 " + externalCount + "건 기반"
+                        : "KOTRA/산업 뉴스 source trace가 없어 뉴스 feature는 점수 기여 없음"));
+        features.add(feature("regulationBurden", "규제 부담",
+                regulationEvidence > 0 ? clamp(100 - regulation) : 0,
+                dominantSourceType(sources, "regulation", "heuristic"),
+                regulationEvidence,
+                regulationEvidence > 0
+                        ? "규제 준비도 " + regulation + "/100에서 역산한 보완 부담. " + firstSourceSummary(sources, "regulation", "")
+                        : "등록된 규제·인증 trace가 부족하여 rule 기반 사전 검토만 가능"));
+        features.add(feature("certificationRequirementCount", "인증 요구 항목",
+                regulationEvidence > 0 ? regulation : 0,
+                dominantSourceType(sources, "regulation", "insufficient_evidence"),
+                regulationEvidence,
+                regulationEvidence > 0
+                        ? "CE/제품안전/배터리 규정 등 규제 source trace " + regulationEvidence + "건 기반"
+                        : "인증·시험·문서 source trace가 없어 담당자 확인 필요"));
+        features.add(feature("recallSimilarity", "리콜 유사도",
+                recallEvidence > 0 ? clamp(100 - recall) : 0,
+                dominantSourceType(sources, "recall", "insufficient_evidence"),
+                recallEvidence,
+                recallEvidence > 0
+                        ? "리콜 안정성 " + recall + "/100에서 제품군 유사 위험을 산출. " + firstSourceSummary(sources, "recall", "")
+                        : "제품군 리콜 source trace가 없어 안전함으로 해석하지 않음"));
+        features.add(feature("recallSeverity", "리콜 심각도",
+                recallEvidence > 0 ? clamp(100 - recall + Math.min(15, recallEvidence * 3)) : 0,
+                dominantSourceType(sources, "recall", "insufficient_evidence"),
+                recallEvidence,
+                recallEvidence > 0
+                        ? "리콜/제품안전 trace의 fallback 여부와 리콜 안정성 점수를 함께 반영"
+                        : "화재·과열·감전 등 리콜 심각도 source trace 미확보"));
+        features.add(feature("ftoPatentRisk", "FTO 특허 리스크",
+                ftoEvidence > 0 ? clamp(100 - fto) : 0,
+                dominantSourceType(sources, "fto", "insufficient_evidence"),
+                ftoEvidence,
+                ftoEvidence > 0
+                        ? "FTO 점수 " + fto + "/100과 특허 source trace " + ftoEvidence + "건 기반"
+                        : "KIPRIS/특허 source trace가 없어 법률 검토 전 위험 신호만 표시"));
+        features.add(feature("supportProgramFit", "지원사업 적합도",
+                supportEvidence > 0 ? support : 0,
+                dominantSourceType(sources, "support", "insufficient_evidence"),
+                supportEvidence,
+                supportEvidence > 0
+                        ? "지원사업 매칭 source trace " + supportEvidence + "건과 지원 적합도 " + support + "/100 기반"
+                        : "기업마당/KOTRA/수출지원 source trace가 없어 매칭도 점수 기여 없음"));
+        features.add(feature("evidenceCoverage", "근거 커버리지",
+                totalEvidence > 0 ? clamp(Math.round((verifiedCount * 100f) / Math.max(1, totalEvidence))) : 0,
+                totalEvidence == 0 ? "insufficient_evidence" : fallbackCount > 0 ? "mixed" : verifiedCount > 0 ? "live/cache" : "fallback",
+                totalEvidence,
+                "source trace 총 " + totalEvidence + "건 중 live/cache " + verifiedCount + "건, fallback " + fallbackCount + "건"));
+        features.add(feature("dataFreshness", "데이터 최신성",
+                liveCount > 0 ? 90 : cacheCount > 0 ? 70 : fallbackCount > 0 ? 25 : 0,
+                liveCount > 0 ? "live" : cacheCount > 0 ? "cache" : fallbackCount > 0 ? "fallback" : "insufficient_evidence",
+                liveCount + cacheCount + fallbackCount,
+                liveCount > 0 ? "live 수집 trace 포함" : cacheCount > 0 ? "cache 검증 trace 기반" : fallbackCount > 0 ? "fallback trace만 있어 최신성 낮음" : "수집 trace가 없어 최신성 판단 불가"));
+        features.add(feature("buyerInquiryCompleteness", "바이어 문의 완성도",
+                sourceCount(sources, "buyer", "user_input", "heuristic") > 0 ? 75 : 0,
+                sourceCount(sources, "buyer", "user_input", "heuristic") > 0 ? "user_input" : "insufficient_evidence",
+                sourceCount(sources, "buyer", "user_input", "heuristic"),
+                sourceCount(sources, "buyer", "user_input", "heuristic") > 0
+                        ? "바이어 요구사항 trace가 진단 입력으로 연결됨"
+                        : "바이어 문의 원문 trace가 없어 인증·납기·수량 조건 보강 필요"));
+        features.add(feature("productSpecCompleteness", "제품 사양 완성도",
+                !normalizeHsCode(hsCode).isBlank() && !stringValue(productName).isBlank() ? 80 : 40,
+                "input",
+                (!normalizeHsCode(hsCode).isBlank() ? 1 : 0) + (!stringValue(productName).isBlank() ? 1 : 0),
+                "제품명, HS Code 등 직접 입력값 기반 사양 완성도"));
+        features.add(feature("logisticsLeadTimeRisk", "물류·납기 리스크",
+                sourceIds(sources, "logistics").isEmpty() ? 0 : 55,
+                sourceIds(sources, "logistics").isEmpty() ? "insufficient_evidence" : dominantSourceType(sources, "logistics", "cache"),
+                sourceIds(sources, "logistics").size(),
+                sourceIds(sources, "logistics").isEmpty()
+                        ? "통관·물류 리드타임 source trace가 없어 견적 전 확인 필요"
+                        : "물류 source trace 기반 납기 리스크 신호"));
+        features.add(feature("priceMarginRisk", "가격·마진 리스크",
+                sourceIds(sources, "price").isEmpty() ? 0 : 50,
+                sourceIds(sources, "price").isEmpty() ? "insufficient_evidence" : dominantSourceType(sources, "price", "cache"),
+                sourceIds(sources, "price").size(),
+                sourceIds(sources, "price").isEmpty()
+                        ? "환율·원자재·단가 source trace가 없어 가격 리스크는 별도 산정 필요"
+                        : "가격·환율 source trace 기반 마진 리스크 신호"));
+        features.add(feature("diagnosisEngine", "진단 엔진 경로",
+                60,
+                agentProvider,
+                agentResult != null || (llmResult != null && llmResult.isSucceeded()) ? 1 : 0,
+                "최종 Gate는 rule score가 결정하며, " + agentProvider + "는 보조 설명 경로로만 표시"));
+        return features;
+    }
+
+    private Map<String, Object> feature(String key, String label, int value, String sourceType,
+                                        int evidenceCount, String description) {
+        Map<String, Object> feature = new LinkedHashMap<>();
+        feature.put("key", key);
+        feature.put("label", label);
+        feature.put("value", clamp(value));
+        feature.put("sourceType", defaultString(sourceType, "unknown"));
+        feature.put("evidenceCount", Math.max(0, evidenceCount));
+        feature.put("description", defaultString(description, "근거 설명이 등록되지 않았습니다."));
+        return feature;
+    }
+
+    private String dominantSourceType(List<Map<String, Object>> sources, String field, String fallback) {
+        List<String> priority = List.of("live", "cache", "external_feed", "external_reconstructed", "crawl", "user_input", "heuristic", "fallback", "empty");
+        for (String sourceType : priority) {
+            if (sourceCount(sources, field, sourceType) > 0) return sourceType;
+        }
+        return fallback;
+    }
+
+    private int sourceContribution(List<Map<String, Object>> sources, String field) {
+        return sources.stream()
+                .filter(source -> field.equals(source.get("field")) || field.equals(source.get("usedFor")))
+                .map(source -> source.get("scoreContribution"))
+                .filter(Number.class::isInstance)
+                .map(Number.class::cast)
+                .mapToInt(Number::intValue)
+                .sum();
+    }
+
+    private String firstSourceSummary(List<Map<String, Object>> sources, String field, String fallback) {
+        return sources.stream()
+                .filter(source -> field.equals(source.get("field")) || field.equals(source.get("usedFor")))
+                .map(source -> defaultString(source.get("metricSummary"), stringValue(source.get("reason"))))
+                .filter(summary -> !summary.isBlank())
+                .findFirst()
+                .orElse(fallback);
     }
 
     private List<Map<String, Object>> buildMarketStageCard(String targetCountry, int market,

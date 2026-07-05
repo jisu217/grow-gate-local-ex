@@ -130,6 +130,15 @@ body {
   overflow-y: auto;
 }
 
+.diagnosis-section {
+  scroll-margin-top: 96px;
+  margin-bottom: 18px;
+}
+
+.diagnosis-section:last-of-type {
+  margin-bottom: 0;
+}
+
 .pager {
   display: flex;
   justify-content: space-between;
@@ -567,16 +576,40 @@ body {
 }
 .fi .row {
   display: grid;
-  grid-template-columns: 160px 1fr 42px;
+  grid-template-columns: minmax(220px, 0.8fr) minmax(180px, 1fr) 42px;
   align-items: center;
   gap: 10px;
-  padding: 6px 0;
+  padding: 10px 0;
   border-bottom: 1px solid var(--line);
 }
 .fi .row:last-child { border-bottom: none; }
 .fi .row .lab {
+  min-width: 0;
   font-size: 13px;
   color: var(--ink);
+}
+.fi .row .lab strong {
+  display: block;
+  font-weight: 750;
+}
+.fi .feature-meta {
+  display: inline-flex;
+  width: fit-content;
+  margin-top: 5px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: #f4f7ff;
+  color: var(--slate);
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.35;
+}
+.fi .feature-desc {
+  display: block;
+  margin-top: 5px;
+  color: var(--mute);
+  font-size: 11.5px;
+  line-height: 1.35;
 }
 .fi .row .tk {
   height: 6px;
@@ -596,6 +629,21 @@ body {
   font-weight: 700;
   color: var(--slate);
   text-align: right;
+}
+
+@media (max-width: 760px) {
+  .status-explain-popover {
+    left: auto;
+    right: 0;
+    bottom: calc(100% + 8px);
+    width: min(300px, calc(100vw - 28px));
+  }
+  .fi .row {
+    grid-template-columns: 1fr 42px;
+  }
+  .fi .row .lab {
+    grid-column: 1 / -1;
+  }
 }
 
 .market-grid3 {
@@ -708,6 +756,96 @@ body {
   color: var(--ink);
 }
 .num.dim { color: var(--slate-2); }
+
+.status-explain {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  max-width: 100%;
+  vertical-align: middle;
+  z-index: 2;
+}
+.status-explain-trigger {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  max-width: 100%;
+  cursor: help;
+  text-align: left;
+}
+.status-explain-trigger:focus-visible {
+  outline: 2px solid rgba(47, 107, 255, .45);
+  outline-offset: 3px;
+  border-radius: 8px;
+}
+.status-explain-mark {
+  width: 16px;
+  height: 16px;
+  display: inline-grid;
+  place-items: center;
+  flex-shrink: 0;
+  border-radius: 50%;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--slate);
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+}
+.status-explain-popover {
+  position: absolute;
+  left: 0;
+  bottom: calc(100% + 10px);
+  width: min(340px, calc(100vw - 36px));
+  padding: 13px 14px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 16px 40px rgba(15, 23, 42, .16);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(4px);
+  transition: opacity .12s ease, transform .12s ease;
+  font-size: 12px;
+  line-height: 1.45;
+  z-index: 50;
+  white-space: normal;
+  text-transform: none;
+  letter-spacing: 0;
+}
+.status-explain-popover.high { border-color: #f6d3cf; }
+.status-explain-popover.medium { border-color: #f3e2bf; }
+.status-explain-popover strong,
+.status-explain-popover span {
+  display: block;
+}
+.status-explain-popover strong {
+  font-size: 12.5px;
+  margin-bottom: 7px;
+}
+.status-explain-popover span + span {
+  margin-top: 6px;
+}
+.status-explain-popover b {
+  display: inline-block;
+  min-width: 58px;
+  margin-right: 6px;
+  color: var(--blue);
+}
+.status-explain:hover .status-explain-popover,
+.status-explain:focus-within .status-explain-popover,
+.status-explain:active .status-explain-popover {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(0);
+}
 
 .recall-grid {
   display: grid;
@@ -1387,6 +1525,7 @@ body {
   .gate-grid { grid-template-columns: 1fr; }
   /* 좁은 본문에서 좌우 여백을 줄여 내용 폭 확보 */
   .scroll { padding: 18px 14px 40px; }
+  .diagnosis-section { scroll-margin-top: 122px; }
   /* 페이저 버튼이 안 줄어들어 '다음' 버튼 글자가 화면 밖으로 밀리던 문제:
      두 버튼을 균등 폭으로 줄어들게 해 글자가 항상 보이게 */
   .pager { gap: 10px; }

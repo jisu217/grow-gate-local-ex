@@ -12,6 +12,7 @@
   align-items: center;
   gap: 18px;
   padding: 14px 28px;
+  flex-wrap: wrap;
 }
 
 /* 현재 단계 경로 텍스트 */
@@ -48,6 +49,28 @@
 }
 .search input::placeholder { color: var(--slate-2); }
 
+/* 진단 상세에서 내 작업 공간으로 돌아가는 보조 액션 */
+.mypage {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 34px;
+  padding: 8px 13px;
+  border: 1px solid var(--blue-line);
+  border-radius: 10px;
+  background: var(--blue-soft);
+  color: var(--blue);
+  font-family: var(--kr);
+  font-size: 13px;
+  font-weight: 800;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.mypage:hover {
+  border-color: var(--blue);
+  background: #f5f8ff;
+}
+
 /* 실시간 데이터 뱃지 */
 .live {
   display: flex;
@@ -75,5 +98,19 @@
 
 /* 모바일: 검색창 숨김 */
 @media (max-width: 760px) {
+  .topbar {
+    gap: 10px;
+    padding: 12px 14px;
+  }
+  .crumb {
+    flex: 1 1 100%;
+    font-size: 13px;
+  }
   .search { display: none; }
+  .mypage {
+    margin-left: auto;
+    min-height: 32px;
+    padding: 7px 11px;
+    font-size: 12.5px;
+  }
 }

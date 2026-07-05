@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import DiagnosisStage from './DiagnosisStage.jsx'
 import { createPublicDataProofRun, getLatestPublicDataProofRun } from '../../services/publicDataService.js'
+import ExplainableStatus from '../ui/ExplainableStatus.jsx'
 
 export default function S10Sources({ data, sourceTrustSummary, onRetry, retryStatus }) {
   const pipes = Array.isArray(data) ? data : data?.pipes ?? []
@@ -94,7 +95,14 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
             <div className="pipe-lbl">quality · {quality}</div>
             {pipe.zeroReason && <div className="pipe-lbl req-text">zero · {pipe.zeroReason}</div>}
 
-            <span className={`status-chip ${chipType}`}>{statusText}</span>
+            <ExplainableStatus
+              status={status}
+              sourceType={status}
+              evidenceCount={pipe.count}
+              reason={pipe.zeroReason || pipe.metricSummary || pipe.label}
+            >
+              <span className={`status-chip ${chipType}`}>{statusText}</span>
+            </ExplainableStatus>
           </div>
           )
         })}
@@ -104,7 +112,9 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
           <div style={{ fontSize: 12, color: 'var(--slate-2)', marginTop: 8, lineHeight: 1.5 }}>
             새 공공데이터 소스를 연결합니다
           </div>
-          <span className="status-chip warn">대기중</span>
+          <ExplainableStatus status="대기" sourceType="insufficient_evidence" evidenceCount={0}>
+            <span className="status-chip warn">대기중</span>
+          </ExplainableStatus>
         </div>
       </div>
 
@@ -348,9 +358,16 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
             <div key={event.eventId} className="pipe-card evidence-timeline-row">
               <div>
                 <div className="pipe-source">{event.eventType}</div>
-                <span className={`status-chip ${event.sourceType === 'live' || event.sourceType === 'cache' ? 'ok' : event.sourceType === 'fallback' ? 'req' : 'warn'}`}>
-                  {event.sourceType}
-                </span>
+                <ExplainableStatus
+                  status={event.sourceType}
+                  sourceType={event.sourceType}
+                  evidenceCount={1}
+                  reason={event.summary}
+                >
+                  <span className={`status-chip ${event.sourceType === 'live' || event.sourceType === 'cache' ? 'ok' : event.sourceType === 'fallback' ? 'req' : 'warn'}`}>
+                    {event.sourceType}
+                  </span>
+                </ExplainableStatus>
               </div>
               <div>
                 <div style={{ fontSize: 12, fontWeight: 700 }}>{event.provider} · {event.usedFor}</div>

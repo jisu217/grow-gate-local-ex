@@ -1,5 +1,6 @@
 // S06 리콜 위험 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
+import ExplainableStatus from '../ui/ExplainableStatus.jsx'
 
 export default function S06Recall({ recalls }) {
   return (
@@ -14,15 +15,21 @@ export default function S06Recall({ recalls }) {
 
           <div key={rec.title} className={`recall-card ${rec.riskClass}`}>
 
-            <span className={`recall-badge-pill ${rec.riskClass}`}>{rec.badge}</span>
+            <ExplainableStatus status={rec.badge} explanation={rec.statusExplanation}>
+              <span className={`recall-badge-pill ${rec.riskClass}`}>{rec.badge}</span>
+            </ExplainableStatus>
             <div className="recall-title">{rec.title}</div>
 
             <div className="recall-sim">{rec.similarity}</div>
             <div className="recall-sim-lbl">유사도 점수</div>
 
             <div className="recall-checks">
-              {rec.checks.map((check) => (
-                <div key={check} className="recall-check">{check}</div>
+              {rec.checks.map((check, index) => (
+                <div key={check} className="recall-check">
+                  <ExplainableStatus status={check} explanation={rec.checkExplanations?.[index]}>
+                    <span>{check}</span>
+                  </ExplainableStatus>
+                </div>
               ))}
             </div>
           </div>

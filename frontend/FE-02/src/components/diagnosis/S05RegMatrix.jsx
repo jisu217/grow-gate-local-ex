@@ -1,6 +1,7 @@
 // S05 규제 매트릭스 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
 import Pill from '../ui/Pill.jsx'
+import ExplainableStatus from '../ui/ExplainableStatus.jsx'
 
 export default function S05RegMatrix({ regulations }) {
   return (
@@ -35,16 +36,28 @@ export default function S05RegMatrix({ regulations }) {
             </div>
 
             <div>
-              <Pill type={reg.priority[0]}>{reg.priority[1]}</Pill>
+              <ExplainableStatus status={reg.priority[1]} explanation={reg.priorityExplanation}>
+                <Pill type={reg.priority[0]}>{reg.priority[1]}</Pill>
+              </ExplainableStatus>
             </div>
 
             <div>
-              <Pill type={reg.status[0]}>{reg.status[1]}</Pill>
+              <ExplainableStatus status={reg.status[1]} explanation={reg.statusExplanation}>
+                <Pill type={reg.status[0]}>{reg.status[1]}</Pill>
+              </ExplainableStatus>
             </div>
 
             <div className={`num${dim(reg.duration)}`}>{reg.duration}</div>
 
-            <div className={`num${dim(reg.cost)}`}>{reg.cost}</div>
+            <div className={`num${dim(reg.cost)}`}>
+              {reg.cost === '—' || reg.cost === '-'
+                ? reg.cost
+                : (
+                  <ExplainableStatus status={reg.cost} explanation={reg.costExplanation}>
+                    <span>{reg.cost}</span>
+                  </ExplainableStatus>
+                )}
+            </div>
           </div>
         )
       })}

@@ -1,5 +1,6 @@
 // 진단 서비스
 import { apiFetch } from './apiClient.js'
+import { buildStatusExplanation } from '../utils/statusExplanation.js'
 
 const EMPTY_SCORE = {
   overall: 0,
@@ -575,10 +576,27 @@ function mapPredictionStage(stageData) {
     bar: item.value,
     desc: '백엔드 진단 점수 산식에서 생성된 항목별 점수입니다.',
   }))
-  const features = (stageData.features ?? []).map((label, index) => ({
-    label,
-    value: Math.max(30, 90 - index * 15),
-  }))
+  const features = (stageData.features ?? []).map((feature, index) => {
+    if (typeof feature === 'string') {
+      return {
+        key: `legacy-${index}`,
+        label: feature,
+        value: Math.max(30, 90 - index * 15),
+        sourceType: 'legacy',
+        evidenceCount: 0,
+        description: '구버전 백엔드 feature 문자열입니다. source trace 상세 근거는 S10에서 확인하세요.',
+      }
+    }
+    const value = Math.max(0, Math.min(100, numberOrZero(feature?.value)))
+    return {
+      key: firstNonBlank(feature?.key, feature?.label, `feature-${index}`),
+      label: firstNonBlank(feature?.label, feature?.key, '진단 feature'),
+      value,
+      sourceType: firstNonBlank(feature?.sourceType, feature?.sourceQualityStatus, 'unknown'),
+      evidenceCount: numberOrZero(feature?.evidenceCount),
+      description: firstNonBlank(feature?.description, feature?.metricSummary, '근거 설명이 등록되지 않았습니다.'),
+    }
+  })
   return { predictions, features }
 }
 
@@ -629,6 +647,21 @@ function mapRegulationStage(stageData) {
     cost: item.cost ?? '-',
     humanReviewRequired: Boolean(item.humanReviewRequired),
     evidenceIds: Array.isArray(item.evidenceIds) ? item.evidenceIds : [],
+    priorityExplanation: buildStatusExplanation(normalizeTuple(item.priority, 'warn', item.priorityLabel ?? '확인')[1], {
+      reason: item.mkt ?? item.description ?? '',
+      sourceType: item.sourceType ?? item.sourceQualityStatus,
+      evidenceCount: Array.isArray(item.evidenceIds) ? item.evidenceIds.length : item.publicSourceCount,
+    }),
+    statusExplanation: buildStatusExplanation(normalizeTuple(item.status, 'warn', item.statusLabel ?? '검토')[1], {
+      reason: item.mkt ?? item.description ?? '',
+      sourceType: item.sourceType ?? item.sourceQualityStatus,
+      evidenceCount: Array.isArray(item.evidenceIds) ? item.evidenceIds.length : item.publicSourceCount,
+    }),
+    costExplanation: buildStatusExplanation(item.cost ?? '-', {
+      reason: item.mkt ?? item.description ?? '',
+      sourceType: item.sourceType ?? item.sourceQualityStatus,
+      evidenceCount: Array.isArray(item.evidenceIds) ? item.evidenceIds.length : item.publicSourceCount,
+    }),
   }))
 }
 
@@ -650,6 +683,16 @@ function mapRecallStage(stageData) {
     checks: normalizeRecallChecks(item.checks),
     humanReviewRequired: Boolean(item.humanReviewRequired),
     evidenceIds: Array.isArray(item.evidenceIds) ? item.evidenceIds : [],
+    statusExplanation: buildStatusExplanation(item.badge ?? '확인', {
+      reason: item.title ?? item.description ?? '',
+      sourceType: item.sourceType ?? item.sourceQualityStatus,
+      evidenceCount: Array.isArray(item.evidenceIds) ? item.evidenceIds.length : item.publicSourceCount,
+    }),
+    checkExplanations: normalizeRecallChecks(item.checks).map((check) => buildStatusExplanation(check, {
+      reason: item.title ?? item.description ?? check,
+      sourceType: item.sourceType ?? item.sourceQualityStatus,
+      evidenceCount: Array.isArray(item.evidenceIds) ? item.evidenceIds.length : item.publicSourceCount,
+    })),
   }))
 }
 
@@ -664,11 +707,29 @@ function mapFtoSupportStage(stageData) {
       sub: normalizeFtoTraceLabel(item.sub ?? item.description ?? ''),
       attorneyReviewRequired: Boolean(item.attorneyReviewRequired),
       evidenceIds: Array.isArray(item.evidenceIds) ? item.evidenceIds : [],
+      statusExplanation: buildStatusExplanation(item.badge ?? item.sub ?? item.description ?? '검토 필요', {
+        reason: normalizeFtoTraceLabel(item.sub ?? item.description ?? ''),
+        sourceType: item.sourceType ?? item.sourceQualityStatus,
+        evidenceCount: Array.isArray(item.evidenceIds) ? item.evidenceIds.length : item.publicSourceCount,
+      }),
+      traceExplanation: buildStatusExplanation(normalizeFtoTraceLabel(item.sub ?? item.description ?? ''), {
+        reason: normalizeFtoTraceLabel(item.sub ?? item.description ?? ''),
+        sourceType: item.sourceType ?? item.sourceQualityStatus,
+        evidenceCount: Array.isArray(item.evidenceIds) ? item.evidenceIds.length : item.publicSourceCount,
+      }),
     })) : [{
       riskClass: 'm',
       badge: '대기',
       name: 'API FTO 결과 없음',
       sub: 'KIPRIS 공공데이터 미연결 · 변리사 검토 필요',
+      statusExplanation: buildStatusExplanation('KIPRIS 공공데이터 미연결 · 변리사 검토 필요', {
+        sourceType: 'not_configured',
+        evidenceCount: 0,
+      }),
+      traceExplanation: buildStatusExplanation('KIPRIS 공공데이터 미연결 · 변리사 검토 필요', {
+        sourceType: 'not_configured',
+        evidenceCount: 0,
+      }),
     }],
     supports: supports.length ? supports.map((item) => ({
       name: item.name ?? '지원사업 적합도',
@@ -677,11 +738,29 @@ function mapFtoSupportStage(stageData) {
       isGreen: Boolean(item.isGreen),
       humanReviewRequired: Boolean(item.humanReviewRequired),
       evidenceIds: Array.isArray(item.evidenceIds) ? item.evidenceIds : [],
+      statusExplanation: buildStatusExplanation(item.dday ?? item.org ?? item.description ?? '보강', {
+        reason: normalizeSupportTraceLabel(item.org ?? item.description ?? ''),
+        sourceType: item.sourceType ?? item.sourceQualityStatus,
+        evidenceCount: Array.isArray(item.evidenceIds) ? item.evidenceIds.length : item.publicSourceCount,
+      }),
+      traceExplanation: buildStatusExplanation(normalizeSupportTraceLabel(item.org ?? item.description ?? ''), {
+        reason: normalizeSupportTraceLabel(item.org ?? item.description ?? ''),
+        sourceType: item.sourceType ?? item.sourceQualityStatus,
+        evidenceCount: Array.isArray(item.evidenceIds) ? item.evidenceIds.length : item.publicSourceCount,
+      }),
     })) : [{
       name: 'API 지원사업 결과 없음',
       org: '지원사업 공공데이터 미연결 · 원문 공고 확인 필요',
       dday: '대기',
       isGreen: false,
+      statusExplanation: buildStatusExplanation('지원사업 공공데이터 미연결 · 원문 공고 확인 필요', {
+        sourceType: 'not_configured',
+        evidenceCount: 0,
+      }),
+      traceExplanation: buildStatusExplanation('지원사업 공공데이터 미연결 · 원문 공고 확인 필요', {
+        sourceType: 'not_configured',
+        evidenceCount: 0,
+      }),
     }],
   }
 }
@@ -735,6 +814,11 @@ function normalizeActionItems(items, tag) {
       output: 'source trace 확인',
       reason: '백엔드 stageCards에 업무 항목이 없습니다.',
       urgent: false,
+      statusExplanation: buildStatusExplanation('검토 필요', {
+        reason: '백엔드 stageCards에 업무 항목이 없습니다.',
+        sourceType: 'insufficient_evidence',
+        evidenceCount: 0,
+      }),
     }]
   }
   const seen = new Set()
@@ -752,6 +836,13 @@ function normalizeActionItems(items, tag) {
     dueDate: item.dueDate ?? '',
     reason: item.reason ?? item.blockedIfNotDone ?? '',
     urgent: tag === 'NOW' || String(item.blockedIfNotDone ?? '').includes('불가'),
+    statusExplanation: buildStatusExplanation(tag === 'NOW' || String(item.blockedIfNotDone ?? '').includes('불가')
+      ? '담당자 확인 필요'
+      : item.status ?? item.blockedIfNotDone ?? '검토 필요', {
+      reason: item.reason ?? item.blockedIfNotDone ?? item.output ?? item.title ?? '',
+      sourceType: item.sourceType ?? item.sourceQualityStatus,
+      evidenceCount: Array.isArray(item.sourceIds) ? item.sourceIds.length : item.evidenceCount,
+    }),
   }))
 }
 

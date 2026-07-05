@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { Fragment, useEffect, useMemo, useState } from 'react'
 import styles from './DailyPublicData.module.css'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
 import {
@@ -12,11 +12,18 @@ import {
 import { getAuthUser } from '../../services/authService.js'
 import {
   apiProofLabel,
-  collectFailureReasons,
+  diagnosisAvailabilityMeta,
+  formatProviderChips,
+  groupFailureReasons,
+  providerAgencyName,
+  providerDataName,
   providerDisplayName,
   providerReasonLabel,
-  sourceBadgeLabel,
+  schemaValidationLabel,
+  serviceUsageLabel,
+  sourceStatusMeta,
   sortProofProviders,
+  summarizeRecentRunComparison,
 } from './publicDataProofPresenter.js'
 
 export default function DailyPublicData() {
@@ -31,6 +38,9 @@ export default function DailyPublicData() {
   const [proofRun, setProofRun] = useState(null)
   const [proofState, setProofState] = useState('idle')
   const [proofError, setProofError] = useState('')
+  const [recordFilter, setRecordFilter] = useState('all')
+  const [expandedProviders, setExpandedProviders] = useState({})
+  const [expandedRuns, setExpandedRuns] = useState({})
 
   const load = async () => {
     setPageState('loading')
@@ -73,12 +83,18 @@ export default function DailyPublicData() {
   }, [])
 
   const dailyGroups = useMemo(() => groupRunsByDate(runs, records), [runs, records])
+  const recentRunGroups = dailyGroups.slice(0, 2)
   const latestRun = runs[0]
-  const recentTargetCount = dashboard?.runCount ?? runs.length
-  const providerNames = (dashboard?.providers ?? []).map((provider) => provider.provider)
   const externalCount = records.filter((record) => isExternalRecord(record) && !record.fallbackUsed).length
-  const failureReasons = collectFailureReasons(runs, records, proofRun).slice(0, 4)
+  const failureGroups = groupFailureReasons(runs, records, proofRun)
   const proofProviders = sortProofProviders(proofRun?.providers ?? [])
+  const filteredProofProviders = filterProofProviders(proofProviders, recordFilter)
+  const uniqueAgencies = new Set(proofProviders.map((provider) => providerAgencyName(provider.providerCode)))
+  const totalRecordCount = proofProviders.reduce((sum, provider) => sum + Number(provider.recordCount ?? 0), 0)
+  const cacheProviderCount = proofProviders.filter((provider) => provider.sourceType === 'cache').length
+  const liveProviderCount = proofProviders.filter((provider) => provider.sourceType === 'live').length
+  const attentionProviderCount = proofProviders.filter((provider) => provider.sourceType === 'fallback' || provider.sourceType === 'empty').length
+  const comparisonCards = summarizeRecentRunComparison(recentRunGroups)
 
   const handleRefresh = async () => {
     setRefreshState('running')
@@ -110,7 +126,7 @@ export default function DailyPublicData() {
     <main className={styles.wrap}>
       <div className={styles.header}>
         <div>
-          <h1 className={styles.title}>아침 자동 수집</h1>
+          <h1 className={styles.title}>공공데이터 수집 현황</h1>
           <p className={styles.sub}>
             매일 08:00 KST에 최근 활성 제품 최대 30개를 대상으로 공공데이터와 허용된 RSS/API feed를 수집합니다.
           </p>
@@ -149,69 +165,136 @@ export default function DailyPublicData() {
           )}
           {proofError && <div className={styles.warn}>{proofError}</div>}
 
-          <section className={styles.summaryGrid} aria-label="daily refresh summary">
-            <Metric label="수집일" value={formatDateTime(latestRun?.startedAt ?? dashboard?.newestFetchedAt)} />
-            <Metric label="최근 수집 대상" value={`${recentTargetCount}개`} />
-            <Metric label="성공" value={`live ${dashboard?.successCount ?? 0}건`} tone="ok" />
-            <Metric label="캐시" value={`cache ${dashboard?.cacheHitCount ?? 0}건`} />
-            <Metric label="실패" value={`fallback ${dashboard?.fallbackCount ?? 0}건`} tone="warn" />
-            <Metric label="외부 데이터" value={`RSS/API ${externalCount}건`} />
-            <Metric label="사용 가능 여부" value={latestRun?.availabilityLabel ?? '확인 필요'} tone={latestRun?.diagnosisUsable ? 'ok' : 'warn'} />
-            <Metric label="호출 provider" value={`${providerNames.length}개`} detail={providerNames.join(', ')} />
+          <section className={styles.introCard}>
+            <h2>수집 상태 안내</h2>
+            <p className={styles.sub}>
+              GROW-GATE Local EX가 매일 수집·검증하는 공공데이터 연결 상태입니다.
+            </p>
+            <p className={styles.guidance}>
+              실시간 수집, 캐시 사용, 예비 데이터 사용 여부를 구분해 보여줍니다. 데이터가 부족한 경우에도 숨기지 않고 표시합니다.
+            </p>
           </section>
+
+          <section className={styles.summaryGrid} aria-label="public data collection summary">
+            <Metric label="연결 기관" value={`${uniqueAgencies.size}개`} />
+            <Metric label="수집 데이터" value={`${proofProviders.length || dashboard?.recordCount || 0}개`} />
+            <Metric label="총 수집 건수" value={`${totalRecordCount || dashboard?.recordCount || 0}건`} />
+            <Metric label="정상 확인" value={`실시간 수집 ${liveProviderCount || dashboard?.successCount || 0}건`} tone="ok" />
+            <Metric label="저장 데이터" value={`저장 데이터 사용 ${cacheProviderCount || dashboard?.cacheHitCount || 0}건`} />
+            <Metric label="확인 필요" value={`${attentionProviderCount || dashboard?.fallbackCount || 0}건`} tone="warn" />
+            <Metric label="최근 수집일" value={formatDateTime(latestRun?.startedAt ?? dashboard?.newestFetchedAt)} />
+            <Metric label="외부 보조 데이터" value={`${externalCount}건`} />
+          </section>
+
+          {uniqueAgencies.size > 0 && (
+            <section className={styles.section}>
+              <div className={styles.sectionHead}>
+                <h2>기관별 수집 상태 요약</h2>
+                <span>기본 화면에는 기관명을 우선 표시하고, 상세에서 provider key를 확인합니다.</span>
+              </div>
+              <div className={styles.agencyGrid}>
+                {Array.from(uniqueAgencies).slice(0, 20).map((agency) => (
+                  <span key={agency} className={styles.agencyChip}>{agency}</span>
+                ))}
+              </div>
+            </section>
+          )}
 
           <section className={styles.section}>
             <div className={styles.sectionHead}>
-              <h2>수집 증거 Proof</h2>
-              <span>{proofRun?.judgeProofPolicy ?? 'raw hash와 schema validation으로 live/cache proof를 확인합니다.'}</span>
+              <h2>수집 데이터 확인</h2>
+              <span>기관, 데이터명, 수집 상태, 검증 결과를 쉬운 말로 확인합니다.</span>
             </div>
             <div className={styles.proofGrid}>
-              <Metric label="proofRunId" value={proofRun?.proofRunId ?? proofRun?.proof_run_id ?? '-'} />
-              <Metric label="proofStatus" value={proofRun?.proofStatus ?? proofRun?.proof_status ?? proofState} tone={proofRun?.proofStatus === 'PASS' ? 'ok' : 'warn'} />
-              <Metric label="schema pass" value={`${proofRun?.schemaPassCount ?? proofRun?.schema_pass_count ?? 0}건`} tone="ok" />
-              <Metric label="schema fail" value={`${proofRun?.schemaFailCount ?? proofRun?.schema_fail_count ?? 0}건`} tone={(proofRun?.schemaFailCount ?? proofRun?.schema_fail_count ?? 0) > 0 ? 'warn' : undefined} />
+              <Metric label="Proof 실행 ID" value={proofRun?.proofRunId ?? proofRun?.proof_run_id ?? '-'} />
+              <Metric label="검증 상태" value={proofRun?.proofStatus ?? proofRun?.proof_status ?? proofState} tone={proofRun?.proofStatus === 'PASS' ? 'ok' : 'warn'} />
+              <Metric label="형식 검증 통과" value={`${proofRun?.schemaPassCount ?? proofRun?.schema_pass_count ?? 0}건`} tone="ok" />
+              <Metric label="형식 확인 필요" value={`${proofRun?.schemaFailCount ?? proofRun?.schema_fail_count ?? 0}건`} tone={(proofRun?.schemaFailCount ?? proofRun?.schema_fail_count ?? 0) > 0 ? 'warn' : undefined} />
+            </div>
+            <div className={styles.filterBar} aria-label="수집 데이터 필터">
+              {[
+                ['all', '전체'],
+                ['live', '정상'],
+                ['cache', '저장 데이터 사용'],
+                ['fallback', '예비 데이터'],
+                ['attention', '확인 필요'],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={`${styles.filterBtn} ${recordFilter === value ? styles.filterBtnActive : ''}`}
+                  onClick={() => setRecordFilter(value)}
+                >
+                  {label}
+                </button>
+              ))}
             </div>
 
             <div className={styles.tableWrap}>
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Provider</th>
-                    <th>Source</th>
-                    <th>API proof</th>
-                    <th>Records</th>
-                    <th>Raw response hash</th>
-                    <th>Schema validation</th>
-                    <th>Fallback reason</th>
+                    <th>기관</th>
+                    <th>데이터명</th>
+                    <th>수집 상태</th>
+                    <th>수집 건수</th>
+                    <th>검증 결과</th>
+                    <th>서비스 활용</th>
+                    <th>확인 메모</th>
+                    <th>상세</th>
                   </tr>
                 </thead>
                 <tbody>
                   {(!Array.isArray(proofRun?.providers) || proofRun.providers.length === 0) && (
-                    <tr><td colSpan="7" className={styles.empty}>아직 proof provider row가 없습니다. Proof run을 생성하세요.</td></tr>
+                    <tr><td colSpan="8" className={styles.empty}>아직 수집 데이터 검증 row가 없습니다. Proof run을 생성하세요.</td></tr>
                   )}
-                  {proofProviders.slice(0, 12).map((provider) => {
+                  {filteredProofProviders.map((provider) => {
                     const apiProof = apiProofLabel(provider)
+                    const status = sourceStatusMeta(provider)
+                    const expanded = Boolean(expandedProviders[provider.providerCode])
                     return (
-                      <tr key={`${provider.providerCode}-${provider.rawResponseSha256 || provider.fallbackReason || provider.fetchedAt}`}>
-                        <td>
-                          {providerDisplayName(provider.providerCode)}
-                          <span className={styles.inlineMeta}>{provider.providerCode}</span>
-                        </td>
-                        <td>
-                          {sourceBadgeLabel(provider)}
-                          <span className={styles.inlineMeta}>{provider.sourceQualityStatus || '-'}</span>
-                        </td>
-                        <td>
-                          {apiProof.primary}
-                          <span className={styles.inlineMeta}>{apiProof.secondary}</span>
-                        </td>
-                        <td>{provider.recordCount ?? 0}</td>
-                        <td>{shortHash(provider.rawResponseSha256)}</td>
-                        <td className={provider.schemaValidationStatus === 'PASS' ? styles.ok : styles.warnText}>
-                          {provider.schemaValidationStatus || '-'}
-                        </td>
-                        <td>{providerReasonLabel(provider)}</td>
-                      </tr>
+                      <Fragment key={`${provider.providerCode}-${provider.rawResponseSha256 || provider.fallbackReason || provider.fetchedAt}`}>
+                        <tr key={`${provider.providerCode}-${provider.rawResponseSha256 || provider.fallbackReason || provider.fetchedAt}`}>
+                          <td data-label="기관">{providerAgencyName(provider.providerCode)}</td>
+                          <td data-label="데이터명">
+                            {providerDisplayName(provider.providerCode)}
+                            <span className={styles.inlineMeta}>{serviceUsageLabel(provider.providerCode)}</span>
+                          </td>
+                          <td data-label="수집 상태">
+                            <span className={`${styles.statusBadge} ${statusClass(status.tone)}`}>{status.label}</span>
+                            <span className={styles.inlineMeta}>{status.detail}</span>
+                          </td>
+                          <td data-label="수집 건수">{provider.recordCount ?? 0}건</td>
+                          <td data-label="검증 결과" className={provider.schemaValidationStatus === 'PASS' ? styles.ok : styles.warnText}>
+                            {schemaValidationLabel(provider.schemaValidationStatus)}
+                          </td>
+                          <td data-label="서비스 활용">{serviceUsageLabel(provider.providerCode)}</td>
+                          <td data-label="확인 메모">{providerReasonLabel(provider)}</td>
+                          <td data-label="상세">
+                            <button
+                              type="button"
+                              className={styles.detailBtn}
+                              onClick={() => setExpandedProviders((prev) => ({ ...prev, [provider.providerCode]: !expanded }))}
+                            >
+                              {expanded ? '접기' : '상세 보기'}
+                            </button>
+                          </td>
+                        </tr>
+                        {expanded && (
+                          <tr className={styles.detailRow}>
+                            <td colSpan="8">
+                              <div className={styles.techDetailGrid}>
+                                <span>provider key: {provider.providerCode}</span>
+                                <span>source: {provider.sourceType || '-'}</span>
+                                <span>quality: {provider.sourceQualityStatus || '-'}</span>
+                                <span>API 확인: {apiProof.primary} · {apiProof.secondary}</span>
+                                <span>raw hash: {shortHash(provider.rawResponseSha256)}</span>
+                                <span>schema: {provider.schemaValidationStatus || '-'}</span>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </Fragment>
                     )
                   })}
                 </tbody>
@@ -228,13 +311,13 @@ export default function DailyPublicData() {
               <table className={styles.table}>
                 <thead>
                   <tr>
-                    <th>Diagnosis</th>
-                    <th>Provider</th>
-                    <th>Dimension</th>
-                    <th>Source</th>
-                    <th>Delta</th>
-                    <th>Guarded delta</th>
-                    <th>Evidence records</th>
+                    <th>진단 ID</th>
+                    <th>데이터</th>
+                    <th>반영 영역</th>
+                    <th>데이터 상태</th>
+                    <th>원점수 변화</th>
+                    <th>보정 변화</th>
+                    <th>근거 기록</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -244,9 +327,12 @@ export default function DailyPublicData() {
                   {proofRun?.scoreWaterfall?.slice(0, 12).map((row, index) => (
                     <tr key={`${row.diagnosisId || 'cache'}-${row.providerCode}-${row.dimension}-${index}`}>
                       <td>{row.diagnosisId || 'daily cache'}</td>
-                      <td>{row.providerCode}</td>
-                      <td>{row.dimension || '-'}</td>
-                      <td>{row.sourceType || '-'}</td>
+                      <td>
+                        {providerDataName(row.providerCode)}
+                        <span className={styles.inlineMeta}>{row.providerCode}</span>
+                      </td>
+                      <td>{dimensionLabel(row.dimension)}</td>
+                      <td>{sourceTypeLabel(row.sourceType)}</td>
                       <td>{row.publicDataDelta ?? 0}</td>
                       <td>{row.guardedDelta ?? 0}</td>
                       <td>{compactEvidenceIds(row.evidenceRecordIds)}</td>
@@ -259,43 +345,74 @@ export default function DailyPublicData() {
 
           <section className={styles.section}>
             <div className={styles.sectionHead}>
-              <h2>날짜별 수집 결과</h2>
-              <span>최근 run {runs.length}건 기준</span>
+              <h2>최근 수집 실행 이력</h2>
+              <span>최근 2회 수집 결과를 기준으로 공공데이터 수집 성공, 저장 데이터 사용, 실패 사유를 확인합니다.</span>
             </div>
+            {comparisonCards.length > 0 && (
+              <div className={styles.comparisonGrid}>
+                {comparisonCards.map((card) => (
+                  <Metric key={card.label} label={card.label} value={card.value} tone={card.tone === 'ok' ? 'ok' : card.tone === 'warn' ? 'warn' : undefined} />
+                ))}
+              </div>
+            )}
             <div className={styles.tableWrap}>
-              <table className={styles.table}>
+              <table className={`${styles.table} ${styles.runTable}`}>
                 <thead>
                   <tr>
                     <th>수집일</th>
-                    <th>전체 수집 대상</th>
-                    <th>호출 provider</th>
+                    <th>수집 대상</th>
                     <th>성공</th>
-                    <th>캐시</th>
+                    <th>저장 데이터</th>
                     <th>실패</th>
                     <th>외부 데이터</th>
-                    <th>사용 가능 여부</th>
+                    <th>진단 반영</th>
+                    <th>상세</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {dailyGroups.length === 0 && (
+                  {recentRunGroups.length === 0 && (
                     <tr><td colSpan="8" className={styles.empty}>아직 수집 run이 없습니다.</td></tr>
                   )}
-                  {dailyGroups.map((group) => (
-                    <tr key={group.date}>
-                      <td>{group.date}</td>
-                      <td>제품 {group.productCount}개</td>
-                      <td>{group.providers.join(', ') || '-'}</td>
-                      <td className={styles.ok}>live {group.liveCount}건</td>
-                      <td>cache {group.cacheCount}건</td>
-                      <td className={group.fallbackCount > 0 ? styles.warnText : ''}>fallback {group.fallbackCount}건</td>
-                      <td>RSS/API {group.externalCount}건</td>
-                      <td>
-                        <span className={`${styles.badge} ${group.diagnosisUsable ? styles.badgeOk : styles.badgeWarn}`}>
-                          {group.diagnosisUsable ? '진단 반영 가능' : '확인 필요'}
-                        </span>
-                      </td>
-                    </tr>
-                  ))}
+                  {recentRunGroups.map((group) => {
+                    const availability = diagnosisAvailabilityMeta(group)
+                    const chips = formatProviderChips(group.providers, 5)
+                    const expanded = Boolean(expandedRuns[group.date])
+                    const shownChips = expanded ? chips.all : chips.visible
+                    return (
+                      <tr key={group.date}>
+                        <td data-label="수집일">{group.date}</td>
+                        <td data-label="수집 대상">제품 {group.productCount}개</td>
+                        <td data-label="성공" className={styles.ok}>실시간 수집 {group.liveCount}건</td>
+                        <td data-label="저장 데이터">저장 데이터 사용 {group.cacheCount}건</td>
+                        <td data-label="실패" className={group.fallbackCount > 0 ? styles.warnText : ''}>확인 필요 {group.fallbackCount}건</td>
+                        <td data-label="외부 데이터">외부 보조 데이터 {group.externalCount}건</td>
+                        <td data-label="진단 반영">
+                          <span className={`${styles.badge} ${availability.tone === 'ok' ? styles.badgeOk : styles.badgeWarn}`}>
+                            {availability.label}
+                          </span>
+                          <span className={styles.inlineMeta}>{availability.reason}</span>
+                        </td>
+                        <td data-label="상세">
+                          <div className={styles.providerChips}>
+                            {shownChips.map((chip) => (
+                              <span key={`${group.date}-${chip.code}`} className={styles.providerChip} title={chip.code}>
+                                {chip.label}
+                              </span>
+                            ))}
+                            {chips.hiddenCount > 0 && (
+                              <button
+                                type="button"
+                                className={styles.moreBtn}
+                                onClick={() => setExpandedRuns((prev) => ({ ...prev, [group.date]: !expanded }))}
+                              >
+                                {expanded ? '접기' : `+ ${chips.hiddenCount}개 더보기`}
+                              </button>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -304,12 +421,25 @@ export default function DailyPublicData() {
           <section className={styles.section}>
             <div className={styles.sectionHead}>
               <h2>실패 사유</h2>
-              <span>API key, operation endpoint, timeout 추적</span>
+              <span>원인별로 묶어서 진단 영향도와 다음 조치를 확인합니다.</span>
             </div>
-            <div className={styles.reasonList}>
-              {failureReasons.length === 0 && <div className={styles.empty}>최근 실패 사유가 없습니다.</div>}
-              {failureReasons.map((reason) => (
-                <div key={reason} className={styles.reason}>{reason}</div>
+            <div className={styles.failureGrid}>
+              {failureGroups.length === 0 && <div className={styles.empty}>최근 실패 사유가 없습니다.</div>}
+              {failureGroups.map((group) => (
+                <article key={group.code} className={styles.failureCard}>
+                  <div className={styles.failureTitle}>
+                    <strong>{group.label} · {group.count}개</strong>
+                    <span>진단 영향도: {group.impact}</span>
+                  </div>
+                  <p>{group.description}</p>
+                  <div className={styles.providerChips}>
+                    {group.providerNames.map((name) => (
+                      <span key={`${group.code}-${name}`} className={styles.providerChip}>{name}</span>
+                    ))}
+                  </div>
+                  <p className={styles.reasonHelp}>이유: {group.impactReason}</p>
+                  <p className={styles.reasonHelp}>다음 조치: {group.nextAction}</p>
+                </article>
               ))}
             </div>
           </section>
@@ -362,6 +492,42 @@ function Metric({ label, value, detail, tone }) {
       {detail && <small>{detail}</small>}
     </div>
   )
+}
+
+function filterProofProviders(providers, filter) {
+  if (filter === 'live') return providers.filter((provider) => provider.sourceType === 'live')
+  if (filter === 'cache') return providers.filter((provider) => provider.sourceType === 'cache')
+  if (filter === 'fallback') return providers.filter((provider) => provider.sourceType === 'fallback')
+  if (filter === 'attention') {
+    return providers.filter((provider) => provider.sourceType === 'fallback' || provider.sourceType === 'empty' || provider.schemaValidationStatus === 'FAIL')
+  }
+  return providers
+}
+
+function statusClass(tone) {
+  if (tone === 'ok') return styles.statusOk
+  if (tone === 'cache') return styles.statusCache
+  if (tone === 'warn') return styles.statusWarn
+  return styles.statusNeutral
+}
+
+function sourceTypeLabel(value) {
+  if (value === 'live') return '실시간 수집'
+  if (value === 'cache') return '저장 데이터'
+  if (value === 'fallback') return '예비 데이터'
+  if (value === 'empty') return '응답 없음'
+  return value || '-'
+}
+
+function dimensionLabel(value) {
+  const labels = {
+    market: '시장성',
+    regulation: '규제·인증',
+    recall: '리콜 위험',
+    fto: 'FTO·특허',
+    support: '지원사업',
+  }
+  return labels[value] ?? value ?? '-'
 }
 
 function groupRunsByDate(runs, records) {

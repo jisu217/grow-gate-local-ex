@@ -34,6 +34,94 @@ const detail = {
       fallbackSourceCount: 1,
     },
     stageCards: {
+      s03: {
+        predictions: [
+          { name: '시장성', value: 78 },
+          { name: '규제 준비도', value: 81 },
+        ],
+        features: [
+          {
+            key: 'hsCodeMatch',
+            label: 'HS Code 품목 적합도',
+            value: 90,
+            sourceType: 'input',
+            evidenceCount: 1,
+            description: 'HS 850760이 리튬이온 배터리팩 진단 기준으로 사용됨',
+          },
+          {
+            key: 'targetCountryDemand',
+            label: '대상국 시장 수요',
+            value: 78,
+            sourceType: 'live',
+            evidenceCount: 1,
+            description: 'KCS_TRADE live trace 기반 DE 시장성 점수',
+          },
+          {
+            key: 'exportTrend',
+            label: '수출 흐름',
+            value: 74,
+            sourceType: 'live',
+            evidenceCount: 1,
+            description: 'exportAmountUsd=45678, yoyGrowthPct=12.4',
+          },
+          {
+            key: 'marketNewsSignal',
+            label: '시장 뉴스 신호',
+            value: 0,
+            sourceType: 'insufficient_evidence',
+            evidenceCount: 0,
+            description: '뉴스 source trace가 없어 점수 기여 없음',
+          },
+          {
+            key: 'regulationBurden',
+            label: '규제 부담',
+            value: 19,
+            sourceType: 'cache',
+            evidenceCount: 1,
+            description: 'EU Battery Regulation cache trace 기반',
+          },
+          {
+            key: 'certificationRequirementCount',
+            label: '인증 요구 항목',
+            value: 81,
+            sourceType: 'cache',
+            evidenceCount: 1,
+            description: '인증/문서 요구 trace 기반',
+          },
+          {
+            key: 'recallSimilarity',
+            label: '리콜 유사도',
+            value: 31,
+            sourceType: 'fallback',
+            evidenceCount: 1,
+            description: '리콜 API fallback으로 담당자 확인 필요',
+          },
+          {
+            key: 'ftoPatentRisk',
+            label: 'FTO 특허 리스크',
+            value: 26,
+            sourceType: 'cache',
+            evidenceCount: 1,
+            description: 'KIPRIS cache trace 기반',
+          },
+          {
+            key: 'supportProgramFit',
+            label: '지원사업 적합도',
+            value: 88,
+            sourceType: 'external_feed',
+            evidenceCount: 1,
+            description: '지원사업 feed 후보 기반',
+          },
+          {
+            key: 'evidenceCoverage',
+            label: '근거 커버리지',
+            value: 50,
+            sourceType: 'mixed',
+            evidenceCount: 2,
+            description: 'live/cache/fallback source trace 비율',
+          },
+        ],
+      },
       s04: [{ flag: 'DE', score: 78, publicSourceCount: 2, evidenceStrength: 4 }],
       s05: [{ name: 'EU Battery Regulation', targetCountry: 'DE', priorityLabel: '높음' }],
       s06: [{ title: 'Battery recall signal', similarity: 0.42, checks: ['SDS 확인'] }],
@@ -142,19 +230,35 @@ assert.equal(mapped.session.productName, '리튬이온 배터리팩')
 assert.equal(mapped.stages.s04[0].flag, 'DE')
 assert.equal(mapped.stages.s04[0].score, 78)
 assert.equal(mapped.stages.s05[0].nm, 'EU Battery Regulation')
+assert.equal(mapped.stages.s05[0].priorityExplanation.status, '높음')
+assert.match(mapped.stages.s05[0].priorityExplanation.plainSummary, /확인/)
 assert.equal(mapped.stages.s06[0].title, 'Battery recall signal')
+assert.equal(mapped.stages.s06[0].statusExplanation.status, '확인')
+assert.match(mapped.stages.s06[0].checkExplanations[0].plainSummary, /확인/)
 assert.equal(mapped.stages.s07.patents[0].name, 'BMS FTO')
+assert.equal(mapped.stages.s07.patents[0].statusExplanation.status, '검토')
 assert.equal(mapped.stages.s07.supports[0].name, '수출바우처')
+assert.equal(mapped.stages.s07.supports[0].statusExplanation.status, 'D-20')
 assert.equal(mapped.session.gateDecision.status, 'CONDITIONAL_GO')
 assert.equal(mapped.session.confidencePanel.level, 'MEDIUM')
 assert.equal(mapped.stages.s08[0].day, '이번 주')
 assert.equal(mapped.stages.s08[0].tasks[0].title, 'UN38.3 보유 여부 확인')
+assert.equal(mapped.stages.s08[0].tasks[0].statusExplanation.status, '담당자 확인 필요')
 assert.equal(mapped.session.evidenceRetrieval.mode, 'source-bound-evidence-search')
 assert.equal(mapped.session.exportKnowledgeTimeline[0].eventType, 'EXPORT_METRIC_SIGNAL')
 assert.equal(mapped.session.evidenceGuardrails.verdict, 'pass')
 assert.equal(mapped.session.sourceTrustSummary.liveSuccessRate, 0.5)
 assert.equal(mapped.session.sourceTrustSummary.publicDataProofRunId, 'pdr_diag_1')
 assert.equal(mapped.session.sourceTrustSummary.providerHealth[1].failureReason, 'API key is not configured')
+assert.equal(mapped.stages.s03.features.length, 10)
+assert.equal(mapped.stages.s03.features[0].key, 'hsCodeMatch')
+assert.equal(mapped.stages.s03.features[0].label, 'HS Code 품목 적합도')
+assert.equal(mapped.stages.s03.features[0].value, 90)
+assert.equal(mapped.stages.s03.features[0].sourceType, 'input')
+assert.equal(mapped.stages.s03.features[0].evidenceCount, 1)
+assert.match(mapped.stages.s03.features[0].description, /850760/)
+assert.equal(mapped.stages.s03.features[6].key, 'recallSimilarity')
+assert.equal(mapped.stages.s03.features[6].sourceType, 'fallback')
 assert.equal(mapped.kpiData[0].eyebrow, '대상 제품')
 assert.equal(mapped.kpiData[0].value, '리튬이온 배터리팩')
 assert.equal(mapped.kpiData[0].sub, 'HS 850760 · DE')

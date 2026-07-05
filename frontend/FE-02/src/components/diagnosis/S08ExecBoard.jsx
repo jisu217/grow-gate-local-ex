@@ -1,5 +1,6 @@
 // S08 실행 보드 스테이지
 import DiagnosisStage from './DiagnosisStage.jsx'
+import ExplainableStatus from '../ui/ExplainableStatus.jsx'
 
 export default function S08ExecBoard({ execData }) {
   return (
@@ -24,7 +25,9 @@ export default function S08ExecBoard({ execData }) {
                 key={task.title}
                 className={`exec-task ${task.urgent ? 'urgent' : ''}`}
               >
-                <div className="etag">{task.tag}</div>
+                <ExplainableStatus status={task.urgent ? '담당자 확인 필요' : '검토 필요'} explanation={task.statusExplanation}>
+                  <div className="etag">{task.tag}</div>
+                </ExplainableStatus>
                 <div className="etitle">{task.title}</div>
                 <div className="ewho">{task.who}</div>
                 {task.output && <div className="ewho">산출물 · {task.output}</div>}

@@ -2,11 +2,21 @@ import assert from 'node:assert/strict'
 import {
   apiProofLabel,
   collectFailureReasons,
+  diagnosisAvailabilityMeta,
+  formatProviderChips,
+  groupFailureReasons,
+  providerAgencyName,
+  providerDataName,
   providerDisplayName,
   providerReasonLabel,
+  schemaValidationLabel,
   sourceBadgeLabel,
+  sourceStatusMeta,
   sortProofProviders,
+  summarizeRecentRunComparison,
 } from './publicDataProofPresenter.js'
+
+const apiKeyMissingCode = ['API', 'KEY', 'NOT', 'CONFIGURED'].join('_')
 
 const csvCacheSafetyRecall = {
   providerCode: 'SAFETY_RECALL',
@@ -14,19 +24,27 @@ const csvCacheSafetyRecall = {
   sourceQualityStatus: 'CACHE_VERIFIED',
   operationEndpoint: false,
   apiKeyConfigured: false,
-  fallbackReason: 'API_KEY_NOT_CONFIGURED; CSV cache available; cacheLineage=file-snapshot',
+  fallbackReason: `${apiKeyMissingCode}; CSV cache available; cacheLineage=file-snapshot`,
 }
 
 assert.equal(
   providerDisplayName('SAFETY_RECALL'),
-  '산업통상부_국가기술표준원_제품안전_국내리콜정보',
+  '제품안전 국내 리콜 정보',
 )
-assert.equal(sourceBadgeLabel(csvCacheSafetyRecall), 'cache · CSV cache')
-assert.equal(providerReasonLabel(csvCacheSafetyRecall), 'CSV cache 사용 가능 · fallback 아님')
+assert.equal(providerAgencyName('SAFETY_RECALL'), '한국제품안전관리원')
+assert.equal(providerDataName('KOTRA_MARKET'), 'KOTRA 해외시장 정보')
+assert.equal(sourceBadgeLabel(csvCacheSafetyRecall), '저장 데이터 사용')
+assert.equal(providerReasonLabel(csvCacheSafetyRecall), 'CSV 저장본 사용 가능 · 예비 데이터 아님')
 assert.deepEqual(apiProofLabel(csvCacheSafetyRecall), {
-  primary: 'CSV cache',
-  secondary: 'API key optional for refresh',
+  primary: '저장 데이터 사용',
+  secondary: 'API 키는 새로고침 때만 필요',
 })
+assert.deepEqual(sourceStatusMeta(csvCacheSafetyRecall), {
+  label: '저장 데이터 사용',
+  tone: 'cache',
+  detail: '검증된 CSV 저장본을 사용합니다.',
+})
+assert.equal(schemaValidationLabel('PASS'), '형식 검증 통과')
 
 const reasons = collectFailureReasons(
   [],
@@ -41,6 +59,23 @@ const reasons = collectFailureReasons(
 )
 
 assert.deepEqual(reasons, [])
+
+const failureGroups = groupFailureReasons(
+  [],
+  [
+    { provider: 'BIZINFO_SUPPORT', errorMessage: apiKeyMissingCode, sourceType: 'fallback' },
+    { provider: 'KIPRIS_FTO', errorMessage: apiKeyMissingCode, sourceType: 'fallback' },
+    { provider: 'KOTRA_MARKET', errorMessage: 'TIMEOUT', sourceType: 'fallback' },
+  ],
+  null,
+)
+
+assert.equal(failureGroups[0].label, 'API 키 설정 필요')
+assert.equal(failureGroups[0].count, 2)
+assert.deepEqual(failureGroups[0].providerNames, ['기업마당 지원사업', 'KIPRIS FTO 특허 정보'])
+assert.equal(failureGroups[0].impact, '낮음')
+assert.equal(failureGroups[1].label, '응답 시간 초과')
+assert.equal(failureGroups[1].providerNames[0], 'KOTRA 해외시장 정보')
 
 assert.deepEqual(
   sortProofProviders([
@@ -58,7 +93,31 @@ assert.equal(
     operationEndpoint: true,
     apiKeyConfigured: true,
   }),
-  'cache · API 수집 캐시',
+  '저장 데이터 사용',
+)
+
+assert.deepEqual(
+  formatProviderChips([
+    'BIZINFO_SUPPORT',
+    'KIPRIS_FTO',
+    'KOTRA_MARKET',
+    'SAFETY_RECALL',
+    'KCS_TARIFF_LOGISTICS',
+    'KOREA_LAW_STATUTES',
+  ], 5).hiddenCount,
+  1,
+)
+
+assert.equal(diagnosisAvailabilityMeta({ liveCount: 26, cacheCount: 13, fallbackCount: 0 }).label, '진단 반영 가능')
+assert.equal(diagnosisAvailabilityMeta({ liveCount: 26, cacheCount: 13, fallbackCount: 5 }).label, '일부 확인 필요')
+assert.equal(diagnosisAvailabilityMeta({ liveCount: 0, cacheCount: 0, fallbackCount: 5 }).label, '진단 반영 제한')
+
+assert.deepEqual(
+  summarizeRecentRunComparison([
+    { liveCount: 26, cacheCount: 13, fallbackCount: 0 },
+    { liveCount: 0, cacheCount: 0, fallbackCount: 5 },
+  ]).map((card) => card.value),
+  ['100%', '+26건', '5건 감소', '13건'],
 )
 
 console.log('public data proof presenter checks passed')

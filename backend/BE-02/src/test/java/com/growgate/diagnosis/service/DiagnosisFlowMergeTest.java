@@ -2,6 +2,7 @@ package com.growgate.diagnosis.service;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.growgate.agent.service.AgentInferenceResult;
 import com.growgate.agent.service.AgentInferenceService;
 import com.growgate.agent.service.AgentTraceRecorder;
 import com.growgate.agent.service.ClaimVerificationService;
@@ -27,6 +28,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.util.ReflectionTestUtils;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Map;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -94,6 +96,110 @@ class DiagnosisFlowMergeTest {
         assertThat(metricSummary).contains("empty record");
         assertThat(decisionImpact).contains("live/cache 성공 근거가 아니며");
         assertThat(reason).contains("live/cache 성공 근거로 표시하지 않고");
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void stageThreeFeatureImportanceUsesStructuredSourceTraceFeatures() {
+        DiagnosisAsyncProcessor processor = newDiagnosisAsyncProcessor();
+        List<Map<String, Object>> sources = List.of(
+                Map.of(
+                        "field", "market",
+                        "usedFor", "market",
+                        "sourceType", "live",
+                        "sourceQualityStatus", "LIVE_VERIFIED",
+                        "sourceId", "KCS_TRADE:850760:DE",
+                        "provider", "KCS_TRADE",
+                        "metricSummary", "exportAmountUsd=45678, yoyGrowthPct=12.4",
+                        "scoreContribution", 7
+                ),
+                Map.of(
+                        "field", "regulation",
+                        "usedFor", "regulation",
+                        "sourceType", "cache",
+                        "sourceQualityStatus", "CACHE_VERIFIED",
+                        "sourceId", "KATS_CERT:850760:DE",
+                        "provider", "KATS_CERT",
+                        "metricSummary", "CE, EU Battery Regulation, RoHS",
+                        "scoreContribution", -5
+                ),
+                Map.of(
+                        "field", "recall",
+                        "usedFor", "recall",
+                        "sourceType", "fallback",
+                        "sourceQualityStatus", "FALLBACK_ERROR",
+                        "sourceId", "SAFETY_RECALL:missing-key",
+                        "provider", "SAFETY_RECALL",
+                        "metricSummary", "API key is not configured",
+                        "fallbackUsed", true,
+                        "scoreContribution", 0
+                ),
+                Map.of(
+                        "field", "fto",
+                        "usedFor", "fto",
+                        "sourceType", "cache",
+                        "sourceQualityStatus", "CACHE_VERIFIED",
+                        "sourceId", "KIPRIS_FTO:850760",
+                        "provider", "KIPRIS_FTO",
+                        "metricSummary", "KIPRIS keyword trace",
+                        "scoreContribution", -3
+                ),
+                Map.of(
+                        "field", "support",
+                        "usedFor", "support",
+                        "sourceType", "external_feed",
+                        "sourceQualityStatus", "HEURISTIC_ONLY",
+                        "sourceId", "KOTRA_SUPPORT:DE",
+                        "provider", "KOTRA_SUPPORT",
+                        "metricSummary", "export voucher candidate",
+                        "scoreContribution", 2
+                )
+        );
+
+        AgentInferenceResult llmResult = AgentInferenceResult.builder()
+                .succeeded(false)
+                .provider("spring-local")
+                .content(Map.of())
+                .knowledgeSuggestions(List.of())
+                .fallbackReasons(List.of())
+                .build();
+
+        Map<String, Object> cards = ReflectionTestUtils.invokeMethod(processor,
+                "buildStageCards",
+                "리튬이온 배터리팩", "850760", "DE",
+                70, 73, 44, 61, 45, 47,
+                List.of(), Map.of(), sources, null, llmResult, List.of());
+
+        Map<String, Object> s03 = (Map<String, Object>) cards.get("s03");
+        List<Map<String, Object>> features = (List<Map<String, Object>>) s03.get("features");
+
+        assertThat(features).hasSizeGreaterThanOrEqualTo(10);
+        assertThat(features)
+                .extracting(feature -> feature.get("key"))
+                .contains(
+                        "hsCodeMatch",
+                        "targetCountryDemand",
+                        "exportTrend",
+                        "regulationBurden",
+                        "recallSimilarity",
+                        "ftoPatentRisk",
+                        "supportProgramFit",
+                        "evidenceCoverage",
+                        "dataFreshness",
+                        "productSpecCompleteness"
+                );
+        assertThat(features).allSatisfy(feature -> {
+            assertThat(feature).containsKeys("key", "label", "value", "sourceType", "evidenceCount", "description");
+            assertThat((Integer) feature.get("value")).isBetween(0, 100);
+        });
+        assertThat(features)
+                .filteredOn(feature -> "recallSimilarity".equals(feature.get("key")))
+                .first()
+                .satisfies(feature -> assertThat(feature.get("sourceType")).isEqualTo("fallback"));
+        assertThat(features)
+                .filteredOn(feature -> "evidenceCoverage".equals(feature.get("key")))
+                .first()
+                .satisfies(feature -> assertThat(feature.get("evidenceCount")).isEqualTo(5));
     }
 
     private DiagnosisService newDiagnosisService() {
