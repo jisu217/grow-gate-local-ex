@@ -248,7 +248,7 @@ CREATE TABLE IF NOT EXISTS public_data_collection_runs (
 CREATE TABLE IF NOT EXISTS public_data_records (
   id VARCHAR(36) NOT NULL,
   run_id VARCHAR(36) NULL,
-  provider VARCHAR(40) NOT NULL,
+  provider VARCHAR(80) NOT NULL,
   endpoint VARCHAR(500) NULL,
   request_key VARCHAR(240) NOT NULL,
   hs_code VARCHAR(20) NULL,

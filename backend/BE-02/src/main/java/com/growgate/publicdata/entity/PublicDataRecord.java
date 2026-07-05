@@ -38,7 +38,7 @@ public class PublicDataRecord {
     private PublicDataCollectionRun run;
 
     @Enumerated(EnumType.STRING)
-    @Column(nullable = false, length = 40)
+    @Column(nullable = false, length = 80)
     private PublicDataProvider provider;
 
     @Column(name = "endpoint", length = 500)
