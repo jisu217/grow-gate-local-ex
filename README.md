@@ -478,22 +478,23 @@ KPI 렌더링은 `eyebrow`가 없을 때 `label/title`로 fallback하고, 긴 �
 
 ## 12. Deployment Status
 
-GitHub `main`은 최신 public-data/provider, source-bound evidence, 진단 개요 KPI 명확화 코드가 반영된 기준 브랜치입니다. Lightsail HTTPS 서비스는 최신 main artifact 배포와 운영 smoke를 통과한 상태입니다.
+GitHub `main`은 최신 public-data/provider, source-bound evidence, 진단 개요 KPI 명확화 코드와 합성 시연 진단 접근 보정이 반영된 기준 브랜치입니다. Lightsail HTTPS 서비스는 최신 main artifact 배포와 운영 smoke, 메뉴 QA를 통과한 상태입니다.
 
 | Item | Current State |
 | :--- | :--- |
-| GitHub main | 최신 `origin/main` HEAD. KPI clarity fix `a9785e67`, KPI QA docs `81bc5bb`, provider schema hotfix `68746297` 포함 |
-| Deployed commit | `68746297b2620996b8a9a1dfbea23ad0f9998ea2` |
+| GitHub main | 최신 `origin/main` HEAD. 합성 시연 진단 접근 보정 `51f8a449` 포함 |
+| Deployed commit | `51f8a449486e7985878c21b0363f6014d290dbc3` |
 | Lightsail static IP | `54.180.56.24` |
 | Current public URL | `https://growgate.54.180.56.24.sslip.io` |
 | Attached instance | `growgate-fresh-20260703-2134` |
-| SSH firewall | 배포 중 `1.234.247.45/32`를 임시 허용했으며, 작업 후 원복 필요 |
+| SSH firewall | 작업 IP `221.139.247.7/32`가 기존 allowlist에 포함되어 있어 이번 배포에서 방화벽 변경 없음 |
 | Service status | production smoke PASS |
 | Public proof viewer | `/public-data/daily-refresh` returns `200` without login |
 | Auth session restore | admin login and cookie-only `/api/users/me=200` verified |
 | Synthetic validation seed | personas `5`, sessions `15`, findings `3` |
-| Latest smoke | `2026-07-05 20:29 KST`, `diagnosisId=5bb8252e-fba3-4dcb-91c2-bc482946187a`, `collectionRunId=bb981ec0-9574-4f0b-bca5-03b517131e83`, `cacheCount=21`, `fallbackCount=5` |
-| Live public API proof | 현재 운영 smoke 기준 source trace는 `liveCount=0`, `cacheCount=21`, `fallbackCount=5`, operation endpoint/API key proof count `0` |
+| Latest smoke | `2026-07-06 00:16 KST`, `diagnosisId=d7ad2f06-42d7-4fc6-858d-021e81955f9c`, `collectionRunId=7707af43-2244-4e11-84cb-335b9154e253`, `cacheCount=32`, `fallbackCount=0` |
+| Latest menu QA | `2026-07-06`, production menu QA `33/33 PASS`, see `docs/qa/production-menu-qa-2026-07-06.md` |
+| Live public API proof | 현재 운영 smoke 기준 source trace는 `liveCount=0`, `cacheCount=32`, `fallbackCount=0`, operation endpoint proof count `10` |
 
 배포 재실행 순서:
 
