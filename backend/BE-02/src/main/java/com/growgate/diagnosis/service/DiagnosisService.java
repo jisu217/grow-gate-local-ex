@@ -58,6 +58,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -449,11 +450,19 @@ public class DiagnosisService {
 
     private DiagnosisRun findDiagnosisRun(User user, String diagnosisId) {
         Company company = resolveCompany(user.getId());
+        Optional<DiagnosisRun> scopedRun;
         if (company != null) {
-            return diagnosisRepository.findByIdAndCompanyId(diagnosisId, company.getId())
-                    .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "진단 결과를 찾을 수 없습니다."));
+            scopedRun = diagnosisRepository.findByIdAndCompanyId(diagnosisId, company.getId());
+        } else {
+            scopedRun = diagnosisRepository.findByIdAndUserId(diagnosisId, user.getId());
         }
-        return diagnosisRepository.findByIdAndUserId(diagnosisId, user.getId())
+
+        if (scopedRun.isPresent()) {
+            return scopedRun.get();
+        }
+
+        return diagnosisRepository.findById(diagnosisId)
+                .filter(SyntheticDemoAccess::isSyntheticDemoRun)
                 .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "진단 결과를 찾을 수 없습니다."));
     }
 

@@ -300,6 +300,57 @@ class DiagnosisServiceTest {
     }
 
     @Test
+    void getDetailAllowsWatermarkedSyntheticDemoDiagnosisOutsideCurrentCompany() throws Exception {
+        setUp();
+        User user = user("admin-user", UserType.company);
+        Company currentCompany = Company.builder().id("current-company").build();
+        Company scenarioCompany = Company.builder().id("scenario-company").build();
+        Membership membership = Membership.builder().role(UserRole.admin).company(currentCompany).build();
+        Map<String, Object> result = new LinkedHashMap<>();
+        result.put("syntheticData", true);
+        result.put("demoWatermark", "synthetic_demo_not_real_customer");
+        result.put("summary", "시연용 진단 결과");
+        var run = diagnosisRun("synthetic-demo-diag", user("scenario-owner", UserType.company),
+                objectMapper.writeValueAsString(result));
+        run.setCompany(scenarioCompany);
+
+        when(userRepository.findById("admin-user")).thenReturn(Optional.of(user));
+        when(membershipRepository.findFirstByUserId("admin-user")).thenReturn(Optional.of(membership));
+        when(diagnosisRepository.findByIdAndCompanyId("synthetic-demo-diag", "current-company"))
+                .thenReturn(Optional.empty());
+        when(diagnosisRepository.findById("synthetic-demo-diag")).thenReturn(Optional.of(run));
+
+        var response = diagnosisService.getDetail("admin-user", "synthetic-demo-diag");
+
+        assertThat(response.getId()).isEqualTo("synthetic-demo-diag");
+        assertThat(response.getResult().getSummary()).isEqualTo("시연용 진단 결과");
+    }
+
+    @Test
+    void getDetailKeepsRealDiagnosisOutsideCurrentCompanyHidden() throws Exception {
+        setUp();
+        User user = user("admin-user", UserType.company);
+        Company currentCompany = Company.builder().id("current-company").build();
+        Company otherCompany = Company.builder().id("other-company").build();
+        Membership membership = Membership.builder().role(UserRole.admin).company(currentCompany).build();
+        Map<String, Object> result = Map.of("summary", "실제 고객 진단 결과");
+        var run = diagnosisRun("real-other-company-diag", user("other-owner", UserType.company),
+                objectMapper.writeValueAsString(result));
+        run.setCompany(otherCompany);
+
+        when(userRepository.findById("admin-user")).thenReturn(Optional.of(user));
+        when(membershipRepository.findFirstByUserId("admin-user")).thenReturn(Optional.of(membership));
+        when(diagnosisRepository.findByIdAndCompanyId("real-other-company-diag", "current-company"))
+                .thenReturn(Optional.empty());
+        when(diagnosisRepository.findById("real-other-company-diag")).thenReturn(Optional.of(run));
+
+        assertThatThrownBy(() -> diagnosisService.getDetail("admin-user", "real-other-company-diag"))
+                .isInstanceOf(BusinessException.class)
+                .extracting(e -> ((BusinessException) e).getErrorCode())
+                .isEqualTo(ErrorCode.NOT_FOUND);
+    }
+
+    @Test
     void getDetailExposesRuleOwnedGateDecisionAndDoesNotLetLlmOverrideFinalGate() throws Exception {
         setUp();
         User user = user("user-gate", UserType.personal);

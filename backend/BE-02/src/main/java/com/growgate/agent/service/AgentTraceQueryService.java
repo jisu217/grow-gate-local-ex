@@ -3,6 +3,7 @@ package com.growgate.agent.service;
 import com.growgate.agent.entity.AgentTraceEvent;
 import com.growgate.agent.repository.AgentTraceEventRepository;
 import com.growgate.company.entity.Company;
+import com.growgate.diagnosis.service.SyntheticDemoAccess;
 import com.growgate.diagnosis.repository.DiagnosisRepository;
 import com.growgate.exception.BusinessException;
 import com.growgate.exception.ErrorCode;
@@ -53,6 +54,11 @@ public class AgentTraceQueryService {
             }
         }
         if (diagnosisRepository.findByIdAndUserId(diagnosisId, user.getId()).isPresent()) {
+            return;
+        }
+        if (diagnosisRepository.findById(diagnosisId)
+                .filter(SyntheticDemoAccess::isSyntheticDemoRun)
+                .isPresent()) {
             return;
         }
         throw new BusinessException(ErrorCode.NOT_FOUND, "진단 결과를 찾을 수 없습니다.");
