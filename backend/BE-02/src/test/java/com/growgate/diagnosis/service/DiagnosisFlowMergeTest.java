@@ -3,6 +3,7 @@ package com.growgate.diagnosis.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.agent.service.AgentInferenceService;
+import com.growgate.agent.service.AgentTraceRecorder;
 import com.growgate.agent.service.ClaimVerificationService;
 import com.growgate.agent.service.EvidenceContextBuilder;
 import com.growgate.diagnosis.dto.CreateDiagnosisRequest;
@@ -19,6 +20,7 @@ import com.growgate.product.repository.ProductRepository;
 import com.growgate.publicdata.entity.PublicDataRecord;
 import com.growgate.publicdata.enums.PublicDataProvider;
 import com.growgate.publicdata.service.PublicDataCollectionService;
+import com.growgate.publicdata.service.PublicDataProofRunService;
 import com.growgate.regional.service.RegionalIndustryProfileService;
 import com.growgate.user.repository.UserRepository;
 import org.junit.jupiter.api.Test;
@@ -124,7 +126,9 @@ class DiagnosisFlowMergeTest {
                 mock(EvidenceContextBuilder.class),
                 mock(KnowledgeLoopItemRepository.class),
                 mock(ClaimVerificationService.class),
-                mock(RegionalIndustryProfileService.class)
+                mock(RegionalIndustryProfileService.class),
+                mock(AgentTraceRecorder.class),
+                mock(PublicDataProofRunService.class)
         );
     }
 }

@@ -14,6 +14,7 @@ import com.growgate.publicdata.entity.PublicDataCollectionRun;
 import com.growgate.publicdata.entity.PublicDataRecord;
 import com.growgate.publicdata.enums.PublicDataCollectionStatus;
 import com.growgate.publicdata.enums.PublicDataProvider;
+import com.growgate.publicdata.enums.SourceQualityStatus;
 import com.growgate.publicdata.repository.PublicDataCollectionRunRepository;
 import com.growgate.publicdata.repository.PublicDataRecordRepository;
 import com.growgate.user.entity.User;
@@ -303,6 +304,14 @@ public class PublicDataCollectionService {
     }
 
     private PublicDataRecord toRecord(PublicDataCollectionRun run, PublicDataConnectorResult result) {
+        Map<String, Object> normalizedPayload = normalizePayload(result.getNormalizedPayload());
+        String sourceType = result.getSourceType() == null ? result.isFallbackUsed() ? "fallback" : "live" : result.getSourceType();
+        SourceQualityStatus qualityStatus = PublicDataQualityClassifier.classify(
+                sourceType, result.isFallbackUsed(), normalizedPayload, result.getErrorMessage());
+        normalizedPayload.put("sourceQualityStatus", qualityStatus.name());
+        normalizedPayload.putIfAbsent("schemaValidation", schemaValidation(qualityStatus, normalizedPayload));
+        normalizedPayload.put("scoreContributionLedger", scoreContributionLedger(
+                result.getScoreContribution(), result.getConfidence(), qualityStatus));
         return PublicDataRecord.builder()
                 .run(run)
                 .provider(result.getProvider())
@@ -313,10 +322,11 @@ public class PublicDataCollectionService {
                 .matchedKey(result.getMatchedKey())
                 .usedFor(result.getUsedFor())
                 .rawPayload(result.getRawPayload())
-                .normalizedPayload(toJson(result.getNormalizedPayload()))
-                .scoreContribution(guardedScoreContribution(result.getScoreContribution(), result.isFallbackUsed(), result.getSourceType()))
+                .normalizedPayload(toJson(normalizedPayload))
+                .scoreContribution(guardedScoreContribution(result.getScoreContribution(), result.isFallbackUsed(), sourceType, qualityStatus))
                 .confidence(result.getConfidence())
-                .sourceType(result.getSourceType() == null ? result.isFallbackUsed() ? "fallback" : "live" : result.getSourceType())
+                .sourceType(sourceType)
+                .sourceQualityStatus(qualityStatus.name())
                 .fallbackUsed(result.isFallbackUsed())
                 .cacheHit(false)
                 .errorMessage(result.getErrorMessage())
@@ -326,6 +336,12 @@ public class PublicDataCollectionService {
     }
 
     private PublicDataRecord cloneCacheRecord(PublicDataCollectionRun run, PublicDataRecord cached) {
+        Map<String, Object> normalizedPayload = parseNormalized(cached);
+        SourceQualityStatus qualityStatus = SourceQualityStatus.CACHE_VERIFIED;
+        normalizedPayload.put("sourceQualityStatus", qualityStatus.name());
+        normalizedPayload.putIfAbsent("schemaValidation", schemaValidation(qualityStatus, normalizedPayload));
+        normalizedPayload.put("scoreContributionLedger", scoreContributionLedger(
+                cached.getScoreContribution(), cached.getConfidence(), qualityStatus));
         return PublicDataRecord.builder()
                 .run(run)
                 .provider(cached.getProvider())
@@ -336,10 +352,11 @@ public class PublicDataCollectionService {
                 .matchedKey(cached.getMatchedKey())
                 .usedFor(cached.getUsedFor())
                 .rawPayload(cached.getRawPayload())
-                .normalizedPayload(cached.getNormalizedPayload())
-                .scoreContribution(guardedScoreContribution(cached.getScoreContribution(), cached.isFallbackUsed(), cached.getSourceType()))
+                .normalizedPayload(toJson(normalizedPayload))
+                .scoreContribution(guardedScoreContribution(cached.getScoreContribution(), cached.isFallbackUsed(), "cache", qualityStatus))
                 .confidence(cached.getConfidence())
                 .sourceType("cache")
+                .sourceQualityStatus(qualityStatus.name())
                 .fallbackUsed(cached.isFallbackUsed())
                 .cacheHit(true)
                 .errorMessage(cached.getErrorMessage())
@@ -348,20 +365,50 @@ public class PublicDataCollectionService {
                 .build();
     }
 
-    private int guardedScoreContribution(Integer scoreContribution, boolean fallbackUsed, String sourceType) {
+    private int guardedScoreContribution(Integer scoreContribution, boolean fallbackUsed, String sourceType,
+                                         SourceQualityStatus sourceQualityStatus) {
         int value = scoreContribution == null ? 0 : scoreContribution;
-        if (fallbackUsed || "fallback".equals(sourceType)) return Math.min(value, 0);
+        if (fallbackUsed || "fallback".equals(sourceType)
+                || !PublicDataQualityClassifier.positiveContributionAllowed(sourceQualityStatus)) {
+            return Math.min(value, 0);
+        }
         return value;
     }
 
     private String sourceType(PublicDataRecord record) {
-        if (record.isFallbackUsed() || "fallback".equals(record.getSourceType())) return "fallback";
-        if (record.isCacheHit()
-                || "cache".equals(record.getSourceType())
-                || "file".equals(record.getSourceType())
-                || "file_stale".equals(record.getSourceType())) return "cache";
-        if (record.getSourceType() != null && !record.getSourceType().isBlank()) return record.getSourceType();
-        return "live";
+        return PublicDataQualityClassifier.sourceType(record);
+    }
+
+    private Map<String, Object> normalizePayload(Map<String, Object> payload) {
+        Map<String, Object> normalized = new LinkedHashMap<>();
+        if (payload != null) normalized.putAll(payload);
+        return normalized;
+    }
+
+    private Map<String, Object> schemaValidation(SourceQualityStatus qualityStatus,
+                                                 Map<String, Object> normalizedPayload) {
+        if (qualityStatus == SourceQualityStatus.LIVE_VERIFIED || qualityStatus == SourceQualityStatus.CACHE_VERIFIED) {
+            return Map.of("status", "PASS", "reason", qualityStatus.name());
+        }
+        if (qualityStatus == SourceQualityStatus.EMPTY_TRUE_ZERO) {
+            return Map.of("status", "PASS", "reason", "verified zero-result response");
+        }
+        return Map.of("status", "SKIPPED", "reason", String.valueOf(normalizedPayload.getOrDefault("zeroReason", "")));
+    }
+
+    private Map<String, Object> scoreContributionLedger(Integer rawContribution, Double confidence,
+                                                        SourceQualityStatus qualityStatus) {
+        int raw = rawContribution == null ? 0 : rawContribution;
+        double conf = confidence == null ? 0.0 : confidence;
+        boolean positiveAllowed = PublicDataQualityClassifier.positiveContributionAllowed(qualityStatus);
+        int guarded = positiveAllowed ? raw : Math.min(raw, 0);
+        return Map.of(
+                "rawContribution", raw,
+                "confidence", conf,
+                "guardedContribution", guarded,
+                "positiveContributionAllowed", positiveAllowed,
+                "sourceQualityStatus", qualityStatus.name()
+        );
     }
 
     private boolean isSuccessRecord(PublicDataRecord record) {

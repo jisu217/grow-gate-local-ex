@@ -4,6 +4,8 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.publicdata.entity.PublicDataRecord;
 import com.growgate.publicdata.enums.PublicDataProvider;
+import com.growgate.publicdata.enums.SourceQualityStatus;
+import com.growgate.publicdata.repository.PublicDataRecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -30,6 +32,7 @@ public class PublicDataProofRunService {
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
 
     private final PublicDataCollectionService collectionService;
+    private final PublicDataRecordRepository recordRepository;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
 
@@ -48,6 +51,16 @@ public class PublicDataProofRunService {
                 .sorted(Comparator.comparing(PublicDataRecord::getFetchedAt,
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
+        return createProofRunFromRecords(userId, triggerType, records);
+    }
+
+    @Transactional
+    public Map<String, Object> createProofRunForDiagnosis(String userId, String diagnosisId, String triggerType) {
+        List<PublicDataRecord> records = recordRepository.findByRun_DiagnosisIdOrderByFetchedAtDesc(diagnosisId);
+        return createProofRunFromRecords(userId, triggerType == null ? "diagnosis" : triggerType, records);
+    }
+
+    private Map<String, Object> createProofRunFromRecords(String userId, String triggerType, List<PublicDataRecord> records) {
         String proofRunId = "pdr_" + DateTimeFormatter.ofPattern("yyyyMMdd_HHmmss")
                 .format(LocalDateTime.now()) + "_" + Integer.toHexString(Math.abs(records.hashCode()));
 
@@ -156,6 +169,7 @@ public class PublicDataProofRunService {
                        http_status AS httpStatus,
                        content_type AS contentType,
                        source_type AS sourceType,
+                       source_quality_status AS sourceQualityStatus,
                        record_count AS recordCount,
                        latency_ms AS latencyMs,
                        raw_response_sha256 AS rawResponseSha256,
@@ -213,23 +227,24 @@ public class PublicDataProofRunService {
         Map<String, Object> evidence = mapValue(normalized.get("collectionEvidence"));
         Map<String, Object> metrics = mapValue(normalized.get("metrics"));
         String sourceType = sourceType(record);
+        SourceQualityStatus qualityStatus = PublicDataQualityClassifier.classify(record, normalized);
         boolean liveOrCache = "live".equals(sourceType) || "cache".equals(sourceType);
         boolean operationEndpoint = booleanValue(evidence.get("operationEndpoint"));
         boolean apiKeyConfigured = booleanValue(evidence.get("apiKeyConfigured"));
         int recordCount = intValue(metrics.get("recordCount"));
         String rawHash = record.getRawPayload() == null || record.getRawPayload().isBlank()
                 ? null : "sha256:" + sha256(record.getRawPayload());
-        String schemaStatus = schemaStatus(liveOrCache, operationEndpoint, apiKeyConfigured, recordCount, rawHash);
+        String schemaStatus = schemaStatus(qualityStatus, liveOrCache, operationEndpoint, apiKeyConfigured, recordCount, rawHash);
         String fallbackReason = String.valueOf(evidence.getOrDefault("reason",
                 record.getErrorMessage() == null ? "" : record.getErrorMessage()));
 
         jdbcTemplate.update("""
                         INSERT INTO public_api_raw_responses
                         (proof_run_id, provider_code, request_url_redacted, request_params_hash, api_key_configured,
-                         operation_endpoint, http_status, content_type, source_type, record_count, latency_ms,
+                         operation_endpoint, http_status, content_type, source_type, source_quality_status, record_count, latency_ms,
                          raw_response_sha256, schema_name, schema_validation_status, schema_validation_errors,
                          fallback_reason, fetched_at)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                         """,
                 proofRunId,
                 record.getProvider().name(),
@@ -240,12 +255,13 @@ public class PublicDataProofRunService {
                 liveOrCache ? 200 : null,
                 "application/json-or-xml",
                 sourceType,
+                qualityStatus.name(),
                 recordCount,
                 null,
                 rawHash,
                 record.getProvider().name() + "_v1",
                 schemaStatus,
-                "FAIL".equals(schemaStatus) ? toJson(List.of("live/cache proof requires recordCount, raw hash, operation endpoint and API key")) : "[]",
+                "FAIL".equals(schemaStatus) ? toJson(List.of("live proof requires operation endpoint, API key, record count, and raw hash")) : "[]",
                 fallbackReason,
                 record.getFetchedAt());
 
@@ -272,6 +288,7 @@ public class PublicDataProofRunService {
         row.put("agencyName", record.getProvider().agency());
         row.put("datasetName", record.getProvider().usedFor());
         row.put("sourceType", sourceType);
+        row.put("sourceQualityStatus", qualityStatus.name());
         row.put("apiKeyConfigured", apiKeyConfigured);
         row.put("operationEndpoint", operationEndpoint);
         row.put("httpStatus", liveOrCache ? 200 : null);
@@ -285,9 +302,11 @@ public class PublicDataProofRunService {
     private Map<String, Object> persistScoreContribution(String proofRunId, PublicDataRecord record,
                                                          Map<String, Object> providerRow) {
         String sourceType = String.valueOf(providerRow.get("sourceType"));
+        SourceQualityStatus qualityStatus = SourceQualityStatus.valueOf(String.valueOf(providerRow.get("sourceQualityStatus")));
         int rawDelta = record.getScoreContribution() == null ? 0 : record.getScoreContribution();
-        int guardedDelta = ("fallback".equals(sourceType) || record.isFallbackUsed()) ? Math.min(rawDelta, 0) : rawDelta;
-        String clampReason = rawDelta != guardedDelta ? "fallback positive contribution clamped" : "";
+        boolean positiveAllowed = PublicDataQualityClassifier.positiveContributionAllowed(qualityStatus);
+        int guardedDelta = positiveAllowed ? rawDelta : Math.min(rawDelta, 0);
+        String clampReason = rawDelta != guardedDelta ? qualityStatus.name() + " positive contribution clamped" : "";
         String diagnosisId = record.getRun() == null ? null : record.getRun().getDiagnosisId();
         String dimension = record.getUsedFor() == null ? record.getProvider().usedFor() : record.getUsedFor();
         jdbcTemplate.update("""
@@ -308,6 +327,7 @@ public class PublicDataProofRunService {
         row.put("guardedDelta", guardedDelta);
         row.put("finalScore", guardedDelta);
         row.put("sourceType", sourceType);
+        row.put("sourceQualityStatus", qualityStatus.name());
         row.put("clampReason", clampReason);
         return row;
     }
@@ -350,6 +370,12 @@ public class PublicDataProofRunService {
         result.put("apiKeyConfiguredLiveCount", apiKeyLive);
         result.put("schemaPassCount", schemaPass);
         result.put("schemaFailCount", schemaFail);
+        result.put("sourceQualityCounts", providerRows.stream()
+                .collect(java.util.stream.Collectors.groupingBy(
+                        row -> String.valueOf(row.get("sourceQualityStatus")),
+                        LinkedHashMap::new,
+                        java.util.stream.Collectors.counting()
+                )));
         result.put("failReasons", failReasons);
         return result;
     }
@@ -391,9 +417,16 @@ public class PublicDataProofRunService {
         return "live";
     }
 
-    private String schemaStatus(boolean liveOrCache, boolean operationEndpoint, boolean apiKeyConfigured,
+    private String schemaStatus(SourceQualityStatus qualityStatus, boolean liveOrCache,
+                                boolean operationEndpoint, boolean apiKeyConfigured,
                                 int recordCount, String rawHash) {
         if (!liveOrCache) return "SKIPPED";
+        if (qualityStatus == SourceQualityStatus.CACHE_VERIFIED) {
+            return rawHash != null ? "PASS" : "FAIL";
+        }
+        if (qualityStatus == SourceQualityStatus.EMPTY_TRUE_ZERO) {
+            return operationEndpoint && apiKeyConfigured && rawHash != null ? "PASS" : "FAIL";
+        }
         return operationEndpoint && apiKeyConfigured && recordCount > 0 && rawHash != null ? "PASS" : "FAIL";
     }
 

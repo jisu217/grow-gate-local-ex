@@ -45,7 +45,17 @@ public class PublicDataOperationalStatusService {
     private List<Map<String, Object>> providerStatuses() {
         return List.of(
                 providerStatus(PublicDataProvider.KCS_TRADE, prop("public-data.kcs-trade.url"), prop("public-data.kcs-trade.key")),
+                providerStatus(PublicDataProvider.EXIM_EXCHANGE_RATE,
+                        prop("public-data.exim-exchange-rate.url"),
+                        prop("public-data.exim-exchange-rate.key")),
+                providerStatus(PublicDataProvider.BOK_KEY_STATISTICS,
+                        prop("public-data.bok-key-statistics.url"),
+                        prop("public-data.bok-key-statistics.key")),
                 providerStatus(PublicDataProvider.KOTRA_MARKET, prop("public-data.kotra-market.url"), prop("public-data.kotra-market.key")),
+                fileDataStatus(PublicDataProvider.KOTRA_OVERSEAS_EXHIBITIONS,
+                        prop("public-data.kotra-overseas-exhibitions.csv-resource"),
+                        prop("public-data.kotra-overseas-exhibitions.url"),
+                        prop("public-data.kotra-overseas-exhibitions.key")),
                 fileDataStatus(PublicDataProvider.KIAT_RND_OUTCOMES,
                         prop("public-data.kiat-rnd-outcomes.csv-resource"),
                         prop("public-data.kiat-rnd-outcomes.url"),
@@ -84,6 +94,22 @@ public class PublicDataOperationalStatusService {
                         prop("public-data.kats-domestic-recall-report.csv-resource"),
                         prop("public-data.kats-domestic-recall-report.url"),
                         prop("public-data.kats-domestic-recall-report.key")),
+                fileDataStatus(PublicDataProvider.KATS_CERTIFIED_PRODUCT_INFO,
+                        prop("public-data.kats-certified-product-info.csv-resource"),
+                        prop("public-data.kats-certified-product-info.url"),
+                        prop("public-data.kats-certified-product-info.key")),
+                providerStatus(PublicDataProvider.KOREA_LAW_STATUTES,
+                        prop("public-data.korea-law-statutes.url"),
+                        prop("public-data.korea-law-statutes.key")),
+                providerStatus(PublicDataProvider.CONSUMER_RECALL_SANITATION,
+                        prop("public-data.consumer-recall.url"),
+                        prop("public-data.consumer-recall.sanitation-key")),
+                providerStatus(PublicDataProvider.CONSUMER_RECALL_CHEMICAL,
+                        prop("public-data.consumer-recall.url"),
+                        prop("public-data.consumer-recall.chemical-key")),
+                providerStatus(PublicDataProvider.CONSUMER_RECALL_OVERSEAS,
+                        prop("public-data.consumer-recall.url"),
+                        prop("public-data.consumer-recall.overseas-key")),
                 fileDataStatus(PublicDataProvider.KGS_HYDROGEN_SANDBOX_REGIONS,
                         prop("public-data.kgs-hydrogen-sandbox-regions.csv-resource"),
                         prop("public-data.kgs-hydrogen-sandbox-regions.url"),
@@ -250,7 +276,10 @@ public class PublicDataOperationalStatusService {
     private String healthKey(String provider) {
         return switch (provider) {
             case "KCS_TRADE" -> "trade";
+            case "EXIM_EXCHANGE_RATE" -> "eximExchangeRate";
+            case "BOK_KEY_STATISTICS" -> "bokKeyStatistics";
             case "KOTRA_MARKET" -> "kotra";
+            case "KOTRA_OVERSEAS_EXHIBITIONS" -> "kotraOverseasExhibitions";
             case "KIAT_RND_OUTCOMES" -> "kiatRndOutcomes";
             case "KIAT_TECH_BANK_PATENT" -> "kiatTechBankPatent";
             case "MOTIE_EXPORT_PREARRANGE" -> "motieExportPrearrange";
@@ -262,6 +291,11 @@ public class PublicDataOperationalStatusService {
             case "SAFETY_RECALL" -> "safetyKorea";
             case "KATS_PRODUCT_SAFETY_HAZARD_INFO" -> "katsProductSafetyHazardInfo";
             case "KATS_DOMESTIC_RECALL_REPORT" -> "katsDomesticRecallReport";
+            case "KATS_CERTIFIED_PRODUCT_INFO" -> "katsCertifiedProductInfo";
+            case "KOREA_LAW_STATUTES" -> "koreaLawStatutes";
+            case "CONSUMER_RECALL_SANITATION" -> "consumerRecallSanitation";
+            case "CONSUMER_RECALL_CHEMICAL" -> "consumerRecallChemical";
+            case "CONSUMER_RECALL_OVERSEAS" -> "consumerRecallOverseas";
             case "KGS_HYDROGEN_SANDBOX_REGIONS" -> "kgsHydrogenSandboxRegions";
             case "KICOX_OPERATION_RATE" -> "kicoxOperationRate";
             case "KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY" -> "kicoxFactoryRegistration";

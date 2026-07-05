@@ -49,6 +49,12 @@ public class DiagnosisSourcesResponse {
         private String scoreFormula;
         private Object scoreInputs;
         private String sourceType;
+        private String sourceQualityStatus;
+        private String zeroReason;
+        private Object schemaValidation;
+        private Object scoreContributionLedger;
+        private Object rawCount;
+        private Object normalizedCount;
         private Boolean fallbackUsed;
         private Boolean cacheHit;
         private String collectionRunId;

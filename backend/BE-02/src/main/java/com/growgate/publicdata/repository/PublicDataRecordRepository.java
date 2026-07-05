@@ -32,6 +32,8 @@ public interface PublicDataRecordRepository extends JpaRepository<PublicDataReco
             String targetCountry
     );
 
+    List<PublicDataRecord> findByRun_DiagnosisIdOrderByFetchedAtDesc(String diagnosisId);
+
     @Query("""
             select count(distinct r.provider)
             from PublicDataRecord r

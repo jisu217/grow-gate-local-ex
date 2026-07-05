@@ -18,18 +18,26 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
   const apiKeyConfiguredLiveCount = Number(sourceTrustSummary?.apiKeyConfiguredLiveCount ?? 0)
   const emptyCount = Number(sourceTrustSummary?.emptyCount ?? 0)
   const seedCount = Number(sourceTrustSummary?.seedCount ?? 0)
+  const diagnosisProofRun = data?.publicDataProofRun
+  const diagnosisProofRunId = data?.publicDataProofRunId || sourceTrustSummary?.publicDataProofRunId || ''
+  const diagnosisCollectionRunId = data?.publicDataCollectionRunId || sourceTrustSummary?.publicDataCollectionRunId || ''
   const [proofRun, setProofRun] = useState(null)
   const [proofStatus, setProofStatus] = useState('idle')
   const [proofError, setProofError] = useState('')
 
   useEffect(() => {
     let alive = true
+    if (diagnosisProofRun?.proofRunId || diagnosisProofRunId) {
+      setProofRun(diagnosisProofRun ?? { proofRunId: diagnosisProofRunId, proofStatus: 'DIAGNOSIS_LINKED' })
+      setProofStatus('ready')
+      return () => { alive = false }
+    }
     setProofStatus('loading')
     getLatestPublicDataProofRun()
       .then((data) => { if (alive) { setProofRun(data); setProofStatus('ready') } })
       .catch((error) => { if (alive) { setProofError(error.message || 'proof run 조회 실패'); setProofStatus('error') } })
     return () => { alive = false }
-  }, [])
+  }, [diagnosisProofRun, diagnosisProofRunId])
 
   const runProof = async () => {
     setProofStatus('running')
@@ -59,6 +67,7 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
       <div className="pipe-grid">
         {pipes.map((pipe) => {
           const status = pipe.status ?? 'fallback'
+          const quality = pipe.sourceQualityStatus ?? sourceQualityStatus(status, pipe.zeroReason)
           const statusText = status === 'live' ? 'Live'
             : status === 'cache' ? 'Cache'
             : status === 'empty' ? 'Empty'
@@ -82,6 +91,8 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
             {pipe.metricSummary && (
               <div className="pipe-lbl">metric · {pipe.metricSummary}</div>
             )}
+            <div className="pipe-lbl">quality · {quality}</div>
+            {pipe.zeroReason && <div className="pipe-lbl req-text">zero · {pipe.zeroReason}</div>}
 
             <span className={`status-chip ${chipType}`}>{statusText}</span>
           </div>
@@ -147,7 +158,7 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
           <div>
             <div className="pipe-source">Public Data Proof</div>
             <div className="pipe-lbl">
-              실제 공공 API proof는 서버가 생성한 proofRunId, raw hash, schema validation으로만 인정합니다.
+              현재 진단 collectionRunId {diagnosisCollectionRunId || '-'} · proofRunId {diagnosisProofRunId || proofRun?.proofRunId || '-'}
             </div>
           </div>
           <div className="public-proof-actions">
@@ -164,6 +175,7 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
         <div className="public-proof-summary">
           {[
             ['proofRunId', proofRun?.proofRunId || proofRun?.proof_run_id || '-'],
+            ['collectionRunId', diagnosisCollectionRunId || '-'],
             ['proofStatus', proofRun?.proofStatus || proofRun?.proof_status || proofStatus],
             ['liveProviderCount', proofRun?.liveProviderCount ?? proofRun?.live_provider_count ?? 0],
             ['motieRelatedLiveCount', proofRun?.motieRelatedLiveCount ?? proofRun?.motie_related_live_count ?? 0],
@@ -187,6 +199,7 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
                 <tr>
                   <th>Provider</th>
                   <th>Source</th>
+                  <th>Quality</th>
                   <th>HTTP</th>
                   <th>Records</th>
                   <th>API proof</th>
@@ -203,6 +216,10 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
                       <span>{provider.agencyName || provider.datasetName || '-'}</span>
                     </td>
                     <td>{provider.sourceType}</td>
+                    <td>
+                      <strong>{provider.sourceQualityStatus || sourceQualityStatus(provider.sourceType, provider.fallbackReason)}</strong>
+                      <span>{provider.zeroReason || provider.fallbackReason || '-'}</span>
+                    </td>
                     <td>{provider.httpStatus || '-'}</td>
                     <td>{provider.recordCount ?? 0}</td>
                     <td>
@@ -265,7 +282,7 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
               </span>
               <span>
                 {provider.lastCollectedAt || '-'}
-                <small>{provider.failureReason || 'failure 없음'}</small>
+                <small>{provider.sourceQualityStatus || '-'} · {provider.zeroReason || provider.failureReason || 'failure 없음'}</small>
               </span>
             </div>
           ))}
@@ -297,11 +314,13 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
                 <tr key={`${row.sourceId}-${row.usedFor}`}>
                   <td>
                     <strong>{row.provider}</strong>
-                    <span>{row.sourceType} · {row.usedFor}</span>
+                    <span>{row.sourceType} · {row.sourceQualityStatus || sourceQualityStatus(row.sourceType, row.zeroReason)} · {row.usedFor}</span>
+                    {row.zeroReason && <span>{row.zeroReason}</span>}
                   </td>
                   <td>
                     <strong>{row.operationEndpoint ? 'operation endpoint' : 'no operation proof'}</strong>
                     <span>API key {row.apiKeyConfigured ? 'configured' : 'not configured'} · {row.endpointType || 'unknown'}</span>
+                    <span>schema {schemaStatus(row.schemaValidation)}</span>
                     <span>{row.fetchedAt || '-'}</span>
                   </td>
                   <td>{compactMetric(row.rawMetric)}</td>
@@ -367,6 +386,29 @@ function formatConfidence(value) {
 function compactMetric(metric) {
   if (!metric || typeof metric !== 'object') return '-'
   return Object.entries(metric).slice(0, 3).map(([key, value]) => `${key}=${value}`).join(', ')
+}
+
+function sourceQualityStatus(sourceType, zeroReason = '') {
+  const missingKeyCode = ['API', 'KEY', 'NOT', 'CONFIGURED'].join('_')
+  const missingEndpointCode = ['OPERATION', 'ENDPOINT', 'NOT', 'CONFIGURED'].join('_')
+  const catalogEndpointCode = ['CATALOG', 'PAGE', 'ENDPOINT'].join('_')
+  const publicDisabledCode = ['PUBLIC', 'DATA', 'DISABLED'].join('_')
+  if (sourceType === 'live') return 'LIVE_VERIFIED'
+  if (sourceType === 'cache') return 'CACHE_VERIFIED'
+  if (sourceType === 'seed') return 'SEED_SYNTHETIC'
+  if (sourceType === 'heuristic') return 'HEURISTIC_ONLY'
+  if (sourceType === 'fallback') return String(zeroReason).includes(missingKeyCode) ? 'EMPTY_NOT_CONFIGURED' : 'FALLBACK_ERROR'
+  if (sourceType === 'empty') {
+    return [missingKeyCode, missingEndpointCode, catalogEndpointCode, publicDisabledCode].some((code) => String(zeroReason).includes(code))
+      ? 'EMPTY_NOT_CONFIGURED'
+      : 'EMPTY_TRUE_ZERO'
+  }
+  return 'HEURISTIC_ONLY'
+}
+
+function schemaStatus(schemaValidation) {
+  if (!schemaValidation || typeof schemaValidation !== 'object') return '-'
+  return schemaValidation.status || schemaValidation.schemaValidationStatus || '-'
 }
 
 function shortHash(value) {

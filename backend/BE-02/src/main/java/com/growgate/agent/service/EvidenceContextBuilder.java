@@ -1,5 +1,7 @@
 package com.growgate.agent.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.knowledge.entity.BuyerRequirement;
 import com.growgate.knowledge.entity.Certification;
 import com.growgate.knowledge.entity.Fto;
@@ -7,6 +9,8 @@ import com.growgate.knowledge.entity.KnowledgeLoopItem;
 import com.growgate.knowledge.entity.KnowledgeSource;
 import com.growgate.knowledge.entity.ProductKnowledge;
 import com.growgate.publicdata.entity.PublicDataRecord;
+import com.growgate.publicdata.enums.SourceQualityStatus;
+import com.growgate.publicdata.service.PublicDataQualityClassifier;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -20,6 +24,9 @@ import java.util.stream.Collectors;
 
 @Service
 public class EvidenceContextBuilder {
+
+    private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
+    private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
 
     public Map<String, Object> build(ProductKnowledge knowledge,
                                      List<Certification> certifications,
@@ -58,13 +65,9 @@ public class EvidenceContextBuilder {
                         "url", safe(source.getUrl()),
                         "retrievedAt", source.getRetrievedAt() != null ? source.getRetrievedAt().toString() : ""
                 )).toList());
-        context.put("publicDataSignals", publicDataRecords.stream().limit(10).map(record -> Map.of(
-                        "provider", record.getProvider() != null ? record.getProvider().name() : "",
-                        "usedFor", safe(record.getUsedFor()),
-                        "matchedKey", safe(record.getMatchedKey()),
-                        "fallbackUsed", record.isFallbackUsed(),
-                        "scoreContribution", record.getScoreContribution() == null ? 0 : record.getScoreContribution()
-                )).toList());
+        context.put("publicDataSignals", publicDataRecords.stream().limit(10)
+                .map(this::publicDataSignal)
+                .toList());
         context.put("acceptedKnowledgeLoop", acceptedLoopItems.stream().limit(10).map(item -> Map.of(
                         "type", safe(item.getType()),
                         "title", safe(item.getTitle()),
@@ -147,6 +150,51 @@ public class EvidenceContextBuilder {
         return chunks;
     }
 
+    private Map<String, Object> publicDataSignal(PublicDataRecord record) {
+        Map<String, Object> normalizedPayload = parseObjectMap(record.getNormalizedPayload());
+        Map<String, Object> evidence = mapValue(normalizedPayload.get("collectionEvidence"));
+        SourceQualityStatus qualityStatus = PublicDataQualityClassifier.classify(record, normalizedPayload);
+        Map<String, Object> signal = new LinkedHashMap<>();
+        signal.put("sourceId", "public-data:" + safe(record.getId()));
+        signal.put("provider", record.getProvider() != null ? record.getProvider().name() : "");
+        signal.put("usedFor", safe(record.getUsedFor()));
+        signal.put("sourceType", PublicDataQualityClassifier.sourceType(record));
+        signal.put("sourceQualityStatus", qualityStatus.name());
+        signal.put("matchedKey", safe(record.getMatchedKey()));
+        signal.put("operationEndpoint", booleanValue(evidence.get("operationEndpoint")));
+        signal.put("apiKeyConfigured", booleanValue(evidence.get("apiKeyConfigured")));
+        signal.put("endpointType", safe(evidence.get("endpointType")));
+        signal.put("rawCount", intValue(normalizedPayload.get("rawCount")));
+        signal.put("normalizedCount", intValue(normalizedPayload.get("normalizedCount")));
+        signal.put("filteredCount", intValue(normalizedPayload.get("filteredCount")));
+        signal.put("zeroReason", safe(normalizedPayload.get("zeroReason")));
+        signal.put("schemaValidation", normalizedPayload.getOrDefault("schemaValidation", Map.of(
+                "status", qualityStatus == SourceQualityStatus.LIVE_VERIFIED || qualityStatus == SourceQualityStatus.CACHE_VERIFIED
+                        ? "PASS" : "SKIPPED",
+                "reason", qualityStatus.name()
+        )));
+        signal.put("responseHash", safe(normalizedPayload.get("rawResponseSha256")));
+        signal.put("fallbackUsed", record.isFallbackUsed());
+        signal.put("scoreContribution", record.getScoreContribution() == null ? 0 : record.getScoreContribution());
+        signal.put("confidence", record.getConfidence() == null ? 0.0 : record.getConfidence());
+        signal.put("scoreContributionLedger", ledger(record, qualityStatus));
+        return signal;
+    }
+
+    private Map<String, Object> ledger(PublicDataRecord record, SourceQualityStatus qualityStatus) {
+        int rawContribution = record.getScoreContribution() == null ? 0 : record.getScoreContribution();
+        boolean positiveAllowed = PublicDataQualityClassifier.positiveContributionAllowed(qualityStatus);
+        int guardedContribution = positiveAllowed ? rawContribution : Math.min(rawContribution, 0);
+        Map<String, Object> ledger = new LinkedHashMap<>();
+        ledger.put("rawContribution", rawContribution);
+        ledger.put("confidence", record.getConfidence() == null ? 0.0 : record.getConfidence());
+        ledger.put("guardedContribution", guardedContribution);
+        ledger.put("positiveContributionAllowed", positiveAllowed);
+        ledger.put("sourceQualityStatus", qualityStatus.name());
+        ledger.put("policy", "positiveContributionAllowed=" + positiveAllowed);
+        return ledger;
+    }
+
     private String buildQuery(ProductKnowledge knowledge,
                               List<Certification> certifications,
                               List<Fto> ftoItems,
@@ -221,6 +269,32 @@ public class EvidenceContextBuilder {
 
     private String safe(String value) {
         return value == null ? "" : value;
+    }
+
+    private String safe(Object value) {
+        return value == null ? "" : String.valueOf(value);
+    }
+
+    private int intValue(Object value) {
+        return value instanceof Number number ? number.intValue() : 0;
+    }
+
+    private boolean booleanValue(Object value) {
+        return value instanceof Boolean bool && bool;
+    }
+
+    private Map<String, Object> parseObjectMap(String json) {
+        if (json == null || json.isBlank()) return Map.of();
+        try {
+            return OBJECT_MAPPER.readValue(json, MAP_TYPE);
+        } catch (Exception ignored) {
+            return Map.of();
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> mapValue(Object value) {
+        return value instanceof Map<?, ?> map ? (Map<String, Object>) map : Map.of();
     }
 
     private record RetrievalChunk(String chunkId, String sourceId, String category, String sourceType, String text) {

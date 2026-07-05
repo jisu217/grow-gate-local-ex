@@ -108,4 +108,56 @@ class EvidenceContextBuilderTest {
                     assertThat(chunk.get("usedSentence").toString()).contains("KCS_TRADE");
                 });
     }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void buildIncludesSourceQualityAndCollectionLedgerFieldsForAgentContext() {
+        EvidenceContextBuilder builder = new EvidenceContextBuilder();
+
+        Map<String, Object> context = builder.build(
+                ProductKnowledge.builder()
+                        .trustGrade(TrustGrade.medium)
+                        .sourceType("internal")
+                        .notes("850760 Germany battery pack market review")
+                        .build(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(),
+                List.of(PublicDataRecord.builder()
+                        .id("record-1")
+                        .provider(PublicDataProvider.KCS_TRADE)
+                        .usedFor("market")
+                        .hsCode("850760")
+                        .targetCountry("DE")
+                        .matchedKey("KCS_TRADE:850760:DE")
+                        .sourceType("empty")
+                        .sourceQualityStatus("EMPTY_NOT_CONFIGURED")
+                        .normalizedPayload("""
+                                {"rawCount":0,"normalizedCount":0,"filteredCount":0,
+                                 "zeroReason":"API_KEY_NOT_CONFIGURED",
+                                 "collectionEvidence":{"operationEndpoint":true,"apiKeyConfigured":false,"endpointType":"operation"},
+                                 "schemaValidation":{"status":"SKIPPED","reason":"API key missing"},
+                                 "metrics":{"recordCount":0}}
+                                """)
+                        .fallbackUsed(false)
+                        .scoreContribution(0)
+                        .confidence(0.0)
+                        .build()),
+                List.of()
+        );
+
+        List<Map<String, Object>> signals = (List<Map<String, Object>>) context.get("publicDataSignals");
+        Map<String, Object> signal = signals.get(0);
+
+        assertThat(signal).containsEntry("sourceQualityStatus", "EMPTY_NOT_CONFIGURED");
+        assertThat(signal).containsEntry("zeroReason", "API_KEY_NOT_CONFIGURED");
+        assertThat(signal).containsEntry("rawCount", 0);
+        assertThat(signal).containsEntry("normalizedCount", 0);
+        assertThat(signal).containsEntry("operationEndpoint", true);
+        assertThat(signal).containsEntry("apiKeyConfigured", false);
+        assertThat(signal).containsKey("schemaValidation");
+        assertThat(signal).containsKey("scoreContributionLedger");
+        assertThat(signal.get("scoreContributionLedger").toString()).contains("positiveContributionAllowed=false");
+    }
 }

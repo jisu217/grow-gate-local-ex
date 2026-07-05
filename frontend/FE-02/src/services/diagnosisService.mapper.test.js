@@ -84,11 +84,17 @@ const detail = {
       officialLiveOrCacheRecordCount: 1,
     },
     sourceTrustSummary: {
+      publicDataProofRunId: 'pdr_diag_1',
+      publicDataCollectionRunId: 'run_diag_1',
       liveCount: 1,
       cacheCount: 0,
       fallbackCount: 1,
       externalFeedCount: 1,
       liveSuccessRate: 0.5,
+      sourceQualityCounts: {
+        LIVE_VERIFIED: 1,
+        EMPTY_NOT_CONFIGURED: 1,
+      },
       lastCollectedAt: '2026-07-03T09:00:00Z',
       sourcePeriod: '2026-06-01 ~ 2026-06-30',
       retryPayload: {
@@ -116,6 +122,8 @@ const detail = {
       provider: 'KCS_TRADE',
       usedFor: 'market',
       sourceType: 'live',
+      sourceQualityStatus: 'LIVE_VERIFIED',
+      zeroReason: '',
       rawMetric: { exportAmountUsd: 45678 },
       normalizedMetric: { exportAmountUsd: 45678, yoyGrowthPct: 12.4 },
       rawContribution: 9,
@@ -145,6 +153,7 @@ assert.equal(mapped.session.evidenceRetrieval.mode, 'source-bound-evidence-searc
 assert.equal(mapped.session.exportKnowledgeTimeline[0].eventType, 'EXPORT_METRIC_SIGNAL')
 assert.equal(mapped.session.evidenceGuardrails.verdict, 'pass')
 assert.equal(mapped.session.sourceTrustSummary.liveSuccessRate, 0.5)
+assert.equal(mapped.session.sourceTrustSummary.publicDataProofRunId, 'pdr_diag_1')
 assert.equal(mapped.session.sourceTrustSummary.providerHealth[1].failureReason, 'API key is not configured')
 assert.equal(mapped.stages.s10.pipes[0].source, 'KCS_TRADE')
 assert.equal(mapped.stages.s10.pipes[0].status, 'live')
@@ -153,10 +162,15 @@ assert.equal(mapped.stages.s10.evidenceRetrieval.topK[0].sourceId, 'KCS_TRADE-1'
 assert.equal(mapped.stages.s10.timeline[0].scoreImpact, 9)
 assert.equal(mapped.stages.s10.ledger[0].rawMetric.exportAmountUsd, 45678)
 assert.equal(mapped.stages.s10.ledger[0].finalScoreDelta, 7)
+assert.equal(mapped.stages.s10.ledger[0].sourceQualityStatus, 'LIVE_VERIFIED')
 
 const decisionBrief = buildDecisionBrief(mapped.session, mapped.stages)
 assert.equal(decisionBrief.fallbackReviewRequired, true)
 assert.match(decisionBrief.fallbackMessage, /담당자 검토/)
+assert.equal(decisionBrief.proofRunId, 'pdr_diag_1')
+assert.equal(decisionBrief.collectionRunId, 'run_diag_1')
+assert.equal(decisionBrief.sourceQualityCounts.EMPTY_NOT_CONFIGURED, 1)
+assert.equal(decisionBrief.notConfiguredCount, 1)
 assert.equal(decisionBrief.topRisks.length, 3)
 assert.deepEqual(
   decisionBrief.nextActions.map((action) => action.bucket),
@@ -201,6 +215,7 @@ const sourceRestored = mapDiagnosisDetail({
   sourceId: 'KCS_TRADE-record-1',
   provider: 'KCS_TRADE',
   sourceType: 'live',
+  sourceQualityStatus: 'LIVE_VERIFIED',
   usedFor: 'market',
   scoreContribution: 7,
   rawScoreContribution: 9,
@@ -226,6 +241,7 @@ const sourceRestored = mapDiagnosisDetail({
   sourceId: 'SAFETY_RECALL-record-2',
   provider: 'SAFETY_RECALL',
   sourceType: 'fallback',
+  sourceQualityStatus: 'FALLBACK_ERROR',
   usedFor: 'recall',
   fallbackUsed: true,
   scoreContribution: 0,
@@ -248,12 +264,14 @@ assert.equal(sourceRestored.stages.s10.ledger[0].operationEndpoint, true)
 assert.equal(sourceRestored.stages.s10.ledger[0].apiKeyConfigured, true)
 assert.equal(sourceRestored.stages.s10.ledger[0].endpointType, 'operation')
 assert.equal(sourceRestored.stages.s10.ledger[0].rawMetric.exportAmountUsd, 45678)
+assert.equal(sourceRestored.stages.s10.ledger[0].sourceQualityStatus, 'LIVE_VERIFIED')
 
 const noPublicDataSources = [
   {
     sourceId: 'MARKET-empty',
     provider: 'KOTRA_MARKET',
     sourceType: 'empty',
+    sourceQualityStatus: 'EMPTY_NOT_CONFIGURED',
     usedFor: 'market',
     scoreContribution: 0,
     confidence: 0,
@@ -264,11 +282,13 @@ const noPublicDataSources = [
     metricSummary: 'recordCount=0',
     decisionImpact: '시장성 live metric 미확보',
     errorMessage: 'CATALOG_PAGE_ENDPOINT',
+    zeroReason: 'CATALOG_PAGE_ENDPOINT',
   },
   {
     sourceId: 'REG-fallback',
     provider: 'KCS_TRADE',
     sourceType: 'fallback',
+    sourceQualityStatus: 'FALLBACK_ERROR',
     usedFor: 'regulation',
     fallbackUsed: true,
     scoreContribution: -1,
@@ -285,6 +305,7 @@ const noPublicDataSources = [
     sourceId: 'RECALL-empty',
     provider: 'SAFETY_RECALL',
     sourceType: 'empty',
+    sourceQualityStatus: 'EMPTY_NOT_CONFIGURED',
     usedFor: 'recall',
     scoreContribution: 0,
     confidence: 0,
@@ -295,11 +316,13 @@ const noPublicDataSources = [
     metricSummary: 'recordCount=0',
     decisionImpact: '리콜 live metric 미확보',
     errorMessage: 'API key is not configured',
+    zeroReason: 'key not configured',
   },
   {
     sourceId: 'FTO-fallback',
     provider: 'KIPRIS_FTO',
     sourceType: 'fallback',
+    sourceQualityStatus: 'EMPTY_NOT_CONFIGURED',
     usedFor: 'fto',
     fallbackUsed: true,
     scoreContribution: -3,
@@ -316,6 +339,7 @@ const noPublicDataSources = [
     sourceId: 'SUPPORT-fallback',
     provider: 'BIZINFO_SUPPORT',
     sourceType: 'fallback',
+    sourceQualityStatus: 'EMPTY_NOT_CONFIGURED',
     usedFor: 'support',
     fallbackUsed: true,
     scoreContribution: -1,
@@ -369,4 +393,10 @@ assert.deepEqual(
   allBucketsNoData.stages.s10.ledger.map((row) => row.usedFor),
   ['market', 'regulation', 'recall', 'fto', 'support']
 )
+assert.deepEqual(
+  allBucketsNoData.stages.s10.ledger.map((row) => row.sourceQualityStatus),
+  ['EMPTY_NOT_CONFIGURED', 'FALLBACK_ERROR', 'EMPTY_NOT_CONFIGURED', 'EMPTY_NOT_CONFIGURED', 'EMPTY_NOT_CONFIGURED']
+)
+assert.equal(allBucketsNoData.stages.s10.pipes[0].sourceQualityStatus, 'EMPTY_NOT_CONFIGURED')
+assert.equal(allBucketsNoData.stages.s10.pipes[0].zeroReason, 'CATALOG_PAGE_ENDPOINT')
 assert.equal(allBucketsNoData.session.gateDecision.llmInfluencedGate, false)

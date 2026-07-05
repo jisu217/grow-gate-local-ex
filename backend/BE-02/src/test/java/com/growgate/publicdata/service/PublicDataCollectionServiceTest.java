@@ -62,6 +62,7 @@ class PublicDataCollectionServiceTest {
         assertThat(result.getRecords()).hasSize(1);
         assertThat(result.getRecords().get(0).isFallbackUsed()).isTrue();
         assertThat(result.getRecords().get(0).getErrorMessage()).isEqualTo("PUBLIC_DATA_ENABLED=false");
+        assertThat(result.getRecords().get(0).getSourceQualityStatus()).isEqualTo("FALLBACK_ERROR");
         verify(connector, never()).collect(any(PublicDataRequest.class));
     }
 
@@ -116,6 +117,7 @@ class PublicDataCollectionServiceTest {
         assertThat(result.getRecords()).hasSize(1);
         assertThat(result.getRecords().get(0).isCacheHit()).isTrue();
         assertThat(result.getRecords().get(0).getScoreContribution()).isEqualTo(8);
+        assertThat(result.getRecords().get(0).getSourceQualityStatus()).isEqualTo("CACHE_VERIFIED");
         verify(connector, never()).collect(any(PublicDataRequest.class));
     }
 
@@ -165,6 +167,63 @@ class PublicDataCollectionServiceTest {
 
         assertThat(result.getRecords()).hasSize(1);
         assertThat(result.getRecords().get(0).isFallbackUsed()).isTrue();
+        assertThat(result.getRecords().get(0).getScoreContribution()).isLessThanOrEqualTo(0);
+        assertThat(result.getRecords().get(0).getSourceQualityStatus()).isEqualTo("FALLBACK_ERROR");
+    }
+
+    @Test
+    void collectForDiagnosisClampsEmptyNotConfiguredPositiveContributionBeforePersisting() {
+        PublicDataConnector connector = mock(PublicDataConnector.class);
+        when(connector.provider()).thenReturn(PublicDataProvider.BIZINFO_SUPPORT);
+        when(connector.usedFor()).thenReturn("support");
+        when(connector.requestKey(any(PublicDataRequest.class))).thenReturn("BIZINFO_SUPPORT:DE:Battery pack");
+        when(connector.collect(any(PublicDataRequest.class))).thenReturn(PublicDataConnectorResult.builder()
+                .provider(PublicDataProvider.BIZINFO_SUPPORT)
+                .endpoint("https://api.example.test/bizinfo")
+                .requestKey("BIZINFO_SUPPORT:DE:Battery pack")
+                .hsCode("850760")
+                .targetCountry("DE")
+                .matchedKey("hsCode=850760;country=DE")
+                .usedFor("support")
+                .rawPayload("{\"items\":[]}")
+                .normalizedPayload(Map.of(
+                        "rawCount", 0,
+                        "normalizedCount", 0,
+                        "zeroReason", "API_KEY_NOT_CONFIGURED",
+                        "collectionEvidence", Map.of(
+                                "operationEndpoint", true,
+                                "apiKeyConfigured", false,
+                                "endpointType", "operation")))
+                .scoreContribution(7)
+                .confidence(0.0)
+                .sourceType("empty")
+                .fallbackUsed(false)
+                .errorMessage("API_KEY_NOT_CONFIGURED")
+                .build());
+
+        PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
+        PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        MembershipRepository membershipRepository = mock(MembershipRepository.class);
+        User user = user("user-1");
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(runRepository.save(any(PublicDataCollectionRun.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.save(any(PublicDataRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.findTopByProviderAndRequestKeyAndExpiresAtAfterOrderByFetchedAtDesc(
+                eq(PublicDataProvider.BIZINFO_SUPPORT), eq("BIZINFO_SUPPORT:DE:Battery pack"), any(LocalDateTime.class)))
+                .thenReturn(Optional.empty());
+
+        PublicDataCollectionService service = service(
+                List.of(connector), runRepository, recordRepository, userRepository, membershipRepository);
+        ReflectionTestUtils.setField(service, "enabled", true);
+        ReflectionTestUtils.setField(service, "cacheTtlHours", 24L);
+
+        PublicDataCollectionResult result = service.collectForDiagnosis(
+                "diagnosis-1", "user-1", "850760", "DE", "Battery pack");
+
+        assertThat(result.getRecords()).hasSize(1);
+        assertThat(result.getRecords().get(0).getSourceQualityStatus()).isEqualTo("EMPTY_NOT_CONFIGURED");
         assertThat(result.getRecords().get(0).getScoreContribution()).isLessThanOrEqualTo(0);
     }
 
@@ -216,6 +275,7 @@ class PublicDataCollectionServiceTest {
         assertThat(result.getRun().getStatus()).isEqualTo(PublicDataCollectionStatus.done);
         assertThat(result.getRun().getSuccessCount()).isEqualTo(1);
         assertThat(result.getRecords().get(0).getSourceType()).isEqualTo("cache");
+        assertThat(result.getRecords().get(0).getSourceQualityStatus()).isEqualTo("CACHE_VERIFIED");
     }
 
     @Test

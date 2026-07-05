@@ -59,6 +59,7 @@ CREATE TABLE IF NOT EXISTS public_api_raw_responses (
   http_status INT,
   content_type VARCHAR(120),
   source_type VARCHAR(40) NOT NULL,
+  source_quality_status VARCHAR(40) NOT NULL DEFAULT 'HEURISTIC_ONLY',
   record_count INT NOT NULL DEFAULT 0,
   latency_ms BIGINT,
   raw_response_sha256 VARCHAR(96),

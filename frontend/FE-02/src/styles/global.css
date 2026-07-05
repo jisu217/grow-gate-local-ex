@@ -22,8 +22,8 @@
   --radius: 18px;
 
   
-  --kr: 'Dotum', '돋움', sans-serif;
-  --en: 'Manrope', sans-serif;
+  --kr: 'Pretendard Variable', Pretendard, 'Noto Sans KR', 'Malgun Gothic', 'Apple SD Gothic Neo', 'Segoe UI', Arial, sans-serif;
+  --en: 'Pretendard Variable', Pretendard, 'Segoe UI', 'Noto Sans KR', 'Malgun Gothic', Arial, sans-serif;
 
   
   --idle-fill: #eef1f7;
@@ -46,6 +46,7 @@ body {
   background: var(--bg);
   color: var(--ink);
   -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
   line-height: 1.5;
   /* 본문 최소 폰트: 13px / 보조 레이블 최소: 11px (장식용 eyebrow 제외) */
 }
@@ -1003,6 +1004,8 @@ body {
   border-radius: 14px;
   padding: 20px 16px;
   box-shadow: 0 1px 3px rgba(15, 27, 61, 0.04);
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .evidence-workflow-grid {
   display: grid;
@@ -1187,6 +1190,7 @@ body {
   border-bottom: 1px solid var(--line);
   text-align: left;
   vertical-align: top;
+  overflow-wrap: anywhere;
 }
 .ledger-table th {
   font-size: 11px;
@@ -1262,12 +1266,17 @@ body {
 }
 .provider-health-row {
   display: grid;
-  grid-template-columns: minmax(130px, 1fr) minmax(140px, auto) minmax(180px, auto) minmax(180px, 1.2fr);
+  grid-template-columns: minmax(130px, 1fr) minmax(140px, 0.8fr) minmax(180px, 1fr) minmax(180px, 1.2fr);
   gap: 10px;
   align-items: center;
   border-top: 1px solid var(--line);
   padding-top: 7px;
   font-size: 12px;
+  min-width: 0;
+}
+.provider-health-row > * {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .provider-health-row small {
   display: block;
@@ -1287,6 +1296,7 @@ body {
   font-weight: 700;
   color: var(--ink);
   margin-bottom: 6px;
+  overflow-wrap: anywhere;
 }
 .pipe-count {
   font-family: var(--en);
@@ -1301,6 +1311,7 @@ body {
   font-size: 12px;
   color: var(--slate-2);
   margin-bottom: 14px;
+  overflow-wrap: anywhere;
 }
 .status-chip {
   font-family: var(--en);

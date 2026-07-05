@@ -49,6 +49,55 @@ def providers(args):
             "defaultZeroReason": "CATALOG_PAGE_ENDPOINT",
         },
         {
+            "provider": "한국수출입은행 환율 정보",
+            "runtimeProvider": "EXIM_EXCHANGE_RATE",
+            "agent": "market-fx-reference",
+            "endpoint": env("EXIM_EXCHANGE_RATE_API_URL", "https://oapi.koreaexim.go.kr/site/program/financial/exchangeJSON"),
+            "apiKey": first_env("EXIM_EXCHANGE_RATE_API_KEY"),
+            "apiKeyEnv": "EXIM_EXCHANGE_RATE_API_KEY",
+            "keyParam": "authkey",
+            "params": {
+                "searchdate": env("EXIM_EXCHANGE_RATE_SEARCH_DATE", dt.date.today().strftime("%Y%m%d")),
+                "data": env("EXIM_EXCHANGE_RATE_DATA_CODE", "AP01"),
+            },
+            "defaultZeroReason": "API_KEY_NOT_CONFIGURED",
+        },
+        {
+            "provider": "한국은행 ECOS 100대 통계지표",
+            "runtimeProvider": "BOK_KEY_STATISTICS",
+            "agent": "market-macro-reference",
+            "endpoint": env("BOK_KEY_STATISTICS_API_URL", "https://ecos.bok.or.kr/api/KeyStatisticList"),
+            "apiKey": first_env("BOK_ECOS_API_KEY"),
+            "apiKeyEnv": "BOK_ECOS_API_KEY",
+            "pathKey": True,
+            "pathSuffix": "/{key}/json/kr/1/" + env("BOK_KEY_STATISTICS_MAX_ROWS", "100"),
+            "params": {},
+            "defaultZeroReason": "API_KEY_NOT_CONFIGURED",
+        },
+        {
+            "provider": "KOTRA 해외전시회 정보",
+            "runtimeProvider": "KOTRA_OVERSEAS_EXHIBITIONS",
+            "agent": "support-exhibition-reference",
+            "endpoint": env("KOTRA_OVERSEAS_EXHIBITIONS_SOURCE_URL", "https://www.data.go.kr/data/15003367/fileData.do"),
+            "apiKey": first_env("KOTRA_OVERSEAS_EXHIBITIONS_API_KEY", "DATAGO_SERVICE_KEY"),
+            "apiKeyEnv": "KOTRA_OVERSEAS_EXHIBITIONS_API_KEY|DATAGO_SERVICE_KEY",
+            "params": {},
+            "defaultZeroReason": "FILE_DATA_NOT_CONFIGURED",
+            "fileData": True,
+            "fileStrategy": "prefer_file_then_api_when_stale",
+            "filePath": env("KOTRA_OVERSEAS_EXHIBITIONS_FILE_PATH", "data/public/kotra_overseas_exhibitions_20250630.csv"),
+            "fileEncodings": ["utf-8-sig", "cp949", "euc-kr"],
+            "fileAsOf": env("KOTRA_OVERSEAS_EXHIBITIONS_FILE_AS_OF", "2025-06-30"),
+            "officialUpdatedAt": env("KOTRA_OVERSEAS_EXHIBITIONS_OFFICIAL_UPDATED_AT", "2025-06-30"),
+            "refreshDueAt": env("KOTRA_OVERSEAS_EXHIBITIONS_NEXT_UPDATE_DUE_AT", "2026-06-30"),
+            "apiEndpoint": env("KOTRA_OVERSEAS_EXHIBITIONS_API_URL", ""),
+            "apiParams": {
+                "page": "1",
+                "perPage": "200",
+                "returnType": "JSON",
+            },
+        },
+        {
             "provider": "MOTIE 반도체디스플레이 산업 동향",
             "runtimeProvider": "NOT_RUNTIME_CONNECTED",
             "agent": "industry-trend-reference",
@@ -242,6 +291,29 @@ def providers(args):
             },
         },
         {
+            "provider": "KATS 인증제품 정보",
+            "runtimeProvider": "KATS_CERTIFIED_PRODUCT_INFO",
+            "agent": "regulation-certified-product-reference",
+            "endpoint": env("KATS_CERTIFIED_PRODUCT_INFO_SOURCE_URL", "https://www.data.go.kr/data/15040703/fileData.do"),
+            "apiKey": first_env("KATS_CERTIFIED_PRODUCT_INFO_API_KEY", "DATAGO_SERVICE_KEY"),
+            "apiKeyEnv": "KATS_CERTIFIED_PRODUCT_INFO_API_KEY|DATAGO_SERVICE_KEY",
+            "params": {},
+            "defaultZeroReason": "FILE_DATA_NOT_CONFIGURED",
+            "fileData": True,
+            "fileStrategy": "prefer_file_then_api_when_stale",
+            "filePath": env("KATS_CERTIFIED_PRODUCT_INFO_FILE_PATH", "data/public/kats_certified_product_info_20220801.csv"),
+            "fileEncodings": ["utf-8-sig", "cp949", "euc-kr"],
+            "fileAsOf": env("KATS_CERTIFIED_PRODUCT_INFO_FILE_AS_OF", "2022-08-01"),
+            "officialUpdatedAt": env("KATS_CERTIFIED_PRODUCT_INFO_OFFICIAL_UPDATED_AT", "2022-08-01"),
+            "refreshDueAt": env("KATS_CERTIFIED_PRODUCT_INFO_NEXT_UPDATE_DUE_AT", "2026-08-01"),
+            "apiEndpoint": env("KATS_CERTIFIED_PRODUCT_INFO_API_URL", ""),
+            "apiParams": {
+                "page": "1",
+                "perPage": "5000",
+                "returnType": "JSON",
+            },
+        },
+        {
             "provider": "KATS 인증제품 첨부파일",
             "runtimeProvider": "NOT_RUNTIME_CONNECTED",
             "agent": "certified-product-attachment-reference",
@@ -329,6 +401,68 @@ def providers(args):
                 "perPage": "10",
                 "returnType": "JSON",
             },
+        },
+        {
+            "provider": "국가법령정보 현행법령 목록",
+            "runtimeProvider": "KOREA_LAW_STATUTES",
+            "agent": "regulation-domestic-law-reference",
+            "endpoint": env("KOREA_LAW_STATUTES_API_URL", "https://www.law.go.kr/DRF/lawSearch.do"),
+            "apiKey": first_env("LAW_OPENAPI_OC"),
+            "apiKeyEnv": "LAW_OPENAPI_OC",
+            "keyParam": "OC",
+            "params": {
+                "target": "law",
+                "type": "JSON",
+                "display": env("KOREA_LAW_STATUTES_DISPLAY", "20"),
+                "page": "1",
+                "query": env("KOREA_LAW_STATUTES_QUERY", "제품안전 인증"),
+            },
+            "defaultZeroReason": "API_KEY_NOT_CONFIGURED",
+        },
+        {
+            "provider": "소비자24 리콜정보_위생용품",
+            "runtimeProvider": "CONSUMER_RECALL_SANITATION",
+            "agent": "recall-consumer24-sanitation",
+            "endpoint": env("CONSUMER_RECALL_API_URL", "https://www.consumer.go.kr/openapi/recall/contents/index.do"),
+            "apiKey": first_env("CONSUMER_RECALL_SANITATION_API_KEY"),
+            "apiKeyEnv": "CONSUMER_RECALL_SANITATION_API_KEY",
+            "params": {
+                "pageNo": "1",
+                "cntPerPage": env("CONSUMER_RECALL_COUNT_PER_PAGE", "20"),
+                "cntntsId": "0208",
+                "productNm": args.product_name,
+            },
+            "defaultZeroReason": "API_KEY_NOT_CONFIGURED",
+        },
+        {
+            "provider": "소비자24 리콜정보_생활화학제품",
+            "runtimeProvider": "CONSUMER_RECALL_CHEMICAL",
+            "agent": "recall-consumer24-chemical",
+            "endpoint": env("CONSUMER_RECALL_API_URL", "https://www.consumer.go.kr/openapi/recall/contents/index.do"),
+            "apiKey": first_env("CONSUMER_RECALL_CHEMICAL_API_KEY"),
+            "apiKeyEnv": "CONSUMER_RECALL_CHEMICAL_API_KEY",
+            "params": {
+                "pageNo": "1",
+                "cntPerPage": env("CONSUMER_RECALL_COUNT_PER_PAGE", "20"),
+                "cntntsId": "0403",
+                "productNm": args.product_name,
+            },
+            "defaultZeroReason": "API_KEY_NOT_CONFIGURED",
+        },
+        {
+            "provider": "소비자24 리콜정보_해외리콜",
+            "runtimeProvider": "CONSUMER_RECALL_OVERSEAS",
+            "agent": "recall-consumer24-overseas",
+            "endpoint": env("CONSUMER_RECALL_API_URL", "https://www.consumer.go.kr/openapi/recall/contents/index.do"),
+            "apiKey": first_env("CONSUMER_RECALL_OVERSEAS_API_KEY"),
+            "apiKeyEnv": "CONSUMER_RECALL_OVERSEAS_API_KEY",
+            "params": {
+                "pageNo": "1",
+                "cntPerPage": env("CONSUMER_RECALL_COUNT_PER_PAGE", "20"),
+                "cntntsId": "0501",
+                "productNm": args.product_name,
+            },
+            "defaultZeroReason": "API_KEY_NOT_CONFIGURED",
         },
         {
             "provider": "한국에너지공단 신재생에너지설비 KS 인증제품",
@@ -570,10 +704,10 @@ def is_catalog_or_application(endpoint):
     )
 
 
-def mask_params(params, has_key):
+def mask_params(params, has_key, key_param="serviceKey"):
     masked = dict(params)
     if has_key:
-        masked["serviceKey"] = REDACTED
+        masked[key_param or "serviceKey"] = REDACTED
     return masked
 
 
@@ -594,8 +728,13 @@ def call_provider(provider, timeout):
         return result(provider, "empty", "API_KEY_NOT_CONFIGURED")
 
     params = dict(provider["params"])
-    params["serviceKey"] = api_key
-    url = endpoint + ("&" if "?" in endpoint else "?") + urllib.parse.urlencode(params)
+    if provider.get("pathKey"):
+        suffix = provider.get("pathSuffix", "/{key}").replace("{key}", urllib.parse.quote(api_key, safe=""))
+        url = endpoint.rstrip("/") + suffix
+    else:
+        key_param = provider.get("keyParam", "serviceKey")
+        params[key_param] = api_key
+        url = endpoint + ("&" if "?" in endpoint else "?") + urllib.parse.urlencode(params)
     try:
         with urllib.request.urlopen(url, timeout=timeout) as response:
             body = response.read().decode("utf-8", errors="replace")
@@ -824,7 +963,8 @@ def parse_date(value):
 
 def call_operation_endpoint(provider, endpoint, api_key, params, timeout):
     request_params = dict(params)
-    request_params["serviceKey"] = api_key
+    key_param = provider.get("keyParam", "serviceKey")
+    request_params[key_param] = api_key
     url = endpoint + ("&" if "?" in endpoint else "?") + urllib.parse.urlencode(request_params)
     try:
         with urllib.request.urlopen(url, timeout=timeout) as response:
@@ -914,7 +1054,7 @@ def result(provider, source_type, zero_reason, http_status=None, raw_count=0, no
         if operation_endpoint is None else operation_endpoint,
         "apiKeyEnv": provider["apiKeyEnv"],
         "apiKeyConfigured": bool(provider["apiKey"]),
-        "requestParamsMasked": mask_params(effective_params, bool(provider["apiKey"])),
+        "requestParamsMasked": mask_params(effective_params, bool(provider["apiKey"]), provider.get("keyParam", "serviceKey")),
         "filePath": provider.get("filePath", ""),
         "httpStatus": http_status,
         "rawCount": raw_count,

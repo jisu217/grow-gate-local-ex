@@ -82,9 +82,27 @@ public-data:
     dataset-date: ${KCS_TARIFF_LOGISTICS_DATASET_DATE:2026-05-31}
     source-hs-date: ${KCS_TARIFF_LOGISTICS_SOURCE_HS_DATE:2026-01-01}
     source-tariff-date: ${KCS_TARIFF_LOGISTICS_SOURCE_TARIFF_DATE:2026-02-11}
+  exim-exchange-rate:
+    url: ${EXIM_EXCHANGE_RATE_API_URL:https://oapi.koreaexim.go.kr/site/program/financial/exchangeJSON}
+    key: ${EXIM_EXCHANGE_RATE_API_KEY:}
+    data-code: ${EXIM_EXCHANGE_RATE_DATA_CODE:AP01}
+    search-date: ${EXIM_EXCHANGE_RATE_SEARCH_DATE:}
+  bok-key-statistics:
+    url: ${BOK_KEY_STATISTICS_API_URL:https://ecos.bok.or.kr/api/KeyStatisticList}
+    key: ${BOK_ECOS_API_KEY:}
+    language: ${BOK_KEY_STATISTICS_LANGUAGE:kr}
+    max-rows: ${BOK_KEY_STATISTICS_MAX_ROWS:100}
   kotra-market:
     url: ${KOTRA_MARKET_API_URL:https://www.data.go.kr/data/15122648/openapi.do}
     key: ${KOTRA_MARKET_API_KEY:${DATAGO_SERVICE_KEY:}}
+  kotra-overseas-exhibitions:
+    url: ${KOTRA_OVERSEAS_EXHIBITIONS_API_URL:}
+    key: ${KOTRA_OVERSEAS_EXHIBITIONS_API_KEY:${DATAGO_SERVICE_KEY:}}
+    csv-resource: ${KOTRA_OVERSEAS_EXHIBITIONS_CSV_RESOURCE:classpath:publicdata/kotra-overseas-exhibitions-20250630.csv}
+    dataset-date: ${KOTRA_OVERSEAS_EXHIBITIONS_DATASET_DATE:2025-06-30}
+    next-update-date: ${KOTRA_OVERSEAS_EXHIBITIONS_NEXT_UPDATE_DATE:2026-06-30}
+    portal-total-rows: ${KOTRA_OVERSEAS_EXHIBITIONS_PORTAL_TOTAL_ROWS:105}
+    api-per-page: ${KOTRA_OVERSEAS_EXHIBITIONS_API_PER_PAGE:200}
   kiat-rnd-outcomes:
     url: ${KIAT_RND_OUTCOMES_API_URL:https://api.odcloud.kr/api/15144951/v1/uddi:552c6b5b-5d8b-4aa5-8859-d0441cf28de0}
     key: ${KIAT_RND_OUTCOMES_API_KEY:${DATAGO_SERVICE_KEY:}}
@@ -166,6 +184,24 @@ public-data:
     next-update-date: ${KATS_DOMESTIC_RECALL_REPORT_NEXT_UPDATE_DATE:2022-08-02}
     portal-total-rows: ${KATS_DOMESTIC_RECALL_REPORT_PORTAL_TOTAL_ROWS:848}
     api-per-page: ${KATS_DOMESTIC_RECALL_REPORT_API_PER_PAGE:1000}
+  kats-certified-product-info:
+    url: ${KATS_CERTIFIED_PRODUCT_INFO_API_URL:}
+    key: ${KATS_CERTIFIED_PRODUCT_INFO_API_KEY:${DATAGO_SERVICE_KEY:}}
+    csv-resource: ${KATS_CERTIFIED_PRODUCT_INFO_CSV_RESOURCE:classpath:publicdata/kats-certified-product-info-20220801.csv}
+    dataset-date: ${KATS_CERTIFIED_PRODUCT_INFO_DATASET_DATE:2022-08-01}
+    next-update-date: ${KATS_CERTIFIED_PRODUCT_INFO_NEXT_UPDATE_DATE:2026-08-01}
+    portal-total-rows: ${KATS_CERTIFIED_PRODUCT_INFO_PORTAL_TOTAL_ROWS:152433}
+    api-per-page: ${KATS_CERTIFIED_PRODUCT_INFO_API_PER_PAGE:5000}
+  korea-law-statutes:
+    url: ${KOREA_LAW_STATUTES_API_URL:https://www.law.go.kr/DRF/lawSearch.do}
+    key: ${LAW_OPENAPI_OC:}
+    display: ${KOREA_LAW_STATUTES_DISPLAY:20}
+  consumer-recall:
+    url: ${CONSUMER_RECALL_API_URL:https://www.consumer.go.kr/openapi/recall/contents/index.do}
+    count-per-page: ${CONSUMER_RECALL_COUNT_PER_PAGE:20}
+    sanitation-key: ${CONSUMER_RECALL_SANITATION_API_KEY:}
+    chemical-key: ${CONSUMER_RECALL_CHEMICAL_API_KEY:}
+    overseas-key: ${CONSUMER_RECALL_OVERSEAS_API_KEY:}
   kgs-hydrogen-sandbox-regions:
     url: ${KGS_HYDROGEN_SANDBOX_REGIONS_API_URL:https://api.odcloud.kr/api/15139606/v1/uddi:1757878e-98ac-41b6-bcc6-98fda8d01d03}
     key: ${KGS_HYDROGEN_SANDBOX_REGIONS_API_KEY:${DATAGO_SERVICE_KEY:}}

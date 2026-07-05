@@ -74,6 +74,9 @@ public class PublicDataRecord {
     @Column(name = "source_type", length = 20)
     private String sourceType;
 
+    @Column(name = "source_quality_status", length = 40)
+    private String sourceQualityStatus;
+
     @Column(name = "fallback_used", nullable = false)
     private boolean fallbackUsed;
 

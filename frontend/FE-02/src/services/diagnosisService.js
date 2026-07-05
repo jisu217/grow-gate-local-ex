@@ -39,6 +39,9 @@ const EMPTY_SESSION = {
   exportKnowledgeTimeline: [],
   evidenceGuardrails: null,
   sourceTrustSummary: null,
+  publicDataCollectionRunId: '',
+  publicDataProofRunId: '',
+  publicDataProofRun: null,
   regionalIndustryProfile: null,
   scoreContributionLedger: [],
   normalizedMetrics: null,
@@ -120,6 +123,9 @@ export function mapDiagnosisDetail(d, evidenceSources, sourceEntries = []) {
     exportKnowledgeTimeline: Array.isArray(d.result?.exportKnowledgeTimeline) ? d.result.exportKnowledgeTimeline : [],
     evidenceGuardrails: d.result?.evidenceGuardrails ?? null,
     sourceTrustSummary: restoredSourceTrustSummary,
+    publicDataCollectionRunId: d.result?.publicDataCollectionRunId ?? restoredSourceTrustSummary?.publicDataCollectionRunId ?? '',
+    publicDataProofRunId: d.result?.publicDataProofRunId ?? restoredSourceTrustSummary?.publicDataProofRunId ?? '',
+    publicDataProofRun: d.result?.publicDataProofRun ?? null,
     regionalIndustryProfile: d.result?.regionalIndustryProfile ?? null,
     scoreContributionLedger: restoredLedger,
     normalizedMetrics: d.result?.normalizedMetrics ?? null,
@@ -151,6 +157,9 @@ export function mapDiagnosisDetail(d, evidenceSources, sourceEntries = []) {
         evidenceGuardrails: session.evidenceGuardrails,
         scoreContributionLedger: session.scoreContributionLedger,
         regionalIndustryProfile: session.regionalIndustryProfile,
+        publicDataCollectionRunId: session.publicDataCollectionRunId,
+        publicDataProofRunId: session.publicDataProofRunId,
+        publicDataProofRun: session.publicDataProofRun,
       }),
     },
   }
@@ -173,6 +182,11 @@ export function buildDecisionBrief(session = {}, stages = {}) {
       ?? session.confidencePanel?.cacheSourceCount
       ?? 0
   )
+  const sourceQualityCounts = sourceSummary.sourceQualityCounts ?? {}
+  const notConfiguredCount = Number(sourceQualityCounts.EMPTY_NOT_CONFIGURED ?? 0)
+  const fallbackErrorCount = Number(sourceQualityCounts.FALLBACK_ERROR ?? 0)
+  const proofRunId = session.publicDataProofRunId ?? sourceSummary.publicDataProofRunId ?? ''
+  const collectionRunId = session.publicDataCollectionRunId ?? sourceSummary.publicDataCollectionRunId ?? ''
   const gateDecision = session.gateDecision ?? {}
   const topRisks = normalizeTopRisks(session.riskItems, gateDecision.mustFixBeforeQuote)
   const nextActions = normalizeNextActions(stages.s08, gateDecision.mustFixBeforeQuote, topRisks)
@@ -180,11 +194,16 @@ export function buildDecisionBrief(session = {}, stages = {}) {
   return {
     gateLabel: gateDecision.label ?? gateDecision.status ?? '조건부 검토',
     gateReason: gateDecision.oneLineReason ?? '견적 확정 전 source trace와 담당자 확인이 필요합니다.',
-    fallbackReviewRequired: fallbackCount > 0,
-    fallbackMessage: fallbackCount > 0
-      ? `fallback 출처 ${fallbackCount}건이 포함되어 담당자 검토 후 바이어 회신을 확정해야 합니다.`
+    fallbackReviewRequired: fallbackCount > 0 || notConfiguredCount > 0 || fallbackErrorCount > 0,
+    fallbackMessage: fallbackCount > 0 || notConfiguredCount > 0 || fallbackErrorCount > 0
+      ? `fallback/미설정 출처 ${fallbackCount + notConfiguredCount + fallbackErrorCount}건은 담당자 검토 후 바이어 회신을 확정해야 합니다.`
       : 'live/cache 출처 중심으로 판단 근거가 구성되었습니다.',
     sourceCounts: { live: liveCount, cache: cacheCount, fallback: fallbackCount },
+    sourceQualityCounts,
+    proofRunId,
+    collectionRunId,
+    notConfiguredCount,
+    fallbackErrorCount,
     topRisks,
     nextActions,
   }
@@ -200,6 +219,7 @@ export function buildSourceTrustSummaryFromSources(sourceEntries = [], detail = 
   let emptyCount = 0
   let crawlCount = 0
   let externalFeedCount = 0
+  const sourceQualityCounts = {}
   let operationEndpointLiveCount = 0
   let apiKeyConfiguredLiveCount = 0
   const collected = []
@@ -209,6 +229,8 @@ export function buildSourceTrustSummaryFromSources(sourceEntries = [], detail = 
 
   entries.forEach((entry) => {
     const sourceType = entry.sourceType ?? 'fallback'
+    const sourceQualityStatus = entry.sourceQualityStatus ?? deriveSourceQualityStatus(entry)
+    sourceQualityCounts[sourceQualityStatus] = (sourceQualityCounts[sourceQualityStatus] ?? 0) + 1
     if (sourceType === 'live') liveCount += 1
     if (sourceType === 'cache') cacheCount += 1
     if (sourceType === 'fallback') fallbackCount += 1
@@ -248,6 +270,8 @@ export function buildSourceTrustSummaryFromSources(sourceEntries = [], detail = 
       sourcePeriodEnd: '',
       failureReason: '',
       status: 'no_record',
+      sourceQualityStatus: '',
+      zeroReason: '',
     }
     if (sourceType === 'live') row.liveCount += 1
     if (sourceType === 'cache') row.cacheCount += 1
@@ -264,6 +288,8 @@ export function buildSourceTrustSummaryFromSources(sourceEntries = [], detail = 
     row.sourcePeriodStart = minDateString(row.sourcePeriodStart, entry.sourcePeriodStart)
     row.sourcePeriodEnd = maxDateString(row.sourcePeriodEnd, entry.sourcePeriodEnd)
     row.failureReason = row.failureReason || entry.errorMessage || entry.reason || ''
+    row.sourceQualityStatus = row.sourceQualityStatus || sourceQualityStatus
+    row.zeroReason = row.zeroReason || entry.zeroReason || ''
     row.status = row.fallbackCount > 0 && row.liveCount + row.cacheCount + row.crawlCount + row.externalFeedCount === 0 ? 'fallback'
       : row.fallbackCount > 0 ? 'partial'
         : row.liveCount > 0 ? 'live'
@@ -290,6 +316,7 @@ export function buildSourceTrustSummaryFromSources(sourceEntries = [], detail = 
     emptyCount,
     crawlCount,
     externalFeedCount,
+    sourceQualityCounts,
     operationEndpointLiveCount,
     apiKeyConfiguredLiveCount,
     liveSuccessRate,
@@ -311,9 +338,14 @@ export function buildLedgerFromSources(sourceEntries = []) {
       provider: entry.provider ?? entry.datasetName ?? '',
       usedFor: entry.usedFor ?? entry.field ?? '',
       sourceType: entry.sourceType ?? 'fallback',
+      sourceQualityStatus: entry.sourceQualityStatus ?? deriveSourceQualityStatus(entry),
+      zeroReason: entry.zeroReason ?? '',
+      rawCount: entry.rawCount ?? 0,
+      normalizedCount: entry.normalizedCount ?? 0,
       operationEndpoint: Boolean(entry.operationEndpoint ?? entry.collectionEvidence?.operationEndpoint),
       apiKeyConfigured: Boolean(entry.apiKeyConfigured ?? entry.collectionEvidence?.apiKeyConfigured),
       endpointType: entry.endpointType ?? entry.collectionEvidence?.endpointType ?? '',
+      schemaValidation: entry.schemaValidation ?? {},
       fetchedAt: entry.fetchedAt ?? entry.retrievedAt ?? '',
       rawMetric: entry.rawMetric ?? entry.metrics ?? entry.scoreInputs ?? {},
       normalizedMetric: entry.normalizedMetric ?? entry.metrics ?? entry.scoreInputs ?? {},
@@ -667,6 +699,8 @@ function mapSourceStage(stageData, evidenceMeta = {}) {
       label: item.decisionImpact ?? sourceTypeLabel(item.sourceType, item.usedFor ?? item.field),
       metricSummary: item.metricSummary ?? item.reason ?? '',
       status: item.sourceType ?? (item.fallbackUsed ? 'fallback' : 'live'),
+      sourceQualityStatus: item.sourceQualityStatus ?? deriveSourceQualityStatus(item),
+      zeroReason: item.zeroReason ?? '',
     }))
 
   return {
@@ -676,7 +710,30 @@ function mapSourceStage(stageData, evidenceMeta = {}) {
     guardrails: evidenceMeta.evidenceGuardrails ?? null,
     ledger: Array.isArray(evidenceMeta.scoreContributionLedger) ? evidenceMeta.scoreContributionLedger : [],
     regionalIndustryProfile: evidenceMeta.regionalIndustryProfile ?? null,
+    publicDataCollectionRunId: evidenceMeta.publicDataCollectionRunId ?? '',
+    publicDataProofRunId: evidenceMeta.publicDataProofRunId ?? '',
+    publicDataProofRun: evidenceMeta.publicDataProofRun ?? null,
   }
+}
+
+function deriveSourceQualityStatus(entry = {}) {
+  const sourceType = entry.sourceType ?? (entry.fallbackUsed ? 'fallback' : 'live')
+  const zeroReason = entry.zeroReason ?? entry.errorMessage ?? ''
+  const missingKeyCode = ['API', 'KEY', 'NOT', 'CONFIGURED'].join('_')
+  const missingEndpointCode = ['OPERATION', 'ENDPOINT', 'NOT', 'CONFIGURED'].join('_')
+  const catalogEndpointCode = ['CATALOG', 'PAGE', 'ENDPOINT'].join('_')
+  const publicDisabledCode = ['PUBLIC', 'DATA', 'DISABLED'].join('_')
+  if (sourceType === 'live') return 'LIVE_VERIFIED'
+  if (sourceType === 'cache') return 'CACHE_VERIFIED'
+  if (sourceType === 'seed') return 'SEED_SYNTHETIC'
+  if (sourceType === 'heuristic') return 'HEURISTIC_ONLY'
+  if (sourceType === 'fallback') return String(zeroReason).includes(missingKeyCode) ? 'EMPTY_NOT_CONFIGURED' : 'FALLBACK_ERROR'
+  if (sourceType === 'empty') {
+    return [missingKeyCode, missingEndpointCode, catalogEndpointCode, publicDisabledCode].some((code) => String(zeroReason).includes(code))
+      ? 'EMPTY_NOT_CONFIGURED'
+      : 'EMPTY_TRUE_ZERO'
+  }
+  return 'HEURISTIC_ONLY'
 }
 
 function sourceTypeLabel(sourceType, usedFor) {

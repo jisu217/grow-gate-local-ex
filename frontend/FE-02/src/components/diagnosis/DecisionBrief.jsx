@@ -15,12 +15,15 @@ export default function DecisionBrief({ session, stages }) {
           <span>live {brief.sourceCounts.live}</span>
           <span>cache {brief.sourceCounts.cache}</span>
           <span className={brief.fallbackReviewRequired ? 'danger' : ''}>fallback {brief.sourceCounts.fallback}</span>
+          {brief.notConfiguredCount > 0 && <span className="danger">not configured {brief.notConfiguredCount}</span>}
+          {brief.proofRunId && <span>proof {brief.proofRunId}</span>}
         </div>
       </div>
 
       {brief.fallbackReviewRequired && (
         <div className="decision-warning">
           담당자 검토 필요 · {brief.fallbackMessage}
+          {brief.collectionRunId && <span> · collection {brief.collectionRunId}</span>}
         </div>
       )}
 

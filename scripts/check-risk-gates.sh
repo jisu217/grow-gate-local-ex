@@ -83,6 +83,10 @@ grep -q 'confidence DOUBLE PRECISION' "$ROOT_DIR/database/mysql/init/01_schema.s
   || fail "Docker init schema must include public_data_records.confidence"
 grep -q 'source_type VARCHAR(20)' "$ROOT_DIR/database/mysql/init/01_schema.sql" \
   || fail "Docker init schema must include public_data_records.source_type"
+grep -q 'source_quality_status VARCHAR(40)' "$ROOT_DIR/database/mysql/init/01_schema.sql" \
+  || fail "Docker init schema must include public_data_records.source_quality_status"
+grep -q 'source_quality_status VARCHAR(40)' "$ROOT_DIR/database/mysql/init/06_public_api_proof_ml_validation.sql" \
+  || fail "proof schema must include source_quality_status"
 grep -q 'JPA_DDL_AUTO=\"validate\"' "$ROOT_DIR/scripts/verify-fresh-db.sh" \
   || fail "fresh DB verifier must start backend with ddl-auto=validate"
 grep -q 'COMPOSE_PROJECT_NAME' "$ROOT_DIR/scripts/verify-fresh-db.sh" \
@@ -90,6 +94,18 @@ grep -q 'COMPOSE_PROJECT_NAME' "$ROOT_DIR/scripts/verify-fresh-db.sh" \
 grep -q 'verify-fresh-db.sh' "$ROOT_DIR/README.md" \
   || fail "README must document fresh DB verification"
 pass "fresh Docker DB schema is aligned with validate startup"
+
+search_quiet 'sourceQualityStatus' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "diagnosis result must expose sourceQualityStatus"
+search_quiet 'EMPTY_NOT_CONFIGURED' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataQualityClassifier.java" \
+  || fail "public data quality classifier must distinguish EMPTY_NOT_CONFIGURED"
+search_quiet 'AgentTraceRecorder' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "diagnosis agent loop must persist AgentTraceEvent rows"
+search_quiet 'agentRoleOutputs' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/diagnosis/service/DiagnosisAsyncProcessor.java" \
+  || fail "diagnosis result must expose deterministic role agent outputs"
+search_quiet 'sourceQualityStatus' "$ROOT_DIR/frontend/FE-02/src/components/diagnosis/S10Sources.jsx" \
+  || fail "S10 must render sourceQualityStatus"
+pass "source quality status and persisted agent trace contract are wired"
 
 grep -q 'synthetic_demo_not_real_customer' "$ROOT_DIR/docs/SYNTHETIC_DATA_POLICY.md" \
   || fail "synthetic data policy must preserve the required synthetic label"

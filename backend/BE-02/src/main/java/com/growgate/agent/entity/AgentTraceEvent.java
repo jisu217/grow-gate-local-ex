@@ -5,14 +5,21 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
+import jakarta.persistence.PrePersist;
 import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
 @Getter
 @Entity
 @Table(name = "agent_trace_events")
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class AgentTraceEvent {
 
     @Id
@@ -69,4 +76,11 @@ public class AgentTraceEvent {
 
     @Column(name = "created_at", nullable = false)
     private LocalDateTime createdAt;
+
+    @PrePersist
+    private void prePersist() {
+        if (createdAt == null) createdAt = LocalDateTime.now();
+        if (retryCount == null) retryCount = 0;
+        if (evidenceCount == null) evidenceCount = 0;
+    }
 }
