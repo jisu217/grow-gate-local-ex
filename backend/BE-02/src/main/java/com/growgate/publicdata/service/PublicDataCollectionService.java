@@ -236,7 +236,16 @@ public class PublicDataCollectionService {
         return recordRepository
                 .findTopByProviderAndRequestKeyAndExpiresAtAfterOrderByFetchedAtDesc(
                         connector.provider(), connector.requestKey(request), LocalDateTime.now())
+                .filter(this::isReusableCacheRecord)
                 .orElse(null);
+    }
+
+    private boolean isReusableCacheRecord(PublicDataRecord record) {
+        String sourceType = sourceType(record);
+        return !record.isFallbackUsed()
+                && ("live".equals(sourceType) || "cache".equals(sourceType))
+                && !"FALLBACK_ERROR".equals(record.getSourceQualityStatus())
+                && !"EMPTY_NOT_CONFIGURED".equals(record.getSourceQualityStatus());
     }
 
     private PublicDataConnectorResult disabledResult(PublicDataConnector connector, PublicDataRequest request) {
@@ -353,13 +362,13 @@ public class PublicDataCollectionService {
                 .usedFor(cached.getUsedFor())
                 .rawPayload(cached.getRawPayload())
                 .normalizedPayload(toJson(normalizedPayload))
-                .scoreContribution(guardedScoreContribution(cached.getScoreContribution(), cached.isFallbackUsed(), "cache", qualityStatus))
+                .scoreContribution(guardedScoreContribution(cached.getScoreContribution(), false, "cache", qualityStatus))
                 .confidence(cached.getConfidence())
                 .sourceType("cache")
                 .sourceQualityStatus(qualityStatus.name())
-                .fallbackUsed(cached.isFallbackUsed())
+                .fallbackUsed(false)
                 .cacheHit(true)
-                .errorMessage(cached.getErrorMessage())
+                .errorMessage(null)
                 .fetchedAt(LocalDateTime.now())
                 .expiresAt(cached.getExpiresAt())
                 .build();

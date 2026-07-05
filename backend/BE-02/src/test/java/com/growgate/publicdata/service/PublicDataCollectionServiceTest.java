@@ -122,6 +122,84 @@ class PublicDataCollectionServiceTest {
     }
 
     @Test
+    void collectForDiagnosisDoesNotReuseFallbackRecordAsCache() {
+        PublicDataConnector connector = mock(PublicDataConnector.class);
+        when(connector.provider()).thenReturn(PublicDataProvider.SAFETY_RECALL);
+        when(connector.usedFor()).thenReturn("recall");
+        when(connector.requestKey(any(PublicDataRequest.class))).thenReturn("SAFETY_RECALL:배터리팩");
+        when(connector.collect(any(PublicDataRequest.class))).thenReturn(PublicDataConnectorResult.builder()
+                .provider(PublicDataProvider.SAFETY_RECALL)
+                .endpoint("csv:classpath:publicdata/kats-domestic-recall-20230809.csv")
+                .requestKey("SAFETY_RECALL:배터리팩")
+                .hsCode("850760")
+                .targetCountry("DE")
+                .matchedKey("product=배터리팩")
+                .usedFor("recall")
+                .rawPayload("{\"source\":\"csv\"}")
+                .normalizedPayload(Map.of(
+                        "collectionEvidence", Map.of(
+                                "operationEndpoint", false,
+                                "apiKeyConfigured", false,
+                                "reason", "API_KEY_NOT_CONFIGURED; CSV cache available"),
+                        "metrics", Map.of("recordCount", 881)))
+                .scoreContribution(-2)
+                .confidence(0.62)
+                .sourceType("cache")
+                .fallbackUsed(false)
+                .build());
+
+        PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
+        PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        MembershipRepository membershipRepository = mock(MembershipRepository.class);
+        User user = user("user-1");
+        PublicDataRecord staleFallback = PublicDataRecord.builder()
+                .provider(PublicDataProvider.SAFETY_RECALL)
+                .endpoint("https://www.safetykorea.kr/release/openapi")
+                .requestKey("SAFETY_RECALL:배터리팩")
+                .hsCode("850760")
+                .targetCountry("DE")
+                .matchedKey("product=배터리팩")
+                .usedFor("recall")
+                .rawPayload("{\"fallback\":true}")
+                .normalizedPayload("{\"sourceQualityStatus\":\"FALLBACK_ERROR\"}")
+                .scoreContribution(-2)
+                .confidence(0.0)
+                .sourceType("fallback")
+                .sourceQualityStatus("FALLBACK_ERROR")
+                .fallbackUsed(true)
+                .cacheHit(false)
+                .errorMessage("SAFETY_RECALL API key is not configured")
+                .fetchedAt(LocalDateTime.now().minusMinutes(5))
+                .expiresAt(LocalDateTime.now().plusHours(2))
+                .build();
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(runRepository.save(any(PublicDataCollectionRun.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.save(any(PublicDataRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.findTopByProviderAndRequestKeyAndExpiresAtAfterOrderByFetchedAtDesc(
+                eq(PublicDataProvider.SAFETY_RECALL), eq("SAFETY_RECALL:배터리팩"), any(LocalDateTime.class)))
+                .thenReturn(Optional.of(staleFallback));
+
+        PublicDataCollectionService service = service(
+                List.of(connector), runRepository, recordRepository, userRepository, membershipRepository);
+        ReflectionTestUtils.setField(service, "enabled", true);
+        ReflectionTestUtils.setField(service, "cacheTtlHours", 24L);
+
+        PublicDataCollectionResult result = service.collectForDiagnosis(
+                "diagnosis-1", "user-1", "850760", "DE", "배터리팩");
+
+        assertThat(result.getRun().getStatus()).isEqualTo(PublicDataCollectionStatus.done);
+        assertThat(result.getRun().getSuccessCount()).isEqualTo(1);
+        assertThat(result.getRun().getFallbackCount()).isZero();
+        assertThat(result.getRun().getCacheHitCount()).isZero();
+        assertThat(result.getRecords().get(0).getSourceType()).isEqualTo("cache");
+        assertThat(result.getRecords().get(0).isFallbackUsed()).isFalse();
+        assertThat(result.getRecords().get(0).getErrorMessage()).isNull();
+        verify(connector).collect(any(PublicDataRequest.class));
+    }
+
+    @Test
     void collectForDiagnosisClampsFallbackPositiveContributionBeforePersisting() {
         PublicDataConnector connector = mock(PublicDataConnector.class);
         when(connector.provider()).thenReturn(PublicDataProvider.KOTRA_MARKET);
