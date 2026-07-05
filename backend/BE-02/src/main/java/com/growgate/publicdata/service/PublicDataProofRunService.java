@@ -5,6 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.publicdata.entity.PublicDataRecord;
 import com.growgate.publicdata.enums.PublicDataProvider;
 import com.growgate.publicdata.enums.SourceQualityStatus;
+import com.growgate.publicdata.repository.PublicDataCollectionRunRepository;
 import com.growgate.publicdata.repository.PublicDataRecordRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
@@ -32,6 +33,7 @@ public class PublicDataProofRunService {
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
 
     private final PublicDataCollectionService collectionService;
+    private final PublicDataCollectionRunRepository runRepository;
     private final PublicDataRecordRepository recordRepository;
     private final JdbcTemplate jdbcTemplate;
     private final ObjectMapper objectMapper;
@@ -47,7 +49,10 @@ public class PublicDataProofRunService {
 
     @Transactional
     public Map<String, Object> createProofRun(String userId, String triggerType) {
-        List<PublicDataRecord> records = collectionService.getRecentRecords(userId, null, null).stream()
+        List<PublicDataRecord> records = runRepository.findTopByOrderByStartedAtDesc()
+                .map(run -> recordRepository.findByRun_IdOrderByFetchedAtDesc(run.getId()))
+                .orElseGet(() -> collectionService.getRecentRecords(userId, null, null))
+                .stream()
                 .sorted(Comparator.comparing(PublicDataRecord::getFetchedAt,
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
@@ -72,16 +77,17 @@ public class PublicDataProofRunService {
                 proofRunId, userId, triggerType == null ? "manual" : triggerType, serverProfile,
                 distinctProviders(records, null).size());
 
+        List<PublicDataRecord> latestProviderRecords = latestRecordPerProvider(records);
         List<Map<String, Object>> providerRows = new ArrayList<>();
         List<Map<String, Object>> waterfallRows = new ArrayList<>();
-        for (PublicDataRecord record : records) {
+        for (PublicDataRecord record : latestProviderRecords) {
             Map<String, Object> providerRow = persistRecordProof(proofRunId, record);
             providerRows.add(providerRow);
             Map<String, Object> waterfall = persistScoreContribution(proofRunId, record, providerRow);
             waterfallRows.add(waterfall);
         }
 
-        Map<String, Object> summary = summarize(proofRunId, records, providerRows, waterfallRows);
+        Map<String, Object> summary = summarize(proofRunId, latestProviderRecords, providerRows, waterfallRows);
         jdbcTemplate.update("""
                         UPDATE public_api_proof_runs
                         SET completed_at = CURRENT_TIMESTAMP(6),
@@ -109,6 +115,15 @@ public class PublicDataProofRunService {
                 toJson(summary.get("failReasons")),
                 proofRunId);
         return detail(proofRunId);
+    }
+
+    private List<PublicDataRecord> latestRecordPerProvider(List<PublicDataRecord> records) {
+        Map<PublicDataProvider, PublicDataRecord> latest = new LinkedHashMap<>();
+        records.stream()
+                .sorted(Comparator.comparing(PublicDataRecord::getFetchedAt,
+                        Comparator.nullsLast(Comparator.reverseOrder())))
+                .forEach(record -> latest.putIfAbsent(record.getProvider(), record));
+        return new ArrayList<>(latest.values());
     }
 
     @Transactional(readOnly = true)
@@ -357,7 +372,7 @@ public class PublicDataProofRunService {
         List<String> failReasons = failReasons(liveProviders.size(), motieRelatedLive, operationLive, apiKeyLive,
                 schemaFail, providerRows, waterfallRows);
         String proofStatus = failReasons.isEmpty() ? "PASS"
-                : liveProviders.isEmpty() ? "FAIL" : "WARN";
+                : liveProviders.isEmpty() && cacheProviders.isEmpty() ? "FAIL" : "WARN";
 
         Map<String, Object> result = new LinkedHashMap<>();
         result.put("proofRunId", proofRunId);

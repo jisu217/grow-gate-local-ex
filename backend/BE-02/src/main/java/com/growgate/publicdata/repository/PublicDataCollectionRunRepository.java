@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface PublicDataCollectionRunRepository extends JpaRepository<PublicDataCollectionRun, String> {
@@ -12,4 +13,6 @@ public interface PublicDataCollectionRunRepository extends JpaRepository<PublicD
     List<PublicDataCollectionRun> findTop20ByOrderByStartedAtDesc();
 
     List<PublicDataCollectionRun> findTop20ByRequestedBy_IdInOrderByStartedAtDesc(List<String> userIds);
+
+    Optional<PublicDataCollectionRun> findTopByOrderByStartedAtDesc();
 }
