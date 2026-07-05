@@ -530,6 +530,7 @@ public class DiagnosisAsyncProcessor {
         long liveCount = sources.stream().filter(source -> "live".equals(source.get("sourceType"))).count();
         long cacheCount = sources.stream().filter(source -> "cache".equals(source.get("sourceType"))).count();
         long fallbackCount = sources.stream().filter(source -> "fallback".equals(source.get("sourceType"))).count();
+        long emptyCount = sources.stream().filter(source -> "empty".equals(source.get("sourceType"))).count();
         long crawlCount = sources.stream().filter(source -> "crawl".equals(source.get("sourceType"))).count();
         long externalFeedCount = sources.stream().filter(source -> "external_feed".equals(source.get("sourceType"))).count();
         long seedCount = sources.stream().filter(source -> "seed".equals(source.get("sourceType"))).count();
@@ -582,6 +583,7 @@ public class DiagnosisAsyncProcessor {
         summary.put("liveCount", liveCount);
         summary.put("cacheCount", cacheCount);
         summary.put("fallbackCount", fallbackCount);
+        summary.put("emptyCount", emptyCount);
         summary.put("crawlCount", crawlCount);
         summary.put("externalFeedCount", externalFeedCount);
         summary.put("seedCount", seedCount);
@@ -616,6 +618,7 @@ public class DiagnosisAsyncProcessor {
             int live = sourceTypeCount(items, "live");
             int cache = sourceTypeCount(items, "cache");
             int fallback = sourceTypeCount(items, "fallback");
+            int empty = sourceTypeCount(items, "empty");
             int crawl = sourceTypeCount(items, "crawl");
             int externalFeed = sourceTypeCount(items, "external_feed");
             List<String> fetched = items.stream().map(item -> stringValue(item.get("fetchedAt")))
@@ -640,6 +643,7 @@ public class DiagnosisAsyncProcessor {
             row.put("liveCount", live);
             row.put("cacheCount", cache);
             row.put("fallbackCount", fallback);
+            row.put("emptyCount", empty);
             row.put("crawlCount", crawl);
             row.put("externalFeedCount", externalFeed);
             row.put("operationEndpoint", items.stream().anyMatch(item -> Boolean.TRUE.equals(item.get("operationEndpoint"))));
@@ -666,7 +670,8 @@ public class DiagnosisAsyncProcessor {
                     : live > 0 ? "live"
                     : cache > 0 ? "cache"
                     : externalFeed > 0 ? "external_feed"
-                    : crawl > 0 ? "crawl" : "no_record");
+                    : crawl > 0 ? "crawl"
+                    : empty > 0 ? "empty" : "no_record");
             health.add(row);
         });
         return health;

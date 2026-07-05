@@ -1158,7 +1158,8 @@ body {
 .provider-health.live,
 .provider-health.cache { border-color: #bfe6d2; background: #eaf7f0; }
 .provider-health.external_feed,
-.provider-health.crawl { border-color: #f3e2bf; background: #fdf7e9; }
+.provider-health.crawl,
+.provider-health.empty { border-color: #f3e2bf; background: #fdf7e9; }
 .provider-health strong,
 .provider-health span {
   font-size: 11.5px;
@@ -1273,6 +1274,7 @@ body {
 }
 .provider-health-row.fallback,
 .provider-health-row.partial { color: #b42318; }
+.provider-health-row.empty { color: var(--amber); }
 .provider-health-row.live,
 .provider-health-row.cache { color: var(--green); }
 .req-text { color: #b42318 !important; font-weight: 700; }

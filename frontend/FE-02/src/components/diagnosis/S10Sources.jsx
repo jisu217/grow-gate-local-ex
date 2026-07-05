@@ -16,6 +16,7 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
   const cacheCount = Number(sourceTrustSummary?.cacheCount ?? 0)
   const operationEndpointLiveCount = Number(sourceTrustSummary?.operationEndpointLiveCount ?? 0)
   const apiKeyConfiguredLiveCount = Number(sourceTrustSummary?.apiKeyConfiguredLiveCount ?? 0)
+  const emptyCount = Number(sourceTrustSummary?.emptyCount ?? 0)
   const seedCount = Number(sourceTrustSummary?.seedCount ?? 0)
   const [proofRun, setProofRun] = useState(null)
   const [proofStatus, setProofStatus] = useState('idle')
@@ -233,6 +234,9 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
           {liveCount + cacheCount === 0 && (
             <div className="pipe-lbl req-text">live/cache 공공데이터 0건 - fallback 원인 확인 후 재수집이 필요합니다.</div>
           )}
+          {emptyCount > 0 && (
+            <div className="pipe-lbl req-text">empty source {emptyCount}건 - API key, operation endpoint, catalog URL, 0건 응답 여부를 확인해야 합니다.</div>
+          )}
           {liveCount + cacheCount > 0 && operationEndpointLiveCount === 0 && (
             <div className="pipe-lbl req-text">operation endpoint 증거 0건 - catalog/신청 페이지 기반 응답은 공식 API live 증거로 표시하지 않습니다.</div>
           )}
@@ -251,7 +255,7 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
             <div key={provider.provider} className={`provider-health-row ${provider.status}`}>
               <strong>{provider.provider}</strong>
               <span>
-                L{provider.liveCount ?? 0} / C{provider.cacheCount ?? 0} / F{provider.fallbackCount ?? 0}
+                L{provider.liveCount ?? 0} / C{provider.cacheCount ?? 0} / E{provider.emptyCount ?? 0} / F{provider.fallbackCount ?? 0}
                 {Number(provider.externalFeedCount ?? 0) > 0 ? ` / Feed${provider.externalFeedCount}` : ''}
                 {Number(provider.crawlCount ?? 0) > 0 ? ` / Crawl${provider.crawlCount}` : ''}
               </span>
