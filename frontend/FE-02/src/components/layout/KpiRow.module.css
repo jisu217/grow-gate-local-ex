@@ -8,6 +8,10 @@
   margin-bottom: 18px;
 }
 
+.kpiRow[data-count="3"] {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
 /* 개별 KPI 카드 */
 .kpi {
   background: var(--card);
@@ -48,7 +52,13 @@
 }
 
 /* 큰 수치 값 */
-.bigValue {}
+.bigValue {
+  display: block;
+  max-width: 100%;
+  min-height: 42px;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+}
 
 /* 수치 단위 */
 .unit {

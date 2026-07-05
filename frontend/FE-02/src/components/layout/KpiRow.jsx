@@ -6,12 +6,12 @@ import styles from './KpiRow.module.css'
 export default function KpiRow({ kpiData }) {
   return (
 
-    <div className={styles.kpiRow}>
+    <div className={styles.kpiRow} data-count={kpiData.length}>
       {kpiData.map((kpi) => (
-        <div key={kpi.step} className={styles.kpi}>
+        <div key={kpi.step} className={styles.kpi} aria-label={`${kpi.step} ${kpi.eyebrow ?? kpi.label ?? kpi.title ?? ''}`}>
 
           <div className={styles.step}>{kpi.step}</div>
-          <div className="eyebrow">{kpi.eyebrow}</div>
+          <div className="eyebrow">{kpi.eyebrow ?? kpi.label ?? kpi.title ?? '진단 지표'}</div>
 
           {kpi.score !== undefined ? (
             <>
@@ -22,16 +22,16 @@ export default function KpiRow({ kpiData }) {
 
                 <DonutChart score={kpi.score} />
               </div>
-              <div className="sub">{kpi.sub}</div>
+              {kpi.sub && <div className="sub">{kpi.sub}</div>}
             </>
           ) : (
 
             <>
-              <div className={`big ${styles.bigValue}`} style={{ fontSize: kpi.valueFontSize }}>
+              <div className={`big ${styles.bigValue}`} style={{ fontSize: kpi.valueFontSize }} title={String(kpi.value ?? '')}>
                 {kpi.value}
                 <span className={styles.unit}>{kpi.unit}</span>
               </div>
-              <div className="sub">{kpi.sub}</div>
+              {kpi.sub && <div className="sub">{kpi.sub}</div>}
             </>
           )}
 

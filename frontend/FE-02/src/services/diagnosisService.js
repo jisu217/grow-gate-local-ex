@@ -51,12 +51,6 @@ const EMPTY_SESSION = {
   reportFastApiUsed: false,
 }
 
-const EMPTY_METRICS = [
-  { step: '01', label: 'Input', score: 0 },
-  { step: '02', label: 'Gate', score: 0 },
-  { step: '03', label: 'Sources', score: 0 },
-]
-
 // 진단 이력 목록 항목 매핑 (백엔드 요약 응답 → FE 카드 형태)
 // 백엔드 목록 응답에 없는 diagnosisScore/summary는 null 처리.
 function mapDiagnosisSummary(d) {
@@ -137,9 +131,7 @@ export function mapDiagnosisDetail(d, evidenceSources, sourceEntries = []) {
 
   return {
     session,
-    kpiData: EMPTY_METRICS.map((kpi) =>
-      kpi.step === '02' ? { ...kpi, score: overallScore } : kpi
-    ),
+    kpiData: buildKpiData(d, diagnosisScore, overallScore, restoredSourceTrustSummary),
     stages: {
       s00: mapOverviewStage(stageCards.s00, overallScore),
       s01: mapInputStage(stageCards.s01, d),
@@ -163,6 +155,81 @@ export function mapDiagnosisDetail(d, evidenceSources, sourceEntries = []) {
       }),
     },
   }
+}
+
+function buildKpiData(detail, diagnosisScore, overallScore, sourceTrustSummary) {
+  const inputTrace = detail.result?.inputTrace ?? {}
+  const retryPayload = sourceTrustSummary?.retryPayload ?? {}
+  const productName = compactText(
+    firstNonBlank(inputTrace.productName, retryPayload.productName, detail.productName, '제품명 확인 중'),
+    24
+  )
+  const hsCode = firstNonBlank(inputTrace.hsCode, retryPayload.hsCode, detail.hsCode, '')
+  const targetCountry = firstNonBlank(inputTrace.targetCountry, retryPayload.targetCountry, detail.targetCountry, '')
+  const gateDecision = detail.result?.gateDecision ?? {}
+  const liveCount = numberOrZero(sourceTrustSummary?.liveCount ?? detail.result?.confidencePanel?.liveSourceCount)
+  const cacheCount = numberOrZero(sourceTrustSummary?.cacheCount ?? detail.result?.confidencePanel?.cacheSourceCount)
+  const fallbackCount = numberOrZero(sourceTrustSummary?.fallbackCount ?? detail.result?.confidencePanel?.fallbackSourceCount)
+  const emptyCount = numberOrZero(sourceTrustSummary?.emptyCount)
+  const totalEvidenceCount = liveCount + cacheCount + fallbackCount + emptyCount
+  const areaScores = typeof diagnosisScore === 'object' && diagnosisScore
+    ? [
+      numberOrZero(diagnosisScore.market),
+      numberOrZero(diagnosisScore.regulation),
+      numberOrZero(diagnosisScore.recall),
+      numberOrZero(diagnosisScore.fto),
+      numberOrZero(diagnosisScore.support),
+    ]
+    : []
+  const weakestAreaScore = areaScores.length ? Math.min(...areaScores) : overallScore
+
+  return [
+    {
+      step: '01',
+      eyebrow: '대상 제품',
+      value: productName,
+      sub: `HS ${hsCode || '미등록'} · ${targetCountry || '대상국 미정'}`,
+      valueFontSize: productName.length > 16 ? 20 : 22,
+    },
+    {
+      step: '02',
+      eyebrow: 'Gate 준비도',
+      score: overallScore,
+      sub: `${gateDecision.label ?? gateDecision.status ?? '판단 대기'} · 최저 영역 ${weakestAreaScore}/100`,
+    },
+    {
+      step: '03',
+      eyebrow: '근거 상태',
+      value: String(totalEvidenceCount),
+      unit: '건',
+      sub: `live ${liveCount} · cache ${cacheCount} · fallback ${fallbackCount}`,
+      valueFontSize: 40,
+      sources: [
+        `live ${liveCount}`,
+        `cache ${cacheCount}`,
+        fallbackCount > 0 ? `fallback ${fallbackCount}` : `empty ${emptyCount}`,
+      ],
+    },
+  ]
+}
+
+function compactText(value, maxLength) {
+  const text = String(value ?? '').trim()
+  if (!text) return ''
+  return text.length > maxLength ? `${text.slice(0, maxLength - 1)}...` : text
+}
+
+function firstNonBlank(...values) {
+  for (const value of values) {
+    const text = String(value ?? '').trim()
+    if (text) return text
+  }
+  return ''
+}
+
+function numberOrZero(value) {
+  const number = Number(value ?? 0)
+  return Number.isFinite(number) ? number : 0
 }
 
 export function buildDecisionBrief(session = {}, stages = {}) {

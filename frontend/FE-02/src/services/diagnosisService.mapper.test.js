@@ -155,6 +155,14 @@ assert.equal(mapped.session.evidenceGuardrails.verdict, 'pass')
 assert.equal(mapped.session.sourceTrustSummary.liveSuccessRate, 0.5)
 assert.equal(mapped.session.sourceTrustSummary.publicDataProofRunId, 'pdr_diag_1')
 assert.equal(mapped.session.sourceTrustSummary.providerHealth[1].failureReason, 'API key is not configured')
+assert.equal(mapped.kpiData[0].eyebrow, '대상 제품')
+assert.equal(mapped.kpiData[0].value, '리튬이온 배터리팩')
+assert.equal(mapped.kpiData[0].sub, 'HS 850760 · DE')
+assert.equal(mapped.kpiData[1].eyebrow, 'Gate 준비도')
+assert.equal(mapped.kpiData[1].score, 82)
+assert.equal(mapped.kpiData[2].eyebrow, '근거 상태')
+assert.equal(mapped.kpiData[2].value, '2')
+assert.equal(mapped.kpiData[2].sub, 'live 1 · cache 0 · fallback 1')
 assert.equal(mapped.stages.s10.pipes[0].source, 'KCS_TRADE')
 assert.equal(mapped.stages.s10.pipes[0].status, 'live')
 assert.equal(mapped.stages.s10.pipes[0].metricSummary, 'exportAmountUsd=45678')
@@ -199,7 +207,11 @@ assert.deepEqual(sparseMapped.session.actionRoadmap, {
   beforeQuote: [],
   beforeShipment: [],
 })
-assert.equal(sparseMapped.kpiData[0].score, 0)
+assert.equal(sparseMapped.kpiData[0].eyebrow, '대상 제품')
+assert.equal(sparseMapped.kpiData[0].value, '신규 제품')
+assert.equal(sparseMapped.kpiData[0].sub, 'HS 미등록 · US')
+assert.equal(sparseMapped.kpiData[1].score, 0)
+assert.equal(sparseMapped.kpiData[2].value, '0')
 
 const sourceRestored = mapDiagnosisDetail({
   id: 'diag-source-restore',
