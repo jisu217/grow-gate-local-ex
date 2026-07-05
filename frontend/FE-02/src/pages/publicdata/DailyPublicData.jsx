@@ -16,6 +16,7 @@ import {
   providerDisplayName,
   providerReasonLabel,
   sourceBadgeLabel,
+  sortProofProviders,
 } from './publicDataProofPresenter.js'
 
 export default function DailyPublicData() {
@@ -77,6 +78,7 @@ export default function DailyPublicData() {
   const providerNames = (dashboard?.providers ?? []).map((provider) => provider.provider)
   const externalCount = records.filter((record) => isExternalRecord(record) && !record.fallbackUsed).length
   const failureReasons = collectFailureReasons(runs, records, proofRun).slice(0, 4)
+  const proofProviders = sortProofProviders(proofRun?.providers ?? [])
 
   const handleRefresh = async () => {
     setRefreshState('running')
@@ -187,7 +189,7 @@ export default function DailyPublicData() {
                   {(!Array.isArray(proofRun?.providers) || proofRun.providers.length === 0) && (
                     <tr><td colSpan="7" className={styles.empty}>아직 proof provider row가 없습니다. Proof run을 생성하세요.</td></tr>
                   )}
-                  {proofRun?.providers?.slice(0, 12).map((provider) => {
+                  {proofProviders.slice(0, 12).map((provider) => {
                     const apiProof = apiProofLabel(provider)
                     return (
                       <tr key={`${provider.providerCode}-${provider.rawResponseSha256 || provider.fallbackReason || provider.fetchedAt}`}>

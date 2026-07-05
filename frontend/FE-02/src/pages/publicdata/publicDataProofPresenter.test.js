@@ -5,6 +5,7 @@ import {
   providerDisplayName,
   providerReasonLabel,
   sourceBadgeLabel,
+  sortProofProviders,
 } from './publicDataProofPresenter.js'
 
 const csvCacheSafetyRecall = {
@@ -39,7 +40,16 @@ const reasons = collectFailureReasons(
   { providers: [csvCacheSafetyRecall] },
 )
 
-assert.deepEqual(reasons, ['SAFETY_RECALL: CSV cache 사용 가능 · fallback 아님'])
+assert.deepEqual(reasons, [])
+
+assert.deepEqual(
+  sortProofProviders([
+    { providerCode: 'BIZINFO_SUPPORT', sourceType: 'empty' },
+    { providerCode: 'KATS_CERTIFIED_PRODUCT_INFO', sourceType: 'cache', recordCount: 10 },
+    csvCacheSafetyRecall,
+  ]).map((provider) => provider.providerCode),
+  ['SAFETY_RECALL', 'KATS_CERTIFIED_PRODUCT_INFO', 'BIZINFO_SUPPORT'],
+)
 
 assert.equal(
   sourceBadgeLabel({

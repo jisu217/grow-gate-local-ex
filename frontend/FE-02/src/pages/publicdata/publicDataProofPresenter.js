@@ -10,13 +10,26 @@ export function collectFailureReasons(runs = [], records = [], proofRun = null) 
     if (record.apiKeyConfigured === false) reasons.add(`${record.provider}: API key 없음`)
   })
   proofRun?.providers?.forEach((provider) => {
-    if (provider.providerCode === 'SAFETY_RECALL' && provider.sourceType === 'cache') {
-      reasons.add(`SAFETY_RECALL: ${providerReasonLabel(provider)}`)
-    } else if (provider.fallbackReason && provider.sourceType === 'fallback') {
+    if (provider.fallbackReason && provider.sourceType === 'fallback') {
       reasons.add(`${provider.providerCode}: ${provider.fallbackReason}`)
     }
   })
   return Array.from(reasons)
+}
+
+export function sortProofProviders(providers = []) {
+  return [...providers].sort((a, b) => proofProviderRank(a) - proofProviderRank(b)
+    || String(a?.providerCode || '').localeCompare(String(b?.providerCode || '')))
+}
+
+function proofProviderRank(provider) {
+  if (provider?.providerCode === 'SAFETY_RECALL') return 0
+  if (provider?.sourceType === 'live') return 1
+  if (provider?.sourceType === 'cache' && Number(provider?.recordCount || 0) > 0) return 2
+  if (provider?.sourceType === 'cache') return 3
+  if (provider?.sourceType === 'empty') return 4
+  if (provider?.sourceType === 'fallback') return 5
+  return 6
 }
 
 export function providerDisplayName(providerCode) {
