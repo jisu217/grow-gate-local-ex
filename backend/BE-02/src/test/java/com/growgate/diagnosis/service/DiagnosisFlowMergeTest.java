@@ -16,6 +16,8 @@ import com.growgate.knowledge.repository.KnowledgeSourceRepository;
 import com.growgate.knowledge.repository.ProductKnowledgeRepository;
 import com.growgate.membership.repository.MembershipRepository;
 import com.growgate.product.repository.ProductRepository;
+import com.growgate.publicdata.entity.PublicDataRecord;
+import com.growgate.publicdata.enums.PublicDataProvider;
 import com.growgate.publicdata.service.PublicDataCollectionService;
 import com.growgate.regional.service.RegionalIndustryProfileService;
 import com.growgate.user.repository.UserRepository;
@@ -67,6 +69,29 @@ class DiagnosisFlowMergeTest {
         assertThat((String) result.get("errorMessage")).doesNotContain("secret-host", "password");
         assertThat(OffsetDateTime.parse((String) result.get("failedAt"))).isNotNull();
         assertThat(result).containsKeys("agentTrace", "evidenceSources", "riskItems");
+    }
+
+    @Test
+    void emptyPublicDataSourceIsNotDescribedAsLiveOrCacheEvidence() {
+        DiagnosisAsyncProcessor processor = newDiagnosisAsyncProcessor();
+        PublicDataRecord emptyRecord = PublicDataRecord.builder()
+                .provider(PublicDataProvider.SAFETY_RECALL)
+                .usedFor("recall")
+                .sourceType("empty")
+                .fallbackUsed(false)
+                .scoreContribution(0)
+                .build();
+
+        String metricSummary = ReflectionTestUtils.invokeMethod(processor,
+                "publicDataMetricSummary", emptyRecord, Map.of());
+        String decisionImpact = ReflectionTestUtils.invokeMethod(processor,
+                "publicDataDecisionImpact", emptyRecord, 0);
+        String reason = ReflectionTestUtils.invokeMethod(processor,
+                "publicDataReason", emptyRecord);
+
+        assertThat(metricSummary).contains("empty record");
+        assertThat(decisionImpact).contains("live/cache 성공 근거가 아니며");
+        assertThat(reason).contains("live/cache 성공 근거로 표시하지 않고");
     }
 
     private DiagnosisService newDiagnosisService() {

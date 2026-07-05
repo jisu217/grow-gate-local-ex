@@ -476,9 +476,10 @@ public class DiagnosisAsyncProcessor {
             source.put("adjustedContribution", adjustedContribution);
             source.put("finalScoreDelta", adjustedContribution);
             source.put("scoreContribution", adjustedContribution);
+            String sourceType = sourceType(record);
             source.put("fallbackUsed", record.isFallbackUsed());
             source.put("cacheHit", record.isCacheHit());
-            source.put("sourceType", sourceType(record));
+            source.put("sourceType", sourceType);
             source.put("collectionRunId", record.getRun() != null ? record.getRun().getId() : null);
             source.put("errorMessage", record.getErrorMessage());
             source.put("confidence", record.getConfidence());
@@ -519,9 +520,7 @@ public class DiagnosisAsyncProcessor {
             source.put("decisionImpact", publicDataDecisionImpact(record, adjustedContribution));
             source.put("scoreFormula", normalizedPayload.getOrDefault("scoreFormula",
                     "scoreContribution = provider metric contribution adjusted by confidence"));
-            source.put("reason", record.isFallbackUsed()
-                    ? "live 공공 API 수집 실패/비활성 상태를 명시하고 fallback 신호로 반영"
-                    : "live 공공 API 또는 유효 cache record의 도메인 신호를 진단 점수에 반영");
+            source.put("reason", publicDataReason(record));
             sources.add(source);
         }
     }
@@ -763,18 +762,33 @@ public class DiagnosisAsyncProcessor {
                     .reduce((left, right) -> left + ", " + right)
                     .orElse("metric record 없음");
         }
+        if ("empty".equals(sourceType(record))) {
+            return "empty record: live/cache metric 0건 또는 endpoint/key/응답 상태 확인 필요";
+        }
         return record.isFallbackUsed()
                 ? "fallback record: live metric 미확보"
                 : "live/cache record 수집됨, provider parser metric 확인 필요";
     }
 
     private String publicDataDecisionImpact(PublicDataRecord record, int adjustedContribution) {
+        if ("empty".equals(sourceType(record))) {
+            return "empty source는 live/cache 성공 근거가 아니며 API key, operation endpoint, catalog URL, 0건 응답 여부를 담당자가 확인해야 합니다.";
+        }
         if (record.isFallbackUsed()) {
             return "fallback은 점수를 올리지 않고 confidence 하락 및 담당자 확인 항목으로만 반영됩니다.";
         }
         String direction = adjustedContribution > 0 ? "상향" : adjustedContribution < 0 ? "하향" : "중립";
         return record.getProvider().name() + " " + record.getUsedFor()
                 + " metric이 Gate 판단에 " + direction + " 기여(" + adjustedContribution + "점)했습니다.";
+    }
+
+    private String publicDataReason(PublicDataRecord record) {
+        if ("empty".equals(sourceType(record))) {
+            return "공공데이터 호출/설정/응답이 empty 상태이므로 live/cache 성공 근거로 표시하지 않고 담당자 확인 및 재수집 대상으로 반영";
+        }
+        return record.isFallbackUsed()
+                ? "live 공공 API 수집 실패/비활성 상태를 명시하고 fallback 신호로 반영"
+                : "live 공공 API 또는 유효 cache record의 도메인 신호를 진단 점수에 반영";
     }
 
     private void putIfPresent(Map<String, Object> target, String key, Object value) {

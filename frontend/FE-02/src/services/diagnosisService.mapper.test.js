@@ -294,7 +294,7 @@ const noPublicDataSources = [
     fetchedAt: '2026-07-05T02:02:00Z',
     metricSummary: 'recordCount=0',
     decisionImpact: '리콜 live metric 미확보',
-    errorMessage: 'API_KEY_NOT_CONFIGURED',
+    errorMessage: 'API key is not configured',
   },
   {
     sourceId: 'FTO-fallback',
@@ -310,7 +310,7 @@ const noPublicDataSources = [
     fetchedAt: '2026-07-05T02:03:00Z',
     metricSummary: 'patentCount unavailable',
     decisionImpact: 'FTO 담당자/변리사 확인 필요',
-    errorMessage: 'API_KEY_NOT_CONFIGURED',
+    errorMessage: 'API key is not configured',
   },
   {
     sourceId: 'SUPPORT-fallback',
