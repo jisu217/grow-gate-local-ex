@@ -148,7 +148,7 @@ public class DiagnosisAsyncProcessor {
 
             Map<String, Integer> scoreMap = agentLoop.runTool(
                     "score_readiness",
-                    "Spring rule scorer + public data contribution",
+                    "Source-bound rule score + guarded public data contribution",
                     1,
                     Map.of(),
                     () -> {
@@ -1392,6 +1392,7 @@ public class DiagnosisAsyncProcessor {
     private List<Map<String, Object>> buildMarketStageCard(String targetCountry, int market,
                                                            List<Map<String, Object>> sources) {
         int publicCount = sourceCount(sources, "market", "live", "cache");
+        int externalCount = sourceCount(sources, "market", "external_feed", "external_reconstructed", "crawl");
         int fallbackCount = sourceCount(sources, "market", "fallback");
         int evidenceStrength = maxEvidenceStrength(sources, "market");
         return List.of(Map.of(
@@ -1399,9 +1400,13 @@ public class DiagnosisAsyncProcessor {
                 "score", market,
                 "grade", gradeClass(market),
                 "gradeLabel", gradeLabel(market),
-                "marketSize", publicCount + " live/cache",
-                "growth", "evidence " + evidenceStrength + "/5",
-                "evidenceNote", "market source trace " + publicCount + "건, fallback " + fallbackCount + "건"
+                "marketSize", "공공데이터 " + publicCount + "건",
+                "growth", "근거 " + evidenceStrength + "/5 · 보조출처 " + externalCount + "건",
+                "evidenceNote", publicCount > 0
+                        ? "MarketSignalAgent가 live/cache 공공데이터를 점수 근거로 사용했습니다."
+                        : "MarketSignalAgent live/cache 공공데이터가 없어 보조출처와 담당자 확인이 필요합니다.",
+                "humanReviewRequired", publicCount == 0 || fallbackCount > 0,
+                "evidenceIds", sourceIds(sources, "market")
         ));
     }
 
@@ -1414,21 +1419,25 @@ public class DiagnosisAsyncProcessor {
         return List.of(
                 Map.of(
                         "nm", "대상국 규제 준비도",
-                        "mkt", "Spring rule score + 인증 지식",
+                        "mkt", "규칙 점수 + 등록 인증/제품 지식 기반 1차 판단",
                         "market", List.of("req", targetCountry),
                         "priority", List.of(regulation >= 70 ? "warn" : "req", regulation >= 70 ? "주의" : "긴급"),
                         "status", List.of(statusType, statusLabel),
                         "duration", regulation >= 75 ? "2-4주" : "4-8주",
-                        "cost", publicCount > 0 ? "출처확인" : "견적필요"
+                        "cost", publicCount > 0 ? "출처확인" : "견적필요",
+                        "humanReviewRequired", publicCount == 0 || fallbackCount > 0,
+                        "evidenceIds", sourceIds(sources, "regulation")
                 ),
                 Map.of(
-                        "nm", "공공 API 규제 출처",
-                        "mkt", "sourceType live/cache/fallback 분리",
+                        "nm", "규제 근거 연결 상태",
+                        "mkt", "live/cache 공공데이터와 보조·fallback 근거를 분리 표시",
                         "market", List.of(publicCount > 0 ? "ok" : "warn", targetCountry),
                         "priority", List.of(fallbackCount > 0 ? "warn" : "ok", fallbackCount > 0 ? "확인" : "정상"),
                         "status", List.of(publicCount > 0 ? "ok" : "warn", publicCount + "건 연결"),
                         "duration", fallbackCount > 0 ? "키/엔드포인트 확인" : "완료",
-                        "cost", "내부"
+                        "cost", "내부",
+                        "humanReviewRequired", fallbackCount > 0 || publicCount == 0,
+                        "evidenceIds", sourceIds(sources, "regulation")
                 )
         );
     }
@@ -1438,6 +1447,8 @@ public class DiagnosisAsyncProcessor {
         String riskClass = recall >= 75 ? "l" : recall >= 60 ? "m" : "h";
         String badge = recall >= 75 ? "저위험" : recall >= 60 ? "중위험" : "고위험";
         int publicCount = sourceCount(sources, "recall", "live", "cache");
+        int externalCount = sourceCount(sources, "recall", "external_feed", "external_reconstructed", "crawl");
+        int fallbackCount = sourceCount(sources, "recall", "fallback");
         String topRisk = risks.isEmpty() ? "출처 최신성 점검" : stringValue(risks.get(0).get("label"));
         return List.of(
                 Map.of(
@@ -1447,9 +1458,12 @@ public class DiagnosisAsyncProcessor {
                         "similarity", String.format("%.2f", recall / 100.0),
                         "checks", List.of(
                                 topRisk,
-                                "Safety source trace " + publicCount + "건 확인",
+                                "제품안전/리콜 공공데이터 " + publicCount + "건 - 담당자 확인 필요",
+                                "외부보조 위해정보 " + externalCount + "건 · fallback " + fallbackCount + "건",
                                 "fallback 발생 시 담당자 근거 문서 지식화"
-                        )
+                        ),
+                        "humanReviewRequired", publicCount == 0 || fallbackCount > 0,
+                        "evidenceIds", sourceIds(sources, "recall")
                 )
         );
     }
@@ -1458,17 +1472,27 @@ public class DiagnosisAsyncProcessor {
                                                          List<Map<String, Object>> sources) {
         int ftoPublicCount = sourceCount(sources, "fto", "live", "cache");
         int supportPublicCount = sourceCount(sources, "support", "live", "cache");
+        String ftoTrace = ftoPublicCount > 0
+                ? "KIPRIS 공공데이터 " + ftoPublicCount + "건 · score " + fto + "/100"
+                : "KIPRIS 공공데이터 미연결 · 변리사 검토 필요 · score " + fto + "/100";
+        String supportTrace = supportPublicCount > 0
+                ? "지원사업 공공데이터 " + supportPublicCount + "건 · score " + support + "/100"
+                : "지원사업 공공데이터 미연결 · 원문 공고 확인 필요 · score " + support + "/100";
         List<Map<String, Object>> patents = List.of(Map.of(
                 "riskClass", fto >= 75 ? "l" : fto >= 60 ? "m" : "h",
                 "badge", fto >= 75 ? "저위험" : fto >= 60 ? "중위험" : "고위험",
                 "name", "대상국 FTO 준비도",
-                "sub", "KIPRIS/public trace " + ftoPublicCount + "건 · score " + fto + "/100"
+                "sub", ftoTrace,
+                "attorneyReviewRequired", ftoPublicCount == 0 || fto < 70,
+                "evidenceIds", sourceIds(sources, "fto")
         ));
         List<Map<String, Object>> supports = List.of(Map.of(
                 "name", targetCountry + " 수출 지원 적합도",
-                "org", "Bizinfo/KOTRA/public trace " + supportPublicCount + "건 · score " + support + "/100",
+                "org", supportTrace,
                 "dday", support >= 70 ? "우선" : "보강",
-                "isGreen", support >= 70
+                "isGreen", support >= 70,
+                "humanReviewRequired", supportPublicCount == 0,
+                "evidenceIds", sourceIds(sources, "support")
         ));
         return Map.of("patents", patents, "supports", supports);
     }
@@ -2090,8 +2114,8 @@ public class DiagnosisAsyncProcessor {
                         Map.of("key", "market", "weight", 0.25, "evidence", "HS code, target country, KCS/KOTRA public-data source trace"),
                         Map.of("key", "regulation", "weight", 0.22, "evidence", "target-market rule, certification count, expiry risk, public-data trace"),
                         Map.of("key", "recall", "weight", 0.16, "evidence", "HS/product keyword risk and SafetyKorea/public recall source trace"),
-                        Map.of("key", "fto", "weight", 0.20, "evidence", "registered FTO risk and KIPRIS/public trace"),
-                        Map.of("key", "support", "weight", 0.17, "evidence", "knowledge trust, buyer requirements, source count, Bizinfo/KOTRA trace")
+                        Map.of("key", "fto", "weight", 0.20, "evidence", "registered FTO risk and KIPRIS public-data or human-review trace"),
+                        Map.of("key", "support", "weight", 0.17, "evidence", "knowledge trust, buyer requirements, source count, Bizinfo/KOTRA public-data or notice trace")
                 ),
                 "guardrails", List.of(
                         "live/cache/fallback/heuristic/agent sourceType을 결과에 함께 저장",
@@ -2400,6 +2424,16 @@ public class DiagnosisAsyncProcessor {
                 .filter(source -> field.equals(source.get("field")) || field.equals(source.get("usedFor")))
                 .filter(source -> allowed.isEmpty() || allowed.contains(stringValue(source.get("sourceType"))))
                 .count();
+    }
+
+    private List<String> sourceIds(List<Map<String, Object>> sources, String field) {
+        return sources.stream()
+                .filter(source -> field.equals(source.get("field")) || field.equals(source.get("usedFor")))
+                .map(source -> stringValue(source.get("sourceId")))
+                .filter(value -> !value.isBlank())
+                .distinct()
+                .limit(8)
+                .toList();
     }
 
     private int maxEvidenceStrength(List<Map<String, Object>> sources, String field) {

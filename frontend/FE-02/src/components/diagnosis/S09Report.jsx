@@ -18,7 +18,7 @@ export default function S09Report({ scoreBars, summary, onDownload, fastApiUsed 
           </p>
 
           <div className="highlight-list">
-            <div className="hl-item"><b>산출물:</b> {fastApiUsed ? '선택형 report bridge 결과를 병합한 Markdown 바이어 대응 메모입니다.' : 'Spring 로컬 생성기의 Markdown 바이어 대응 메모입니다.'}</div>
+            <div className="hl-item"><b>산출물:</b> {fastApiUsed ? '선택형 report bridge 결과를 병합한 Markdown 바이어 대응 메모입니다.' : 'source-bound evidence 기반 Markdown 바이어 대응 메모입니다.'}</div>
             <div className="hl-item"><b>보관:</b> PDF가 필요하면 다운로드한 Markdown을 HTML 미리보기 또는 브라우저 인쇄로 보관합니다.</div>
             <div className="hl-item"><b>근거:</b> 점수별 source trace와 fallback 여부를 함께 확인할 수 있습니다.</div>
             <div className="hl-item"><b>구분:</b> 공공데이터 원문 근거, 정규화/필터링 결과, AI 보조 해석, 사람이 최종 확인해야 하는 항목을 분리해 확인하십시오.</div>

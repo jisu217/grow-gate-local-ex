@@ -44,7 +44,7 @@
 
 실제 공공 API 증거는 `/api/admin/public-data/proof-runs`가 생성하는 `proofRunId`, `rawResponseSha256`, `schemaValidationStatus`, `operationEndpoint`, `apiKeyConfigured` 기준으로만 인정합니다. Synthetic persona validation은 [docs/validation/README_SYNTHETIC_VALIDATION.md](docs/validation/README_SYNTHETIC_VALIDATION.md)에 분리했고, 실제 고객 검증 자료처럼 표현하지 않습니다. 보고서 공식 산출물은 Markdown이며 PDF는 [docs/report/REPORT_FORMAT_POLICY.md](docs/report/REPORT_FORMAT_POLICY.md)의 선택 인쇄/변환 전략만 사용합니다. Pilot ML artifact는 `python3 ml/pipelines/train_all.py`로 생성하며 `/api/ml/models/latest`에서 버전과 한계를 조회합니다.
 
-2026-07-04 기준 GitHub `main`에는 심사용 방어 패키지와 공개 proof 뷰어가 포함되어 있습니다.
+2026-07-06 기준 GitHub `main`에는 심사용 방어 패키지와 공개 proof 뷰어, source-bound S04-S09 화면 방어가 포함되어 있습니다.
 
 - 3개 합성 seed 기업, 지역산업 profile, agent trace event schema, synthetic persona validation
 - public-data proof run API와 S10 proof surface
@@ -55,6 +55,7 @@
 - synthetic rule-assisted ML artifact와 `/api/ml/models/latest` 제한 고지
 - HttpOnly cookie 기반 로그인 세션 복원
 - `scripts/check-risk-gates.sh` 기반 제출 리스크 회귀 차단
+- S04-S09 stage card가 `0 live/cache`, `Spring 로컬`, `KIPRIS/public trace 0건` 같은 구현/빈근거 문구를 그대로 노출하지 않고, 공공데이터·보조출처·fallback·담당자 검토 필요 상태를 분리 표시
 
 심사 대응 기준 문서는 [docs/top15-resolution-2026-07-01.md](docs/top15-resolution-2026-07-01.md)입니다. 15개 치명 항목의 처리 상태, code reference, 남은 상용화 과제를 이 문서에 고정했습니다.
 90점권 시연 증거 기준은 [docs/judge-defense-90.md](docs/judge-defense-90.md), 공공데이터 metric/score 매핑은 [docs/public-data-field-mapping.md](docs/public-data-field-mapping.md), 발표 서버 환경 변수 템플릿은 [.env.example.presentation](.env.example.presentation)에 정리했습니다.

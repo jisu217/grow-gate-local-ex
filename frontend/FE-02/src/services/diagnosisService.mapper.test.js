@@ -412,3 +412,80 @@ assert.deepEqual(
 assert.equal(allBucketsNoData.stages.s10.pipes[0].sourceQualityStatus, 'EMPTY_NOT_CONFIGURED')
 assert.equal(allBucketsNoData.stages.s10.pipes[0].zeroReason, 'CATALOG_PAGE_ENDPOINT')
 assert.equal(allBucketsNoData.session.gateDecision.llmInfluencedGate, false)
+
+const weakStageCopy = mapDiagnosisDetail({
+  id: 'diag-weak-stage-copy',
+  productName: '베트남 수출용 산업용 정수 필터 카트리지',
+  hsCode: '850760',
+  targetCountry: 'DE',
+  status: 'completed',
+  knowledgeSnapshot: {},
+  result: {
+    summary: 'Spring 로컬 생성기의 Markdown 바이어 대응 메모입니다.',
+    diagnosisScore: { overall: 55, market: 73, regulation: 44, recall: 61, fto: 45, support: 47 },
+    stageCards: {
+      s04: [{ flag: 'Germany / EU', score: 73, marketSize: '0 live/cache', growth: 'evidence 0/5' }],
+      s05: [{
+        nm: '대상국 규제 준비도',
+        mkt: 'Spring rule score + 인증 지식',
+        market: ['req', 'DE'],
+        priority: ['req', '긴급'],
+        status: ['req', '누락위험'],
+        duration: '4-8주',
+        cost: '견적필요',
+      }],
+      s06: [{ title: '제품군 위해·리콜 신호', similarity: '0.61', checks: ['Safety source trace 0건 확인'] }],
+      s07: {
+        patents: [{ name: '대상국 FTO 준비도', sub: 'KIPRIS/public trace 0건 · score 45/100' }],
+        supports: [{ name: 'DE 수출 지원 적합도', org: 'Bizinfo/KOTRA/public trace 0건 · score 47/100' }],
+      },
+      s08: {
+        thisWeek: [
+          { title: 'KIPRIS 키워드와 경쟁사명을 기준으로 1차 검색', owner: '대표/외부 변리사', output: 'FTO 1차 검색 결과' },
+          { title: 'KIPRIS 키워드와 경쟁사명을 기준으로 1차 검색', owner: '대표/외부 변리사', output: 'FTO 1차 검색 결과' },
+        ],
+        beforeQuote: [
+          { title: 'KIPRIS 키워드와 경쟁사명을 기준으로 1차 검색', owner: '대표/외부 변리사', output: 'FTO 1차 검색 결과' },
+        ],
+        beforeShipment: [],
+      },
+      s09: {},
+    },
+  },
+})
+
+assert.equal(weakStageCopy.stages.s04[0].marketSize, '공공데이터 0건')
+assert.equal(weakStageCopy.stages.s04[0].growth, '근거 0/5 · 보조출처 확인 필요')
+assert.equal(weakStageCopy.stages.s05[0].mkt, '규칙 점수 + 등록 인증/제품 지식 기반 1차 판단')
+assert.equal(weakStageCopy.stages.s06[0].checks[0], '제품안전/리콜 공공데이터 0건 - 담당자 확인 필요')
+assert.match(weakStageCopy.stages.s07.patents[0].sub, /KIPRIS 공공데이터 미연결/)
+assert.match(weakStageCopy.stages.s07.supports[0].org, /지원사업 공공데이터 미연결/)
+assert.equal(weakStageCopy.stages.s08[0].tasks.length, 1)
+assert.equal(weakStageCopy.stages.s09.summary, 'source-bound evidence 기반 수출 준비도 리포트입니다.')
+
+const evidenceIdPreserved = mapDiagnosisDetail({
+  id: 'diag-evidence-id-preserved',
+  productName: '전동밸브',
+  targetCountry: 'US',
+  status: 'completed',
+  knowledgeSnapshot: {},
+  result: {
+    diagnosisScore: { overall: 66 },
+    stageCards: {
+      s04: [{ flag: 'US', score: 66, evidenceIds: ['SRC-MARKET-1'], humanReviewRequired: true }],
+      s05: [{ name: 'NRTL pre-check', evidenceIds: ['SRC-REG-1'], humanReviewRequired: true }],
+      s06: [{ title: 'recall cluster', evidenceIds: ['SRC-RECALL-1'], humanReviewRequired: true }],
+      s07: {
+        patents: [{ name: 'FTO', evidenceIds: ['SRC-FTO-1'], attorneyReviewRequired: true }],
+        supports: [{ name: '지원사업', evidenceIds: ['SRC-SUPPORT-1'], humanReviewRequired: true }],
+      },
+    },
+  },
+})
+
+assert.deepEqual(evidenceIdPreserved.stages.s04[0].evidenceIds, ['SRC-MARKET-1'])
+assert.deepEqual(evidenceIdPreserved.stages.s05[0].evidenceIds, ['SRC-REG-1'])
+assert.deepEqual(evidenceIdPreserved.stages.s06[0].evidenceIds, ['SRC-RECALL-1'])
+assert.deepEqual(evidenceIdPreserved.stages.s07.patents[0].evidenceIds, ['SRC-FTO-1'])
+assert.deepEqual(evidenceIdPreserved.stages.s07.supports[0].evidenceIds, ['SRC-SUPPORT-1'])
+assert.equal(evidenceIdPreserved.stages.s07.patents[0].attorneyReviewRequired, true)

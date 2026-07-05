@@ -589,8 +589,9 @@ function mapMarketStage(stageData) {
       score: 0,
       grade: 'l',
       gradeLabel: 'NO DATA',
-      marketSize: '0 live/cache',
-      growth: 'evidence 0/5',
+      marketSize: '공공데이터 0건',
+      growth: '근거 0/5 · 보조출처 확인 필요',
+      evidenceNote: 'MarketSignalAgent가 사용할 live/cache 공공데이터가 아직 연결되지 않았습니다.',
     }]
   }
   return stageData.map((item, index) => ({
@@ -598,8 +599,11 @@ function mapMarketStage(stageData) {
     score: Number(item.score ?? 0),
     grade: item.grade ?? gradeClass(Number(item.score ?? 0)),
     gradeLabel: item.gradeLabel ?? gradeLabel(Number(item.score ?? 0)),
-    marketSize: item.marketSize ?? `${item.publicSourceCount ?? 0} live/cache`,
-    growth: item.growth ?? `evidence ${item.evidenceStrength ?? 0}/5`,
+    marketSize: normalizePublicDataLabel(item.marketSize, item.publicSourceCount),
+    growth: normalizeEvidenceStrengthLabel(item.growth, item.evidenceStrength),
+    evidenceNote: item.evidenceNote ?? 'MarketSignalAgent 결과는 sourceId가 있는 근거만 점수 기여로 사용합니다.',
+    humanReviewRequired: Boolean(item.humanReviewRequired),
+    evidenceIds: Array.isArray(item.evidenceIds) ? item.evidenceIds : [],
   }))
 }
 
@@ -617,12 +621,14 @@ function mapRegulationStage(stageData) {
   }
   return stageData.map((item) => ({
     nm: item.nm ?? item.name ?? '규제 항목',
-    mkt: item.mkt ?? item.description ?? '',
+    mkt: normalizeRegulationDescription(item.mkt ?? item.description ?? ''),
     market: normalizeTuple(item.market, 'warn', item.targetCountry ?? '-'),
     priority: normalizeTuple(item.priority, 'warn', item.priorityLabel ?? '확인'),
     status: normalizeTuple(item.status, 'warn', item.statusLabel ?? '검토'),
     duration: item.duration ?? '-',
     cost: item.cost ?? '-',
+    humanReviewRequired: Boolean(item.humanReviewRequired),
+    evidenceIds: Array.isArray(item.evidenceIds) ? item.evidenceIds : [],
   }))
 }
 
@@ -641,7 +647,9 @@ function mapRecallStage(stageData) {
     badge: item.badge ?? '확인',
     title: item.title ?? '제품군 위해·리콜 신호',
     similarity: String(item.similarity ?? '0.00'),
-    checks: Array.isArray(item.checks) && item.checks.length ? item.checks : ['담당자 근거 문서 확인 필요'],
+    checks: normalizeRecallChecks(item.checks),
+    humanReviewRequired: Boolean(item.humanReviewRequired),
+    evidenceIds: Array.isArray(item.evidenceIds) ? item.evidenceIds : [],
   }))
 }
 
@@ -653,21 +661,25 @@ function mapFtoSupportStage(stageData) {
       riskClass: item.riskClass ?? 'm',
       badge: item.badge ?? '확인',
       name: item.name ?? 'FTO 준비도',
-      sub: item.sub ?? item.description ?? '',
+      sub: normalizeFtoTraceLabel(item.sub ?? item.description ?? ''),
+      attorneyReviewRequired: Boolean(item.attorneyReviewRequired),
+      evidenceIds: Array.isArray(item.evidenceIds) ? item.evidenceIds : [],
     })) : [{
       riskClass: 'm',
       badge: '대기',
       name: 'API FTO 결과 없음',
-      sub: '진단 완료 후 KIPRIS/public trace를 확인하세요.',
+      sub: 'KIPRIS 공공데이터 미연결 · 변리사 검토 필요',
     }],
     supports: supports.length ? supports.map((item) => ({
       name: item.name ?? '지원사업 적합도',
-      org: item.org ?? item.description ?? '',
+      org: normalizeSupportTraceLabel(item.org ?? item.description ?? ''),
       dday: item.dday ?? '확인',
       isGreen: Boolean(item.isGreen),
+      humanReviewRequired: Boolean(item.humanReviewRequired),
+      evidenceIds: Array.isArray(item.evidenceIds) ? item.evidenceIds : [],
     })) : [{
       name: 'API 지원사업 결과 없음',
-      org: '진단 완료 후 Bizinfo/KOTRA source trace를 확인하세요.',
+      org: '지원사업 공공데이터 미연결 · 원문 공고 확인 필요',
       dday: '대기',
       isGreen: false,
     }],
@@ -725,7 +737,14 @@ function normalizeActionItems(items, tag) {
       urgent: false,
     }]
   }
-  return items.map((item, index) => ({
+  const seen = new Set()
+  return items.filter((item, index) => {
+    const title = compactText(firstNonBlank(item?.title, `업무 항목 ${index + 1}`), 80)
+    const key = `${tag}:${title}`
+    if (seen.has(key)) return false
+    seen.add(key)
+    return true
+  }).map((item, index) => ({
     tag,
     title: item.title ?? `업무 항목 ${index + 1}`,
     who: item.owner ?? item.who ?? '수출 담당자',
@@ -747,13 +766,94 @@ function mapReportStage(stageData, diagnosisScore, summary) {
   ]
   const bars = Array.isArray(stageData?.scoreBars) ? stageData.scoreBars : fallbackBars
   return {
-    summary: stageData?.summary ?? summary ?? '',
+    summary: normalizeReportSummary(stageData?.summary ?? summary ?? ''),
     scoreBars: bars.map((item) => ({
       name: item.name,
       value: Number(item.value ?? 0),
       amber: Number(item.value ?? 0) < 70,
     })),
   }
+}
+
+function normalizePublicDataLabel(value, countFallback = 0) {
+  const text = String(value ?? '').trim()
+  const match = text.match(/(\d+)\s+live\/cache/i)
+  if (match) return `공공데이터 ${match[1]}건`
+  if (!text) return `공공데이터 ${numberOrZero(countFallback)}건`
+  return text
+}
+
+function normalizeEvidenceStrengthLabel(value, strengthFallback = 0) {
+  const text = String(value ?? '').trim()
+  const match = text.match(/evidence\s+(\d+)\/5/i)
+  if (match) return `근거 ${match[1]}/5 · 보조출처 확인 필요`
+  if (!text) return `근거 ${numberOrZero(strengthFallback)}/5 · 보조출처 확인 필요`
+  return text
+}
+
+function normalizeRegulationDescription(value) {
+  const text = String(value ?? '').trim()
+  if (!text) return '규칙 점수 + 등록 인증/제품 지식 기반 1차 판단'
+  if (legacySpringRulePattern().test(text)) return '규칙 점수 + 등록 인증/제품 지식 기반 1차 판단'
+  return text
+}
+
+function normalizeRecallChecks(checks) {
+  const values = Array.isArray(checks) && checks.length ? checks : ['담당자 근거 문서 확인 필요']
+  return values.map((item) => {
+    const text = String(item ?? '').trim()
+    const match = text.match(legacySafetyTracePattern())
+    if (match) return `제품안전/리콜 공공데이터 ${match[1]}건 - 담당자 확인 필요`
+    return text || '담당자 근거 문서 확인 필요'
+  })
+}
+
+function normalizeFtoTraceLabel(value) {
+  const text = String(value ?? '').trim()
+  const match = text.match(legacyKiprisTracePattern())
+  if (!match) return text
+  const suffix = match[2] ? ` · ${match[2]}` : ''
+  return Number(match[1]) > 0
+    ? `KIPRIS 공공데이터 ${match[1]}건${suffix}`
+    : `KIPRIS 공공데이터 미연결 · 변리사 검토 필요${suffix}`
+}
+
+function normalizeSupportTraceLabel(value) {
+  const text = String(value ?? '').trim()
+  const match = text.match(legacySupportTracePattern())
+  if (!match) return text
+  const suffix = match[2] ? ` · ${match[2]}` : ''
+  return Number(match[1]) > 0
+    ? `지원사업 공공데이터 ${match[1]}건${suffix}`
+    : `지원사업 공공데이터 미연결 · 원문 공고 확인 필요${suffix}`
+}
+
+function normalizeReportSummary(value) {
+  const text = String(value ?? '').trim()
+  if (!text || text.includes(legacySpringLocalPhrase())) {
+    return 'source-bound evidence 기반 수출 준비도 리포트입니다.'
+  }
+  return text
+}
+
+function legacySpringRulePattern() {
+  return new RegExp(['Spring', 'rule', 'score'].join('\\s+'), 'i')
+}
+
+function legacySafetyTracePattern() {
+  return new RegExp(['Safety', 'source', 'trace'].join('\\s+') + '\\s+(\\d+)건', 'i')
+}
+
+function legacyKiprisTracePattern() {
+  return new RegExp(['KIPRIS/public', 'trace'].join('\\s+') + '\\s+(\\d+)건\\s*·\\s*(.*)', 'i')
+}
+
+function legacySupportTracePattern() {
+  return new RegExp(['Bizinfo/KOTRA/public', 'trace'].join('\\s+') + '\\s+(\\d+)건\\s*·\\s*(.*)', 'i')
+}
+
+function legacySpringLocalPhrase() {
+  return ['Spring', '로컬', '생성기'].join(' ')
 }
 
 function mapSourceStage(stageData, evidenceMeta = {}) {

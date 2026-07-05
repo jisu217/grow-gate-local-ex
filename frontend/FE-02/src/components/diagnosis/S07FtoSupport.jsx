@@ -3,6 +3,8 @@ import DiagnosisStage from './DiagnosisStage.jsx'
 import MemoBox from '../ui/MemoBox.jsx'
 
 export default function S07FtoSupport({ patents, supports }) {
+  const supportCount = Array.isArray(supports) ? supports.length : 0
+
   return (
     <DiagnosisStage
       eyebrow="S07 FTO & SUPPORT"
@@ -25,7 +27,7 @@ export default function S07FtoSupport({ patents, supports }) {
         </div>
 
         <div>
-          <div className="fto-title">Support Programs · 5 Matched</div>
+          <div className="fto-title">지원사업 매칭 · {supportCount}건</div>
           {supports.map((s) => (
             <div key={s.name} className="support-card">
               <div>
