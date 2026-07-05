@@ -198,7 +198,8 @@ http://localhost:5173/
 
 환경 이슈:
 
-- macOS sandbox에서 Playwright Chromium 실행이 `MachPortRendezvous` 권한 문제로 실패했다.
+- 2026-07-05 이전에는 macOS sandbox에서 Playwright Chromium 실행이 `MachPortRendezvous` 권한 문제로 실패했다.
+- 2026-07-05 기준 `frontend/FE-02`에 Playwright dev dependency와 Chromium runtime을 설치했고, sandbox 밖 권한으로 `playwright-ok 149.0.7827.55` headless 실행을 확인했다.
 - Vite dev server도 sandbox 안에서는 포트 바인딩이 제한되어, sandbox 밖 실행으로 확인했다.
 - AWS profile session이 만료되어 S3 배포는 진행하지 못했다.
 
@@ -250,7 +251,7 @@ http://localhost:5173/
 | P1 | 공공데이터포털/KIPRIS 실제 API key 발급 및 env 주입 | live 수집 smoke test 필요 |
 | P1 | KOTRA/Safety/KIPRIS operation endpoint 확보 | 현재 일부는 공식 카탈로그 URL만 기본값 |
 | P1 | 제출용 시연 계정/시드 데이터 정리 | 심사자가 안정적으로 진단 flow를 볼 수 있어야 함 |
-| P2 | Playwright 또는 대체 브라우저 QA 환경 정리 | sandbox 제약 없는 재현 가능한 화면 검증 필요 |
+| P2 | Playwright 시각 QA 스크립트 확대 | 패키지/Chromium 실행은 준비됨. 진단 결과 핵심 화면별 자동 screenshot/assertion 추가 필요 |
 
 ## 12. 공유 시 주의 사항
 

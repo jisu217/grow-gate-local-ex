@@ -464,20 +464,30 @@ PRESENTATION_REQUIRE_OPERATION_API=true \
 
 시연 산출물: Gate Decision, confidence panel, Source Trust Bar, S10 evidence ledger, 이번 주/견적 전/출하 전 업무 보드, Markdown 바이어 대응 메모.
 
+진단 개요 상단 KPI 3개는 심사자가 첫 화면에서 빈 카드로 오해하지 않도록 다음 계약을 유지합니다.
+
+| KPI | 표시 내용 | 목적 |
+| :--- | :--- | :--- |
+| `01 대상 제품` | 제품명, HS Code, 대상국 | 현재 진단이 어떤 제품/시장 기준인지 즉시 식별 |
+| `02 Gate 준비도` | overall score, Gate 상태, 최저 영역 점수 | 점수와 보류/진행 판단의 관계를 명확히 표시 |
+| `03 근거 상태` | live/cache/fallback/empty 출처 수 | 판단 근거의 품질과 보강 필요 여부를 첫 화면에 노출 |
+
+KPI 렌더링은 `eyebrow`가 없을 때 `label/title`로 fallback하고, 긴 제품명·빈 문자열·NaN count가 들어와도 빈 카드나 `NaN`이 보이지 않도록 방어합니다.
+
 ---
 
 ## 12. Deployment Status
 
-GitHub `main`은 최신 public-data/provider 및 source-bound evidence 코드가 반영된 기준 브랜치입니다. Lightsail HTTPS 서비스는 접근 가능한 운영 smoke가 통과하지만, 현재 작업자 IP가 SSH allowlist에 없어 `main` pull/restart 배포 완료 여부는 서버에서 직접 확인해야 합니다.
+GitHub `main`은 최신 public-data/provider, source-bound evidence, 진단 개요 KPI 명확화 코드가 반영된 기준 브랜치입니다. Lightsail HTTPS 서비스는 접근 가능한 운영 smoke가 통과하지만, 서버 shell 접속이 가능한 환경에서 `main` pull/restart 배포 완료 여부를 다시 확인해야 합니다.
 
 | Item | Current State |
 | :--- | :--- |
-| GitHub main | `3eae6e5cbf21a1242cb4c02ae08ed1826040de6d` |
+| GitHub main | 최신 `origin/main` HEAD. KPI clarity fix `a9785e67` 포함 |
 | Deployed commit | 서버 SSH 재접속 후 확인 필요 |
 | Lightsail static IP | `54.180.56.24` |
 | Current public URL | `https://growgate.54.180.56.24.sslip.io` |
 | Attached instance | `growgate-fresh-20260703-2134` |
-| SSH firewall | `lightsail-connect`는 허용, 현재 작업자 IP `1.234.247.45/32`는 미등록이라 SSH timeout |
+| SSH firewall | `lightsail-connect`는 허용. SSH는 현재 작업자 IP allowlist 또는 Lightsail browser shell 접속 필요 |
 | Service status | production smoke PASS |
 | Public proof viewer | `/public-data/daily-refresh` returns `200` without login |
 | Auth session restore | admin login and cookie-only `/api/users/me=200` verified |

@@ -89,4 +89,4 @@
 | `cd backend/BE-02 && ./gradlew test --no-daemon` | 통과 |
 | dev server HTTP smoke | `http://127.0.0.1:5174/diagnosis/diag-empty` 200 |
 
-Playwright Chromium headless 실행은 macOS sandbox의 Mach port 권한으로 차단되어 스크린샷 검증까지는 수행하지 못했다. 대신 정적 build, mapper, backend test, risk gate, HTTP smoke로 코드 경로를 확인했다.
+당시 Playwright Chromium headless 실행은 macOS sandbox의 Mach port 권한으로 차단되어 스크린샷 검증까지는 수행하지 못했다. 이후 2026-07-05에 `frontend/FE-02` dev dependency로 Playwright를 추가하고 Chromium runtime 실행을 sandbox 밖 권한으로 확인했다. 발표 핵심 화면은 mapper/build 검증과 함께 Playwright screenshot/assertion을 우선 적용한다.

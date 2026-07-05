@@ -90,7 +90,7 @@
 | presentation dist grep | `CURRENT_SESSION`, `KPI_DATA`, mock stage key, `AI 지식화`, `추론 Agent` 미검출 |
 | `cd backend/BE-02 && ./gradlew test --no-daemon` | 통과 |
 | dev server HTTP smoke | `/diagnosis/diag-empty` 200 |
-| Playwright screenshot QA | macOS sandbox Mach port 권한으로 차단 |
+| Playwright screenshot QA | 2026-07-02 당시 macOS sandbox Mach port 권한으로 차단. 2026-07-05에 `frontend/FE-02` Playwright/Chromium 설치 및 headless 실행 확인 |
 
 참고: `find -newermt '2026-07-02 21:00:00'` 기준으로 `.gradle` 파일도 수정됐지만, 이는 test 실행으로 생긴 build metadata라 의도 변경에서 제외한다.
 

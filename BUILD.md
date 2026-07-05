@@ -21,6 +21,24 @@ npm ci
 npm run build
 ```
 
+## Browser QA
+
+Playwright is installed as a frontend dev dependency for reproducible visual checks.
+
+```bash
+cd frontend/FE-02
+npx playwright install chromium
+node -e "import('playwright').then(async ({ chromium }) => { const b = await chromium.launch({ headless: true }); console.log('playwright-ok', b.version()); await b.close(); })"
+```
+
+Use this for presentation-critical screens such as `/diagnosis/:id`. The diagnosis overview KPI row must show:
+
+- `01 대상 제품`: product name plus `HS Code · target country`
+- `02 Gate 준비도`: rule-based overall score plus Gate status and weakest score area
+- `03 근거 상태`: live/cache/fallback source counts
+
+The KPI cards must not render blank labels, meaningless `0/100` placeholder cards, or `NaN` counts.
+
 ## One-command Local Verification
 
 ```bash
