@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import styles from './TopNav.module.css'
 import { getAuthUser, logout } from '../../services/authService.js'
@@ -16,7 +17,12 @@ export default function TopNav() {
   const isPublicData = pathname.startsWith('/public-data')
   const isMypage = pathname.startsWith('/mypage')
 
+  // 모바일 햄버거 메뉴 열림 상태
+  const [menuOpen, setMenuOpen] = useState(false)
+  const closeMenu = () => setMenuOpen(false)
+
   const handleLogout = async () => {
+    closeMenu()
     await logout()
     navigate('/', { replace: true })
   }
@@ -24,20 +30,30 @@ export default function TopNav() {
   return (
     <nav className={styles.bar}>
       <div className={styles.inner}>
-        <Link to="/" className={styles.brand}>GROW-GATE <span className={styles.ex}>Local EX</span></Link>
+        <Link to="/" className={styles.brand} onClick={closeMenu}>GROW-GATE <span className={styles.ex}>Local EX</span></Link>
 
-        <div className={styles.links}>
-          <Link to="/" className={`${styles.link} ${isHome ? styles.active : ''}`}>홈</Link>
-          <Link to="/diagnosis" className={`${styles.link} ${isDiagnosis ? styles.active : ''}`}>Gate 판단</Link>
-          <Link to="/public-data/daily-refresh" className={`${styles.link} ${isPublicData ? styles.active : ''}`}>데이터 수집</Link>
-          <Link to="/mypage" className={`${styles.link} ${isMypage ? styles.active : ''}`}>마이페이지</Link>
+        {/* 모바일 전용 햄버거 토글 (데스크탑에선 CSS로 숨김) */}
+        <button
+          className={styles.hamburger}
+          aria-label="메뉴"
+          aria-expanded={menuOpen}
+          onClick={() => setMenuOpen((v) => !v)}
+        >
+          <span /><span /><span />
+        </button>
+
+        <div className={`${styles.links} ${menuOpen ? styles.open : ''}`}>
+          <Link to="/" onClick={closeMenu} className={`${styles.link} ${isHome ? styles.active : ''}`}>홈</Link>
+          <Link to="/diagnosis" onClick={closeMenu} className={`${styles.link} ${isDiagnosis ? styles.active : ''}`}>Gate 판단</Link>
+          <Link to="/public-data/daily-refresh" onClick={closeMenu} className={`${styles.link} ${isPublicData ? styles.active : ''}`}>데이터 수집</Link>
+          <Link to="/mypage" onClick={closeMenu} className={`${styles.link} ${isMypage ? styles.active : ''}`}>마이페이지</Link>
 
           {user
             ? <button className={styles.auth} onClick={handleLogout}>로그아웃</button>
-            : <Link to="/login" className={styles.auth}>로그인</Link>}
+            : <Link to="/login" onClick={closeMenu} className={styles.auth}>로그인</Link>}
 
           {/* Gate 판단 시작: 제품등록+바이어 문의 입력을 겸하는 단일 진입점 */}
-          <Link to="/diagnosis/new" className={styles.cta}>Gate 판단</Link>
+          <Link to="/diagnosis/new" onClick={closeMenu} className={styles.cta}>Gate 판단</Link>
         </div>
       </div>
     </nav>
