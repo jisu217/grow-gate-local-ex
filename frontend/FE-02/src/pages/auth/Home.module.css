@@ -142,6 +142,7 @@
   letter-spacing: -.03em;
   line-height: 1.1;
   color: #0b1530;
+  word-break: keep-all; /* 한국어를 단어 단위로만 줄바꿈 ('풉니다.'가 '풉니/다.'로 안 쪼개지게) */
   max-width: 620px;
 }
 /* 그라디언트 강조 텍스트 */

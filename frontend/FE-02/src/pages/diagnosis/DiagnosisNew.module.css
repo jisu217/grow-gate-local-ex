@@ -275,3 +275,8 @@
 .selectField { flex: 1; min-width: 220px; display: flex; align-items: center; justify-content: space-between; background: #fff; border: 1px solid var(--line); border-radius: 12px; padding: 14px 16px; cursor: pointer; font-family: var(--kr); font-size: 14.5px; color: var(--slate); transition: .15s; }
 .selectField:hover { border-color: var(--blue); background: #f4f8ff; }
 .selectChevron { color: var(--slate-2); font-size: 12px; }
+
+/* 모바일: 제품 선택 카드 그리드를 1열로 (파일 뒤쪽에 둬야 기본 2열을 덮음) */
+@media (max-width: 720px) {
+  .productGrid { grid-template-columns: 1fr; }
+}

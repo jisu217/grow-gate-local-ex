@@ -250,3 +250,15 @@
 .pending { color: var(--amber); background: #fbeecb; }
 /* 실패 상태 */
 .failed  { color: var(--red);   background: #fbe0dd; }
+
+/* ===== 모바일: 헤더 세로 배치 + 요약 수치 2열 ===== */
+@media (max-width: 640px) {
+  .wrap { padding: 28px 18px; }
+  .header { flex-direction: column; gap: 14px; }
+  .title { font-size: 23px; }
+  .newBtn { align-self: flex-start; }
+  /* 4단 수치가 좁은 폭에서 찌그러지지 않게 2×2로, 세로 구분선 제거 */
+  .summaryRow { grid-template-columns: 1fr 1fr; gap: 14px 8px; }
+  .sumItem { padding: 0; border-right: none; }
+  .sumVal { font-size: 22px; }
+}

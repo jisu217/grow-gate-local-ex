@@ -164,7 +164,9 @@ body {
   border-color: var(--blue);
   box-shadow: 0 8px 20px rgba(47, 107, 255, 0.28);
 }
-.pager .next:hover {
+/* :not(:disabled)로 우선순위를 높여, hover(모바일 sticky 포함) 시에도
+   '.pager button:hover'의 파란 글씨에 덮이지 않고 흰 글씨를 유지 */
+.pager .next:hover:not(:disabled) {
   transform: translateY(-1px);
   color: #fff;
 }
@@ -1077,6 +1079,7 @@ body {
   font-size: 12px;
   color: var(--slate-2);
   margin: 0;
+  overflow-wrap: anywhere; /* 긴 UUID/source id가 폭을 넘치게 밀어내지 않게 */
 }
 .source-trust-counts {
   display: grid;
@@ -1163,6 +1166,7 @@ body {
 .provider-health span {
   font-size: 11.5px;
   line-height: 1.35;
+  overflow-wrap: anywhere; /* 긴 타임스탬프가 카드를 넘치게 밀어내지 않게 */
 }
 .ledger-table-wrap {
   overflow-x: auto;
@@ -1322,6 +1326,15 @@ body {
   .source-trust-bar {
     grid-template-columns: 1fr;
   }
+  /* 3열 레이아웃의 최소폭(260+260+150=670px)이 좁은 화면을 넘치게 하던 문제 → 1열 */
+  .source-trust-layout {
+    grid-template-columns: 1fr;
+  }
+  /* provider 행도 4열 최소폭(≈630px)이 넘치므로 세로로 쌓음 */
+  .provider-health-row {
+    grid-template-columns: 1fr;
+    gap: 3px;
+  }
   .decision-brief-head,
   .decision-brief-grid,
   .action-strip {
@@ -1359,4 +1372,14 @@ body {
   .app { grid-template-columns: var(--sb-collapsed) 1fr; }
   .kpi-row { grid-template-columns: 1fr; }
   .gate-grid { grid-template-columns: 1fr; }
+  /* 좁은 본문에서 좌우 여백을 줄여 내용 폭 확보 */
+  .scroll { padding: 18px 14px 40px; }
+  /* 페이저 버튼이 안 줄어들어 '다음' 버튼 글자가 화면 밖으로 밀리던 문제:
+     두 버튼을 균등 폭으로 줄어들게 해 글자가 항상 보이게 */
+  .pager { gap: 10px; }
+  .pager button { flex: 1 1 0; min-width: 0; padding: 12px 12px; font-size: 12.5px; text-align: center; }
+  /* 스테이지 헤더: pill이 제목 폭을 뺏어 제목이 단어별로 세로로 쪼개지던 문제 →
+     세로로 쌓아 제목에 full width 부여, 한국어는 단어 단위로만 줄바꿈 */
+  .s-head { flex-direction: column; gap: 10px; }
+  .s-head h2 { font-size: 22px; word-break: keep-all; }
 }

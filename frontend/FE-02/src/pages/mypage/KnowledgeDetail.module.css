@@ -47,7 +47,13 @@
 .meta { font-size: 13px; color: var(--slate-2); margin-top: 4px; margin-bottom: 22px; }
 
 /* 탭 내비게이션 */
-.tabs { display: flex; gap: 4px; border-bottom: 2px solid var(--line); margin-bottom: 20px; }
+/* 탭 6개가 좁은 화면에서 넘치지 않도록 가로 스크롤. 데스크탑에선 다 들어가 스크롤이 생기지 않음 */
+.tabs {
+  display: flex; gap: 4px; border-bottom: 2px solid var(--line); margin-bottom: 20px;
+  overflow-x: auto; -webkit-overflow-scrolling: touch;
+  scrollbar-width: none; /* Firefox: 스크롤바 숨김 */
+}
+.tabs::-webkit-scrollbar { display: none; } /* Chrome/Safari: 스크롤바 숨김 */
 
 /* 탭 버튼 */
 .tab {
@@ -55,6 +61,7 @@
   color: var(--slate); background: none; border: none;
   padding: 10px 16px; cursor: pointer; transition: .13s;
   border-bottom: 2px solid transparent; margin-bottom: -2px;
+  flex-shrink: 0; white-space: nowrap; /* 좁아도 탭이 찌그러지거나 줄바꿈되지 않게 */
 }
 .tab:hover { color: var(--ink); }
 
