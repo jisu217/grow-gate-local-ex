@@ -1,13 +1,38 @@
 // 백엔드 API 공통 fetch 헬퍼
 const viteEnv = import.meta.env ?? {}
 const configuredApiUrl = (viteEnv.VITE_API_URL?.trim() || viteEnv.VITE_API_BASE_URL?.trim() || '')
-const rawApiUrl = configuredApiUrl || (typeof window !== 'undefined' ? window.location.origin : '')
-const normalizedApiUrl = rawApiUrl.replace(/\/+$/, '')
-const API_BASE = normalizedApiUrl.endsWith('/api') ? normalizedApiUrl : `${normalizedApiUrl}/api`
+const browserLocation = typeof window !== 'undefined' ? window.location : null
+const API_BASE = resolveApiBase(configuredApiUrl, browserLocation?.origin ?? '', browserLocation?.hostname ?? '')
 const LEGACY_TOKEN_KEY = 'gg_access_token'
 const DEFAULT_TIMEOUT_MS = Number(viteEnv.VITE_API_TIMEOUT_MS ?? 15000)
 const DEFAULT_RETRY_COUNT = Number(viteEnv.VITE_API_RETRY_COUNT ?? 2)
 let memoryAccessToken = null
+
+export function resolveApiBase(configuredUrl, locationOrigin = '', locationHostname = '') {
+  const trimmedConfiguredUrl = configuredUrl?.trim() ?? ''
+  const safeConfiguredUrl = shouldIgnoreConfiguredUrl(trimmedConfiguredUrl, locationHostname)
+    ? ''
+    : trimmedConfiguredUrl
+  const rawApiUrl = safeConfiguredUrl || locationOrigin
+  const normalizedApiUrl = rawApiUrl.replace(/\/+$/, '')
+  return normalizedApiUrl.endsWith('/api') ? normalizedApiUrl : `${normalizedApiUrl}/api`
+}
+
+function shouldIgnoreConfiguredUrl(configuredUrl, locationHostname) {
+  if (!configuredUrl) return false
+  try {
+    const configured = new URL(configuredUrl)
+    const configuredIsLocal = isLocalHostname(configured.hostname)
+    const pageIsLocal = !locationHostname || isLocalHostname(locationHostname)
+    return configuredIsLocal && !pageIsLocal
+  } catch {
+    return false
+  }
+}
+
+function isLocalHostname(hostname) {
+  return ['localhost', '127.0.0.1', '0.0.0.0', '::1'].includes(hostname)
+}
 
 // accessToken은 XSS 노출면을 줄이기 위해 localStorage에 저장하지 않는다.
 // 새로고침 뒤 인증은 서버가 내려준 HttpOnly cookie가 담당한다.
