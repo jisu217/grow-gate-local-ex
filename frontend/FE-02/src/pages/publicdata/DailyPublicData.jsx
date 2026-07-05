@@ -26,27 +26,35 @@ export default function DailyPublicData() {
 
   const load = async () => {
     setPageState('loading')
-    try {
-      const [dashboardData, runData, recordData] = await Promise.all([
-        getPublicDataDashboard(),
-        getPublicDataRuns(),
-        getPublicDataRecords(),
-      ])
-      setDashboard(dashboardData)
-      setRuns(runData?.runs ?? [])
-      setRecords(recordData?.records ?? [])
-      try {
-        const proofData = await getLatestPublicDataProofRun()
-        setProofRun(proofData)
-        setProofState('ready')
-        setProofError('')
-      } catch (error) {
-        setProofRun(null)
-        setProofState('error')
-        setProofError(error.message || 'proof run 조회에 실패했습니다.')
-      }
+    const [dashboardResult, runResult, recordResult, proofResult] = await Promise.allSettled([
+      getPublicDataDashboard(),
+      getPublicDataRuns(),
+      getPublicDataRecords(),
+      getLatestPublicDataProofRun(),
+    ])
+
+    const dashboardData = valueOrNull(dashboardResult)
+    const runData = valueOrNull(runResult)
+    const recordData = valueOrNull(recordResult)
+    const proofData = valueOrNull(proofResult)
+
+    setDashboard(dashboardData ?? proofDashboard(proofData))
+    setRuns(runData?.runs ?? [])
+    setRecords(recordData?.records ?? [])
+
+    if (proofData) {
+      setProofRun(proofData)
+      setProofState('ready')
+      setProofError('')
+    } else {
+      setProofRun(null)
+      setProofState('error')
+      setProofError(errorMessage(proofResult) || 'proof run 조회에 실패했습니다.')
+    }
+
+    if (dashboardData || runData || recordData || proofData) {
       setPageState('ok')
-    } catch {
+    } else {
       setPageState('error')
     }
   }
@@ -289,6 +297,29 @@ export default function DailyPublicData() {
       )}
     </main>
   )
+}
+
+function valueOrNull(result) {
+  return result.status === 'fulfilled' ? result.value : null
+}
+
+function errorMessage(result) {
+  return result.status === 'rejected' ? result.reason?.message : ''
+}
+
+function proofDashboard(proofRun) {
+  if (!proofRun) return null
+  return {
+    runCount: proofRun.proofRunId || proofRun.proof_run_id ? 1 : 0,
+    recordCount: proofRun.totalProviderCount ?? proofRun.total_provider_count ?? 0,
+    successCount: proofRun.liveProviderCount ?? proofRun.live_provider_count ?? 0,
+    fallbackCount: proofRun.fallbackProviderCount ?? proofRun.fallback_provider_count ?? 0,
+    cacheHitCount: proofRun.cacheProviderCount ?? proofRun.cache_provider_count ?? 0,
+    newestFetchedAt: proofRun.completedAt ?? proofRun.completed_at ?? proofRun.startedAt ?? proofRun.started_at,
+    providers: Array.isArray(proofRun.providers)
+      ? proofRun.providers.map((provider) => ({ provider: provider.providerCode })).filter((provider) => provider.provider)
+      : [],
+  }
 }
 
 function Metric({ label, value, detail, tone }) {

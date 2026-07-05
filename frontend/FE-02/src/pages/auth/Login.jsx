@@ -11,6 +11,10 @@ export default function Login() {
   const [submitting, setSubmitting] = useState(false)
   // 입력값 변경 처리
   const handleChange = (e) => setForm(p => ({ ...p, [e.target.name]: e.target.value }))
+  const handleDemoFill = () => {
+    setForm({ email: 'admin@growgate.com', password: 'growgateadmin' })
+    setError('')
+  }
   // 로그인 제출 처리
   const handleSubmit = async () => {
     setError('')
@@ -42,6 +46,9 @@ export default function Login() {
         </div>
         {error && <p className={styles.error}>{error}</p>}
         <button className={styles.btn} onClick={handleSubmit} disabled={submitting}>로그인</button>
+        <button className={styles.secondaryAction} type="button" onClick={handleDemoFill} disabled={submitting}>
+          데모 계정 입력
+        </button>
         <div className={styles.links}>
           계정이 없으신가요? <Link to="/signup">회원가입</Link> 하기
         </div>

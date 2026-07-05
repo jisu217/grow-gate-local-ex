@@ -24,6 +24,8 @@
 .checkRow small { display: block; margin-top: 2px; color: var(--slate); font-size: 12px; line-height: 1.45; }
 /* 제출 버튼 */
 .btn { display: block; width: 100%; margin-top: 24px; background: var(--blue); color: #fff; font-family: var(--kr); font-weight: 700; font-size: 15px; border: none; padding: 14px; border-radius: 12px; cursor: pointer; box-shadow: 0 8px 20px rgba(47,107,255,.3); }
+.secondaryAction { display: block; width: 100%; margin-top: 10px; background: #fff; color: var(--blue); font-family: var(--kr); font-weight: 700; font-size: 14px; border: 1px solid var(--line); padding: 12px; border-radius: 12px; cursor: pointer; }
+.secondaryAction:disabled { opacity: .6; cursor: progress; }
 /* 하단 보조 링크 */
 .links { text-align: center; margin-top: 16px; font-size: 13px; color: var(--slate); }
 .links a { color: var(--blue); text-decoration: none; font-weight: 600; }
