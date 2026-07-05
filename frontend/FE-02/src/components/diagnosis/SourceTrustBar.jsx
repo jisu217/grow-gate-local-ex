@@ -6,6 +6,7 @@ export default function SourceTrustBar({ summary, onRetry, retryStatus }) {
   const liveCount = Number(summary.liveCount ?? 0)
   const cacheCount = Number(summary.cacheCount ?? 0)
   const fallbackCount = Number(summary.fallbackCount ?? 0)
+  const emptyCount = Number(summary.emptyCount ?? 0)
   const crawlCount = Number(summary.crawlCount ?? 0)
   const externalFeedCount = Number(summary.externalFeedCount ?? 0)
   const seedCount = Number(summary.seedCount ?? 0)
@@ -40,6 +41,7 @@ export default function SourceTrustBar({ summary, onRetry, retryStatus }) {
           <TrustCount label="Cache" value={cacheCount} tone="ok" />
           <TrustCount label="Feed" value={externalFeedCount} tone="warn" />
           <TrustCount label="Crawl" value={crawlCount} tone="warn" />
+          <TrustCount label="Empty" value={emptyCount} tone={emptyCount > 0 ? 'warn' : 'ok'} />
           <TrustCount label="Fallback" value={fallbackCount} tone={fallbackCount > 0 ? 'req' : 'ok'} />
           {seedCount > 0 && <TrustCount label="Seed" value={seedCount} tone="req" />}
         </div>
@@ -60,7 +62,7 @@ export default function SourceTrustBar({ summary, onRetry, retryStatus }) {
           {providerHealth.slice(0, 6).map((provider) => (
             <div key={provider.provider} className={`provider-health ${provider.status}`}>
               <strong>{provider.provider}</strong>
-              <span>L{provider.liveCount ?? 0}/C{provider.cacheCount ?? 0}/F{provider.fallbackCount ?? 0}</span>
+              <span>L{provider.liveCount ?? 0}/C{provider.cacheCount ?? 0}/E{provider.emptyCount ?? 0}/F{provider.fallbackCount ?? 0}</span>
               <span>{provider.lastCollectedAt || '-'}</span>
             </div>
           ))}

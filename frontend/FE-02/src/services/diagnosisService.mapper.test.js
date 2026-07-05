@@ -248,3 +248,125 @@ assert.equal(sourceRestored.stages.s10.ledger[0].operationEndpoint, true)
 assert.equal(sourceRestored.stages.s10.ledger[0].apiKeyConfigured, true)
 assert.equal(sourceRestored.stages.s10.ledger[0].endpointType, 'operation')
 assert.equal(sourceRestored.stages.s10.ledger[0].rawMetric.exportAmountUsd, 45678)
+
+const noPublicDataSources = [
+  {
+    sourceId: 'MARKET-empty',
+    provider: 'KOTRA_MARKET',
+    sourceType: 'empty',
+    usedFor: 'market',
+    scoreContribution: 0,
+    confidence: 0,
+    operationEndpoint: false,
+    apiKeyConfigured: false,
+    endpointType: 'catalog_or_application_page',
+    fetchedAt: '2026-07-05T02:00:00Z',
+    metricSummary: 'recordCount=0',
+    decisionImpact: '시장성 live metric 미확보',
+    errorMessage: 'CATALOG_PAGE_ENDPOINT',
+  },
+  {
+    sourceId: 'REG-fallback',
+    provider: 'KCS_TRADE',
+    sourceType: 'fallback',
+    usedFor: 'regulation',
+    fallbackUsed: true,
+    scoreContribution: -1,
+    confidence: 0,
+    operationEndpoint: true,
+    apiKeyConfigured: true,
+    endpointType: 'operation',
+    fetchedAt: '2026-07-05T02:01:00Z',
+    metricSummary: 'timeout',
+    decisionImpact: '규제 근거 담당자 확인 필요',
+    errorMessage: 'TIMEOUT',
+  },
+  {
+    sourceId: 'RECALL-empty',
+    provider: 'SAFETY_RECALL',
+    sourceType: 'empty',
+    usedFor: 'recall',
+    scoreContribution: 0,
+    confidence: 0,
+    operationEndpoint: false,
+    apiKeyConfigured: false,
+    endpointType: 'catalog_or_application_page',
+    fetchedAt: '2026-07-05T02:02:00Z',
+    metricSummary: 'recordCount=0',
+    decisionImpact: '리콜 live metric 미확보',
+    errorMessage: 'API key is not configured',
+  },
+  {
+    sourceId: 'FTO-fallback',
+    provider: 'KIPRIS_FTO',
+    sourceType: 'fallback',
+    usedFor: 'fto',
+    fallbackUsed: true,
+    scoreContribution: -3,
+    confidence: 0,
+    operationEndpoint: true,
+    apiKeyConfigured: false,
+    endpointType: 'operation',
+    fetchedAt: '2026-07-05T02:03:00Z',
+    metricSummary: 'patentCount unavailable',
+    decisionImpact: 'FTO 담당자/변리사 확인 필요',
+    errorMessage: 'API key is not configured',
+  },
+  {
+    sourceId: 'SUPPORT-fallback',
+    provider: 'BIZINFO_SUPPORT',
+    sourceType: 'fallback',
+    usedFor: 'support',
+    fallbackUsed: true,
+    scoreContribution: -1,
+    confidence: 0,
+    operationEndpoint: false,
+    apiKeyConfigured: false,
+    endpointType: 'catalog_or_application_page',
+    fetchedAt: '2026-07-05T02:04:00Z',
+    metricSummary: 'support item unavailable',
+    decisionImpact: '지원사업 담당자 확인 필요',
+    errorMessage: 'CATALOG_PAGE_ENDPOINT',
+  },
+]
+
+const allBucketsNoData = mapDiagnosisDetail({
+  id: 'diag-all-buckets-no-data',
+  productName: '의료용 센서 모듈',
+  targetCountry: 'JP',
+  status: 'completed',
+  createdAt: '2026-07-05T02:05:00Z',
+  knowledgeSnapshot: {},
+  result: {
+    diagnosisScore: { overall: 52, market: 45, regulation: 48, recall: 50, fto: 44, support: 51 },
+    gateDecision: {
+      status: 'HOLD',
+      finalGate: 'HOLD',
+      fallbackCount: 3,
+      llmInfluencedGate: false,
+    },
+    stageCards: {
+      s10: noPublicDataSources,
+    },
+  },
+}, null, noPublicDataSources)
+
+assert.equal(allBucketsNoData.session.sourceTrustSummary.liveCount, 0)
+assert.equal(allBucketsNoData.session.sourceTrustSummary.cacheCount, 0)
+assert.equal(allBucketsNoData.session.sourceTrustSummary.fallbackCount, 3)
+assert.equal(allBucketsNoData.session.sourceTrustSummary.emptyCount, 2)
+assert.equal(allBucketsNoData.session.sourceTrustSummary.liveSuccessRate, 0)
+assert.equal(allBucketsNoData.session.sourceTrustSummary.providerHealth.length, 5)
+assert.deepEqual(
+  allBucketsNoData.session.sourceTrustSummary.providerHealth.map((row) => row.status),
+  ['empty', 'fallback', 'empty', 'fallback', 'fallback']
+)
+assert.deepEqual(
+  allBucketsNoData.stages.s10.pipes.map((pipe) => pipe.status),
+  ['empty', 'fallback', 'empty', 'fallback', 'fallback']
+)
+assert.deepEqual(
+  allBucketsNoData.stages.s10.ledger.map((row) => row.usedFor),
+  ['market', 'regulation', 'recall', 'fto', 'support']
+)
+assert.equal(allBucketsNoData.session.gateDecision.llmInfluencedGate, false)

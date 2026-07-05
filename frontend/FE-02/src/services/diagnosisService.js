@@ -197,6 +197,7 @@ export function buildSourceTrustSummaryFromSources(sourceEntries = [], detail = 
   let liveCount = 0
   let cacheCount = 0
   let fallbackCount = 0
+  let emptyCount = 0
   let crawlCount = 0
   let externalFeedCount = 0
   let operationEndpointLiveCount = 0
@@ -211,6 +212,7 @@ export function buildSourceTrustSummaryFromSources(sourceEntries = [], detail = 
     if (sourceType === 'live') liveCount += 1
     if (sourceType === 'cache') cacheCount += 1
     if (sourceType === 'fallback') fallbackCount += 1
+    if (sourceType === 'empty') emptyCount += 1
     if (sourceType === 'crawl') crawlCount += 1
     if (sourceType === 'external_feed' || sourceType === 'external_reconstructed') externalFeedCount += 1
     const isLiveOrCache = sourceType === 'live' || sourceType === 'cache'
@@ -233,6 +235,7 @@ export function buildSourceTrustSummaryFromSources(sourceEntries = [], detail = 
       liveCount: 0,
       cacheCount: 0,
       fallbackCount: 0,
+      emptyCount: 0,
       crawlCount: 0,
       externalFeedCount: 0,
       operationEndpoint: false,
@@ -249,6 +252,7 @@ export function buildSourceTrustSummaryFromSources(sourceEntries = [], detail = 
     if (sourceType === 'live') row.liveCount += 1
     if (sourceType === 'cache') row.cacheCount += 1
     if (sourceType === 'fallback') row.fallbackCount += 1
+    if (sourceType === 'empty') row.emptyCount += 1
     if (sourceType === 'crawl') row.crawlCount += 1
     if (sourceType === 'external_feed' || sourceType === 'external_reconstructed') row.externalFeedCount += 1
     row.operationEndpoint = row.operationEndpoint || operationEndpoint
@@ -265,7 +269,8 @@ export function buildSourceTrustSummaryFromSources(sourceEntries = [], detail = 
         : row.liveCount > 0 ? 'live'
           : row.cacheCount > 0 ? 'cache'
             : row.externalFeedCount > 0 ? 'external_feed'
-              : row.crawlCount > 0 ? 'crawl' : 'no_record'
+              : row.crawlCount > 0 ? 'crawl'
+                : row.emptyCount > 0 ? 'empty' : 'no_record'
     byProvider.set(provider, row)
   })
 
@@ -282,6 +287,7 @@ export function buildSourceTrustSummaryFromSources(sourceEntries = [], detail = 
     liveCount,
     cacheCount,
     fallbackCount,
+    emptyCount,
     crawlCount,
     externalFeedCount,
     operationEndpointLiveCount,

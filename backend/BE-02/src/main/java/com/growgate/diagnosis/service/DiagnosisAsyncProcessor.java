@@ -476,9 +476,10 @@ public class DiagnosisAsyncProcessor {
             source.put("adjustedContribution", adjustedContribution);
             source.put("finalScoreDelta", adjustedContribution);
             source.put("scoreContribution", adjustedContribution);
+            String sourceType = sourceType(record);
             source.put("fallbackUsed", record.isFallbackUsed());
             source.put("cacheHit", record.isCacheHit());
-            source.put("sourceType", sourceType(record));
+            source.put("sourceType", sourceType);
             source.put("collectionRunId", record.getRun() != null ? record.getRun().getId() : null);
             source.put("errorMessage", record.getErrorMessage());
             source.put("confidence", record.getConfidence());
@@ -519,9 +520,7 @@ public class DiagnosisAsyncProcessor {
             source.put("decisionImpact", publicDataDecisionImpact(record, adjustedContribution));
             source.put("scoreFormula", normalizedPayload.getOrDefault("scoreFormula",
                     "scoreContribution = provider metric contribution adjusted by confidence"));
-            source.put("reason", record.isFallbackUsed()
-                    ? "live 공공 API 수집 실패/비활성 상태를 명시하고 fallback 신호로 반영"
-                    : "live 공공 API 또는 유효 cache record의 도메인 신호를 진단 점수에 반영");
+            source.put("reason", publicDataReason(record));
             sources.add(source);
         }
     }
@@ -530,6 +529,7 @@ public class DiagnosisAsyncProcessor {
         long liveCount = sources.stream().filter(source -> "live".equals(source.get("sourceType"))).count();
         long cacheCount = sources.stream().filter(source -> "cache".equals(source.get("sourceType"))).count();
         long fallbackCount = sources.stream().filter(source -> "fallback".equals(source.get("sourceType"))).count();
+        long emptyCount = sources.stream().filter(source -> "empty".equals(source.get("sourceType"))).count();
         long crawlCount = sources.stream().filter(source -> "crawl".equals(source.get("sourceType"))).count();
         long externalFeedCount = sources.stream().filter(source -> "external_feed".equals(source.get("sourceType"))).count();
         long seedCount = sources.stream().filter(source -> "seed".equals(source.get("sourceType"))).count();
@@ -582,6 +582,7 @@ public class DiagnosisAsyncProcessor {
         summary.put("liveCount", liveCount);
         summary.put("cacheCount", cacheCount);
         summary.put("fallbackCount", fallbackCount);
+        summary.put("emptyCount", emptyCount);
         summary.put("crawlCount", crawlCount);
         summary.put("externalFeedCount", externalFeedCount);
         summary.put("seedCount", seedCount);
@@ -616,6 +617,7 @@ public class DiagnosisAsyncProcessor {
             int live = sourceTypeCount(items, "live");
             int cache = sourceTypeCount(items, "cache");
             int fallback = sourceTypeCount(items, "fallback");
+            int empty = sourceTypeCount(items, "empty");
             int crawl = sourceTypeCount(items, "crawl");
             int externalFeed = sourceTypeCount(items, "external_feed");
             List<String> fetched = items.stream().map(item -> stringValue(item.get("fetchedAt")))
@@ -640,6 +642,7 @@ public class DiagnosisAsyncProcessor {
             row.put("liveCount", live);
             row.put("cacheCount", cache);
             row.put("fallbackCount", fallback);
+            row.put("emptyCount", empty);
             row.put("crawlCount", crawl);
             row.put("externalFeedCount", externalFeed);
             row.put("operationEndpoint", items.stream().anyMatch(item -> Boolean.TRUE.equals(item.get("operationEndpoint"))));
@@ -666,7 +669,8 @@ public class DiagnosisAsyncProcessor {
                     : live > 0 ? "live"
                     : cache > 0 ? "cache"
                     : externalFeed > 0 ? "external_feed"
-                    : crawl > 0 ? "crawl" : "no_record");
+                    : crawl > 0 ? "crawl"
+                    : empty > 0 ? "empty" : "no_record");
             health.add(row);
         });
         return health;
@@ -758,18 +762,33 @@ public class DiagnosisAsyncProcessor {
                     .reduce((left, right) -> left + ", " + right)
                     .orElse("metric record 없음");
         }
+        if ("empty".equals(sourceType(record))) {
+            return "empty record: live/cache metric 0건 또는 endpoint/key/응답 상태 확인 필요";
+        }
         return record.isFallbackUsed()
                 ? "fallback record: live metric 미확보"
                 : "live/cache record 수집됨, provider parser metric 확인 필요";
     }
 
     private String publicDataDecisionImpact(PublicDataRecord record, int adjustedContribution) {
+        if ("empty".equals(sourceType(record))) {
+            return "empty source는 live/cache 성공 근거가 아니며 API key, operation endpoint, catalog URL, 0건 응답 여부를 담당자가 확인해야 합니다.";
+        }
         if (record.isFallbackUsed()) {
             return "fallback은 점수를 올리지 않고 confidence 하락 및 담당자 확인 항목으로만 반영됩니다.";
         }
         String direction = adjustedContribution > 0 ? "상향" : adjustedContribution < 0 ? "하향" : "중립";
         return record.getProvider().name() + " " + record.getUsedFor()
                 + " metric이 Gate 판단에 " + direction + " 기여(" + adjustedContribution + "점)했습니다.";
+    }
+
+    private String publicDataReason(PublicDataRecord record) {
+        if ("empty".equals(sourceType(record))) {
+            return "공공데이터 호출/설정/응답이 empty 상태이므로 live/cache 성공 근거로 표시하지 않고 담당자 확인 및 재수집 대상으로 반영";
+        }
+        return record.isFallbackUsed()
+                ? "live 공공 API 수집 실패/비활성 상태를 명시하고 fallback 신호로 반영"
+                : "live 공공 API 또는 유효 cache record의 도메인 신호를 진단 점수에 반영";
     }
 
     private void putIfPresent(Map<String, Object> target, String key, Object value) {
