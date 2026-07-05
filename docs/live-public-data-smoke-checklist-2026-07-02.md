@@ -10,7 +10,12 @@ KCS_TRADE_API_URL=http://apis.data.go.kr/1220000/Newtrade/getNewtradeList
 KCS_TRADE_API_KEY=...
 KOTRA_MARKET_API_URL=...
 KOTRA_MARKET_API_KEY=...
-SAFETY_RECALL_API_URL=...
+MOTIE_SAFETY_RECALL_OPERATION_ENDPOINT=https://api.odcloud.kr/api/15040696/v1/uddi:f13d1404-717d-4862-871d-b249899ea58f
+MOTIE_SAFETY_RECALL_API_KEY=...
+MOTIE_SAFETY_RECALL_CSV_RESOURCE=classpath:publicdata/kats-domestic-recall-20230809.csv
+MOTIE_SAFETY_RECALL_CACHE_ROOT=data/cache/safety_recall
+# Backward-compatible aliases:
+SAFETY_RECALL_API_URL=https://api.odcloud.kr/api/15040696/v1/uddi:f13d1404-717d-4862-871d-b249899ea58f
 SAFETY_RECALL_API_KEY=...
 KIPRIS_API_URL=...
 KIPRIS_API_KEY=...
@@ -55,6 +60,14 @@ It captures:
 - `sourceIds`
 
 If `SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true`, the script fails when no live/cache record or collection run id is captured.
+
+For `SAFETY_RECALL`, keyless production can still be smoke-tested as official CSV cache evidence:
+
+- expected provider: `산업통상부_국가기술표준원_제품안전_국내리콜정보`
+- expected `sourceType`: `cache`
+- expected records: `881` from `kats-domestic-recall-20230809.csv`
+- expected display: `cache · CSV cache`
+- not acceptable: `fallback`, `endpoint no`, `key missing` as the primary visible row when the CSV cache is readable.
 
 ## Presentation Proof Script
 

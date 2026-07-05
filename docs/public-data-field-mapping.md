@@ -22,7 +22,7 @@
 | --- | --- | --- | --- | --- |
 | `KCS_TRADE` | `OTHER_PUBLIC` | `market` | `importAmountUsd`, `exportAmountUsd`, `yoyGrowthPct`, `recordCount` | export/import amount와 growth가 높을수록 market contribution 증가 |
 | `KOTRA_MARKET` | `MOTIE_AFFILIATED` | `market` | `marketArticleCount`, `countryMentions`, `productMentions`, `yoyGrowthPct`, `recordCount` | target country/product article과 growth가 확인되면 market confidence 보강 |
-| `SAFETY_RECALL` | `OTHER_PUBLIC` | `recall` | `recallCount`, `highRiskCount`, `recordCount` | recall/highRisk count가 높을수록 recall contribution 하락 |
+| `SAFETY_RECALL` | `MOTIE_AFFILIATED` | `recall` | `recallCount`, `highRiskCount`, `recordCount`, `productKeywordMentionCount`, `hazardMentionCount`, `electricalRiskRows`, `childrenRiskRows` | 산업통상부/국가기술표준원 국내리콜정보 live 또는 CSV cache record를 recall-risk context로 반영한다. fallback이 아니어도 최신 리콜 없음·제품 안전성·인증 적합성 확정으로 표현하지 않는다. |
 | `KIPRIS_FTO` | `OTHER_PUBLIC` | `fto` | `patentCount`, `claimsCount`, `productMentions`, `recordCount` | patent/product mention이 많을수록 FTO 검토 필요 contribution으로 보수화 |
 | `BIZINFO_SUPPORT` | `MOTIE_AFFILIATED` | `support` | `supportProgramCount`, `openProgramSignalCount`, `exportKeywordCount`, `recordCount` | 관련 지원사업과 모집/수출 키워드가 있으면 support contribution 증가 |
 | `MOTIE_WEB_CRAWL` | `MOTIE_AFFILIATED` 또는 allowlist 기관 | `market/regulation/support` | `pageCount`, `keywordHits`, `policyMentions`, `masked` | API live 대체가 아니라 보조 source trace로만 사용 |
@@ -35,7 +35,7 @@
 | Fixture | 검증 목적 |
 | --- | --- |
 | `kotra-market-sample-live-response.json` | KOTRA market article, country/product mention, growth field mapping |
-| `safety-recall-sample-live-response.json` | Safety recall/high-risk count parsing and negative contribution |
+| `safety-recall-sample-live-response.json` | KATS domestic recall/high-risk count parsing, cache-aside schema, and negative contribution |
 | `kipris-fto-sample-live-response.json` | KIPRIS patent count, claim count, product mention parsing |
 | `bizinfo-support-sample-live-response.json` | 기업마당 지원사업, 모집/수출 keyword count parsing |
 | `export-evidence-feed-sample.xml` | RSS/Atom feed item, date, export keyword parsing |

@@ -10,6 +10,13 @@ import {
   refreshDailyPublicData,
 } from '../../services/publicDataService.js'
 import { getAuthUser } from '../../services/authService.js'
+import {
+  apiProofLabel,
+  collectFailureReasons,
+  providerDisplayName,
+  providerReasonLabel,
+  sourceBadgeLabel,
+} from './publicDataProofPresenter.js'
 
 export default function DailyPublicData() {
   const authUser = getAuthUser()
@@ -69,7 +76,7 @@ export default function DailyPublicData() {
   const recentTargetCount = dashboard?.runCount ?? runs.length
   const providerNames = (dashboard?.providers ?? []).map((provider) => provider.provider)
   const externalCount = records.filter((record) => isExternalRecord(record) && !record.fallbackUsed).length
-  const failureReasons = collectFailureReasons(runs, records).slice(0, 4)
+  const failureReasons = collectFailureReasons(runs, records, proofRun).slice(0, 4)
 
   const handleRefresh = async () => {
     setRefreshState('running')
@@ -180,22 +187,31 @@ export default function DailyPublicData() {
                   {(!Array.isArray(proofRun?.providers) || proofRun.providers.length === 0) && (
                     <tr><td colSpan="7" className={styles.empty}>아직 proof provider row가 없습니다. Proof run을 생성하세요.</td></tr>
                   )}
-                  {proofRun?.providers?.slice(0, 12).map((provider) => (
-                    <tr key={`${provider.providerCode}-${provider.rawResponseSha256 || provider.fallbackReason || provider.fetchedAt}`}>
-                      <td>{provider.providerCode}</td>
-                      <td>{provider.sourceType || '-'}</td>
-                      <td>
-                        endpoint {provider.operationEndpoint ? 'yes' : 'no'}
-                        <span className={styles.inlineMeta}>key {provider.apiKeyConfigured ? 'set' : 'missing'}</span>
-                      </td>
-                      <td>{provider.recordCount ?? 0}</td>
-                      <td>{shortHash(provider.rawResponseSha256)}</td>
-                      <td className={provider.schemaValidationStatus === 'PASS' ? styles.ok : styles.warnText}>
-                        {provider.schemaValidationStatus || '-'}
-                      </td>
-                      <td>{provider.fallbackReason || '-'}</td>
-                    </tr>
-                  ))}
+                  {proofRun?.providers?.slice(0, 12).map((provider) => {
+                    const apiProof = apiProofLabel(provider)
+                    return (
+                      <tr key={`${provider.providerCode}-${provider.rawResponseSha256 || provider.fallbackReason || provider.fetchedAt}`}>
+                        <td>
+                          {providerDisplayName(provider.providerCode)}
+                          <span className={styles.inlineMeta}>{provider.providerCode}</span>
+                        </td>
+                        <td>
+                          {sourceBadgeLabel(provider)}
+                          <span className={styles.inlineMeta}>{provider.sourceQualityStatus || '-'}</span>
+                        </td>
+                        <td>
+                          {apiProof.primary}
+                          <span className={styles.inlineMeta}>{apiProof.secondary}</span>
+                        </td>
+                        <td>{provider.recordCount ?? 0}</td>
+                        <td>{shortHash(provider.rawResponseSha256)}</td>
+                        <td className={provider.schemaValidationStatus === 'PASS' ? styles.ok : styles.warnText}>
+                          {provider.schemaValidationStatus || '-'}
+                        </td>
+                        <td>{providerReasonLabel(provider)}</td>
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -383,19 +399,6 @@ function groupRunsByDate(runs, records) {
     ...group,
     providers: Array.from(group.providers).sort(),
   }))
-}
-
-function collectFailureReasons(runs, records) {
-  const reasons = new Set()
-  runs.forEach((run) => {
-    if (run.errorSummary) reasons.add(run.errorSummary)
-  })
-  records.forEach((record) => {
-    if (record.errorMessage) reasons.add(`${record.provider}: ${record.errorMessage}`)
-    if (record.operationEndpoint === false) reasons.add(`${record.provider}: operation endpoint 아님`)
-    if (record.apiKeyConfigured === false) reasons.add(`${record.provider}: API key 없음`)
-  })
-  return Array.from(reasons)
 }
 
 function isExternalRecord(record) {

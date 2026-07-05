@@ -85,7 +85,10 @@ public class PublicDataOperationalStatusService {
                         prop("public-data.ksure-country-industry-overdue-rate.csv-resource"),
                         prop("public-data.ksure-country-industry-overdue-rate.url"),
                         prop("public-data.ksure-country-industry-overdue-rate.key")),
-                providerStatus(PublicDataProvider.SAFETY_RECALL, prop("public-data.safety-recall.url"), prop("public-data.safety-recall.key")),
+                fileDataStatus(PublicDataProvider.SAFETY_RECALL,
+                        prop("public-data.safety-recall.csv-resource"),
+                        prop("public-data.safety-recall.url"),
+                        prop("public-data.safety-recall.key")),
                 fileDataStatus(PublicDataProvider.KATS_PRODUCT_SAFETY_HAZARD_INFO,
                         prop("public-data.kats-product-safety-hazard-info.csv-resource"),
                         prop("public-data.kats-product-safety-hazard-info.url"),
@@ -288,7 +291,7 @@ public class PublicDataOperationalStatusService {
             case "MOTIE_TRADE_REMEDY_FTA_LIST" -> "motieTradeRemedyFtaList";
             case "KSURE_OVERSEAS_BRANCHES" -> "ksureOverseasBranches";
             case "KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE" -> "ksureCountryIndustryOverdueRate";
-            case "SAFETY_RECALL" -> "safetyKorea";
+            case "SAFETY_RECALL" -> "motieSafetyRecall";
             case "KATS_PRODUCT_SAFETY_HAZARD_INFO" -> "katsProductSafetyHazardInfo";
             case "KATS_DOMESTIC_RECALL_REPORT" -> "katsDomesticRecallReport";
             case "KATS_CERTIFIED_PRODUCT_INFO" -> "katsCertifiedProductInfo";

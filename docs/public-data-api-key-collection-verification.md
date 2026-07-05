@@ -9,9 +9,9 @@ This document lists what has actually been verified for public-data collection. 
 | Category | Count | Status |
 | --- | ---: | --- |
 | API-key based live collection confirmed in this Codex environment | 0 | No provider key was present in the process environment during verification. Do not claim live API proof from this run. |
-| Operation endpoint configured and ready for key-based smoke | 5 | KCS trade, KSURE buyer search, KIPRIS Plus, KOMSA MTIS auth status, MOLIT warehouse registry. |
+| Operation endpoint configured and ready for key-based smoke | 6 | KCS trade, SAFETY_RECALL/KATS domestic recall, KSURE buyer search, KIPRIS Plus, KOMSA MTIS auth status, MOLIT warehouse registry. |
 | Local cache/file collection confirmed | 10 | CSV/DOCX/catalog sources loaded successfully with `sourceType=cache`. |
-| Raw rows/documents loaded from local cache | 145845 | Sum of cache records reported by `scripts/check_public_data_providers.py --json`. |
+| Raw rows/documents loaded from local cache | 145845 | Sum of cache records reported by `scripts/check_public_data_providers.py --json`; SAFETY_RECALL also uses the KATS domestic recall CSV in the Spring runtime path. |
 | Real API keys stored in repository | 0 | Key leak scan found no pasted KIPRIS/data.go.kr/KOMSA keys. |
 
 ## API-Key Live Collection Confirmed
@@ -37,6 +37,7 @@ These providers have operation endpoints configured or confirmed, but live data 
 | Provider | Runtime provider | Endpoint status | Key env | Current sourceType | zeroReason | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | 무역/수출입 통계 | `KCS_TRADE` | operation endpoint configured | `KCS_TRADE_API_KEY` or `DATAGO_SERVICE_KEY` | `empty` | `API_KEY_NOT_CONFIGURED` | Request params are `hsCode`, `cntyCd`, `strtYymm`, `endYymm`. Country-code acceptance still needs live validation. |
+| 산업통상부/국가기술표준원 국내리콜정보 | `SAFETY_RECALL` | operation endpoint configured with CSV cache-aside | `MOTIE_SAFETY_RECALL_API_KEY`, `SAFETY_RECALL_API_KEY`, or `DATAGO_SERVICE_KEY` | `cache` without key, `live` with key | `API_KEY_NOT_CONFIGURED; CSV cache available` without key | Runtime recall connector. CSV cache is official file-data evidence and must not be displayed as fallback. Use as recall-risk context only. |
 | 한국무역보험공사 바이어 검색 | `NOT_RUNTIME_CONNECTED` | operation endpoint captured from data.go.kr screen | `KSURE_BUYER_SEARCH_API_KEY` or `DATAGO_SERVICE_KEY` | `empty` | `API_KEY_NOT_CONFIGURED` | Uses local codebook for country/industry code reference. Not buyer creditworthiness proof. |
 | KIPRIS Plus | `KIPRIS_FTO` | operation endpoint confirmed | `KIPRIS_PLUS_ACCESSKEY`, `KIPRIS_PLUS_KEY`, or `KIPRIS_API_KEY` | `empty` | `API_KEY_NOT_CONFIGURED` | Confirmed operation: `특허·실용 공개·등록공보 / 전체검색 - getAdvancedSearch`; key parameter `ServiceKey`; params `inventionTitle`, `astrtCont`, `pageNo`, `numOfRows`, `patent`, `utility`. FTO remains preliminary risk-signal search only. |
 | KOMSA MTIS | `NOT_RUNTIME_CONNECTED` | auth status endpoint configured | `MTIS_SERVICE_KEY` or `KOMSA_MTIS_SERVICE_KEY` | `empty` | `API_KEY_NOT_CONFIGURED` | Key/auth status smoke only. Not evidence for export readiness. |
@@ -53,7 +54,7 @@ These sources were actually read by the local provider smoke without API keys. T
 | MOTIE 제품안전인증 신규등록현황 | `NOT_RUNTIME_CONNECTED` | `cache` | 4 | 4 |  | Aggregate safety-cert registration trend only. |
 | MOTIE 금속표준용어 | `NOT_RUNTIME_CONNECTED` | `cache` | 1 | 1 |  | Terminology dictionary/knowledge source only. |
 | 관세청 HS/관세율/운송비 reference | `KCS_TARIFF_LOGISTICS` | `cache` | 1377 | 1377 |  | HS/tariff/logistics reference only; not legal tariff certainty or freight quote. |
-| KATS 국내리콜정보 | `NOT_RUNTIME_CONNECTED` | `cache` | 881 | 881 | `CSV_CACHE_STALE_API_KEY_NOT_CONFIGURED` | Recall reference list only; not latest recall clearance. |
+| KATS 국내리콜정보 원본 CSV | `SAFETY_RECALL` runtime cache-aside | `cache` | 881 | 881 | `API_KEY_NOT_CONFIGURED; CSV cache available` when key is missing | Runtime recall provider cache. Not latest recall clearance, safety clearance, or certification adequacy proof. |
 | KATS 인증제품 첨부파일 | `NOT_RUNTIME_CONNECTED` | `cache` | 121525 | 121525 | `CSV_CACHE_STALE_API_KEY_NOT_CONFIGURED` | Attachment path/name reference only. |
 | KATS 인증제품 제조공장 | `NOT_RUNTIME_CONNECTED` | `cache` | 21871 | 21871 | `CSV_CACHE_STALE_API_KEY_NOT_CONFIGURED` | Manufacturer name/country reference only. |
 | KATS 제품안전 민원접수 | `NOT_RUNTIME_CONNECTED` | `cache` | 145 | 145 |  | Complaint trend reference with redaction/minimization. |
