@@ -12,5 +12,6 @@
 10. evaluation_tests → `CODEX_PROMPT_10_evaluation_tests.md`
 11. reporting_docs_presentation → `CODEX_PROMPT_11_reporting_docs_presentation.md`
 12. packaging_demo → `CODEX_PROMPT_12_packaging_demo.md`
+13. multi_agent_public_data_harness → `CODEX_PROMPT_13_multi_agent_public_data_harness.md`
 
-권장 실행 방식: 01→02→03→04→05→06→07→08→09→10→11→12 순서. 중간마다 테스트와 빌드를 실행하고, synthetic seed를 live proof로 표시하지 않는지 확인하세요.
+권장 실행 방식: 01→02→03→04→05→06→07→08→09→10→11→12→13 순서. 중간마다 테스트와 빌드를 실행하고, synthetic seed를 live proof로 표시하지 않는지 확인하세요.

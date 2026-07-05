@@ -41,6 +41,7 @@ require_file ".env.example.presentation"
 require_file "docs/public-data-field-mapping.md"
 require_file "docs/judge-defense-90.md"
 require_file "docs/evidence-workflow-redesign-2026-07-02.md"
+require_file "docs/agent-public-data-harness-playbook-2026-07-05.md"
 require_file "docs/security-sre-performance-review-2026-07-02.md"
 require_file "docs/python-worker-engine-contract-2026-07-02.md"
 require_file "docs/live-public-data-smoke-checklist-2026-07-02.md"
@@ -60,6 +61,7 @@ require_file "database/mysql/init/05_seed_synthetic_companies.sql"
 require_file "database/mysql/init/06_public_api_proof_ml_validation.sql"
 require_file "database/mysql/init/07_seed_synthetic_persona_validation.sql"
 require_file "docs/judge-solution-pack/04_codex_prompts/00_PROMPT_ORDER.md"
+require_file "docs/judge-solution-pack/04_codex_prompts/CODEX_PROMPT_13_multi_agent_public_data_harness.md"
 require_file "docs/validation/README_SYNTHETIC_VALIDATION.md"
 require_file "docs/validation/synthetic_validation_sessions.csv"
 require_file "docs/report/REPORT_FORMAT_POLICY.md"
@@ -111,6 +113,29 @@ grep -q 'enabled: ${PUBLIC_DATA_ENABLED:true}' "$ROOT_DIR/backend/BE-02/src/main
 grep -q 'enabled: ${PUBLIC_DATA_ENABLED:true}' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml.example" \
   || fail "application.yml.example public-data.enabled must default to true"
 pass "public data defaults to enabled"
+
+search_quiet 'KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY' \
+  "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/enums/PublicDataProvider.java" \
+  || fail "KICOX factory registration provider enum must be registered"
+require_file "backend/BE-02/src/main/java/com/growgate/publicdata/service/KicoxFactoryRegistrationConnector.java"
+require_file "backend/BE-02/src/test/java/com/growgate/publicdata/service/KicoxFactoryRegistrationConnectorTest.java"
+search_quiet 'kicox-factory-registration' "$ROOT_DIR/backend/BE-02/src/main/resources/application.yml" \
+  || fail "KICOX factory registration config must exist"
+search_quiet 'KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY' "$ROOT_DIR/backend/BE-02/src/main/java/com/growgate/publicdata/service/PublicDataOperationalStatusService.java" \
+  || fail "KICOX factory registration must appear in public-data health"
+search_quiet 'kicox_factory_registration_region_industry' "$ROOT_DIR/data/public_data_sources.json" \
+  || fail "public data source catalog must include KICOX factory registration"
+search_quiet 'KICOX_OPERATION_RATE|KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY' "$ROOT_DIR/scripts/check_public_data_providers.py" \
+  || fail "public data provider smoke must include KICOX runtime providers"
+search_quiet 'KICOX_OPERATION_RATE' \
+  "$ROOT_DIR/docs/judge-solution-pack/04_codex_prompts/CODEX_PROMPT_13_multi_agent_public_data_harness.md" \
+  || fail "multi-agent harness prompt must name KICOX operation rate runtime provider"
+search_quiet 'KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY' \
+  "$ROOT_DIR/docs/judge-solution-pack/04_codex_prompts/CODEX_PROMPT_13_multi_agent_public_data_harness.md" \
+  || fail "multi-agent harness prompt must name KICOX factory registration runtime provider"
+search_quiet 'llmInfluencedGate=false' "$ROOT_DIR/docs/agent-public-data-harness-playbook-2026-07-05.md" \
+  || fail "agent public-data harness playbook must preserve rule-owned Gate policy"
+pass "KICOX CSV/API providers and multi-agent public-data harness are wired"
 
 if search_quiet 'MOCK_STAGES|S04_MARKETS|S05_REGULATIONS|S06_RECALLS|S07_PATENTS|S07_SUPPORTS' \
   "$ROOT_DIR/frontend/FE-02/src/services/diagnosisService.js"; then

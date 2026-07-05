@@ -51,6 +51,24 @@
       "reason": "FTA status is useful as source-bound target-country context, but must not be used as tariff-rate proof, origin determination, legal advice, or final export readiness evidence."
     },
     {
+      "dataset": "한국에너지공단_산업부문 에너지사용 및 온실가스배출량 통계_20241231.hwpx",
+      "status": "knowledge_source_registered",
+      "target": "public_data_sources.json + proof script",
+      "reason": "Industrial energy and greenhouse-gas statistics are useful as source-bound environmental/industry context, but must not be used as company-specific emissions verification, compliance determination, cost calculation, or final Gate evidence."
+    },
+    {
+      "dataset": "한국산업단지공단_국가산업단지 산업동향정보_가동률_20260331.csv",
+      "status": "runtime_connected_csv_then_api",
+      "target": "KICOX_OPERATION_RATE",
+      "reason": "Industrial complex operation-rate aggregates support market context only. CSV is the fast path; odcloud API refresh is attempted only when update due and API key are configured."
+    },
+    {
+      "dataset": "한국산업단지공단_공장등록현황통계_시도별 업종별 현황_20260331.csv",
+      "status": "runtime_connected_csv_then_api",
+      "target": "KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY",
+      "reason": "Swagger namespace 15085508/v1 latest endpoint matches the attached 20260331/26-row CSV. Use as regional/industry density context only, not specific company capacity or final Gate proof."
+    },
+    {
       "dataset": "KOTRA 권역별 경제 지표, 글로벌 무역현황, 수출입동향, 일반기계산업 동향",
       "status": "reference_only_deferred",
       "target": "future country/industry profile module",

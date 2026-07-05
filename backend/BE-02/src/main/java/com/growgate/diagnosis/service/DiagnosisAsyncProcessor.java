@@ -743,7 +743,19 @@ public class DiagnosisAsyncProcessor {
         return switch (record.getProvider()) {
             case KCS_TRADE -> "관세청 수출입무역통계 live/cache 수집";
             case KOTRA_MARKET -> "KOTRA 시장·뉴스 live/cache 수집";
+            case KIAT_RND_OUTCOMES -> "한국산업기술진흥원 연구개발 성과 CSV/API 수집";
+            case KIAT_TECH_BANK_PATENT -> "한국산업기술진흥원 기술은행 등록기술 특허 API 수집";
+            case MOTIE_EXPORT_PREARRANGE -> "산업통상부 수출예정정보 API 수집";
+            case MOTIE_DEALING_BUSINESS_INFO -> "산업통상부 거래업체정보 API 수집";
+            case KSURE_OVERSEAS_BRANCHES -> "한국무역보험공사 해외지사 현황 CSV/API 수집";
             case SAFETY_RECALL -> "제품안전·리콜 live/cache 수집";
+            case KATS_PRODUCT_SAFETY_HAZARD_INFO -> "국가기술표준원 제품안전 위해정보 CSV/API 수집";
+            case KATS_DOMESTIC_RECALL_REPORT -> "국가기술표준원 제품안전 국내리콜 보고서 CSV/API 수집";
+            case KGS_HYDROGEN_SANDBOX_REGIONS -> "한국가스안전공사 수소 규제샌드박스 실증지역 CSV/API 수집";
+            case KICOX_OPERATION_RATE -> "한국산업단지공단 국가산업단지 가동률 CSV/API 수집";
+            case KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY -> "한국산업단지공단 공장등록현황 시도별 업종별 CSV/API 수집";
+            case MOLIT_WAREHOUSE_REGISTRATION -> "국토교통부 물류창고업등록정보 API 수집";
+            case KHNP_SAFETY_HEALTH_CERTIFICATION -> "한국수력원자력 안전보건 인증현황 CSV/API 수집";
             case MOTIE_IMPORT_REGULATION -> "산업통상부 수입규제현황 CSV/API 수집";
             case MOTIE_MPE_TRADE_STATISTICS -> "산업통상부 소재부품장비 무역통계 CSV/API 수집";
             case MOTIE_MPE_PRODUCTION_INDEX -> "산업통상부 소재부품장비 생산지수 CSV/API 수집";

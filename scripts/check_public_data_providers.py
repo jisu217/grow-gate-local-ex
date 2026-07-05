@@ -148,6 +148,22 @@ def providers(args):
             "officialUpdatedAt": env("MOTIE_FTA_STATUS_OFFICIAL_UPDATED_AT", "2026-05-31"),
         },
         {
+            "provider": "KEA 산업부문 에너지사용 및 온실가스배출량 통계",
+            "runtimeProvider": "NOT_RUNTIME_CONNECTED",
+            "agent": "knowledge-industrial-energy-ghg-reference",
+            "endpoint": env("KEA_INDUSTRIAL_ENERGY_GHG_SOURCE_URL", "https://www.data.go.kr/data/15017225/fileData.do"),
+            "apiKey": "",
+            "apiKeyEnv": "none",
+            "params": {},
+            "defaultZeroReason": "FILE_DATA_NOT_CONFIGURED",
+            "fileData": True,
+            "fileKind": "hwpx",
+            "filePath": env("KEA_INDUSTRIAL_ENERGY_GHG_FILE_PATH", "data/public/kea_industrial_energy_ghg_statistics_20241231.hwpx"),
+            "fileAsOf": env("KEA_INDUSTRIAL_ENERGY_GHG_FILE_AS_OF", "2024-12-31"),
+            "officialUpdatedAt": env("KEA_INDUSTRIAL_ENERGY_GHG_OFFICIAL_UPDATED_AT", "2026-06-12"),
+            "refreshDueAt": env("KEA_INDUSTRIAL_ENERGY_GHG_NEXT_UPDATE_DUE_AT", "2027-05-31"),
+        },
+        {
             "provider": "무역/수출입 통계",
             "runtimeProvider": "KCS_TRADE",
             "agent": "market",
@@ -388,6 +404,52 @@ def providers(args):
             "fileData": True,
         },
         {
+            "provider": "한국산업단지공단 국가산업단지 산업동향정보_가동률",
+            "runtimeProvider": "KICOX_OPERATION_RATE",
+            "agent": "market-industrial-complex-operation-reference",
+            "endpoint": env("KICOX_OPERATION_RATE_SOURCE_URL", "https://www.data.go.kr/data/15085889/fileData.do"),
+            "apiKey": first_env("KICOX_OPERATION_RATE_API_KEY", "DATAGO_SERVICE_KEY"),
+            "apiKeyEnv": "KICOX_OPERATION_RATE_API_KEY|DATAGO_SERVICE_KEY",
+            "params": {},
+            "defaultZeroReason": "FILE_DATA_NOT_CONFIGURED",
+            "fileData": True,
+            "fileStrategy": "prefer_file_then_api_when_stale",
+            "filePath": env("KICOX_OPERATION_RATE_FILE_PATH", "backend/BE-02/src/main/resources/publicdata/kicox-national-industrial-complex-operation-rate-20260331.csv"),
+            "fileEncodings": ["utf-8-sig", "cp949", "euc-kr"],
+            "fileAsOf": env("KICOX_OPERATION_RATE_FILE_AS_OF", "2026-03-31"),
+            "officialUpdatedAt": env("KICOX_OPERATION_RATE_OFFICIAL_UPDATED_AT", "2026-03-31"),
+            "refreshDueAt": env("KICOX_OPERATION_RATE_NEXT_UPDATE_DUE_AT", "2026-06-30"),
+            "apiEndpoint": env("KICOX_OPERATION_RATE_API_URL", "https://api.odcloud.kr/api/15085889/v1/uddi:e32e7d2e-82a3-4cde-9d24-f3e90e2b1eb6"),
+            "apiParams": {
+                "page": "1",
+                "perPage": "100",
+                "returnType": "JSON",
+            },
+        },
+        {
+            "provider": "한국산업단지공단 공장등록현황통계_시도별 업종별 현황",
+            "runtimeProvider": "KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY",
+            "agent": "market-factory-registration-reference",
+            "endpoint": env("KICOX_FACTORY_REGISTRATION_SOURCE_URL", "https://www.data.go.kr/data/15085508/fileData.do"),
+            "apiKey": first_env("KICOX_FACTORY_REGISTRATION_API_KEY", "DATAGO_SERVICE_KEY"),
+            "apiKeyEnv": "KICOX_FACTORY_REGISTRATION_API_KEY|DATAGO_SERVICE_KEY",
+            "params": {},
+            "defaultZeroReason": "FILE_DATA_NOT_CONFIGURED",
+            "fileData": True,
+            "fileStrategy": "prefer_file_then_api_when_stale",
+            "filePath": env("KICOX_FACTORY_REGISTRATION_FILE_PATH", "backend/BE-02/src/main/resources/publicdata/kicox-factory-registration-by-region-industry-20260331.csv"),
+            "fileEncodings": ["utf-8-sig", "cp949", "euc-kr"],
+            "fileAsOf": env("KICOX_FACTORY_REGISTRATION_FILE_AS_OF", "2026-03-31"),
+            "officialUpdatedAt": env("KICOX_FACTORY_REGISTRATION_OFFICIAL_UPDATED_AT", "2026-03-31"),
+            "refreshDueAt": env("KICOX_FACTORY_REGISTRATION_NEXT_UPDATE_DUE_AT", "2026-04-30"),
+            "apiEndpoint": env("KICOX_FACTORY_REGISTRATION_API_URL", "https://api.odcloud.kr/api/15085508/v1/uddi:b0d2581a-2a88-47a6-af2d-87b575db32d2"),
+            "apiParams": {
+                "page": "1",
+                "perPage": "100",
+                "returnType": "JSON",
+            },
+        },
+        {
             "provider": "외부 뉴스/RSS",
             "runtimeProvider": "EXPORT_EVIDENCE_FEED",
             "agent": "news-risk",
@@ -519,6 +581,8 @@ def call_file_data(provider, timeout):
         return call_docx_file_data(provider, file_path)
     if provider.get("fileKind") == "pdf":
         return call_pdf_file_data(provider, file_path)
+    if provider.get("fileKind") == "hwpx":
+        return call_hwpx_file_data(provider, file_path)
     errors = []
     for encoding in provider.get("fileEncodings", ["utf-8-sig"]):
         try:
@@ -621,6 +685,51 @@ def call_pdf_file_data(provider, file_path):
         )
     except Exception as exc:
         return result(provider, "fallback", "PDF_READ_ERROR", error=str(exc))
+
+
+def call_hwpx_file_data(provider, file_path):
+    try:
+        import zipfile
+        with open(file_path, "rb") as handle:
+            data = handle.read()
+        with zipfile.ZipFile(file_path) as archive:
+            names = archive.namelist()
+            sections = [name for name in names if name.startswith("Contents/section") and name.endswith(".xml")]
+            images = [name for name in names if name.startswith("BinData/")]
+            sample_texts = []
+            for name in sections[:3]:
+                try:
+                    root = ET.fromstring(archive.read(name))
+                except ET.ParseError:
+                    continue
+                for element in root.iter():
+                    if element.text and element.text.strip():
+                        sample_texts.append(element.text.strip())
+                    if len(sample_texts) >= 12:
+                        break
+                if len(sample_texts) >= 12:
+                    break
+        valid = "mimetype" in names and bool(sections)
+        return result(
+            provider,
+            "cache" if valid else "fallback",
+            "" if valid else "HWPX_SECTION_XML_MISSING",
+            raw_count=len(sections) if valid else 0,
+            normalized_count=len(sections) if valid else 0,
+            sample_raw_keys=["hwpx", "Contents/section*.xml", "sha256"],
+            metadata={
+                "fileAsOf": provider.get("fileAsOf", ""),
+                "officialUpdatedAt": provider.get("officialUpdatedAt", ""),
+                "refreshDueAt": provider.get("refreshDueAt", ""),
+                "knowledgeUse": "industrial_energy_ghg_context",
+                "sha256": sha256_bytes(data),
+                "sectionCount": len(sections),
+                "imageCount": len(images),
+                "sampleText": sample_texts[:12],
+            },
+        )
+    except Exception as exc:
+        return result(provider, "fallback", "HWPX_READ_ERROR", error=str(exc))
 
 
 def sha256_bytes(data):

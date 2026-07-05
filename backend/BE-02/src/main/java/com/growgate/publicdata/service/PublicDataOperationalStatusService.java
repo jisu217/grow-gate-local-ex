@@ -46,7 +46,51 @@ public class PublicDataOperationalStatusService {
         return List.of(
                 providerStatus(PublicDataProvider.KCS_TRADE, prop("public-data.kcs-trade.url"), prop("public-data.kcs-trade.key")),
                 providerStatus(PublicDataProvider.KOTRA_MARKET, prop("public-data.kotra-market.url"), prop("public-data.kotra-market.key")),
+                fileDataStatus(PublicDataProvider.KIAT_RND_OUTCOMES,
+                        prop("public-data.kiat-rnd-outcomes.csv-resource"),
+                        prop("public-data.kiat-rnd-outcomes.url"),
+                        prop("public-data.kiat-rnd-outcomes.key")),
+                providerStatus(PublicDataProvider.KIAT_TECH_BANK_PATENT,
+                        prop("public-data.kiat-tech-bank-patent.url"),
+                        prop("public-data.kiat-tech-bank-patent.key")),
+                providerStatus(PublicDataProvider.MOTIE_EXPORT_PREARRANGE,
+                        prop("public-data.motie-export-prearrange.url"),
+                        prop("public-data.motie-export-prearrange.key")),
+                providerStatus(PublicDataProvider.MOTIE_DEALING_BUSINESS_INFO,
+                        prop("public-data.motie-dealing-business-info.url"),
+                        prop("public-data.motie-dealing-business-info.key")),
+                fileDataStatus(PublicDataProvider.KSURE_OVERSEAS_BRANCHES,
+                        prop("public-data.ksure-overseas-branches.csv-resource"),
+                        prop("public-data.ksure-overseas-branches.url"),
+                        prop("public-data.ksure-overseas-branches.key")),
                 providerStatus(PublicDataProvider.SAFETY_RECALL, prop("public-data.safety-recall.url"), prop("public-data.safety-recall.key")),
+                fileDataStatus(PublicDataProvider.KATS_PRODUCT_SAFETY_HAZARD_INFO,
+                        prop("public-data.kats-product-safety-hazard-info.csv-resource"),
+                        prop("public-data.kats-product-safety-hazard-info.url"),
+                        prop("public-data.kats-product-safety-hazard-info.key")),
+                fileDataStatus(PublicDataProvider.KATS_DOMESTIC_RECALL_REPORT,
+                        prop("public-data.kats-domestic-recall-report.csv-resource"),
+                        prop("public-data.kats-domestic-recall-report.url"),
+                        prop("public-data.kats-domestic-recall-report.key")),
+                fileDataStatus(PublicDataProvider.KGS_HYDROGEN_SANDBOX_REGIONS,
+                        prop("public-data.kgs-hydrogen-sandbox-regions.csv-resource"),
+                        prop("public-data.kgs-hydrogen-sandbox-regions.url"),
+                        prop("public-data.kgs-hydrogen-sandbox-regions.key")),
+                fileDataStatus(PublicDataProvider.KICOX_OPERATION_RATE,
+                        prop("public-data.kicox-operation-rate.csv-resource"),
+                        prop("public-data.kicox-operation-rate.url"),
+                        prop("public-data.kicox-operation-rate.key")),
+                fileDataStatus(PublicDataProvider.KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY,
+                        prop("public-data.kicox-factory-registration.csv-resource"),
+                        prop("public-data.kicox-factory-registration.url"),
+                        prop("public-data.kicox-factory-registration.key")),
+                providerStatus(PublicDataProvider.MOLIT_WAREHOUSE_REGISTRATION,
+                        prop("public-data.molit-warehouse-registration.url"),
+                        prop("public-data.molit-warehouse-registration.key")),
+                fileDataStatus(PublicDataProvider.KHNP_SAFETY_HEALTH_CERTIFICATION,
+                        prop("public-data.khnp-safety-health-certification.csv-resource"),
+                        prop("public-data.khnp-safety-health-certification.url"),
+                        prop("public-data.khnp-safety-health-certification.key")),
                 fileDataStatus(PublicDataProvider.MOTIE_IMPORT_REGULATION,
                         prop("public-data.motie-import-regulation.csv-resource"),
                         prop("public-data.motie-import-regulation.url"),
@@ -195,7 +239,19 @@ public class PublicDataOperationalStatusService {
         return switch (provider) {
             case "KCS_TRADE" -> "trade";
             case "KOTRA_MARKET" -> "kotra";
+            case "KIAT_RND_OUTCOMES" -> "kiatRndOutcomes";
+            case "KIAT_TECH_BANK_PATENT" -> "kiatTechBankPatent";
+            case "MOTIE_EXPORT_PREARRANGE" -> "motieExportPrearrange";
+            case "MOTIE_DEALING_BUSINESS_INFO" -> "motieDealingBusinessInfo";
+            case "KSURE_OVERSEAS_BRANCHES" -> "ksureOverseasBranches";
             case "SAFETY_RECALL" -> "safetyKorea";
+            case "KATS_PRODUCT_SAFETY_HAZARD_INFO" -> "katsProductSafetyHazardInfo";
+            case "KATS_DOMESTIC_RECALL_REPORT" -> "katsDomesticRecallReport";
+            case "KGS_HYDROGEN_SANDBOX_REGIONS" -> "kgsHydrogenSandboxRegions";
+            case "KICOX_OPERATION_RATE" -> "kicoxOperationRate";
+            case "KICOX_FACTORY_REGISTRATION_BY_REGION_INDUSTRY" -> "kicoxFactoryRegistration";
+            case "MOLIT_WAREHOUSE_REGISTRATION" -> "molitWarehouseRegistration";
+            case "KHNP_SAFETY_HEALTH_CERTIFICATION" -> "khnpSafetyHealthCertification";
             case "MOTIE_IMPORT_REGULATION" -> "motieImportRegulation";
             case "MOTIE_MPE_TRADE_STATISTICS" -> "motieMpeTradeStatistics";
             case "MOTIE_MPE_PRODUCTION_INDEX" -> "motieMpeProductionIndex";
