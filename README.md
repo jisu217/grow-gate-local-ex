@@ -478,33 +478,35 @@ KPI 렌더링은 `eyebrow`가 없을 때 `label/title`로 fallback하고, 긴 �
 
 ## 12. Deployment Status
 
-GitHub `main`은 최신 public-data/provider, source-bound evidence, 진단 개요 KPI 명확화 코드가 반영된 기준 브랜치입니다. Lightsail HTTPS 서비스는 접근 가능한 운영 smoke가 통과하지만, 서버 shell 접속이 가능한 환경에서 `main` pull/restart 배포 완료 여부를 다시 확인해야 합니다.
+GitHub `main`은 최신 public-data/provider, source-bound evidence, 진단 개요 KPI 명확화 코드가 반영된 기준 브랜치입니다. Lightsail HTTPS 서비스는 최신 main artifact 배포와 운영 smoke를 통과한 상태입니다.
 
 | Item | Current State |
 | :--- | :--- |
-| GitHub main | 최신 `origin/main` HEAD. KPI clarity fix `a9785e67`, KPI QA docs `81bc5bb` 포함 |
-| Deployed commit | 서버 SSH 재접속 후 확인 필요. 현재 IP allowlist 미등록으로 직접 pull/restart 미완료 |
+| GitHub main | 최신 `origin/main` HEAD. KPI clarity fix `a9785e67`, KPI QA docs `81bc5bb`, provider schema hotfix `68746297` 포함 |
+| Deployed commit | `68746297b2620996b8a9a1dfbea23ad0f9998ea2` |
 | Lightsail static IP | `54.180.56.24` |
 | Current public URL | `https://growgate.54.180.56.24.sslip.io` |
 | Attached instance | `growgate-fresh-20260703-2134` |
-| SSH firewall | `lightsail-connect`는 허용. 현재 작업자 IP `1.234.247.45/32`는 미등록이라 SSH timeout |
+| SSH firewall | 배포 중 `1.234.247.45/32`를 임시 허용했으며, 작업 후 원복 필요 |
 | Service status | production smoke PASS |
 | Public proof viewer | `/public-data/daily-refresh` returns `200` without login |
 | Auth session restore | admin login and cookie-only `/api/users/me=200` verified |
 | Synthetic validation seed | personas `5`, sessions `15`, findings `3` |
-| Latest smoke | `2026-07-05 19:37 KST`, `diagnosisId=696230f5-8c65-41b1-bea7-11208eded42e`, `collectionRunId=b3838a53-6a32-4f53-a74b-c90be37c5058`, `cacheCount=8`, `fallbackCount=5` |
-| Live public API proof | 현재 운영 smoke 기준 source trace는 `liveCount=0`, `cacheCount=8`, `fallbackCount=5`, operation endpoint/API key proof count `0` |
+| Latest smoke | `2026-07-05 20:29 KST`, `diagnosisId=5bb8252e-fba3-4dcb-91c2-bc482946187a`, `collectionRunId=bb981ec0-9574-4f0b-bca5-03b517131e83`, `cacheCount=21`, `fallbackCount=5` |
+| Live public API proof | 현재 운영 smoke 기준 source trace는 `liveCount=0`, `cacheCount=21`, `fallbackCount=5`, operation endpoint/API key proof count `0` |
 
 배포 재실행 순서:
 
 ```bash
 git pull origin main
-cd backend/BE-02 && ./gradlew test bootJar --no-daemon
+cd backend/BE-02 && ./gradlew bootJar -x test --no-daemon
 cd ../../frontend/FE-02 && npm ci && npm run build
 sudo systemctl restart growgate-backend
 sudo systemctl reload nginx
 BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/smoke-prod.sh
 ```
+
+현재 Lightsail 인스턴스는 2GB RAM 구성이므로 서버에서 full Gradle test를 실행하면 SSH/HTTPS 응답 지연이 발생할 수 있습니다. 배포 서버에서는 artifact 교체 또는 `bootJar -x test`만 수행하고, full test는 로컬/CI에서 먼저 통과시킨 뒤 배포합니다.
 
 `PUBLIC_DATA_ENABLED=true`는 기본값이지만, `SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true`는 실제 provider operation endpoint와 API key가 서버에 주입된 뒤에만 사용합니다.
 

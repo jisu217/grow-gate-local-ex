@@ -63,6 +63,13 @@ Fresh clone에서 Docker DB와 Spring `ddl-auto=validate`가 같이 뜨는지 �
 ./scripts/verify-fresh-db.sh
 ```
 
+Existing MySQL databases are upgraded manually because this project does not run Flyway/Liquibase at application startup. Apply files in `database/mysql/migrations/` before restarting a `ddl-auto=validate` backend. The 2026-07-05 production hotfix required:
+
+```sql
+SOURCE database/mysql/migrations/2026-07-05_source_quality_status.sql;
+SOURCE database/mysql/migrations/2026-07-05_public_data_provider_length.sql;
+```
+
 DBeaver connection:
 
 | Field | Value |
