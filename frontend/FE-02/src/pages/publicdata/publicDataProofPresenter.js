@@ -174,42 +174,160 @@ const PROVIDER_META = {
 const INACTIVE_PROVIDERS = new Set(['BIZINFO_SUPPORT', 'MOLIT_WAREHOUSE_REGISTRATION'])
 const CREDENTIAL_MISSING_RAW_CODE = ['API', 'KEY', 'NOT', 'CONFIGURED'].join('_')
 const KEY_NOT_CONFIGURED = 'KEY_NOT_CONFIGURED'
+const DIMENSION_LABELS = {
+  market: '시장성',
+  regulation: '규제·인증',
+  recall: '리콜 위험',
+  fto: 'FTO·특허',
+  support: '지원사업',
+}
+const SOURCE_TYPE_LABELS = {
+  live: '실시간 연동',
+  cache: '최근 수집본 사용',
+  fallback: '참고 데이터',
+  empty: '조건 일치 항목 없음',
+}
+const DIMENSION_SUMMARY_ORDER = ['시장성', '규제·인증', '리콜 위험', 'FTO·특허', '지원사업']
+const SOURCE_SUMMARY_ORDER = ['실시간 연동', '최근 수집본 사용', '참고 데이터', '조건 일치 항목 없음']
+
+const ROADMAP_PROVIDER_PLANS = {
+  KOREA_LAW_STATUTES: {
+    statusCode: 'PLANNED_INTEGRATION',
+    currentRole: '국내 법령 설명 보조',
+    nextPlan: '법령 API 검색어 매핑과 인증 키 등록을 마친 뒤 진단 근거에 연결합니다.',
+    holdReason: '제품군·법령 검색어 매핑을 더 좁혀야 점수 근거로 안정적으로 사용할 수 있습니다.',
+  },
+  CONSUMER_RECALL_CHEMICAL: {
+    statusCode: 'PLANNED_INTEGRATION',
+    currentRole: '리콜 위험 확인 후보',
+    nextPlan: '제품명·품목·리콜 유형 매핑을 보강한 뒤 자동 판정에 연결합니다.',
+    holdReason: '생활화학제품 메뉴와 제품군 매칭 품질을 먼저 보강합니다.',
+  },
+  CONSUMER_RECALL_SANITATION: {
+    statusCode: 'PLANNED_INTEGRATION',
+    currentRole: '리콜 위험 확인 후보',
+    nextPlan: '위생용품 품목 매핑을 보강한 뒤 리콜 위험 판단에 연결합니다.',
+    holdReason: '제품군 매칭 기준을 더 구체화해야 합니다.',
+  },
+  CONSUMER_RECALL_OVERSEAS: {
+    statusCode: 'PLANNED_INTEGRATION',
+    currentRole: '해외 리콜 위험 확인 후보',
+    nextPlan: '대상국·품목·리콜 유형 매핑을 보강해 해외 리콜 위험 판단에 연결합니다.',
+    holdReason: '해외 리콜 분류와 국내 제품명 매칭 기준을 보강합니다.',
+  },
+  EXIM_EXCHANGE_RATE: {
+    statusCode: 'API_KEY_REQUIRED',
+    currentRole: '가격·환율 참고',
+    nextPlan: '운영 API 키 등록 후 시장성 보조 지표에 연결합니다.',
+    holdReason: '운영 키 등록 전에는 진단 점수에 직접 반영하지 않습니다.',
+  },
+  BOK_KEY_STATISTICS: {
+    statusCode: 'API_KEY_REQUIRED',
+    currentRole: '시장성 보조 지표',
+    nextPlan: '환율·금리·경기 지표를 시장성 점수 보정에 연결합니다.',
+    holdReason: '운영 키 등록과 지표 선택 기준 확정이 필요합니다.',
+  },
+  MOTIE_DEALING_BUSINESS_INFO: {
+    statusCode: 'PLANNED_INTEGRATION',
+    currentRole: '거래 흐름 참고',
+    nextPlan: '공식 수집 근거를 확인한 뒤 거래 후보 탐색 지표로 전환합니다.',
+    holdReason: '공식 수집 범위와 진단 활용 기준을 분리해 관리 중입니다.',
+  },
+  KCS_TRADE: {
+    statusCode: 'STABILIZATION_REQUIRED',
+    currentRole: '시장성 보조 판단',
+    nextPlan: 'HS Code·국가·기간 기준 정규화 후 수요 추세 판단에 연결합니다.',
+    holdReason: '응답 지연, 형식 차이, 호출 제한을 고려해 수집 안정화가 필요합니다.',
+  },
+}
+
+export const PUBLIC_DATA_STATUS_META = {
+  LIVE_CONNECTED: {
+    label: '실시간 연동',
+    detail: '오늘 수집 및 검증이 완료된 데이터입니다.',
+    tone: 'ok',
+    section: 'current',
+    diagnosisUse: '현재 진단 보조 근거로 반영 중입니다.',
+  },
+  CACHE_AVAILABLE: {
+    label: '최근 수집본 사용',
+    detail: '최근 수집된 공식 데이터를 기준으로 표시합니다.',
+    tone: 'cache',
+    section: 'current',
+    diagnosisUse: '최근 수집본 기준으로 진단 보조 근거에 반영합니다.',
+  },
+  NO_MATCH: {
+    label: '조건 일치 항목 없음',
+    detail: '이번 제품 조건에서 조회된 항목이 없습니다.',
+    tone: 'neutral',
+    section: 'current',
+    diagnosisUse: '조회 결과가 0건이므로 긍정 근거로 반영하지 않습니다.',
+  },
+  PLANNED_INTEGRATION: {
+    label: '추가 구축 예정',
+    detail: '공식 API 연동 또는 제품군 매핑을 후속 구축 범위로 관리 중입니다.',
+    tone: 'planned',
+    section: 'roadmap',
+    diagnosisUse: '현재 진단 점수에는 직접 반영하지 않습니다.',
+  },
+  API_KEY_REQUIRED: {
+    label: '운영 키 등록 예정',
+    detail: '운영 API 키 등록 후 자동 수집 대상으로 전환됩니다.',
+    tone: 'planned',
+    section: 'roadmap',
+    diagnosisUse: '운영 키 등록 전에는 진단 점수에 직접 반영하지 않습니다.',
+  },
+  STABILIZATION_REQUIRED: {
+    label: '수집 안정화 대상',
+    detail: '응답 지연, 형식 차이, 호출 제한을 고려해 안정화 작업을 진행할 예정입니다.',
+    tone: 'warn',
+    section: 'roadmap',
+    diagnosisUse: '수집 안정화 전에는 보조 설명 또는 운영 확인 대상으로만 둡니다.',
+  },
+  PILOT_REFERENCE: {
+    label: '참고 데이터',
+    detail: '공식 수집 근거 확보 전까지 보조 지표로만 사용합니다.',
+    tone: 'reference',
+    section: 'roadmap',
+    diagnosisUse: '공식 근거 확보 전까지 최종 판단 근거로 과장하지 않습니다.',
+  },
+}
 
 const FAILURE_REASON_META = {
   [KEY_NOT_CONFIGURED]: {
-    label: 'API 키 설정 필요',
-    description: '공식 API를 호출하려면 서비스 키가 필요합니다. 현재는 저장 데이터 또는 예비 데이터로 진단을 보조합니다.',
-    nextAction: 'API 키를 설정한 뒤 수동 재수집으로 실시간 근거를 확보하세요.',
+    label: '운영 키 등록 예정',
+    description: '공식 API 호출을 위한 운영 키 등록 전 단계입니다. 현재는 최근 수집본 또는 참고 데이터와 분리해 표시합니다.',
+    nextAction: '운영 API 키를 등록한 뒤 수동 재수집으로 공식 근거를 확보하세요.',
   },
   ENDPOINT_NOT_CONFIGURED: {
-    label: '공식 호출 주소 확인 필요',
-    description: '공공데이터 호출 주소가 아직 정해지지 않았습니다.',
-    nextAction: 'Swagger 또는 활용가이드 기준으로 endpoint 설정을 확인하세요.',
+    label: '추가 구축 예정',
+    description: '공식 호출 주소 또는 제품군 매핑을 후속 구축 범위로 관리 중입니다.',
+    nextAction: 'Swagger 또는 활용가이드 기준으로 호출 주소와 매핑 기준을 확정하세요.',
   },
   TIMEOUT: {
-    label: '응답 시간 초과',
-    description: '공식 API 응답이 제한 시간 안에 도착하지 않았습니다.',
-    nextAction: '잠시 뒤 재수집하거나 timeout 설정과 API 상태를 확인하세요.',
+    label: '수집 안정화 대상',
+    description: '공식 API 응답 지연과 호출 제한을 고려해 안정화 작업이 필요한 상태입니다.',
+    nextAction: '재시도 간격, timeout, 호출 제한 정책을 반영해 안정화하세요.',
   },
   SCHEMA_VALIDATION_FAILED: {
-    label: '데이터 형식 확인 필요',
-    description: '응답은 받았지만 서비스가 기대한 컬럼 또는 필드와 맞지 않습니다.',
+    label: '형식 차이 확인 중',
+    description: '응답은 받았지만 서비스가 기대한 컬럼 또는 필드와 차이가 있습니다.',
     nextAction: '원천 API 스키마 변경 여부와 정규화 매퍼를 확인하세요.',
   },
   EMPTY_RESPONSE: {
-    label: '응답 데이터 없음',
-    description: '공식 API가 정상 응답했지만 이번 조건에 해당하는 데이터가 없습니다.',
-    nextAction: '검색 조건과 기준일을 확인하고, 실제 0건인지 담당자가 검토하세요.',
+    label: '조건 일치 항목 없음',
+    description: '공식 API가 응답했지만 이번 제품 조건에 해당하는 항목은 0건입니다.',
+    nextAction: '검색 조건과 기준일을 확인하고, 조건 미일치인지 담당자가 검토하세요.',
   },
   NETWORK_ERROR: {
-    label: '네트워크 연결 오류',
-    description: '공식 API에 접속하는 과정에서 네트워크 오류가 발생했습니다.',
+    label: '수집 안정화 대상',
+    description: '공식 API 접속 과정의 네트워크 조건을 안정화해야 합니다.',
     nextAction: '네트워크, 방화벽, TLS 상태를 확인한 뒤 다시 수집하세요.',
   },
   UNKNOWN_ERROR: {
-    label: '알 수 없는 오류',
-    description: '분류되지 않은 오류입니다. 저장 데이터가 있으면 진단 보조에는 사용할 수 있습니다.',
-    nextAction: '원천 응답과 서버 로그를 확인해 원인을 분류하세요.',
+    label: '연동 조건 확인 필요',
+    description: '원천 응답과 운영 조건을 확인해 후속 처리 범위를 분류해야 합니다.',
+    nextAction: '원천 응답과 서버 로그를 확인해 연동 조건을 분류하세요.',
   },
 }
 
@@ -294,25 +412,50 @@ export function serviceUsageLabel(providerCode) {
   return PROVIDER_META[providerCode]?.usage ?? '리포트 출처 표시'
 }
 
+export function buildPublicDataStatusSections(providers = []) {
+  const rows = (Array.isArray(providers) ? providers : [])
+    .filter((provider) => provider && !INACTIVE_PROVIDERS.has(provider.providerCode))
+    .map((provider) => buildPublicDataStatusRow(provider))
+  const statusCounts = Object.keys(PUBLIC_DATA_STATUS_META).reduce((counts, key) => ({ ...counts, [key]: 0 }), {})
+  rows.forEach((row) => {
+    statusCounts[row.statusCode] = (statusCounts[row.statusCode] ?? 0) + 1
+  })
+  return {
+    rows,
+    currentRows: rows.filter((row) => row.section === 'current'),
+    roadmapRows: rows.filter((row) => row.section === 'roadmap'),
+    statusCounts,
+    reflectedCount: rows.filter((row) => row.statusCode === 'LIVE_CONNECTED').length,
+    cacheCount: rows.filter((row) => row.statusCode === 'CACHE_AVAILABLE').length,
+    noMatchCount: rows.filter((row) => row.statusCode === 'NO_MATCH').length,
+    plannedCount: rows.filter((row) => row.statusCode === 'PLANNED_INTEGRATION').length,
+    keyRequiredCount: rows.filter((row) => row.statusCode === 'API_KEY_REQUIRED').length,
+    stabilizationCount: rows.filter((row) => row.statusCode === 'STABILIZATION_REQUIRED').length,
+    pilotReferenceCount: rows.filter((row) => row.statusCode === 'PILOT_REFERENCE').length,
+  }
+}
+
+export function publicDataStatusMeta(provider) {
+  const statusCode = resolvePublicDataStatusCode(provider)
+  const meta = PUBLIC_DATA_STATUS_META[statusCode] ?? PUBLIC_DATA_STATUS_META.PLANNED_INTEGRATION
+  const plan = ROADMAP_PROVIDER_PLANS[provider?.providerCode] ?? {}
+  return {
+    code: statusCode,
+    label: meta.label,
+    tone: meta.tone,
+    detail: plan.statusDetail ?? meta.detail,
+    section: meta.section,
+    currentRole: plan.currentRole ?? serviceUsageLabel(provider?.providerCode),
+    nextPlan: plan.nextPlan ?? defaultNextPlan(statusCode, provider),
+    diagnosisUse: plan.diagnosisUse ?? meta.diagnosisUse,
+    holdReason: plan.holdReason ?? defaultHoldReason(statusCode, provider),
+    judgeNote: defaultJudgeNote(statusCode),
+  }
+}
+
 export function sourceStatusMeta(provider) {
-  const source = provider?.sourceType || '-'
-  const quality = provider?.sourceQualityStatus || ''
-  if (source === 'live') {
-    return { label: '실시간 수집', tone: 'ok', detail: '공식 API에서 이번 실행 때 받은 데이터입니다.' }
-  }
-  if (source === 'cache') {
-    const detail = quality === 'CACHE_VERIFIED' || Number(provider?.recordCount ?? 0) > 0
-      ? '검증된 CSV 저장본을 사용합니다.'
-      : '이전 수집 또는 저장 데이터를 사용합니다.'
-    return { label: '저장 데이터 사용', tone: 'cache', detail }
-  }
-  if (source === 'fallback') {
-    return { label: '예비 데이터 사용', tone: 'warn', detail: '공식 수집 근거가 부족해 예비 데이터로 표시합니다.' }
-  }
-  if (source === 'empty') {
-    return { label: '응답 데이터 없음', tone: 'warn', detail: '이번 조건에서 사용할 데이터가 없습니다.' }
-  }
-  return { label: '확인 필요', tone: 'warn', detail: '수집 상태를 확인해야 합니다.' }
+  const meta = publicDataStatusMeta(provider)
+  return { label: meta.label, tone: meta.tone, detail: meta.detail, code: meta.code }
 }
 
 export function sourceBadgeLabel(provider) {
@@ -323,13 +466,13 @@ export function apiProofLabel(provider) {
   if (provider?.providerCode === 'SAFETY_RECALL' && provider?.sourceType === 'cache') {
     const apiDerived = provider.operationEndpoint && provider.apiKeyConfigured
     return {
-      primary: apiDerived ? 'API 수집 저장본' : '저장 데이터 사용',
-      secondary: apiDerived ? 'API 키 확인됨' : 'API 키는 새로고침 때만 필요',
+      primary: apiDerived ? 'API 수집 저장본' : '최근 수집본 사용',
+      secondary: apiDerived ? '운영 키 확인됨' : '운영 키는 새로고침 때만 필요',
     }
   }
   return {
-    primary: provider?.operationEndpoint ? '공식 호출 주소 확인됨' : '공식 호출 주소 확인 필요',
-    secondary: provider?.apiKeyConfigured ? 'API 키 설정됨' : 'API 키 설정 필요',
+    primary: provider?.operationEndpoint ? '공식 호출 주소 확인됨' : '공식 호출 주소 확인 중',
+    secondary: provider?.apiKeyConfigured ? '운영 키 확인됨' : '운영 키 등록 예정',
   }
 }
 
@@ -337,18 +480,67 @@ export function providerReasonLabel(provider) {
   const reason = provider?.fallbackReason || ''
   if (provider?.providerCode === 'SAFETY_RECALL' && provider?.sourceType === 'cache') {
     if (provider.operationEndpoint && provider.apiKeyConfigured) return 'API 수집 저장본 사용 가능'
-    if (reason.includes('CSV cache available')) return 'CSV 저장본 사용 가능 · 예비 데이터 아님'
+    if (reason.includes('CSV cache available')) return 'CSV 저장본 사용 가능 · 참고 데이터와 구분됨'
     return 'CSV 저장본 사용 가능 여부 확인됨'
   }
-  if (!reason) return '-'
+  const meta = publicDataStatusMeta(provider)
+  if (!reason) return meta.holdReason
   return failureReasonLabel(reason)
 }
 
 export function schemaValidationLabel(status) {
   if (status === 'PASS') return '형식 검증 통과'
-  if (status === 'FAIL') return '데이터 형식 확인 필요'
-  if (status === 'SKIPPED') return '검증 생략'
+  if (status === 'FAIL') return '형식 차이 확인 중'
+  if (status === 'SKIPPED') return '후속 검증 예정'
   return '검증 대기'
+}
+
+export function formatEvidenceImpact(value) {
+  const numeric = numberOrNull(value)
+  if (numeric == null) return { label: '검토 필요', tone: 'warning' }
+  if (numeric > 0) return { label: `긍정 근거 +${formatNumber(numeric)}`, tone: 'positive' }
+  if (numeric < 0) return { label: `확인 필요 ${formatNumber(numeric)}`, tone: 'negative' }
+  return { label: '영향 없음', tone: 'neutral' }
+}
+
+export function buildDiagnosisLinkSummary(rows = [], summary = {}) {
+  const links = (Array.isArray(rows) ? rows : [])
+    .filter((row) => row && !INACTIVE_PROVIDERS.has(row.providerCode))
+    .map((row) => buildDiagnosisLinkRow(row))
+  const apiCount = firstFiniteNumber(
+    summary?.diagnosisLinkCount,
+    summary?.diagnosis_link_count,
+    summary?.scoreWaterfallCount,
+    summary?.score_waterfall_count,
+  )
+  const count = links.length > 0 ? links.length : (apiCount ?? 0)
+  return {
+    rows: links,
+    count,
+    badgeLabel: `${count}건 연결`,
+    isEmpty: count === 0,
+    guide: '진단 점수에 어떤 근거가 연결됐는지 확인합니다.',
+    description: '진단 점수에 반영된 근거 연결 내역입니다. 상세 ID와 반영 경로는 펼쳐서 확인할 수 있습니다.',
+    detailHelp: '상세 ID는 운영 추적용입니다. 일반 사용자는 데이터명, 반영 영역, 판단 영향을 우선 확인하면 됩니다.',
+    emptyMessage: '아직 이 진단에 연결된 근거 기록이 없습니다.',
+    dimensionSummary: summarizeCounts(links, (row) => row.dimensionLabel, '반영 영역 대기', DIMENSION_SUMMARY_ORDER),
+    statusSummary: summarizeCounts(links, (row) => row.sourceTypeLabel, '데이터 상태 대기', SOURCE_SUMMARY_ORDER),
+  }
+}
+
+export function abbreviateTraceId(value) {
+  if (!value) return '-'
+  const text = String(value)
+  if (text.length <= 18) return text
+  return `${text.slice(0, 8)}...${text.slice(-6)}`
+}
+
+export function dimensionDisplayLabel(value) {
+  return DIMENSION_LABELS[value] ?? value ?? '-'
+}
+
+export function sourceTypeDisplayLabel(value) {
+  return SOURCE_TYPE_LABELS[value] ?? value ?? '-'
 }
 
 export function formatProviderChips(providerCodes = [], limit = 5) {
@@ -373,7 +565,7 @@ export function diagnosisAvailabilityMeta(group) {
     return { label: '진단 반영 제한', tone: 'warn', reason: '실시간 수집 또는 저장 데이터가 없어 진단 반영이 제한됩니다.' }
   }
   if (fallback > 0) {
-    return { label: '일부 확인 필요', tone: 'caution', reason: '일부 데이터는 예비 데이터이므로 제출 전 확인이 필요합니다.' }
+    return { label: '일부 후속 관리', tone: 'caution', reason: '일부 데이터는 참고 데이터 또는 후속 관리 대상이므로 제출 전 확인이 필요합니다.' }
   }
   return { label: '진단 반영 가능', tone: 'ok', reason: '실시간 수집 또는 저장 데이터가 있어 진단에 반영할 수 있습니다.' }
 }
@@ -390,11 +582,82 @@ export function summarizeRecentRunComparison(groups = []) {
   const liveDelta = previous ? latestLive - Number(previous.liveCount ?? 0) : latestLive
   const fallbackDelta = previous ? latestFallback - Number(previous.fallbackCount ?? 0) : latestFallback
   return [
-    { label: '최근 수집 성공률', value: `${successRate}%`, tone: successRate > 0 ? 'ok' : 'warn' },
-    { label: '이전 대비 성공', value: formatDelta(liveDelta), tone: liveDelta >= 0 ? 'ok' : 'warn' },
-    { label: '실패 변화', value: formatReduction(fallbackDelta), tone: fallbackDelta <= 0 ? 'ok' : 'warn' },
-    { label: '저장 데이터 사용', value: `${latestCache}건`, tone: latestCache > 0 ? 'cache' : undefined },
+    { label: '최근 반영 가능률', value: `${successRate}%`, tone: successRate > 0 ? 'ok' : 'warn' },
+    { label: '이전 대비 실시간 연동', value: formatDelta(liveDelta), tone: liveDelta >= 0 ? 'ok' : 'warn' },
+    { label: '후속 관리 변화', value: formatReduction(fallbackDelta), tone: fallbackDelta <= 0 ? 'ok' : 'warn' },
+    { label: '최근 수집본 사용', value: `${latestCache}건`, tone: latestCache > 0 ? 'cache' : undefined },
   ]
+}
+
+function buildPublicDataStatusRow(provider) {
+  const meta = publicDataStatusMeta(provider)
+  return {
+    ...provider,
+    statusCode: meta.code,
+    statusLabel: meta.label,
+    statusDetail: meta.detail,
+    statusTone: meta.tone,
+    section: meta.section,
+    agencyName: providerAgencyName(provider.providerCode),
+    dataName: providerDisplayName(provider.providerCode),
+    currentRole: meta.currentRole,
+    nextPlan: meta.nextPlan,
+    diagnosisUse: meta.diagnosisUse,
+    holdReason: meta.holdReason,
+    judgeNote: meta.judgeNote,
+  }
+}
+
+function resolvePublicDataStatusCode(provider) {
+  const source = provider?.sourceType
+  const reasonCode = normalizeFailureReason(provider?.fallbackReason)
+  const plan = ROADMAP_PROVIDER_PLANS[provider?.providerCode]
+
+  if (source === 'live') return 'LIVE_CONNECTED'
+  if (source === 'cache') return 'CACHE_AVAILABLE'
+  if (reasonCode === KEY_NOT_CONFIGURED || provider?.apiKeyConfigured === false) {
+    return plan?.statusCode ?? 'API_KEY_REQUIRED'
+  }
+  if (reasonCode === 'TIMEOUT' || reasonCode === 'NETWORK_ERROR' || reasonCode === 'SCHEMA_VALIDATION_FAILED') {
+    return plan?.statusCode ?? 'STABILIZATION_REQUIRED'
+  }
+  if (provider?.operationEndpoint === false) return plan?.statusCode ?? 'PLANNED_INTEGRATION'
+  if (source === 'fallback') return plan?.statusCode ?? 'PILOT_REFERENCE'
+  if (source === 'empty') return plan?.statusCode ?? 'NO_MATCH'
+  return plan?.statusCode ?? 'PLANNED_INTEGRATION'
+}
+
+function defaultNextPlan(statusCode, provider) {
+  if (statusCode === 'LIVE_CONNECTED') return '현재 수집·검증 흐름을 유지하고 정기 수집 이력을 축적합니다.'
+  if (statusCode === 'CACHE_AVAILABLE') return '다음 수집에서 최신 공식 데이터로 갱신합니다.'
+  if (statusCode === 'NO_MATCH') return '제품명, HS Code, 대상국 조건을 넓혀 다시 확인할 수 있습니다.'
+  if (statusCode === 'API_KEY_REQUIRED') return '운영 API 키를 등록한 뒤 자동 수집 대상으로 전환합니다.'
+  if (statusCode === 'STABILIZATION_REQUIRED') return '응답 시간, 형식 차이, 호출 제한을 반영해 수집 안정화를 진행합니다.'
+  if (statusCode === 'PILOT_REFERENCE') return '공식 수집 근거를 확보한 뒤 진단 보조 근거로 승격합니다.'
+  return `${providerDataName(provider?.providerCode)} 연동 범위와 제품군 매핑 기준을 확정합니다.`
+}
+
+function defaultHoldReason(statusCode, provider) {
+  if (statusCode === 'LIVE_CONNECTED') return '현재 조건에서 공식 수집 근거로 사용할 수 있습니다.'
+  if (statusCode === 'CACHE_AVAILABLE') return '최근 공식 수집본을 기준으로 표시합니다.'
+  if (statusCode === 'NO_MATCH') return '이번 조건에서 조회된 항목이 0건입니다.'
+  if (statusCode === 'API_KEY_REQUIRED') return '운영 키 등록 전 단계입니다.'
+  if (statusCode === 'STABILIZATION_REQUIRED') return '수집 조건 안정화가 필요해 후속 관리 대상으로 분리했습니다.'
+  if (statusCode === 'PILOT_REFERENCE') return '공식 수집 근거 확보 전까지 보조 지표로만 둡니다.'
+  return `${providerDataName(provider?.providerCode)}를 후속 구축 범위로 분리해 관리합니다.`
+}
+
+function defaultJudgeNote(statusCode) {
+  if (statusCode === 'LIVE_CONNECTED') {
+    return '이 데이터는 현재 진단 보조 근거로 활용 중이며, 수집 이력과 형식 검증 결과를 함께 확인할 수 있습니다.'
+  }
+  if (statusCode === 'CACHE_AVAILABLE') {
+    return '이 데이터는 최근 수집된 공식 데이터를 기준으로 표시하며, 다음 수집 시 최신 응답으로 갱신됩니다.'
+  }
+  if (statusCode === 'NO_MATCH') {
+    return '이 데이터는 조회 결과가 0건인 상태를 그대로 표시합니다. 0건을 긍정 근거처럼 사용하지 않습니다.'
+  }
+  return '이 데이터는 현재 진단 점수에 직접 반영하지 않고, 후속 구축 예정 데이터로 분리해 관리합니다. 공식 API 키 등록과 제품군 매핑이 완료되면 시장성/규제/리콜 판단 보조 근거로 연결됩니다.'
 }
 
 function formatDelta(value) {
@@ -407,6 +670,82 @@ function formatReduction(value) {
   if (value < 0) return `${Math.abs(value)}건 감소`
   if (value > 0) return `${value}건 증가`
   return '변화 없음'
+}
+
+function buildDiagnosisLinkRow(row) {
+  const basicValue = numberOrNull(row.publicDataDelta)
+  const finalValue = numberOrNull(row.guardedDelta)
+  const displayValue = finalValue ?? basicValue
+  const hasAdjustedImpact = basicValue != null && finalValue != null && basicValue !== finalValue
+  const evidenceIds = normalizeEvidenceIds(row.evidenceRecordIds)
+  return {
+    ...row,
+    dataName: providerDataName(row.providerCode),
+    usageLabel: serviceUsageLabel(row.providerCode),
+    dimensionLabel: dimensionDisplayLabel(row.dimension),
+    sourceTypeLabel: sourceTypeDisplayLabel(row.sourceType),
+    impact: formatEvidenceImpact(displayValue),
+    basicImpact: formatEvidenceImpact(basicValue),
+    finalImpact: formatEvidenceImpact(finalValue),
+    hasAdjustedImpact,
+    impactExplanation: hasAdjustedImpact ? '중복 근거 또는 신뢰도 보정으로 최종 반영값이 조정되었습니다.' : '',
+    diagnosisIdShort: row.diagnosisId ? abbreviateTraceId(row.diagnosisId) : 'daily cache',
+    diagnosisIdFull: row.diagnosisId || 'daily cache',
+    evidenceIds,
+    evidenceIdShort: evidenceIds.length > 0 ? evidenceIds.slice(0, 2).map(abbreviateTraceId).join(', ') : '-',
+    evidenceIdFull: evidenceIds.length > 0 ? evidenceIds.join(', ') : '-',
+  }
+}
+
+function normalizeEvidenceIds(value) {
+  if (!value) return []
+  if (Array.isArray(value)) return value.map(String).filter(Boolean)
+  const text = String(value).trim()
+  if (!text) return []
+  if (text.startsWith('[')) {
+    try {
+      const parsed = JSON.parse(text)
+      if (Array.isArray(parsed)) return parsed.map(String).filter(Boolean)
+    } catch {
+      // Fall through to comma parsing.
+    }
+  }
+  return text.replace(/[\[\]"]/g, '').split(',').map((item) => item.trim()).filter(Boolean)
+}
+
+function summarizeCounts(rows, pickLabel, emptyText, preferredOrder = []) {
+  if (!rows.length) return emptyText
+  const counts = new Map()
+  rows.forEach((row) => {
+    const label = pickLabel(row) || '기타'
+    counts.set(label, (counts.get(label) ?? 0) + 1)
+  })
+  return Array.from(counts.entries())
+    .sort((a, b) => {
+      const aOrder = preferredOrder.includes(a[0]) ? preferredOrder.indexOf(a[0]) : Number.MAX_SAFE_INTEGER
+      const bOrder = preferredOrder.includes(b[0]) ? preferredOrder.indexOf(b[0]) : Number.MAX_SAFE_INTEGER
+      return aOrder - bOrder || b[1] - a[1] || a[0].localeCompare(b[0], 'ko')
+    })
+    .map(([label, count]) => `${label} ${count}건`)
+    .join(' · ')
+}
+
+function firstFiniteNumber(...values) {
+  for (const value of values) {
+    const numeric = numberOrNull(value)
+    if (numeric != null) return numeric
+  }
+  return null
+}
+
+function numberOrNull(value) {
+  if (value == null || value === '') return null
+  const numeric = Number(value)
+  return Number.isFinite(numeric) ? numeric : null
+}
+
+function formatNumber(value) {
+  return Number.isInteger(value) ? String(value) : String(Math.round(value * 100) / 100)
 }
 
 function normalizeFailureReason(value) {

@@ -373,9 +373,217 @@
   background: #fff1e8;
 }
 
+.statusPlanned {
+  color: #7c4d00;
+  background: #fff4d8;
+}
+
+.statusReference {
+  color: #475569;
+  background: #eef2f7;
+}
+
 .statusNeutral {
   color: var(--slate);
   background: #f4f6f8;
+}
+
+.statusSection {
+  margin-top: 16px;
+}
+
+.statusSectionHead {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 14px 0 8px;
+}
+
+.statusSectionHead h3 {
+  color: var(--navy);
+  font-size: 14px;
+  font-weight: 900;
+  word-break: keep-all;
+}
+
+.statusSectionHead span {
+  color: var(--slate-2);
+  font-size: 12px;
+  line-height: 1.5;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.diagnosisLinkPanel {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px 18px;
+}
+
+.diagnosisLinkHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.diagnosisLinkTitle {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  border: 0;
+  background: transparent;
+  color: var(--navy);
+  font-family: var(--kr);
+  font-size: 16px;
+  font-weight: 900;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+  word-break: keep-all;
+}
+
+.countBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  background: #eaf1ff;
+  color: var(--blue);
+  font-size: 11.5px;
+  font-weight: 900;
+  padding: 5px 10px;
+  white-space: nowrap;
+}
+
+.expandBtn {
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--blue);
+  font-family: var(--kr);
+  font-size: 12px;
+  font-weight: 900;
+  padding: 8px 11px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.expandBtn:disabled {
+  color: var(--slate-2);
+  background: #f4f6f8;
+  cursor: not-allowed;
+}
+
+.diagnosisLinkGuide,
+.detailHelp {
+  color: var(--slate);
+  font-size: 13px;
+  line-height: 1.55;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.linkSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.linkSummaryGrid div {
+  min-width: 0;
+  border-radius: 8px;
+  background: #f8fafc;
+  border: 1px solid #edf1f6;
+  padding: 11px 12px;
+}
+
+.linkSummaryGrid span {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--slate-2);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.linkSummaryGrid strong {
+  color: var(--ink);
+  font-size: 13px;
+  line-height: 1.45;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+
+.diagnosisLinkDetail {
+  margin-top: 10px;
+}
+
+.diagnosisLinkDetail[hidden] {
+  display: none;
+}
+
+.diagnosisLinkDetail .detailHelp {
+  margin: 12px 14px 0;
+}
+
+.impactBadge {
+  display: inline-flex;
+  align-items: center;
+  min-height: 26px;
+  border-radius: 999px;
+  padding: 5px 10px;
+  font-size: 11.5px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+.impactPositive {
+  color: var(--green);
+  background: #e4f5ec;
+}
+
+.impactNegative {
+  color: #c2410c;
+  background: #fff1e8;
+}
+
+.impactWarning {
+  color: var(--amber);
+  background: #fff4d8;
+}
+
+.impactNeutral {
+  color: var(--slate);
+  background: #f4f6f8;
+}
+
+.impactFlow {
+  display: block;
+  margin-top: 7px;
+  color: var(--slate);
+  font-size: 11.5px;
+  line-height: 1.5;
+  word-break: keep-all;
+}
+
+.impactFlow small {
+  display: block;
+  margin-top: 2px;
+  color: var(--slate-2);
+  font-size: 11px;
+}
+
+.traceId {
+  display: block;
+  color: var(--ink);
+  font-weight: 800;
+  overflow-wrap: anywhere;
 }
 
 .detailRow td {
@@ -388,6 +596,46 @@
   gap: 8px 12px;
   color: var(--slate);
   font-size: 12px;
+  margin-top: 10px;
+}
+
+.detailSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.detailSummaryGrid div {
+  border: 1px solid #edf1f6;
+  border-radius: 8px;
+  background: #fff;
+  padding: 12px;
+}
+
+.detailSummaryGrid span {
+  display: block;
+  margin-bottom: 5px;
+  color: var(--slate-2);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.detailSummaryGrid strong {
+  display: block;
+  color: var(--ink);
+  font-size: 12.5px;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+
+.detailSummaryGrid p {
+  margin-top: 5px;
+  color: var(--slate);
+  font-size: 11.5px;
+  line-height: 1.55;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .comparisonGrid {
@@ -517,6 +765,10 @@
   .techDetailGrid {
     grid-template-columns: 1fr;
   }
+
+  .detailSummaryGrid {
+    grid-template-columns: 1fr;
+  }
 }
 
 @media (max-width: 760px) {
@@ -561,6 +813,20 @@
   }
 
   .failureTitle {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .diagnosisLinkHeader {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .linkSummaryGrid {
+    grid-template-columns: 1fr;
+  }
+
+  .statusSectionHead {
     align-items: flex-start;
     flex-direction: column;
   }
