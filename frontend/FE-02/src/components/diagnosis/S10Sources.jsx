@@ -2,23 +2,15 @@
 import { useEffect, useState } from 'react'
 import DiagnosisStage from './DiagnosisStage.jsx'
 import { createPublicDataProofRun, getLatestPublicDataProofRun } from '../../services/publicDataService.js'
-import ExplainableStatus from '../ui/ExplainableStatus.jsx'
+import {
+  buildEvidenceWorkflowView,
+  humanProviderName,
+  humanStatusLabel,
+} from './sourceEvidencePresenter.js'
 
 export default function S10Sources({ data, sourceTrustSummary, onRetry, retryStatus }) {
   const pipes = Array.isArray(data) ? data : data?.pipes ?? []
-  const timeline = Array.isArray(data?.timeline) ? data.timeline : []
-  const retrieval = data?.evidenceRetrieval ?? null
-  const guardrails = data?.guardrails ?? null
-  const regionalProfile = data?.regionalIndustryProfile ?? null
   const ledger = Array.isArray(data?.ledger) ? data.ledger : []
-  const topK = Array.isArray(retrieval?.topK) ? retrieval.topK : []
-  const providerHealth = Array.isArray(sourceTrustSummary?.providerHealth) ? sourceTrustSummary.providerHealth : []
-  const liveCount = Number(sourceTrustSummary?.liveCount ?? 0)
-  const cacheCount = Number(sourceTrustSummary?.cacheCount ?? 0)
-  const operationEndpointLiveCount = Number(sourceTrustSummary?.operationEndpointLiveCount ?? 0)
-  const apiKeyConfiguredLiveCount = Number(sourceTrustSummary?.apiKeyConfiguredLiveCount ?? 0)
-  const emptyCount = Number(sourceTrustSummary?.emptyCount ?? 0)
-  const seedCount = Number(sourceTrustSummary?.seedCount ?? 0)
   const diagnosisProofRun = data?.publicDataProofRun
   const diagnosisProofRunId = data?.publicDataProofRunId || sourceTrustSummary?.publicDataProofRunId || ''
   const diagnosisCollectionRunId = data?.publicDataCollectionRunId || sourceTrustSummary?.publicDataCollectionRunId || ''
@@ -58,118 +50,92 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
     await navigator.clipboard.writeText(proofRun.proofRunId)
   }
 
+  const workflow = buildEvidenceWorkflowView({
+    pipes,
+    ledger,
+    sourceTrustSummary,
+    retrieval: data?.evidenceRetrieval ?? null,
+    guardrails: data?.guardrails ?? null,
+    timeline: Array.isArray(data?.timeline) ? data.timeline : [],
+    proofRun: diagnosisProofRun ?? proofRun,
+    agentKnowledgeCandidates: data?.agentKnowledgeCandidates ?? [],
+  })
+  const regionalProfile = data?.regionalIndustryProfile ?? null
+  const providerHealth = Array.isArray(sourceTrustSummary?.providerHealth) ? sourceTrustSummary.providerHealth : []
+  const canRetry = Boolean(sourceTrustSummary?.retryPayload?.hsCode && sourceTrustSummary?.retryPayload?.targetCountry && sourceTrustSummary?.retryPayload?.productName)
+
   return (
     <DiagnosisStage
       eyebrow="S10 EVIDENCE WORKFLOW"
       title="출처, 근거 검색, 지식화 타임라인"
       description="재수집은 제품/진단 생성 또는 관리자 public-data refresh에서 수행되며, 이 화면은 결과 근거를 읽기 전용으로 검증합니다."
     >
-
-      <div className="pipe-grid">
-        {pipes.map((pipe) => {
-          const status = pipe.status ?? 'fallback'
-          const quality = pipe.sourceQualityStatus ?? sourceQualityStatus(status, pipe.zeroReason)
-          const statusText = status === 'live' ? 'Live'
-            : status === 'cache' ? 'Cache'
-            : status === 'empty' ? 'Empty'
-            : status === 'crawl' ? 'Crawl'
-              : status === 'external_feed' ? 'Feed'
-                : status === 'seed' ? 'Seed'
-              : status === 'heuristic' ? 'Rule'
-                : status === 'agent' ? 'Trace'
-                  : status === 'user_input' ? 'User'
-                    : 'Fallback'
-          const chipType = status === 'live' || status === 'cache' ? 'ok'
-            : status === 'crawl' || status === 'external_feed' || status === 'heuristic' || status === 'agent' || status === 'user_input' ? 'warn'
-              : status === 'empty' || status === 'seed' ? 'warn'
-              : 'req'
-          return (
-          <div key={pipe.source} className="pipe-card">
-            <div className="pipe-source">{pipe.source}</div>
-
-            <div className="pipe-count">{pipe.count}</div>
-            <div className="pipe-lbl">{pipe.label}</div>
-            {pipe.metricSummary && (
-              <div className="pipe-lbl">metric · {pipe.metricSummary}</div>
-            )}
-            <div className="pipe-lbl">quality · {quality}</div>
-            {pipe.zeroReason && <div className="pipe-lbl req-text">zero · {pipe.zeroReason}</div>}
-
-            <ExplainableStatus
-              status={status}
-              sourceType={status}
-              evidenceCount={pipe.count}
-              reason={pipe.zeroReason || pipe.metricSummary || pipe.label}
-            >
-              <span className={`status-chip ${chipType}`}>{statusText}</span>
-            </ExplainableStatus>
-          </div>
-          )
-        })}
-
-        <div className="pipe-card" style={{ borderStyle: 'dashed', background: '#fafbfe' }}>
-          <div className="pipe-source" style={{ color: 'var(--slate-2)' }}>+ 커넥터 추가</div>
-          <div style={{ fontSize: 12, color: 'var(--slate-2)', marginTop: 8, lineHeight: 1.5 }}>
-            새 공공데이터 소스를 연결합니다
-          </div>
-          <ExplainableStatus status="대기" sourceType="insufficient_evidence" evidenceCount={0}>
-            <span className="status-chip warn">대기중</span>
-          </ExplainableStatus>
+      <section className="evidence-overview-panel" aria-label="근거 상태 한눈에 보기">
+        <div className="evidence-overview-copy">
+          <span className="source-trust-kicker">근거 상태 한눈에 보기</span>
+          <strong>{workflow.summary.sentence}</strong>
+          <p>마지막 수집 시각 {workflow.summary.lastCollectedAt || '확인 대기'}</p>
         </div>
+        <div className="evidence-overview-kpis">
+          <EvidenceKpi label="총 근거 수" value={workflow.summary.totalEvidenceCount} tone="neutral" />
+          <EvidenceKpi label="바로 사용 가능" value={workflow.summary.readyCount} tone="ok" />
+          <EvidenceKpi label="담당자 확인 필요" value={workflow.summary.needsReviewCount} tone="warn" />
+          <EvidenceKpi label="API 설정 필요" value={workflow.summary.needsConfigurationCount} tone="req" />
+          <EvidenceKpi label="지식화 후보" value={workflow.summary.knowledgeCandidateCount} tone="info" />
+        </div>
+        <div className="evidence-overview-actions">
+          <button type="button" className="secondary-btn" onClick={onRetry} disabled={!canRetry || retryStatus === 'running'}>
+            {retryStatus === 'running' ? '재수집 중' : '공공데이터 재수집'}
+          </button>
+          {retryStatus && retryStatus !== 'running' && <span>{retryStatus}</span>}
+        </div>
+      </section>
+
+      <div className="evidence-group-list">
+        <EvidenceGroup group={workflow.groups.ready} emptyText="바로 사용할 수 있는 live/cache 근거가 아직 없습니다." />
+        <EvidenceGroup group={workflow.groups.needsReview} emptyText="담당자 확인이 필요한 근거가 없습니다." />
+        <EvidenceGroup group={workflow.groups.needsConfiguration} emptyText="API 설정이 필요한 근거가 없습니다." />
+        <EvidenceGroup group={workflow.groups.knowledge} emptyText="아직 지식화 후보가 없습니다." />
       </div>
 
-      <div className="evidence-workflow-grid">
-        <section className="pipe-card" style={{ minHeight: 160 }}>
-          <div className="pipe-source">Source-bound evidence retrieval</div>
-          <div style={{ fontSize: 12, color: 'var(--slate-2)', lineHeight: 1.55, marginTop: 6 }}>
-            {retrieval?.claimBoundary || 'DB 지식과 source trace 안에서만 근거 chunk를 찾습니다.'}
+      <section className="knowledge-timeline-panel" aria-label="Export knowledge timeline">
+        <div className="evidence-section-head">
+          <div>
+            <span className="source-trust-kicker">지식화 타임라인</span>
+            <h3>근거가 제품 지식으로 쌓이는 흐름</h3>
           </div>
-          <div style={{ display: 'grid', gap: 8, marginTop: 12 }}>
-            {topK.length === 0 ? (
-              <div className="pipe-lbl">top-k 근거 chunk 없음</div>
-            ) : topK.slice(0, 4).map((chunk) => (
-              <div key={chunk.chunkId} style={{ borderTop: '1px solid var(--line)', paddingTop: 8 }}>
-                <div style={{ fontSize: 12, fontWeight: 700 }}>{chunk.displayRole || chunk.category}</div>
-                <div className="pipe-lbl">{chunk.sourceId || chunk.chunkId} · score {chunk.score}</div>
-                <div className="pipe-lbl">{chunk.usedSentence}</div>
-              </div>
-            ))}
-          </div>
-        </section>
-
-        <section className="pipe-card" style={{ minHeight: 160 }}>
-          <div className="pipe-source">Evidence guardrails</div>
-          <div className="pipe-count">{guardrails?.verdict || 'pending'}</div>
-          <div className="pipe-lbl">unsupported claims · {guardrails?.unsupportedClaimCount ?? 0}</div>
-          <div className="pipe-lbl">fallback positive contribution · {guardrails?.fallbackPositiveContributionCount ?? 0}</div>
-          <div className="pipe-lbl">official live/cache records · {guardrails?.officialLiveOrCacheRecordCount ?? 0}</div>
-        </section>
-      </div>
+          <span className="evidence-muted">승인 전 후보는 Gate를 직접 바꾸지 않습니다.</span>
+        </div>
+        <div className="knowledge-timeline-steps">
+          {workflow.timeline.steps.map((step, index) => (
+            <div key={step.label} className={`knowledge-step ${step.tone}`}>
+              <span className="knowledge-step-index">{index + 1}</span>
+              <strong>{step.label}</strong>
+              <em>{step.statusLabel}</em>
+            </div>
+          ))}
+        </div>
+      </section>
 
       {regionalProfile && (
-        <section className="pipe-card" style={{ marginTop: 18 }}>
-          <div className="pipe-source">Regional industry profile</div>
-          <div className="pipe-lbl">
-            {regionalProfile.regionName || regionalProfile.region || '-'} · {regionalProfile.leadingIndustry || regionalProfile.industry || '-'}
-          </div>
-          <div className="pipe-lbl">
-            source {regionalProfile.publicSourceName || '-'} · period {regionalProfile.sourcePeriod || '-'} · refresh {regionalProfile.refreshCycleHours ?? '-'}h
-          </div>
+        <section className="evidence-human-panel">
+          <div className="pipe-source">지역 산업 근거</div>
+          <p>
+            {regionalProfile.regionName || regionalProfile.region || '지역 확인 대기'}의 {regionalProfile.leadingIndustry || regionalProfile.industry || '산업 정보'}를
+            보조 근거로 사용했습니다.
+          </p>
+          <span>원천 {regionalProfile.publicSourceName || '확인 대기'} · 기준 기간 {regionalProfile.sourcePeriod || '확인 대기'}</span>
           {regionalProfile.synthetic && (
-            <div className="pipe-lbl req-text">
-              synthetic_demo_not_real_customer 지역 프로필입니다. 공식 지역산업 공공데이터로 교체해야 live proof가 됩니다.
-            </div>
+            <strong className="req-text">데모 지역 프로필입니다. 공식 지역산업 공공데이터로 교체해야 live proof가 됩니다.</strong>
           )}
         </section>
       )}
 
-      <section className="public-proof-panel">
-        <div className="public-proof-header">
+      <section className="evidence-human-panel">
+        <div className="evidence-section-head">
           <div>
-            <div className="pipe-source">Public Data Proof</div>
-            <div className="pipe-lbl">
-              현재 진단 collectionRunId {diagnosisCollectionRunId || '-'} · proofRunId {diagnosisProofRunId || proofRun?.proofRunId || '-'}
-            </div>
+            <span className="source-trust-kicker">공공데이터 수집 증명</span>
+            <h3>수집 실행과 검증 상태</h3>
           </div>
           <div className="public-proof-actions">
             <button type="button" className="secondary-btn" onClick={runProof} disabled={proofStatus === 'running'}>
@@ -182,210 +148,247 @@ export default function S10Sources({ data, sourceTrustSummary, onRetry, retrySta
           </div>
         </div>
         {proofError && <div className="pipe-lbl req-text">{proofError}</div>}
-        <div className="public-proof-summary">
-          {[
-            ['proofRunId', proofRun?.proofRunId || proofRun?.proof_run_id || '-'],
-            ['collectionRunId', diagnosisCollectionRunId || '-'],
-            ['proofStatus', proofRun?.proofStatus || proofRun?.proof_status || proofStatus],
-            ['liveProviderCount', proofRun?.liveProviderCount ?? proofRun?.live_provider_count ?? 0],
-            ['motieRelatedLiveCount', proofRun?.motieRelatedLiveCount ?? proofRun?.motie_related_live_count ?? 0],
-            ['operationEndpointLiveCount', proofRun?.operationEndpointLiveCount ?? proofRun?.operation_endpoint_live_count ?? 0],
-            ['apiKeyConfiguredLiveCount', proofRun?.apiKeyConfiguredLiveCount ?? proofRun?.api_key_configured_live_count ?? 0],
-            ['schemaPassCount', proofRun?.schemaPassCount ?? proofRun?.schema_pass_count ?? 0],
-          ].map(([label, value]) => (
-            <div key={label} className="public-proof-kpi">
-              <span>{label}</span>
-              <strong>{value}</strong>
-            </div>
-          ))}
-        </div>
-        {Number(proofRun?.liveProviderCount ?? proofRun?.live_provider_count ?? 0) === 0 && (
-          <div className="pipe-lbl req-text">live provider 0건입니다. 실제 키와 operation endpoint가 설정된 서버에서 proof run을 다시 생성해야 합니다.</div>
-        )}
-        {Array.isArray(proofRun?.providers) && proofRun.providers.length > 0 && (
-          <div className="ledger-table-wrap" style={{ marginTop: 12 }}>
-            <table className="ledger-table">
-              <thead>
-                <tr>
-                  <th>Provider</th>
-                  <th>Source</th>
-                  <th>Quality</th>
-                  <th>HTTP</th>
-                  <th>Records</th>
-                  <th>API proof</th>
-                  <th>Raw hash</th>
-                  <th>Schema</th>
-                  <th>Fallback reason</th>
-                </tr>
-              </thead>
-              <tbody>
-                {proofRun.providers.slice(0, 12).map((provider) => (
-                  <tr key={`${provider.providerCode}-${provider.rawResponseSha256 || provider.fallbackReason}`}>
-                    <td>
-                      <strong>{provider.providerCode}</strong>
-                      <span>{provider.agencyName || provider.datasetName || '-'}</span>
-                    </td>
-                    <td>{provider.sourceType}</td>
-                    <td>
-                      <strong>{provider.sourceQualityStatus || sourceQualityStatus(provider.sourceType, provider.fallbackReason)}</strong>
-                      <span>{provider.zeroReason || provider.fallbackReason || '-'}</span>
-                    </td>
-                    <td>{provider.httpStatus || '-'}</td>
-                    <td>{provider.recordCount ?? 0}</td>
-                    <td>
-                      endpoint {provider.operationEndpoint ? 'yes' : 'no'}
-                      <span>key {provider.apiKeyConfigured ? 'set' : 'missing'}</span>
-                    </td>
-                    <td>{shortHash(provider.rawResponseSha256)}</td>
-                    <td>{provider.schemaValidationStatus || '-'}</td>
-                    <td>{provider.fallbackReason || '-'}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        <p>
+          현재 진단의 수집 실행은 {diagnosisCollectionRunId || '확인 대기'} 상태입니다.
+          실시간 제공기관 {proofRun?.liveProviderCount ?? proofRun?.live_provider_count ?? 0}건,
+          형식 검증 통과 {proofRun?.schemaPassCount ?? proofRun?.schema_pass_count ?? 0}건을 확인했습니다.
+        </p>
       </section>
 
-      <div className="source-health-panel">
-        <div>
-          <div className="pipe-source">Provider health & retry</div>
-          <div className="pipe-lbl">
-            lastCollectedAt {sourceTrustSummary?.lastCollectedAt || '-'} · sourcePeriod {sourceTrustSummary?.sourcePeriod || '확인 대기'} · liveSuccessRate {Math.round(Number(sourceTrustSummary?.liveSuccessRate ?? 0) * 100)}%
-          </div>
-          {seedCount > 0 && (
-            <div className="pipe-lbl req-text">
-              synthetic_demo_not_real_customer seed {seedCount}건은 합성 시연 데이터이며, live/cache proof 숫자를 올리지 않습니다.
-            </div>
-          )}
-          {liveCount + cacheCount === 0 && (
-            <div className="pipe-lbl req-text">live/cache 공공데이터 0건 - fallback 원인 확인 후 재수집이 필요합니다.</div>
-          )}
-          {emptyCount > 0 && (
-            <div className="pipe-lbl req-text">empty source {emptyCount}건 - API key, operation endpoint, catalog URL, 0건 응답 여부를 확인해야 합니다.</div>
-          )}
-          {liveCount + cacheCount > 0 && operationEndpointLiveCount === 0 && (
-            <div className="pipe-lbl req-text">operation endpoint 증거 0건 - catalog/신청 페이지 기반 응답은 공식 API live 증거로 표시하지 않습니다.</div>
-          )}
-          {operationEndpointLiveCount > 0 && apiKeyConfiguredLiveCount === 0 && (
-            <div className="pipe-lbl req-text">API key configured 증거 0건 - 공개 feed/cache와 인증키 기반 공공 API를 구분해 확인하십시오.</div>
-          )}
-        </div>
-        <button type="button" className="secondary-btn" onClick={onRetry} disabled={!onRetry || retryStatus === 'running'}>
-          {retryStatus === 'running' ? '재수집 중' : '공공데이터 재수집'}
-        </button>
-        {retryStatus && retryStatus !== 'running' && <div className="pipe-lbl">{retryStatus}</div>}
-        <div className="provider-health-list">
-          {providerHealth.length === 0 ? (
-            <div className="pipe-lbl">provider health 대기</div>
-          ) : providerHealth.map((provider) => (
-            <div key={provider.provider} className={`provider-health-row ${provider.status}`}>
-              <strong>{provider.provider}</strong>
-              <span>
-                L{provider.liveCount ?? 0} / C{provider.cacheCount ?? 0} / E{provider.emptyCount ?? 0} / F{provider.fallbackCount ?? 0}
-                {Number(provider.externalFeedCount ?? 0) > 0 ? ` / Feed${provider.externalFeedCount}` : ''}
-                {Number(provider.crawlCount ?? 0) > 0 ? ` / Crawl${provider.crawlCount}` : ''}
-              </span>
-              <span>
-                operation {provider.operationEndpoint ? 'yes' : 'no'} · key {provider.apiKeyConfigured ? 'set' : 'missing'}
-                <small>{provider.endpointType || 'endpoint unknown'}</small>
-              </span>
-              <span>
-                {provider.lastCollectedAt || '-'}
-                <small>{provider.sourceQualityStatus || '-'} · {provider.zeroReason || provider.failureReason || 'failure 없음'}</small>
-              </span>
+      <details className="technical-details-panel">
+        <summary>상세 기술 정보</summary>
+        <p>아래 정보는 개발자와 심사위원 확인용입니다. 기본 업무 화면에서는 raw provider code, metric, sourceId를 숨깁니다.</p>
+
+        <div className="technical-card-grid">
+          {workflow.groups.technical.cards.map((card) => (
+            <div key={card.id} className="technical-card">
+              <strong>{card.title}</strong>
+              <dl>
+                {card.technicalRows.map((row) => (
+                  <div key={`${card.id}-${row.label}`}>
+                    <dt>{row.label}</dt>
+                    <dd>{row.value}</dd>
+                  </div>
+                ))}
+              </dl>
             </div>
           ))}
         </div>
-      </div>
 
-      <div style={{ marginTop: 18 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 8 }}>Score contribution waterfall ledger</div>
-        <div className="ledger-table-wrap">
+        <TechnicalProviderHealth providerHealth={providerHealth} />
+        <TechnicalLedger ledger={ledger} />
+        <TechnicalProofRun
+          proofRun={proofRun}
+          diagnosisCollectionRunId={diagnosisCollectionRunId}
+          proofStatus={proofStatus}
+        />
+      </details>
+    </DiagnosisStage>
+  )
+}
+
+function EvidenceKpi({ label, value, tone }) {
+  return (
+    <div className={`source-trust-count ${tone}`}>
+      <span>{label}</span>
+      <strong>{value}</strong>
+    </div>
+  )
+}
+
+function EvidenceGroup({ group, emptyText }) {
+  return (
+    <section className="evidence-group">
+      <div className="evidence-section-head">
+        <div>
+          <h3>{group.title}</h3>
+          <p>{group.description}</p>
+        </div>
+        <span>{group.cards.length}건</span>
+      </div>
+      {group.cards.length === 0 ? (
+        <div className="evidence-empty">{emptyText}</div>
+      ) : (
+        <div className="evidence-card-grid">
+          {group.cards.map((card) => <EvidenceCard key={card.id} card={card} />)}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function EvidenceCard({ card }) {
+  return (
+    <article className={`evidence-card ${card.scoreTone}`}>
+      <div className="evidence-card-head">
+        <div>
+          <h4>{card.title}</h4>
+          {card.agency && <span>{card.agency}</span>}
+        </div>
+        <strong className={`evidence-score ${card.scoreTone}`}>{card.scoreLabel}</strong>
+      </div>
+      <dl className="evidence-card-body">
+        <EvidenceFact label="이 근거가 말해주는 것" value={card.whatItMeans} />
+        <EvidenceFact label="Gate 판단에 준 영향" value={card.gateImpact} />
+        <EvidenceFact label="현재 상태" value={card.currentStatus} />
+        <EvidenceFact label="담당자가 할 일" value={card.nextAction} />
+        <EvidenceFact label="지식화 상태" value={<span className={`knowledge-badge ${card.statusTone || card.scoreTone}`}>{card.knowledgeStatus}</span>} />
+      </dl>
+    </article>
+  )
+}
+
+function EvidenceFact({ label, value }) {
+  return (
+    <>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </>
+  )
+}
+
+function TechnicalProviderHealth({ providerHealth }) {
+  if (!providerHealth.length) return null
+  return (
+    <div className="technical-section">
+      <h4>Provider health</h4>
+      <div className="provider-health-list">
+        {providerHealth.map((provider) => (
+          <div key={provider.provider} className={`provider-health-row ${provider.status}`}>
+            <strong>{humanProviderName(provider.provider)}</strong>
+            <span>
+              L{provider.liveCount ?? 0} / C{provider.cacheCount ?? 0} / E{provider.emptyCount ?? 0} / F{provider.fallbackCount ?? 0}
+              {Number(provider.externalFeedCount ?? 0) > 0 ? ` / Feed${provider.externalFeedCount}` : ''}
+              {Number(provider.crawlCount ?? 0) > 0 ? ` / Crawl${provider.crawlCount}` : ''}
+            </span>
+            <span>
+              operation {provider.operationEndpoint ? 'yes' : 'no'} · key {provider.apiKeyConfigured ? 'set' : 'missing'}
+              <small>{provider.endpointType || 'endpoint unknown'}</small>
+            </span>
+            <span>
+              {provider.lastCollectedAt || '-'}
+              <small>{provider.sourceQualityStatus ? humanStatusLabel(provider.sourceQualityStatus) : '-'} · {provider.zeroReason || provider.failureReason || 'failure 없음'}</small>
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function TechnicalLedger({ ledger }) {
+  return (
+    <div className="technical-section">
+      <h4>Score contribution waterfall ledger</h4>
+      <div className="ledger-table-wrap">
+        <table className="ledger-table">
+          <thead>
+            <tr>
+              <th>Source</th>
+              <th>API proof</th>
+              <th>Raw metric</th>
+              <th>Normalized metric</th>
+              <th>Raw contribution</th>
+              <th>Confidence</th>
+              <th>Adjusted contribution</th>
+              <th>Final score delta</th>
+            </tr>
+          </thead>
+          <tbody>
+            {ledger.length === 0 ? (
+              <tr>
+                <td colSpan="8">ledger 대기 - backend scoreContributionLedger가 없습니다.</td>
+              </tr>
+            ) : ledger.slice(0, 12).map((row) => (
+              <tr key={`${row.sourceId}-${row.usedFor}`}>
+                <td>
+                  <strong>{humanProviderName(row.provider)}</strong>
+                  <span>{row.provider} · {row.sourceType} · {row.sourceQualityStatus || '-'}</span>
+                  {row.zeroReason && <span>{row.zeroReason}</span>}
+                </td>
+                <td>
+                  <strong>{row.operationEndpoint ? 'operation endpoint' : 'no operation proof'}</strong>
+                  <span>API key {row.apiKeyConfigured ? 'configured' : 'not configured'} · {row.endpointType || 'unknown'}</span>
+                  <span>schema {schemaStatus(row.schemaValidation)}</span>
+                  <span>{row.fetchedAt || '-'}</span>
+                </td>
+                <td>{compactMetric(row.rawMetric)}</td>
+                <td>{row.metricSummary || compactMetric(row.normalizedMetric)}</td>
+                <td>{formatDelta(row.rawContribution)}</td>
+                <td>{formatConfidence(row.confidence)}</td>
+                <td>{formatDelta(row.adjustedContribution)}</td>
+                <td>{formatDelta(row.finalScoreDelta)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  )
+}
+
+function TechnicalProofRun({ proofRun, diagnosisCollectionRunId, proofStatus }) {
+  const providers = Array.isArray(proofRun?.providers) ? proofRun.providers : []
+  return (
+    <div className="technical-section">
+      <h4>Public Data Proof</h4>
+      <div className="public-proof-summary">
+        {[
+          ['proofRunId', proofRun?.proofRunId || proofRun?.proof_run_id || '-'],
+          ['collectionRunId', diagnosisCollectionRunId || '-'],
+          ['proofStatus', proofRun?.proofStatus || proofRun?.proof_status || proofStatus],
+          ['liveProviderCount', proofRun?.liveProviderCount ?? proofRun?.live_provider_count ?? 0],
+          ['operationEndpointLiveCount', proofRun?.operationEndpointLiveCount ?? proofRun?.operation_endpoint_live_count ?? 0],
+          ['apiKeyConfiguredLiveCount', proofRun?.apiKeyConfiguredLiveCount ?? proofRun?.api_key_configured_live_count ?? 0],
+          ['schemaPassCount', proofRun?.schemaPassCount ?? proofRun?.schema_pass_count ?? 0],
+        ].map(([label, value]) => (
+          <div key={label} className="public-proof-kpi">
+            <span>{label}</span>
+            <strong>{value}</strong>
+          </div>
+        ))}
+      </div>
+      {providers.length > 0 && (
+        <div className="ledger-table-wrap" style={{ marginTop: 12 }}>
           <table className="ledger-table">
             <thead>
               <tr>
+                <th>Provider</th>
                 <th>Source</th>
+                <th>Quality</th>
+                <th>HTTP</th>
+                <th>Records</th>
                 <th>API proof</th>
-                <th>Raw metric</th>
-                <th>Normalized metric</th>
-                <th>Raw contribution</th>
-                <th>Confidence</th>
-                <th>Adjusted contribution</th>
-                <th>Final score delta</th>
+                <th>Raw hash</th>
+                <th>Schema</th>
+                <th>Fallback reason</th>
               </tr>
             </thead>
             <tbody>
-              {ledger.length === 0 ? (
-                <tr>
-                  <td colSpan="8">ledger 대기 - backend scoreContributionLedger가 없습니다.</td>
-                </tr>
-              ) : ledger.slice(0, 10).map((row) => (
-                <tr key={`${row.sourceId}-${row.usedFor}`}>
+              {providers.map((provider) => (
+                <tr key={provider.providerCode}>
                   <td>
-                    <strong>{row.provider}</strong>
-                    <span>{row.sourceType} · {row.sourceQualityStatus || sourceQualityStatus(row.sourceType, row.zeroReason)} · {row.usedFor}</span>
-                    {row.zeroReason && <span>{row.zeroReason}</span>}
+                    <strong>{humanProviderName(provider.providerCode)}</strong>
+                    <span>{provider.providerCode}</span>
                   </td>
+                  <td>{provider.sourceType || '-'}</td>
+                  <td>{provider.sourceQualityStatus || '-'}</td>
+                  <td>{provider.httpStatus ?? '-'}</td>
+                  <td>{provider.recordCount ?? 0}</td>
                   <td>
-                    <strong>{row.operationEndpoint ? 'operation endpoint' : 'no operation proof'}</strong>
-                    <span>API key {row.apiKeyConfigured ? 'configured' : 'not configured'} · {row.endpointType || 'unknown'}</span>
-                    <span>schema {schemaStatus(row.schemaValidation)}</span>
-                    <span>{row.fetchedAt || '-'}</span>
+                    <span>operation {provider.operationEndpoint ? 'yes' : 'no'}</span>
+                    <span>key {provider.apiKeyConfigured ? 'set' : 'missing'}</span>
                   </td>
-                  <td>{compactMetric(row.rawMetric)}</td>
-                  <td>{row.metricSummary || compactMetric(row.normalizedMetric)}</td>
-                  <td>{formatDelta(row.rawContribution)}</td>
-                  <td>{formatConfidence(row.confidence)}</td>
-                  <td>{formatDelta(row.adjustedContribution)}</td>
-                  <td>{formatDelta(row.finalScoreDelta)}</td>
+                  <td>{shortHash(provider.rawResponseHash)}</td>
+                  <td>{schemaStatus(provider.schemaValidation)}</td>
+                  <td>{provider.fallbackReason || '-'}</td>
                 </tr>
               ))}
             </tbody>
           </table>
         </div>
-      </div>
-
-      <div style={{ marginTop: 18 }}>
-        <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 8 }}>Export knowledge timeline</div>
-        <div style={{ display: 'grid', gap: 8 }}>
-          {timeline.length === 0 ? (
-            <div className="pipe-card">
-              <div className="pipe-source">타임라인 대기</div>
-              <div className="pipe-lbl">진단 완료 후 sourceId, fetchedAt, sourceType 기반 이벤트가 표시됩니다.</div>
-            </div>
-          ) : timeline.slice(0, 6).map((event) => (
-            <div key={event.eventId} className="pipe-card evidence-timeline-row">
-              <div>
-                <div className="pipe-source">{event.eventType}</div>
-                <ExplainableStatus
-                  status={event.sourceType}
-                  sourceType={event.sourceType}
-                  evidenceCount={1}
-                  reason={event.summary}
-                >
-                  <span className={`status-chip ${event.sourceType === 'live' || event.sourceType === 'cache' ? 'ok' : event.sourceType === 'fallback' ? 'req' : 'warn'}`}>
-                    {event.sourceType}
-                  </span>
-                </ExplainableStatus>
-              </div>
-              <div>
-                <div style={{ fontSize: 12, fontWeight: 700 }}>{event.provider} · {event.usedFor}</div>
-                <div className="pipe-lbl">{event.periodLabel}</div>
-                <div className="pipe-lbl">{event.summary}</div>
-              </div>
-              <div className="pipe-count">{Number(event.scoreImpact ?? 0) > 0 ? '+' : ''}{event.scoreImpact ?? 0}</div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      <div style={{ fontSize: 11.5, color: 'var(--slate-2)', marginTop: 16, lineHeight: 1.6 }}>
-        출처는 live/cache/fallback 공공데이터, crawl 공개 웹, external_feed 재구성 자료, heuristic 규칙 엔진을 구분합니다.
-        official API 증거는 live/cache이면서 operation endpoint와 API key configured evidence가 있는 경우에만 인정합니다.
-        fallback, crawl, external_feed, heuristic은 “공공 API 연결됨”으로 해석하지 말고 보강 대상 여부를 확인하십시오.
-      </div>
-    </DiagnosisStage>
+      )}
+    </div>
   )
 }
 
@@ -403,24 +406,6 @@ function formatConfidence(value) {
 function compactMetric(metric) {
   if (!metric || typeof metric !== 'object') return '-'
   return Object.entries(metric).slice(0, 3).map(([key, value]) => `${key}=${value}`).join(', ')
-}
-
-function sourceQualityStatus(sourceType, zeroReason = '') {
-  const missingKeyCode = ['API', 'KEY', 'NOT', 'CONFIGURED'].join('_')
-  const missingEndpointCode = ['OPERATION', 'ENDPOINT', 'NOT', 'CONFIGURED'].join('_')
-  const catalogEndpointCode = ['CATALOG', 'PAGE', 'ENDPOINT'].join('_')
-  const publicDisabledCode = ['PUBLIC', 'DATA', 'DISABLED'].join('_')
-  if (sourceType === 'live') return 'LIVE_VERIFIED'
-  if (sourceType === 'cache') return 'CACHE_VERIFIED'
-  if (sourceType === 'seed') return 'SEED_SYNTHETIC'
-  if (sourceType === 'heuristic') return 'HEURISTIC_ONLY'
-  if (sourceType === 'fallback') return String(zeroReason).includes(missingKeyCode) ? 'EMPTY_NOT_CONFIGURED' : 'FALLBACK_ERROR'
-  if (sourceType === 'empty') {
-    return [missingKeyCode, missingEndpointCode, catalogEndpointCode, publicDisabledCode].some((code) => String(zeroReason).includes(code))
-      ? 'EMPTY_NOT_CONFIGURED'
-      : 'EMPTY_TRUE_ZERO'
-  }
-  return 'HEURISTIC_ONLY'
 }
 
 function schemaStatus(schemaValidation) {

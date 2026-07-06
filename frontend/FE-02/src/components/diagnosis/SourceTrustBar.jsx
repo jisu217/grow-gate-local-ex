@@ -1,3 +1,5 @@
+import { humanProviderName, humanStatusLabel } from './sourceEvidencePresenter.js'
+
 export default function SourceTrustBar({ summary, onRetry, retryStatus }) {
   if (!summary) return null
   const collectionRunIds = Array.isArray(summary.collectionRunIds) ? summary.collectionRunIds : []
@@ -29,21 +31,21 @@ export default function SourceTrustBar({ summary, onRetry, retryStatus }) {
       <div className="source-trust-layout">
         <div className="source-trust-main">
           <div>
-            <span className="source-trust-kicker">Source Trust</span>
+            <span className="source-trust-kicker">근거 신뢰 상태</span>
             <strong>{summary.diagnosisId || 'diagnosis'}</strong>
             <span>{summary.createdAt || 'createdAt 확인 대기'}</span>
           </div>
           <p>{summary.motieRelatedSummary || '산업부 관련 contribution 확인 대기'}</p>
-          <p>최신 수집 {summary.lastCollectedAt || '-'} · 원천 기간 {summary.sourcePeriod || '확인 대기'} · live success {Math.round(liveSuccessRate * 100)}%</p>
+          <p>최신 수집 {summary.lastCollectedAt || '-'} · 원천 기간 {summary.sourcePeriod || '확인 대기'} · 수집 성공률 {Math.round(liveSuccessRate * 100)}%</p>
         </div>
         <div className="source-trust-counts">
-          <TrustCount label="Live" value={liveCount} tone="ok" />
-          <TrustCount label="Cache" value={cacheCount} tone="ok" />
-          <TrustCount label="Feed" value={externalFeedCount} tone="warn" />
-          <TrustCount label="Crawl" value={crawlCount} tone="warn" />
-          <TrustCount label="Empty" value={emptyCount} tone={emptyCount > 0 ? 'warn' : 'ok'} />
-          <TrustCount label="Fallback" value={fallbackCount} tone={fallbackCount > 0 ? 'req' : 'ok'} />
-          {seedCount > 0 && <TrustCount label="Seed" value={seedCount} tone="req" />}
+          <TrustCount label="실시간 성공" value={liveCount} tone="ok" />
+          <TrustCount label="저장 데이터" value={cacheCount} tone="ok" />
+          <TrustCount label="공개자료 참고" value={externalFeedCount} tone="warn" />
+          <TrustCount label="페이지 수집" value={crawlCount} tone="warn" />
+          <TrustCount label="API 설정 필요" value={emptyCount} tone={emptyCount > 0 ? 'warn' : 'ok'} />
+          <TrustCount label="대체 근거" value={fallbackCount} tone={fallbackCount > 0 ? 'req' : 'ok'} />
+          {seedCount > 0 && <TrustCount label="데모 데이터" value={seedCount} tone="req" />}
         </div>
         <div className="source-trust-actions">
           <button type="button" className="secondary-btn" onClick={onRetry} disabled={!canRetry || retryStatus === 'running'}>
@@ -54,16 +56,16 @@ export default function SourceTrustBar({ summary, onRetry, retryStatus }) {
       </div>
       <div className="source-trust-meta">
         <span>run {collectionRunIds[0] || '-'}</span>
-        <span>{sourceIds.length} source ids</span>
+        <span>{sourceIds.length}개 출처 ID</span>
         <span>MOTIE {Number(summary.motieRelatedContribution ?? 0) > 0 ? '+' : ''}{summary.motieRelatedContribution ?? 0}</span>
       </div>
       {providerHealth.length > 0 && (
         <div className="provider-health-strip">
           {providerHealth.slice(0, 6).map((provider) => (
             <div key={provider.provider} className={`provider-health ${provider.status}`}>
-              <strong>{provider.provider}</strong>
+              <strong>{humanProviderName(provider.provider)}</strong>
               <span>L{provider.liveCount ?? 0}/C{provider.cacheCount ?? 0}/E{provider.emptyCount ?? 0}/F{provider.fallbackCount ?? 0}</span>
-              <span>{provider.lastCollectedAt || '-'}</span>
+              <span>{provider.sourceQualityStatus ? humanStatusLabel(provider.sourceQualityStatus) : provider.lastCollectedAt || '-'}</span>
             </div>
           ))}
         </div>

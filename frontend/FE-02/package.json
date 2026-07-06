@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "test:mappers": "node src/utils/statusExplanation.test.js && node src/services/diagnosisService.mapper.test.js && node src/services/authSession.test.js && node src/services/apiClientBase.test.js && node src/services/mypageReportArchive.test.js && node src/utils/knowledgeRegistration.test.js && node src/pages/publicdata/publicDataProofPresenter.test.js",
+    "test:mappers": "node src/utils/statusExplanation.test.js && node src/services/diagnosisService.mapper.test.js && node src/services/authSession.test.js && node src/services/apiClientBase.test.js && node src/services/mypageReportArchive.test.js && node src/utils/knowledgeRegistration.test.js && node src/pages/publicdata/publicDataProofPresenter.test.js && node src/components/diagnosis/sourceEvidencePresenter.test.js",
     "preview": "vite preview"
   },
   "dependencies": {

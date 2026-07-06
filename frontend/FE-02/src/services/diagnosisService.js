@@ -166,6 +166,7 @@ export function mapDiagnosisDetail(d, evidenceSources, sourceEntries = []) {
         publicDataCollectionRunId: session.publicDataCollectionRunId,
         publicDataProofRunId: session.publicDataProofRunId,
         publicDataProofRun: session.publicDataProofRun,
+        agentKnowledgeCandidates: session.agentKnowledgeCandidates,
       }),
     },
   }
@@ -1013,6 +1014,7 @@ function mapSourceStage(stageData, evidenceMeta = {}) {
     publicDataCollectionRunId: evidenceMeta.publicDataCollectionRunId ?? '',
     publicDataProofRunId: evidenceMeta.publicDataProofRunId ?? '',
     publicDataProofRun: evidenceMeta.publicDataProofRun ?? null,
+    agentKnowledgeCandidates: Array.isArray(evidenceMeta.agentKnowledgeCandidates) ? evidenceMeta.agentKnowledgeCandidates : [],
   }
 }
 
