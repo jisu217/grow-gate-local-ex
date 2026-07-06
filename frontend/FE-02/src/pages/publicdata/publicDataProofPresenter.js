@@ -216,13 +216,13 @@ const ROADMAP_PROVIDER_PLANS = {
     holdReason: '해외 리콜 분류와 국내 제품명 매칭 기준을 보강합니다.',
   },
   EXIM_EXCHANGE_RATE: {
-    statusCode: 'API_KEY_REQUIRED',
+    statusCode: 'OPERATING_KEY_REQUIRED',
     currentRole: '가격·환율 참고',
     nextPlan: '운영 API 키 등록 후 시장성 보조 지표에 연결합니다.',
     holdReason: '운영 키 등록 전에는 진단 점수에 직접 반영하지 않습니다.',
   },
   BOK_KEY_STATISTICS: {
-    statusCode: 'API_KEY_REQUIRED',
+    statusCode: 'OPERATING_KEY_REQUIRED',
     currentRole: '시장성 보조 지표',
     nextPlan: '환율·금리·경기 지표를 시장성 점수 보정에 연결합니다.',
     holdReason: '운영 키 등록과 지표 선택 기준 확정이 필요합니다.',
@@ -270,7 +270,7 @@ export const PUBLIC_DATA_STATUS_META = {
     section: 'roadmap',
     diagnosisUse: '현재 진단 점수에는 직접 반영하지 않습니다.',
   },
-  API_KEY_REQUIRED: {
+  OPERATING_KEY_REQUIRED: {
     label: '운영 키 등록 예정',
     detail: '운영 API 키 등록 후 자동 수집 대상으로 전환됩니다.',
     tone: 'planned',
@@ -429,7 +429,7 @@ export function buildPublicDataStatusSections(providers = []) {
     cacheCount: rows.filter((row) => row.statusCode === 'CACHE_AVAILABLE').length,
     noMatchCount: rows.filter((row) => row.statusCode === 'NO_MATCH').length,
     plannedCount: rows.filter((row) => row.statusCode === 'PLANNED_INTEGRATION').length,
-    keyRequiredCount: rows.filter((row) => row.statusCode === 'API_KEY_REQUIRED').length,
+    keyRequiredCount: rows.filter((row) => row.statusCode === 'OPERATING_KEY_REQUIRED').length,
     stabilizationCount: rows.filter((row) => row.statusCode === 'STABILIZATION_REQUIRED').length,
     pilotReferenceCount: rows.filter((row) => row.statusCode === 'PILOT_REFERENCE').length,
   }
@@ -616,7 +616,7 @@ function resolvePublicDataStatusCode(provider) {
   if (source === 'live') return 'LIVE_CONNECTED'
   if (source === 'cache') return 'CACHE_AVAILABLE'
   if (reasonCode === KEY_NOT_CONFIGURED || provider?.apiKeyConfigured === false) {
-    return plan?.statusCode ?? 'API_KEY_REQUIRED'
+    return plan?.statusCode ?? 'OPERATING_KEY_REQUIRED'
   }
   if (reasonCode === 'TIMEOUT' || reasonCode === 'NETWORK_ERROR' || reasonCode === 'SCHEMA_VALIDATION_FAILED') {
     return plan?.statusCode ?? 'STABILIZATION_REQUIRED'
@@ -631,7 +631,7 @@ function defaultNextPlan(statusCode, provider) {
   if (statusCode === 'LIVE_CONNECTED') return '현재 수집·검증 흐름을 유지하고 정기 수집 이력을 축적합니다.'
   if (statusCode === 'CACHE_AVAILABLE') return '다음 수집에서 최신 공식 데이터로 갱신합니다.'
   if (statusCode === 'NO_MATCH') return '제품명, HS Code, 대상국 조건을 넓혀 다시 확인할 수 있습니다.'
-  if (statusCode === 'API_KEY_REQUIRED') return '운영 API 키를 등록한 뒤 자동 수집 대상으로 전환합니다.'
+  if (statusCode === 'OPERATING_KEY_REQUIRED') return '운영 API 키를 등록한 뒤 자동 수집 대상으로 전환합니다.'
   if (statusCode === 'STABILIZATION_REQUIRED') return '응답 시간, 형식 차이, 호출 제한을 반영해 수집 안정화를 진행합니다.'
   if (statusCode === 'PILOT_REFERENCE') return '공식 수집 근거를 확보한 뒤 진단 보조 근거로 승격합니다.'
   return `${providerDataName(provider?.providerCode)} 연동 범위와 제품군 매핑 기준을 확정합니다.`
@@ -641,7 +641,7 @@ function defaultHoldReason(statusCode, provider) {
   if (statusCode === 'LIVE_CONNECTED') return '현재 조건에서 공식 수집 근거로 사용할 수 있습니다.'
   if (statusCode === 'CACHE_AVAILABLE') return '최근 공식 수집본을 기준으로 표시합니다.'
   if (statusCode === 'NO_MATCH') return '이번 조건에서 조회된 항목이 0건입니다.'
-  if (statusCode === 'API_KEY_REQUIRED') return '운영 키 등록 전 단계입니다.'
+  if (statusCode === 'OPERATING_KEY_REQUIRED') return '운영 키 등록 전 단계입니다.'
   if (statusCode === 'STABILIZATION_REQUIRED') return '수집 조건 안정화가 필요해 후속 관리 대상으로 분리했습니다.'
   if (statusCode === 'PILOT_REFERENCE') return '공식 수집 근거 확보 전까지 보조 지표로만 둡니다.'
   return `${providerDataName(provider?.providerCode)}를 후속 구축 범위로 분리해 관리합니다.`

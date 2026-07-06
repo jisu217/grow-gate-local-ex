@@ -3,14 +3,7 @@ import { useNavigate } from 'react-router-dom'
 import styles from './DiagnosisList.module.css'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
 import { deleteDiagnosis, getDiagnosisList } from '../../services/diagnosisService.js'
-
-// Gate 판단 상태 → 레이블 맵
-const STATUS_MAP = {
-  done:    { label: '완료',    cls: styles.done    },
-  pending: { label: '분석 중', cls: styles.pending },
-  running: { label: '분석 중', cls: styles.pending },
-  failed:  { label: '실패',    cls: styles.failed  },
-}
+import { getDiagnosisStatusMeta, isDiagnosisRunning, nextDiagnosisPollMs } from './diagnosisStatusPresenter.js'
 
 // 한 페이지에 보여줄 진단 이력 수
 const ITEMS_PER_PAGE = 5
@@ -22,15 +15,35 @@ export default function DiagnosisList() {
   const [pageState, setPageState] = useState('loading')
   const [page, setPage] = useState(0)
   const [reloadKey, setReloadKey] = useState(0)
+  const [hasLoaded, setHasLoaded] = useState(false)
   const [deleteTarget, setDeleteTarget] = useState(null)
   const [deleteStatus, setDeleteStatus] = useState({ type: 'idle', message: '' })
 
   useEffect(() => {
-    setPageState('loading')
+    if (!hasLoaded) setPageState('loading')
+    let cancelled = false
     getDiagnosisList()
-      .then((data) => { setList(data); setPageState('ok') })
-      .catch(() => setPageState('error'))
+      .then((data) => {
+        if (cancelled) return
+        setList(data)
+        setHasLoaded(true)
+        setPageState('ok')
+      })
+      .catch(() => {
+        if (!cancelled) setPageState('error')
+      })
+    return () => {
+      cancelled = true
+    }
   }, [reloadKey])
+
+  useEffect(() => {
+    if (pageState !== 'ok') return undefined
+    const nextMs = nextDiagnosisPollMs(list)
+    if (nextMs == null) return undefined
+    const timer = window.setTimeout(() => setReloadKey((k) => k + 1), nextMs)
+    return () => window.clearTimeout(timer)
+  }, [pageState, list])
 
   const openDeleteConfirm = (diag, event) => {
     event.stopPropagation()
@@ -86,7 +99,7 @@ export default function DiagnosisList() {
       </div>
 
       {pageState === 'loading' && (
-        <StatusMessage type="loading" message="공공데이터와 제품 정보를 대조 중입니다." />
+        <StatusMessage type="loading" message="Gate 판단 이력을 불러오는 중입니다." />
       )}
       {pageState === 'error' && (
         <StatusMessage
@@ -126,7 +139,7 @@ export default function DiagnosisList() {
       {pageState === 'ok' && list.length > 0 && (
         <div className={styles.list}>
           {pagedList.map((diag) => {
-            const status = STATUS_MAP[diag.status] ?? { label: diag.status ?? '알 수 없음', cls: styles.pending }
+            const status = getDiagnosisStatusMeta(diag.status, diag.requestedAt)
             const overallScore = typeof diag.diagnosisScore === 'number'
               ? diag.diagnosisScore
               : diag.diagnosisScore?.overall
@@ -147,7 +160,7 @@ export default function DiagnosisList() {
                     {overallScore != null && (
                       <div className={styles.score}>{overallScore}<span>/100</span></div>
                     )}
-                    <span className={`${styles.badge} ${status.cls}`}>{status.label}</span>
+                    <span className={`${styles.badge} ${styles[status.tone]}`}>{status.label}</span>
                     <button
                       type="button"
                       className={styles.deleteBtn}
@@ -172,10 +185,10 @@ export default function DiagnosisList() {
                       </div>
                     ))}
                   </div>
-                ) : ['pending', 'running'].includes(diag.status) ? (
-                  <div className={styles.summaryPending}>공공데이터와 제품 정보를 대조 중입니다…</div>
-                ) : diag.status === 'failed' ? (
-                  <div className={styles.summaryFailed}>Gate 판단에 실패했습니다. 다시 시도해 주세요.</div>
+                ) : isDiagnosisRunning(diag.status) ? (
+                  <div className={status.delayed ? styles.summaryDelayed : styles.summaryPending}>{status.message}</div>
+                ) : diag.status === 'failed' || diag.status === 'timeout' ? (
+                  <div className={styles.summaryFailed}>{status.message}</div>
                 ) : null}
               </div>
             )

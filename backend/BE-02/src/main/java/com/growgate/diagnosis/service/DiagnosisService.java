@@ -59,6 +59,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -70,6 +71,8 @@ public class DiagnosisService {
 
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ISO_LOCAL_DATE;
     private static final int EXPIRY_WARNING_DAYS = 90;
+    private static final int DUPLICATE_WINDOW_MINUTES = 5;
+    private static final int STALE_RUNNING_MINUTES = 10;
 
     private final DiagnosisRepository diagnosisRepository;
     private final UserRepository userRepository;
@@ -105,7 +108,7 @@ public class DiagnosisService {
                     .productName(productName)
                     .hsCode(hsCode)
                     .targetCountry(run.getTargetCountry())
-                    .status(run.getStatus().name())
+                    .status(presentationStatus(run).name())
                     .createdAt(DateTimeUtils.formatUtc(run.getCreatedAt()))
                     .overallScore(extractOverallScore(run.getResult()))
                     .build();
@@ -149,6 +152,17 @@ public class DiagnosisService {
         } else {
             inputDataJson = serializeInputData(request.getInputData(), null);
             knowledgeSnapshotJson = buildInputSnapshot(request.getInputData(), request.getTargetCountry());
+        }
+
+        Optional<DiagnosisRun> duplicateRun = findRecentActiveDuplicate(
+                user, product, inputDataJson, request.getTargetCountry());
+        if (duplicateRun.isPresent()) {
+            DiagnosisRun existing = duplicateRun.get();
+            return new CreateDiagnosisResponse(
+                    existing.getId(),
+                    presentationStatus(existing).name(),
+                    "같은 조건의 Gate 판단이 이미 진행 중입니다. 기존 작업으로 연결합니다."
+            );
         }
 
         DiagnosisRun run = DiagnosisRun.builder()
@@ -250,7 +264,7 @@ public class DiagnosisService {
                 .knowledgeSnapshotId(knowledgeSnapshotId)
                 .productName(productName)
                 .targetCountry(run.getTargetCountry())
-                .status(run.getStatus().name())
+                .status(presentationStatus(run).name())
                 .result(resultData)
                 .knowledgeSnapshot(snapshot)
                 .createdAt(DateTimeUtils.formatUtc(run.getCreatedAt()))
@@ -425,6 +439,43 @@ public class DiagnosisService {
                 asyncProcessor.process(diagnosisId);
             }
         });
+    }
+
+    private Optional<DiagnosisRun> findRecentActiveDuplicate(User user, Product product,
+                                                             String inputDataJson, String targetCountry) {
+        LocalDateTime since = LocalDateTime.now().minusMinutes(DUPLICATE_WINDOW_MINUTES);
+        Company company = resolveCompany(user.getId());
+        List<DiagnosisRun> candidates = company != null
+                ? diagnosisRepository.findByCompanyIdAndDeletedAtIsNullOrderByCreatedAtDesc(company.getId())
+                : diagnosisRepository.findByUserIdAndDeletedAtIsNullOrderByCreatedAtDesc(user.getId());
+
+        return candidates.stream()
+                .filter(run -> run.getCreatedAt() != null && run.getCreatedAt().isAfter(since))
+                .filter(run -> run.getStatus() == DiagnosisStatus.pending || run.getStatus() == DiagnosisStatus.running)
+                .filter(run -> sameTargetCountry(run.getTargetCountry(), targetCountry))
+                .filter(run -> sameDiagnosisInput(run, product, inputDataJson))
+                .findFirst();
+    }
+
+    private DiagnosisStatus presentationStatus(DiagnosisRun run) {
+        if (run == null || run.getStatus() == null) return DiagnosisStatus.failed;
+        if ((run.getStatus() == DiagnosisStatus.pending || run.getStatus() == DiagnosisStatus.running)
+                && run.getCreatedAt() != null
+                && run.getCreatedAt().isBefore(LocalDateTime.now().minusMinutes(STALE_RUNNING_MINUTES))) {
+            return DiagnosisStatus.timeout;
+        }
+        return run.getStatus();
+    }
+
+    private boolean sameDiagnosisInput(DiagnosisRun run, Product product, String inputDataJson) {
+        if (product != null) {
+            return run.getProduct() != null && product.getId().equals(run.getProduct().getId());
+        }
+        return Objects.equals(normalizeNullable(run.getInputData()), normalizeNullable(inputDataJson));
+    }
+
+    private boolean sameTargetCountry(String left, String right) {
+        return Objects.equals(normalizeNullable(left).toUpperCase(), normalizeNullable(right).toUpperCase());
     }
 
     private Company resolveCompany(String userId) {
@@ -847,6 +898,10 @@ public class DiagnosisService {
 
     private String firstNonBlank(String primary, String fallback) {
         return isBlank(primary) ? fallback : primary;
+    }
+
+    private String normalizeNullable(String value) {
+        return value == null ? "" : value.trim();
     }
 
     private Integer asInteger(Object value) {

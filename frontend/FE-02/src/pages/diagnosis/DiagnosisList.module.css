@@ -224,6 +224,7 @@
 
 /* 분석 중·실패 상태 텍스트 */
 .summaryPending,
+.summaryDelayed,
 .summaryFailed {
   margin-top: 14px;
   padding-top: 14px;
@@ -233,6 +234,7 @@
   padding-bottom: 4px;
 }
 .summaryPending { color: var(--amber); }
+.summaryDelayed { color: #b45309; }
 .summaryFailed  { color: var(--red); }
 
 /* 상태 뱃지 */
@@ -248,8 +250,14 @@
 .done    { color: var(--green); background: #e4f5ec; }
 /* 분석 중 상태 */
 .pending { color: var(--amber); background: #fbeecb; }
+/* 지연 상태 */
+.delayed { color: #b45309; background: #fff2cc; }
 /* 실패 상태 */
 .failed  { color: var(--red);   background: #fbe0dd; }
+/* 시간 초과 상태 */
+.timeout { color: var(--red); background: #ffe7e2; }
+/* 부분 완료 상태 */
+.partial { color: #0f766e; background: #ddf7f1; }
 
 /* 삭제 버튼 */
 .deleteBtn {

@@ -80,6 +80,7 @@ public class DiagnosisAsyncProcessor {
     private final RegionalIndustryProfileService regionalIndustryProfileService;
     private final AgentTraceRecorder agentTraceRecorder;
     private final PublicDataProofRunService publicDataProofRunService;
+    private final DiagnosisRunStateWriter runStateWriter;
     private final AgentKnowledgeCaptureService agentKnowledgeCaptureService =
             new AgentKnowledgeCaptureService(new AgentInstructionRegistry(), new AgentExplanationValidator());
 
@@ -433,19 +434,26 @@ public class DiagnosisAsyncProcessor {
             inputTrace.put("buyerRequirementCount", buyers.size());
             resultMap.put("inputTrace", inputTrace);
 
-            run.setResult(objectMapper.writeValueAsString(resultMap));
-            updateStatus(run, DiagnosisStatus.done);
+            completeRun(run, objectMapper.writeValueAsString(resultMap), DiagnosisStatus.done);
         } catch (Exception e) {
             log.error("Diagnosis processing failed for id: {}", diagnosisId, e);
-            run.setResult(buildFailureResult(e));
-            updateStatus(run, DiagnosisStatus.failed);
+            completeRun(run, buildFailureResult(e), DiagnosisStatus.failed);
         }
     }
 
     private void updateStatus(DiagnosisRun run, DiagnosisStatus status) {
         DiagnosisStatus previous = run.getStatus();
         run.setStatus(status);
-        diagnosisRepository.save(run);
+        runStateWriter.updateStatus(run.getId(), status);
+        log.info("Diagnosis status changed: diagnosisId={}, previous={}, current={}",
+                run.getId(), previous, status);
+    }
+
+    private void completeRun(DiagnosisRun run, String resultJson, DiagnosisStatus status) {
+        DiagnosisStatus previous = run.getStatus();
+        run.setResult(resultJson);
+        run.setStatus(status);
+        runStateWriter.complete(run.getId(), resultJson, status);
         log.info("Diagnosis status changed: diagnosisId={}, previous={}, current={}",
                 run.getId(), previous, status);
     }

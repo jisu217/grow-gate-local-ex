@@ -26,6 +26,7 @@ import S10Sources    from '../../components/diagnosis/S10Sources.jsx'
 import { DIAGNOSIS_STEPS } from '../../constants/diagnosisSteps.js'
 import { getDiagnosisReport, getDiagnosisResult } from '../../services/diagnosisService.js'
 import { collectPublicData } from '../../services/publicDataService.js'
+import { getDiagnosisStatusMeta } from './diagnosisStatusPresenter.js'
 
 // 진단 결과 뷰어 페이지 컴포넌트
 export default function DiagnosisResult() {
@@ -83,9 +84,10 @@ export default function DiagnosisResult() {
         const data = await getDiagnosisResult(id)
         if (cancelled) return
         setResult(data)
-        setPageState(data.session?.status === 'failed' ? 'failed' : 'ok')
-        if (['pending', 'running'].includes(String(data.session?.status ?? '').toLowerCase())) {
-          timeoutId = window.setTimeout(load, 2500)
+        const statusMeta = getDiagnosisStatusMeta(data.session?.status, data.session?.updatedAt)
+        setPageState(statusMeta.code === 'failed' ? 'failed' : statusMeta.code === 'timeout' ? 'timeout' : 'ok')
+        if (statusMeta.isRunning) {
+          timeoutId = window.setTimeout(load, statusMeta.delayed ? 10000 : 2500)
         }
       } catch {
         if (!cancelled) setPageState('error')
@@ -274,6 +276,25 @@ export default function DiagnosisResult() {
     </div>
   )
 
+  if (pageState === 'timeout') return (
+    <div className="app">
+      <div className="content">
+        <div className="scroll">
+          <StatusMessage
+            type="error"
+            message="분석 시간이 초과되었습니다. 저장된 근거로 다시 실행하거나 입력값을 확인하세요."
+            actionLabel="새 판단 실행"
+            onAction={() => navigate('/diagnosis/new')}
+            onSecondary={() => navigate('/diagnosis')}
+            secondaryLabel="판단 이력으로"
+          />
+        </div>
+      </div>
+    </div>
+  )
+
+  const statusMeta = getDiagnosisStatusMeta(result?.session?.status, result?.session?.updatedAt)
+
   return (
     <div className={`app ${isCollapsed ? 'collapsed' : ''}`}>
 
@@ -306,8 +327,8 @@ export default function DiagnosisResult() {
             onBoardClick={() => go(8)}
           />
 
-          {['pending', 'running'].includes(String(result.session?.status ?? '').toLowerCase()) && (
-            <StatusMessage type="loading" message="공공데이터와 제품 정보를 대조 중입니다. 완료되면 이 화면이 자동으로 갱신됩니다." />
+          {statusMeta.isRunning && (
+            <StatusMessage type="loading" message={`${statusMeta.message} 완료되면 이 화면이 자동으로 갱신됩니다.`} />
           )}
           {reportError && <StatusMessage type="error" message={reportError} />}
 

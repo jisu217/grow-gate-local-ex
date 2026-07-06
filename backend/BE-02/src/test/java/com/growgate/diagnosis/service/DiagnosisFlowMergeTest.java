@@ -234,7 +234,8 @@ class DiagnosisFlowMergeTest {
                 mock(ClaimVerificationService.class),
                 mock(RegionalIndustryProfileService.class),
                 mock(AgentTraceRecorder.class),
-                mock(PublicDataProofRunService.class)
+                mock(PublicDataProofRunService.class),
+                mock(DiagnosisRunStateWriter.class)
         );
     }
 }

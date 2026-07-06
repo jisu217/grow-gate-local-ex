@@ -20,8 +20,10 @@ import com.growgate.publicdata.repository.PublicDataRecordRepository;
 import com.growgate.user.entity.User;
 import com.growgate.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
@@ -37,11 +39,16 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 @Transactional
+@Slf4j
 public class PublicDataCollectionService {
 
     private static final Set<PublicDataProvider> INACTIVE_PROVIDERS = EnumSet.of(
             PublicDataProvider.BIZINFO_SUPPORT,
             PublicDataProvider.MOLIT_WAREHOUSE_REGISTRATION
+    );
+
+    private static final Set<PublicDataProvider> DIAGNOSIS_FAST_DEFERRED_PROVIDERS = EnumSet.of(
+            PublicDataProvider.MOTIE_DEALING_BUSINESS_INFO
     );
 
     private final List<PublicDataConnector> connectors;
@@ -57,11 +64,12 @@ public class PublicDataCollectionService {
     @Value("${public-data.cache-ttl-hours:24}")
     private long cacheTtlHours;
 
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public PublicDataCollectionResult collectForDiagnosis(String diagnosisId, String userId, String hsCode,
                                                           String targetCountry, String productName) {
         PublicDataRequest request = new PublicDataRequest(diagnosisId, userId, normalizeHsCode(hsCode),
                 normalizeCountry(targetCountry), productName);
-        return collect(request);
+        return collect(request, true);
     }
 
     @Transactional(readOnly = true)
@@ -183,10 +191,14 @@ public class PublicDataCollectionService {
         }
         PublicDataRequest request = new PublicDataRequest(null, userId, normalizeHsCode(hsCode),
                 normalizeCountry(targetCountry), productName, lawSearchQuery);
-        return collect(request);
+        return collect(request, false);
     }
 
     private PublicDataCollectionResult collect(PublicDataRequest request) {
+        return collect(request, false);
+    }
+
+    private PublicDataCollectionResult collect(PublicDataRequest request, boolean diagnosisFastPath) {
         User user = userRepository.findById(request.getUserId()).orElse(null);
 
         PublicDataCollectionRun run = PublicDataCollectionRun.builder()
@@ -218,9 +230,22 @@ public class PublicDataCollectionService {
                 continue;
             }
 
+            if (diagnosisFastPath && shouldDeferLiveConnector(connector)) {
+                PublicDataRecord deferredRecord = toRecord(run, deferredResult(connector, request));
+                records.add(recordRepository.save(deferredRecord));
+                log.info("public data provider deferred on diagnosis fast path: provider={}, diagnosisId={}, requestKey={}",
+                        connector.provider(), request.getDiagnosisId(), connector.requestKey(request));
+                continue;
+            }
+
+            long startedNanos = System.nanoTime();
             PublicDataConnectorResult result = enabled
                     ? connector.collect(request)
                     : disabledResult(connector, request);
+            long elapsedMs = Math.max(0, (System.nanoTime() - startedNanos) / 1_000_000);
+            log.info("public data provider collected: provider={}, diagnosisId={}, fastPath={}, elapsedMs={}, sourceType={}, fallbackUsed={}",
+                    connector.provider(), request.getDiagnosisId(), diagnosisFastPath, elapsedMs,
+                    result.getSourceType(), result.isFallbackUsed());
             PublicDataRecord newRecord = toRecord(run, result);
             records.add(recordRepository.save(newRecord));
             if (isFallbackRecord(newRecord)) {
@@ -242,6 +267,10 @@ public class PublicDataCollectionService {
         runRepository.save(run);
 
         return new PublicDataCollectionResult(run, records);
+    }
+
+    private boolean shouldDeferLiveConnector(PublicDataConnector connector) {
+        return DIAGNOSIS_FAST_DEFERRED_PROVIDERS.contains(connector.provider());
     }
 
     private List<PublicDataConnector> sortedConnectors() {
@@ -318,6 +347,70 @@ public class PublicDataCollectionService {
                 .fallbackUsed(true)
                 .errorMessage("PUBLIC_DATA_ENABLED=false")
                 .build();
+    }
+
+    private PublicDataConnectorResult deferredResult(PublicDataConnector connector, PublicDataRequest request) {
+        return PublicDataConnectorResult.builder()
+                .provider(connector.provider())
+                .endpoint(connector.provider().officialUrl())
+                .requestKey(connector.requestKey(request))
+                .hsCode(request.getHsCode())
+                .targetCountry(request.getTargetCountry())
+                .matchedKey("hsCode=" + request.getHsCode() + ";country=" + request.getTargetCountry())
+                .usedFor(connector.usedFor())
+                .rawPayload("{\"deferred\":true,\"reason\":\"DIAGNOSIS_FAST_PATH_DEFERRED\"}")
+                .normalizedPayload(deferredNormalizedPayload(connector))
+                .scoreContribution(0)
+                .confidence(0.0)
+                .sourceType("empty")
+                .fallbackUsed(false)
+                .errorMessage(null)
+                .build();
+    }
+
+    private Map<String, Object> deferredNormalizedPayload(PublicDataConnector connector) {
+        Map<String, Object> payload = new LinkedHashMap<>();
+        payload.put("provider", connector.provider().name());
+        payload.put("usedFor", connector.usedFor());
+        payload.put("agency", connector.provider().agency());
+        payload.put("ministry", connector.provider().ministry());
+        payload.put("dataFamily", connector.provider().dataFamily());
+        payload.put("motieRelated", connector.provider().motieRelated());
+        payload.put("refreshCycleHours", connector.provider().refreshCycleHours());
+        payload.put("metrics", java.util.Map.of("recordCount", 0));
+        payload.put("metricSchema", List.of("recordCount"));
+        payload.put("rawCount", 0);
+        payload.put("normalizedCount", 0);
+        payload.put("filteredCount", 0);
+        payload.put("zeroReason", "DIAGNOSIS_FAST_PATH_DEFERRED");
+        payload.put("requestParamsMasked", java.util.Map.of());
+        payload.put("sampleRawKeys", List.of());
+        payload.put("scoreContribution", 0);
+        payload.put("confidence", 0.0);
+        payload.put("fallbackUsed", false);
+        payload.put("collectionEvidence", java.util.Map.of(
+                "endpointConfigured", true,
+                "operationEndpoint", true,
+                "endpointType", "diagnosis_fast_path_deferred",
+                "apiKeyConfigured", true,
+                "apiKeyStored", true,
+                "fallbackUsed", false,
+                "reason", "진단 즉시 응답을 위해 live 호출은 daily refresh 또는 수동 수집에서 안정화합니다."
+        ));
+        payload.put("zeroResultDiagnostics", java.util.Map.of(
+                "provider", connector.provider().name(),
+                "agent", connector.usedFor(),
+                "sourceType", "empty",
+                "rawCount", 0,
+                "normalizedCount", 0,
+                "filteredCount", 0,
+                "zeroReason", "DIAGNOSIS_FAST_PATH_DEFERRED",
+                "sampleRawKeys", List.of(),
+                "fallbackUsed", false
+        ));
+        payload.put("scoreFormula", "diagnosis fast path defers slow live provider and contributes 0");
+        payload.put("reason", "DIAGNOSIS_FAST_PATH_DEFERRED");
+        return payload;
     }
 
     private Map<String, Object> disabledNormalizedPayload(PublicDataConnector connector) {

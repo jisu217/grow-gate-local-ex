@@ -119,7 +119,7 @@ assert.equal(statusSections.statusCounts.LIVE_CONNECTED, 1)
 assert.equal(statusSections.statusCounts.CACHE_AVAILABLE, 1)
 assert.equal(statusSections.statusCounts.NO_MATCH, 1)
 assert.equal(statusSections.statusCounts.PLANNED_INTEGRATION, 1)
-assert.equal(statusSections.statusCounts.API_KEY_REQUIRED, 1)
+assert.equal(statusSections.statusCounts.OPERATING_KEY_REQUIRED, 1)
 assert.equal(statusSections.statusCounts.STABILIZATION_REQUIRED, 1)
 
 assert.deepEqual(
