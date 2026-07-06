@@ -125,9 +125,6 @@ public class PublicDataOperationalStatusService {
                         prop("public-data.kicox-factory-registration.csv-resource"),
                         prop("public-data.kicox-factory-registration.url"),
                         prop("public-data.kicox-factory-registration.key")),
-                providerStatus(PublicDataProvider.MOLIT_WAREHOUSE_REGISTRATION,
-                        prop("public-data.molit-warehouse-registration.url"),
-                        prop("public-data.molit-warehouse-registration.key")),
                 fileDataStatus(PublicDataProvider.KHNP_SAFETY_HEALTH_CERTIFICATION,
                         prop("public-data.khnp-safety-health-certification.csv-resource"),
                         prop("public-data.khnp-safety-health-certification.url"),
@@ -161,7 +158,6 @@ public class PublicDataOperationalStatusService {
                         prop("public-data.trade-security-item-keyword.url"),
                         prop("public-data.trade-security-item-keyword.key")),
                 providerStatus(PublicDataProvider.KIPRIS_FTO, prop("public-data.kipris-fto.url"), prop("public-data.kipris-fto.key")),
-                providerStatus(PublicDataProvider.BIZINFO_SUPPORT, prop("public-data.bizinfo-support.url"), prop("public-data.bizinfo-support.key")),
                 feedStatus(PublicDataProvider.MOTIE_WEB_CRAWL, bool("public-data.crawl.enabled", false), prop("public-data.crawl.urls")),
                 feedStatus(PublicDataProvider.EXPORT_EVIDENCE_FEED, bool("public-data.export-evidence.enabled", false), prop("public-data.export-evidence.urls"))
         );

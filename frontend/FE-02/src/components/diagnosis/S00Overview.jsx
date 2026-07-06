@@ -23,7 +23,7 @@ export default function S00Overview({ data }) {
         ))}
       </div>
       <MemoBox>
-        <b>요약</b> · 이 화면은 자동 확정 판단이 아니라 견적 전 1차 리스크 체크입니다. 상세 근거는 source trace와 action board에서 확인하세요.
+        <b>요약</b> · 이 화면은 자동 단정 판단이 아니라 견적 전 1차 리스크 체크입니다. 상세 근거는 source trace와 action board에서 확인하세요.
       </MemoBox>
     </DiagnosisStage>
   )

@@ -5,7 +5,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.publicdata.dto.PublicDataSignal;
 import com.growgate.publicdata.enums.PublicDataProvider;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDate;
@@ -17,7 +16,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.OptionalInt;
 
-@Component
 public class MolitWarehouseRegistrationConnector extends AbstractPublicDataConnector {
 
     private static final String TECHNICAL_DOCUMENT_NAME = "국토교통부_물류창고업등록정보기술문서";

@@ -173,8 +173,23 @@ public class KnowledgeController {
         return ResponseEntity.ok(knowledgeService.getKnowledgeLoopItems(userDetails.getUsername(), productId));
     }
 
+    @GetMapping("/{productId}/knowledge/agent-candidates")
+    public ResponseEntity<KnowledgeLoopItemsResponse> getAgentCandidates(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String productId) {
+        return ResponseEntity.ok(knowledgeService.getKnowledgeLoopItems(userDetails.getUsername(), productId));
+    }
+
     @PostMapping("/{productId}/knowledge/loop-items/{itemId}/accept")
     public ResponseEntity<KnowledgeLoopActionResponse> acceptKnowledgeLoopItem(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String productId,
+            @PathVariable String itemId) {
+        return ResponseEntity.ok(knowledgeService.acceptKnowledgeLoopItem(userDetails.getUsername(), productId, itemId));
+    }
+
+    @PostMapping("/{productId}/knowledge/agent-candidates/{itemId}/approve")
+    public ResponseEntity<KnowledgeLoopActionResponse> approveAgentCandidate(
             @AuthenticationPrincipal UserDetails userDetails,
             @PathVariable String productId,
             @PathVariable String itemId) {
@@ -187,5 +202,21 @@ public class KnowledgeController {
             @PathVariable String productId,
             @PathVariable String itemId) {
         return ResponseEntity.ok(knowledgeService.dismissKnowledgeLoopItem(userDetails.getUsername(), productId, itemId));
+    }
+
+    @PostMapping("/{productId}/knowledge/agent-candidates/{itemId}/reject")
+    public ResponseEntity<KnowledgeLoopActionResponse> rejectAgentCandidate(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String productId,
+            @PathVariable String itemId) {
+        return ResponseEntity.ok(knowledgeService.dismissKnowledgeLoopItem(userDetails.getUsername(), productId, itemId));
+    }
+
+    @PostMapping("/{productId}/knowledge/agent-candidates/{itemId}/archive")
+    public ResponseEntity<KnowledgeLoopActionResponse> archiveAgentCandidate(
+            @AuthenticationPrincipal UserDetails userDetails,
+            @PathVariable String productId,
+            @PathVariable String itemId) {
+        return ResponseEntity.ok(knowledgeService.archiveKnowledgeLoopItem(userDetails.getUsername(), productId, itemId));
     }
 }

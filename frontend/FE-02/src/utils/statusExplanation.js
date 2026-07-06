@@ -24,7 +24,7 @@ const TEMPLATES = {
     severity: 'high',
     plainSummary: '수출 전에 먼저 확인해야 할 필수 항목이 남아 있습니다.',
     reason: '대상국 규제나 인증 근거가 부족하거나, 견적 전에 확인해야 할 조건이 있습니다.',
-    nextAction: ['인증/규제 담당자 검토 후 견적을 확정하세요.', '필요한 인증서와 시험성적서 보유 여부를 먼저 확인하세요.'],
+    nextAction: ['인증/규제 담당자 검토 후 견적을 제시하세요.', '필요한 인증서와 시험성적서 보유 여부를 먼저 확인하세요.'],
     confidence: 'medium',
   },
   보강: {
@@ -38,7 +38,7 @@ const TEMPLATES = {
     severity: 'high',
     plainSummary: '그대로 진행하면 일정이나 비용 문제가 커질 수 있습니다.',
     reason: 'FTO, 리콜, 규제 근거 중 중요한 항목이 부족하거나 위험 신호가 있습니다.',
-    nextAction: ['전문가 검토나 추가 검색을 먼저 진행하세요.', '견적 확정 전 확인 결과를 문서로 남기세요.'],
+    nextAction: ['전문가 검토나 추가 검색을 먼저 진행하세요.', '견적 제시 전 확인 결과를 문서로 남기세요.'],
     confidence: 'medium',
   },
   중위험: {
@@ -72,13 +72,13 @@ const TEMPLATES = {
   'insufficient evidence': {
     severity: 'medium',
     plainSummary: '판단에 필요한 근거 데이터가 충분하지 않습니다.',
-    reason: '현재 source trace만으로는 이 상태를 확정하기 어렵습니다.',
+    reason: '현재 source trace만으로는 이 상태를 단정하기 어렵습니다.',
     nextAction: ['관련 공공데이터나 보유 문서를 추가하세요.', '다음 판단 전 근거 건수를 확인하세요.'],
     confidence: 'low',
   },
   '담당자 확인 필요': {
     severity: 'medium',
-    plainSummary: '자동 진단만으로 확정하지 말고 담당자가 확인해야 합니다.',
+    plainSummary: '자동 진단만으로 단정하지 말고 담당자가 확인해야 합니다.',
     reason: '근거 데이터가 부족하거나 바이어 회신 전에 사람의 검토가 필요한 조건입니다.',
     nextAction: ['담당자를 지정해 원문과 보유 문서를 확인하세요.', '확인 결과를 리포트나 실행보드에 남기세요.'],
     confidence: 'medium',
@@ -100,14 +100,14 @@ const TEMPLATES = {
   출처확인: {
     severity: 'medium',
     plainSummary: '표시된 판단의 원문 출처를 확인해야 합니다.',
-    reason: 'live/cache/fallback 중 어떤 근거인지 확인한 뒤 비용이나 기간을 확정해야 합니다.',
+    reason: 'live/cache/fallback 중 어떤 근거인지 확인한 뒤 비용이나 기간을 제시해야 합니다.',
     nextAction: ['근거 데이터 탭에서 source trace를 확인하세요.', '원문 링크나 보유 문서와 대조하세요.'],
     confidence: 'medium',
   },
   검토: {
     severity: 'medium',
-    plainSummary: '확정 판단 전 검토가 필요한 상태입니다.',
-    reason: '현재 근거만으로는 바로 확정하기 어렵습니다.',
+    plainSummary: '판단 전 검토가 필요한 상태입니다.',
+    reason: '현재 근거만으로는 바로 단정하기 어렵습니다.',
     nextAction: ['관련 담당자가 source trace를 확인하세요.', '필요하면 외부 전문가 검토를 요청하세요.'],
     confidence: 'medium',
   },

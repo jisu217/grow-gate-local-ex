@@ -21,4 +21,7 @@ public class PublicDataCollectRequest {
     @NotBlank(message = "제품명은 필수입니다.")
     @Size(max = 160)
     private String productName;
+
+    @Size(max = 80)
+    private String lawSearchQuery;
 }

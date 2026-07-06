@@ -41,9 +41,28 @@ abstract class AbstractLlmAgentProviderClient implements AgentProviderClient {
     protected String buildPrompt(AgentInferenceRequest request) {
         try {
             return """
-                    You are GrowGate's export readiness reasoning agent.
-                    Return compact JSON only with keys: summary, reasoning, recommendedActions, knowledgeSuggestions.
-                    knowledgeSuggestions must be an array of up to 5 objects with type, title, evidence, rationale, impact.
+                    You are GrowGate Local EX's bounded export-readiness explanation agent.
+                    You do not own finalGate, diagnosisScore, legal judgment, certification outcome, customs outcome, patent clearance, or support-program selection.
+                    The final Gate is deterministic rule scoring plus risk and fallback conditions; keep llmInfluencedGate=false.
+
+                    Return compact JSON only with keys:
+                    summary, reasoning, recommendedActions, knowledgeSuggestions.
+
+                    knowledgeSuggestions must be an array of up to 5 reviewable knowledge-candidate objects:
+                    {
+                      "type": "REGULATION_CHECKLIST|RECALL_CHECKLIST|FTO_SEARCH_MEMO|SUPPORT_PROGRAM_CANDIDATE|EXECUTION_TASK_TEMPLATE|DATA_STATUS_NOTE|MARKET_SIGNAL_NOTE|BUYER_REPLY_DRAFT|REVIEW_REQUIRED_NOTE",
+                      "title": "short reviewable candidate title",
+                      "evidence": "source-bound evidence summary with sourceId/provider/mode when available",
+                      "rationale": "why this matters to a human export manager",
+                      "impact": "how approved knowledge can be reused in a later diagnosis/report/exec board"
+                    }
+
+                    Forbidden claims:
+                    - Do not say all data is live.
+                    - Do not say customs, CE, safety, patent, support selection, export execution, or legal/certification outcomes are confirmed.
+                    - Do not say no recall means safe.
+                    - Do not say AI makes the autonomous final decision.
+                    Use cautious wording: review needed, source-bound evidence, candidate, draft, checklist, 담당자 검토 필요.
 
                     Diagnosis:
                     - diagnosisId: %s

@@ -118,6 +118,46 @@
   line-height: 1.55;
 }
 
+.manualSearch {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 16px 18px;
+  margin-bottom: 18px;
+}
+
+.manualForm {
+  display: grid;
+  grid-template-columns: 120px 120px minmax(160px, 1fr) minmax(160px, 1fr) auto;
+  gap: 10px;
+  align-items: end;
+}
+
+.manualForm label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.manualForm label span {
+  color: var(--slate-2);
+  font-size: 11px;
+  font-weight: 900;
+}
+
+.manualForm input {
+  width: 100%;
+  min-height: 42px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--ink);
+  font-family: var(--kr);
+  font-size: 13px;
+  font-weight: 700;
+  padding: 9px 11px;
+}
+
 .proofGrid {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -461,8 +501,13 @@
 
   .proofGrid,
   .summaryGrid,
-  .comparisonGrid {
+  .comparisonGrid,
+  .manualForm {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .manualForm button {
+    grid-column: span 2;
   }
 
   .agencyGrid {
@@ -535,7 +580,12 @@
   }
 
   .comparisonGrid,
-  .agencyGrid {
+  .agencyGrid,
+  .manualForm {
     grid-template-columns: 1fr;
+  }
+
+  .manualForm button {
+    grid-column: auto;
   }
 }

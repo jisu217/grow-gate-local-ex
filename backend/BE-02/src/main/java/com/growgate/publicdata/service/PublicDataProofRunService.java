@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -31,6 +32,10 @@ import java.util.Set;
 public class PublicDataProofRunService {
 
     private static final TypeReference<Map<String, Object>> MAP_TYPE = new TypeReference<>() {};
+    private static final Set<PublicDataProvider> INACTIVE_PROVIDERS = EnumSet.of(
+            PublicDataProvider.BIZINFO_SUPPORT,
+            PublicDataProvider.MOLIT_WAREHOUSE_REGISTRATION
+    );
 
     private final PublicDataCollectionService collectionService;
     private final PublicDataCollectionRunRepository runRepository;
@@ -53,6 +58,7 @@ public class PublicDataProofRunService {
                 .map(run -> recordRepository.findByRun_IdOrderByFetchedAtDesc(run.getId()))
                 .orElseGet(() -> collectionService.getRecentRecords(userId, null, null))
                 .stream()
+                .filter(record -> !INACTIVE_PROVIDERS.contains(record.getProvider()))
                 .sorted(Comparator.comparing(PublicDataRecord::getFetchedAt,
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .toList();
@@ -120,6 +126,7 @@ public class PublicDataProofRunService {
     private List<PublicDataRecord> latestRecordPerProvider(List<PublicDataRecord> records) {
         Map<PublicDataProvider, PublicDataRecord> latest = new LinkedHashMap<>();
         records.stream()
+                .filter(record -> !INACTIVE_PROVIDERS.contains(record.getProvider()))
                 .sorted(Comparator.comparing(PublicDataRecord::getFetchedAt,
                         Comparator.nullsLast(Comparator.reverseOrder())))
                 .forEach(record -> latest.putIfAbsent(record.getProvider(), record));

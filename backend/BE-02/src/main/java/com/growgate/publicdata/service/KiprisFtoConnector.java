@@ -49,12 +49,10 @@ public class KiprisFtoConnector extends AbstractPublicDataConnector {
     public PublicDataConnectorResult collect(PublicDataRequest request) {
         String keyword = safe(request.getProductName());
         return getJsonWithKeyParam(request, endpoint, apiKey, keyParam, Map.of(
-                "inventionTitle", keyword,
-                "astrtCont", keyword,
+                "word", keyword,
+                "year", "0",
                 "pageNo", "1",
-                "numOfRows", String.valueOf(Math.max(1, pageSize)),
-                "patent", "true",
-                "utility", "false"
+                "numOfRows", String.valueOf(Math.max(1, pageSize))
         ));
     }
 
@@ -74,7 +72,7 @@ public class KiprisFtoConnector extends AbstractPublicDataConnector {
                 "patentCount", "XML <item> rows or JSON patents[]/items[]/data[] patent objects",
                 "claimsCount", "claimCount/claims/청구항수 numeric fields when present",
                 "productMentions", "inventionTitle/abstract/claim text contains product keyword",
-                "recordCount", "KIPRIS Plus getAdvancedSearch result item count"
+                "recordCount", "KIPRIS Plus getWordSearch result item count"
         );
     }
 

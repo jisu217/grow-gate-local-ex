@@ -73,7 +73,7 @@ class KiatTechBankPatentConnectorTest {
 
         assertThat(result.getSourceType()).isEqualTo("live");
         assertThat(result.isFallbackUsed()).isFalse();
-        assertThat(uri).contains("https://apis.data.go.kr/B552536/tech_3");
+        assertThat(uri).contains("https://apis.data.go.kr/B552536/tech_3/techpatent");
         assertThat(uri).contains("pageNo=1");
         assertThat(uri).contains("numOfRows=10");
         assertThat(uri).contains("type=json");
@@ -91,7 +91,7 @@ class KiatTechBankPatentConnectorTest {
     }
 
     private void configure(KiatTechBankPatentConnector connector, String apiKey) {
-        ReflectionTestUtils.setField(connector, "endpoint", "https://apis.data.go.kr/B552536/tech_3");
+        ReflectionTestUtils.setField(connector, "endpoint", "https://apis.data.go.kr/B552536/tech_3/techpatent");
         ReflectionTestUtils.setField(connector, "apiKey", apiKey);
         ReflectionTestUtils.setField(connector, "keyParam", "serviceKey");
         ReflectionTestUtils.setField(connector, "pageSize", 10);

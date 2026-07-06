@@ -624,10 +624,34 @@ public class KnowledgeService {
         }
         item.dismiss(user);
         knowledgeLoopItemRepository.save(item);
+        recordAuditLog(item.getProduct(), user, ChangeType.update, List.of("knowledgeLoop"),
+                toJson(Map.of("status", "pending")), toJson(Map.of("status", item.getStatus().name())),
+                "지식화 후보를 담당자 검토로 반려");
         return KnowledgeLoopActionResponse.builder()
                 .itemId(item.getId())
                 .status(item.getStatus().name())
                 .message("지식화 후보가 제외되었습니다.")
+                .build();
+    }
+
+    public KnowledgeLoopActionResponse archiveKnowledgeLoopItem(String userId, String productId, String itemId) {
+        User user = findUser(userId);
+        requireRole(resolveRole(user), "edit");
+        findProductByUser(user, productId);
+        KnowledgeLoopItem item = knowledgeLoopItemRepository.findByIdAndProductId(itemId, productId)
+                .orElseThrow(() -> new BusinessException(ErrorCode.NOT_FOUND, "지식화 후보를 찾을 수 없습니다."));
+        if (item.getStatus() != KnowledgeLoopStatus.pending) {
+            throw new BusinessException(ErrorCode.INVALID_REQUEST, "이미 처리된 지식화 후보입니다.");
+        }
+        item.archive(user);
+        knowledgeLoopItemRepository.save(item);
+        recordAuditLog(item.getProduct(), user, ChangeType.update, List.of("knowledgeLoop"),
+                toJson(Map.of("status", "pending")), toJson(Map.of("status", item.getStatus().name())),
+                "지식화 후보를 담당자 검토로 보관");
+        return KnowledgeLoopActionResponse.builder()
+                .itemId(item.getId())
+                .status(item.getStatus().name())
+                .message("지식화 후보가 보관되었습니다.")
                 .build();
     }
 

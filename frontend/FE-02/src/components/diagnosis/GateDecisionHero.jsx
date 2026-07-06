@@ -11,12 +11,12 @@ export default function GateDecisionHero({ gateDecision, impactEstimate, confide
       <div className="gate-main">
         <div className="gate-label">수출 Gate 판단</div>
         <div className="gate-status">{gateDecision.label ?? status}</div>
-        <p>{gateDecision.oneLineReason ?? '견적 확정 전 source trace와 담당자 근거 확인이 필요합니다.'}</p>
+        <p>{gateDecision.oneLineReason ?? '견적 제시 전 source trace와 담당자 근거 확인이 필요합니다.'}</p>
       </div>
 
       {fallbackCount > 0 && (
         <div className="gate-warning">
-          공공데이터 일부가 fallback입니다. 바이어 회신 또는 견적 확정 전 담당자 검토가 필요합니다.
+          공공데이터 일부가 fallback입니다. 바이어 회신 또는 견적 제시 전 담당자 검토가 필요합니다.
         </div>
       )}
 
@@ -27,7 +27,7 @@ export default function GateDecisionHero({ gateDecision, impactEstimate, confide
         </div>
         <div>
           <span>막히는 단계</span>
-          <b>{gateDecision.blockedStep ?? '견적 확정'}</b>
+          <b>{gateDecision.blockedStep ?? '견적 제시'}</b>
         </div>
         <div>
           <span>신뢰도</span>

@@ -30,7 +30,7 @@ public class ReportClaimVerifier {
             results.add(new ClaimVerification(
                     "BLOCK",
                     "overclaim_detected",
-                    "확정적 FTO/완전 분석/자동 PDF 주장은 공식 Markdown 보고서에서 사용할 수 없습니다."
+                    "단정적 FTO/완전 분석/자동 PDF 주장은 공식 Markdown 보고서에서 사용할 수 없습니다."
             ));
         }
 

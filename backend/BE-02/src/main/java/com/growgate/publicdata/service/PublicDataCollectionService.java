@@ -27,15 +27,22 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.EnumSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 @Transactional
 public class PublicDataCollectionService {
+
+    private static final Set<PublicDataProvider> INACTIVE_PROVIDERS = EnumSet.of(
+            PublicDataProvider.BIZINFO_SUPPORT,
+            PublicDataProvider.MOLIT_WAREHOUSE_REGISTRATION
+    );
 
     private final List<PublicDataConnector> connectors;
     private final PublicDataCollectionRunRepository runRepository;
@@ -54,61 +61,7 @@ public class PublicDataCollectionService {
                                                           String targetCountry, String productName) {
         PublicDataRequest request = new PublicDataRequest(diagnosisId, userId, normalizeHsCode(hsCode),
                 normalizeCountry(targetCountry), productName);
-        User user = userRepository.findById(userId).orElse(null);
-
-        PublicDataCollectionRun run = PublicDataCollectionRun.builder()
-                .diagnosisId(diagnosisId)
-                .requestedBy(user)
-                .hsCode(request.getHsCode())
-                .targetCountry(request.getTargetCountry())
-                .productName(productName)
-                .status(PublicDataCollectionStatus.running)
-                .providerCount(connectors.size())
-                .startedAt(LocalDateTime.now())
-                .build();
-        runRepository.save(run);
-
-        List<PublicDataRecord> records = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
-        int successCount = 0;
-        int fallbackCount = 0;
-        int cacheHitCount = 0;
-
-        for (PublicDataConnector connector : sortedConnectors()) {
-            PublicDataRecord record = findCache(connector, request);
-            if (record != null) {
-                PublicDataRecord cacheRecord = cloneCacheRecord(run, record);
-                records.add(recordRepository.save(cacheRecord));
-                cacheHitCount++;
-                if (isFallbackRecord(cacheRecord)) fallbackCount++;
-                else if (isSuccessRecord(cacheRecord)) successCount++;
-                continue;
-            }
-
-            PublicDataConnectorResult result = enabled
-                    ? connector.collect(request)
-                    : disabledResult(connector, request);
-            PublicDataRecord newRecord = toRecord(run, result);
-            records.add(recordRepository.save(newRecord));
-            if (isFallbackRecord(newRecord)) {
-                fallbackCount++;
-                if (newRecord.getErrorMessage() != null) errors.add(connector.provider() + ": " + newRecord.getErrorMessage());
-            } else if (isSuccessRecord(newRecord)) {
-                successCount++;
-            } else if (newRecord.getErrorMessage() != null) {
-                errors.add(connector.provider() + ": " + newRecord.getErrorMessage());
-            }
-        }
-
-        run.setSuccessCount(successCount);
-        run.setFallbackCount(fallbackCount);
-        run.setCacheHitCount(cacheHitCount);
-        run.setErrorSummary(errors.isEmpty() ? null : String.join("; ", errors));
-        run.setStatus(resolveStatus(successCount, fallbackCount));
-        run.setFinishedAt(LocalDateTime.now());
-        runRepository.save(run);
-
-        return new PublicDataCollectionResult(run, records);
+        return collect(request);
     }
 
     @Transactional(readOnly = true)
@@ -220,14 +173,80 @@ public class PublicDataCollectionService {
     }
 
     public PublicDataCollectionResult collectManual(String userId, String hsCode, String targetCountry, String productName) {
+        return collectManual(userId, hsCode, targetCountry, productName, null);
+    }
+
+    public PublicDataCollectionResult collectManual(String userId, String hsCode, String targetCountry,
+                                                    String productName, String lawSearchQuery) {
         if (userRepository.findById(userId).isEmpty()) {
             throw new BusinessException(ErrorCode.NOT_FOUND, "사용자를 찾을 수 없습니다.");
         }
-        return collectForDiagnosis(null, userId, hsCode, targetCountry, productName);
+        PublicDataRequest request = new PublicDataRequest(null, userId, normalizeHsCode(hsCode),
+                normalizeCountry(targetCountry), productName, lawSearchQuery);
+        return collect(request);
+    }
+
+    private PublicDataCollectionResult collect(PublicDataRequest request) {
+        User user = userRepository.findById(request.getUserId()).orElse(null);
+
+        PublicDataCollectionRun run = PublicDataCollectionRun.builder()
+                .diagnosisId(request.getDiagnosisId())
+                .requestedBy(user)
+                .hsCode(request.getHsCode())
+                .targetCountry(request.getTargetCountry())
+                .productName(request.getProductName())
+                .status(PublicDataCollectionStatus.running)
+                .providerCount(sortedConnectors().size())
+                .startedAt(LocalDateTime.now())
+                .build();
+        runRepository.save(run);
+
+        List<PublicDataRecord> records = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
+        int successCount = 0;
+        int fallbackCount = 0;
+        int cacheHitCount = 0;
+
+        for (PublicDataConnector connector : sortedConnectors()) {
+            PublicDataRecord record = findCache(connector, request);
+            if (record != null) {
+                PublicDataRecord cacheRecord = cloneCacheRecord(run, record);
+                records.add(recordRepository.save(cacheRecord));
+                cacheHitCount++;
+                if (isFallbackRecord(cacheRecord)) fallbackCount++;
+                else if (isSuccessRecord(cacheRecord)) successCount++;
+                continue;
+            }
+
+            PublicDataConnectorResult result = enabled
+                    ? connector.collect(request)
+                    : disabledResult(connector, request);
+            PublicDataRecord newRecord = toRecord(run, result);
+            records.add(recordRepository.save(newRecord));
+            if (isFallbackRecord(newRecord)) {
+                fallbackCount++;
+                if (newRecord.getErrorMessage() != null) errors.add(connector.provider() + ": " + newRecord.getErrorMessage());
+            } else if (isSuccessRecord(newRecord)) {
+                successCount++;
+            } else if (newRecord.getErrorMessage() != null) {
+                errors.add(connector.provider() + ": " + newRecord.getErrorMessage());
+            }
+        }
+
+        run.setSuccessCount(successCount);
+        run.setFallbackCount(fallbackCount);
+        run.setCacheHitCount(cacheHitCount);
+        run.setErrorSummary(errors.isEmpty() ? null : String.join("; ", errors));
+        run.setStatus(resolveStatus(successCount, fallbackCount));
+        run.setFinishedAt(LocalDateTime.now());
+        runRepository.save(run);
+
+        return new PublicDataCollectionResult(run, records);
     }
 
     private List<PublicDataConnector> sortedConnectors() {
         return connectors.stream()
+                .filter(connector -> !INACTIVE_PROVIDERS.contains(connector.provider()))
                 .sorted(Comparator.comparing(connector -> connector.provider().name()))
                 .collect(Collectors.toList());
     }

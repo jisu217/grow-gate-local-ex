@@ -517,6 +517,35 @@ assert.equal(allBucketsNoData.stages.s10.pipes[0].sourceQualityStatus, 'EMPTY_NO
 assert.equal(allBucketsNoData.stages.s10.pipes[0].zeroReason, 'CATALOG_PAGE_ENDPOINT')
 assert.equal(allBucketsNoData.session.gateDecision.llmInfluencedGate, false)
 
+const agentKnowledgeMapped = mapDiagnosisDetail({
+  id: 'diag-agent-knowledge',
+  productName: '배터리팩',
+  targetCountry: 'DE',
+  status: 'completed',
+  knowledgeSnapshot: {},
+  result: {
+    agentExplanationSummary: { candidateCount: 1, approvedKnowledgeOnlyReusable: true },
+    agentExplanations: [{ agent: 'REGULATION_CERTIFICATION', knowledgeStatus: 'PENDING_REVIEW' }],
+    agentKnowledgeCandidates: [{
+      agent: 'REGULATION_CERTIFICATION',
+      knowledgeType: 'REGULATION_CHECKLIST',
+      title: '인증 문서 확인 필요',
+      plainSummary: 'CE 적용 가능성과 필요 문서 확인이 필요합니다.',
+      evidenceSummary: ['HS Code: 850760'],
+      limitations: ['담당자 승인 전에는 검토 대기 지식 후보입니다.'],
+      nextActions: ['CE 적용 가능성 확인'],
+      sourceIds: ['KTL_CERTINFO-cache-1'],
+      status: 'PENDING_REVIEW',
+    }],
+  },
+})
+
+assert.equal(agentKnowledgeMapped.session.agentExplanationSummary.candidateCount, 1)
+assert.equal(agentKnowledgeMapped.session.agentExplanations[0].agent, 'REGULATION_CERTIFICATION')
+assert.equal(agentKnowledgeMapped.session.agentKnowledgeCandidates[0].statusLabel, '검토 대기')
+assert.equal(agentKnowledgeMapped.session.agentKnowledgeCandidates[0].statusTone, 'info')
+assert.deepEqual(agentKnowledgeMapped.session.agentKnowledgeCandidates[0].sourceIds, ['KTL_CERTINFO-cache-1'])
+
 const weakStageCopy = mapDiagnosisDetail({
   id: 'diag-weak-stage-copy',
   productName: '베트남 수출용 산업용 정수 필터 카트리지',

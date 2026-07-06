@@ -28,7 +28,7 @@ public class ConsumerRecallChemicalConnector extends AbstractConsumerRecallConne
 
     @Override
     protected String menuId() {
-        return "0403";
+        return "0401";
     }
 
     @Override

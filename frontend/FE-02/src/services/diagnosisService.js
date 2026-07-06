@@ -48,6 +48,9 @@ const EMPTY_SESSION = {
   normalizedMetrics: null,
   pythonWorker: null,
   pythonAgenticLoop: null,
+  agentExplanationSummary: null,
+  agentExplanations: [],
+  agentKnowledgeCandidates: [],
   reportMarkdown: '',
   reportFastApiUsed: false,
 }
@@ -131,6 +134,11 @@ export function mapDiagnosisDetail(d, evidenceSources, sourceEntries = []) {
     normalizedMetrics: d.result?.normalizedMetrics ?? null,
     pythonWorker: d.result?.pythonWorker ?? null,
     pythonAgenticLoop: d.result?.pythonAgenticLoop ?? null,
+    agentExplanationSummary: d.result?.agentExplanationSummary ?? null,
+    agentExplanations: Array.isArray(d.result?.agentExplanations) ? d.result.agentExplanations : [],
+    agentKnowledgeCandidates: Array.isArray(d.result?.agentKnowledgeCandidates)
+      ? d.result.agentKnowledgeCandidates.map(mapAgentKnowledgeCandidate)
+      : [],
     reportMarkdown: d.result?.reportMarkdown ?? '',
     reportFastApiUsed: Boolean(d.result?.reportFastApiUsed),
   }
@@ -161,6 +169,35 @@ export function mapDiagnosisDetail(d, evidenceSources, sourceEntries = []) {
       }),
     },
   }
+}
+
+function mapAgentKnowledgeCandidate(candidate) {
+  const status = candidate?.status ?? 'PENDING_REVIEW'
+  return {
+    ...candidate,
+    status,
+    statusLabel: agentKnowledgeStatusLabel(status),
+    statusTone: agentKnowledgeStatusTone(status),
+    sourceIds: Array.isArray(candidate?.sourceIds) ? candidate.sourceIds : [],
+    evidenceSummary: Array.isArray(candidate?.evidenceSummary) ? candidate.evidenceSummary : [],
+    limitations: Array.isArray(candidate?.limitations) ? candidate.limitations : [],
+    nextActions: Array.isArray(candidate?.nextActions) ? candidate.nextActions : [],
+  }
+}
+
+function agentKnowledgeStatusLabel(status) {
+  if (status === 'APPROVED' || status === 'accepted') return '승인됨'
+  if (status === 'REJECTED' || status === 'dismissed') return '반려됨'
+  if (status === 'ARCHIVED') return '보관됨'
+  if (status === 'DATA_INSUFFICIENT') return '근거 보강 필요'
+  return '검토 대기'
+}
+
+function agentKnowledgeStatusTone(status) {
+  if (status === 'APPROVED' || status === 'accepted') return 'ok'
+  if (status === 'REJECTED' || status === 'dismissed') return 'danger'
+  if (status === 'DATA_INSUFFICIENT') return 'warn'
+  return 'info'
 }
 
 function buildKpiData(detail, diagnosisScore, overallScore, sourceTrustSummary) {
@@ -266,10 +303,10 @@ export function buildDecisionBrief(session = {}, stages = {}) {
 
   return {
     gateLabel: gateDecision.label ?? gateDecision.status ?? '조건부 검토',
-    gateReason: gateDecision.oneLineReason ?? '견적 확정 전 source trace와 담당자 확인이 필요합니다.',
+    gateReason: gateDecision.oneLineReason ?? '견적 제시 전 source trace와 담당자 확인이 필요합니다.',
     fallbackReviewRequired: fallbackCount > 0 || notConfiguredCount > 0 || fallbackErrorCount > 0,
     fallbackMessage: fallbackCount > 0 || notConfiguredCount > 0 || fallbackErrorCount > 0
-      ? `fallback/미설정 출처 ${fallbackCount + notConfiguredCount + fallbackErrorCount}건은 담당자 검토 후 바이어 회신을 확정해야 합니다.`
+      ? `fallback/미설정 출처 ${fallbackCount + notConfiguredCount + fallbackErrorCount}건은 담당자 검토 후 바이어 회신에 사용해야 합니다.`
       : 'live/cache 출처 중심으로 판단 근거가 구성되었습니다.',
     sourceCounts: { live: liveCount, cache: cacheCount, fallback: fallbackCount },
     sourceQualityCounts,
@@ -448,7 +485,7 @@ function normalizeTopRisks(riskItems, mustFixBeforeQuote) {
   )
   const fallbackRisks = [
     { level: 'medium', label: 'fallback 또는 cache 출처는 담당자가 원문 최신성을 확인해야 합니다.' },
-    { level: 'medium', label: 'FTO, 리콜, 인증 항목은 외부 전문가 확인 전 확정 표현을 피해야 합니다.' },
+    { level: 'medium', label: 'FTO, 리콜, 인증 항목은 외부 전문가 확인 전 단정 표현을 피해야 합니다.' },
     { level: 'low', label: '바이어 회신 전 HS Code, 대상국, 제품 사양 변경 여부를 재확인해야 합니다.' },
   ]
   const padded = [...unique]
@@ -769,13 +806,13 @@ function mapRoadmapStage(stageData) {
   if (!stageData) {
     return [
       { day: '이번 주', label: '즉시 보완', tasks: normalizeActionItems([], 'NOW') },
-      { day: '견적 전', label: '확정 전 필수', tasks: normalizeActionItems([], 'QUOTE') },
+      { day: '견적 전', label: '제시 전 필수', tasks: normalizeActionItems([], 'QUOTE') },
       { day: '출하 전', label: '문서 패키지', tasks: normalizeActionItems([], 'SHIP') },
     ]
   }
   const workflowBuckets = [
     { key: 'thisWeek', day: '이번 주', label: '즉시 보완', tag: 'NOW' },
-    { key: 'beforeQuote', day: '견적 전', label: '확정 전 필수', tag: 'QUOTE' },
+    { key: 'beforeQuote', day: '견적 전', label: '제시 전 필수', tag: 'QUOTE' },
     { key: 'beforeShipment', day: '출하 전', label: '문서 패키지', tag: 'SHIP' },
   ]
   if (workflowBuckets.some((bucket) => Array.isArray(stageData[bucket.key]))) {

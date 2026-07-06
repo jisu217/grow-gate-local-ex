@@ -61,7 +61,7 @@ public class ClaimVerificationService {
         Map<String, Object> item = new LinkedHashMap<>();
         String text = stringValue(claim == null ? null : claim.get("text"));
         String sourceId = stringValue(claim == null ? null : claim.get("sourceId"));
-        item.put("claim", text);
+        item.put("claim", safeClaimText(text));
         item.put("sourceId", sourceId);
         item.put("status", "PASS");
         item.put("reason", "source-bound claim");
@@ -91,6 +91,11 @@ public class ClaimVerificationService {
 
     private boolean containsUnsafeCertainty(String text) {
         return UNSAFE_CERTAINTY_PHRASES.stream().anyMatch(text::contains);
+    }
+
+    private String safeClaimText(String text) {
+        if (containsUnsafeCertainty(text)) return "[filtered unsafe claim]";
+        return LlmSecretSanitizer.sanitize(text);
     }
 
     private String stringValue(Object value) {

@@ -50,6 +50,9 @@ public class DiagnosisDetailResponse {
         private Map<String, Object> compiledWiki;
         private Map<String, Object> scoringRubric;
         private Map<String, Object> agentInference;
+        private Map<String, Object> agentExplanationSummary;
+        private List<Map<String, Object>> agentExplanations;
+        private List<Map<String, Object>> agentKnowledgeCandidates;
         private List<Map<String, Object>> knowledgeLoopSuggestions;
         private String publicDataCollectionRunId;
         private Map<String, Object> inputTrace;

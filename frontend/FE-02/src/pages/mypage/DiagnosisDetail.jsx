@@ -213,7 +213,7 @@ export default function DiagnosisDetail() {
       </div>
 
       <p className={styles.disclaimer}>
-        2026 산업통상부 공공데이터 활용 공모전 · 본 결과는 공공데이터 기반 AI 분석이며 최종 판단은 전문가와 함께 하십시오.
+        2026 산업통상부 공공데이터 활용 공모전 · 본 결과는 공공데이터 기반 보조 분석이며 담당자 의사결정은 전문가 검토와 함께 하십시오.
       </p>
     </div>
   )

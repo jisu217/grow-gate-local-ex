@@ -216,7 +216,7 @@ export default function Home() {
           </div>
           <div className={styles.fNote}>
             2026 산업통상자원부 공공데이터 활용 공모전 · Regulation-to-Market Twin for Regional SMEs ·
-            본 결과는 공공데이터 수집 신호와 규칙 기반 점검 결과이며 최종 판단은 전문가와 함께 하십시오.
+            본 결과는 공공데이터 수집 신호와 규칙 기반 점검 결과이며 담당자 의사결정은 전문가 검토와 함께 하십시오.
           </div>
         </footer>
       </div>

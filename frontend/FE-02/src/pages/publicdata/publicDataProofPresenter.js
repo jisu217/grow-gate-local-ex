@@ -1,9 +1,4 @@
 const PROVIDER_META = {
-  BIZINFO_SUPPORT: {
-    agency: '기업마당',
-    data: '기업마당 지원사업',
-    usage: '지원사업 매칭',
-  },
   BOK_KEY_STATISTICS: {
     agency: '한국은행',
     data: '한국은행 100대 통계지표',
@@ -114,11 +109,6 @@ const PROVIDER_META = {
     data: '해외지사 현황',
     usage: '현지 지원 채널 참고',
   },
-  MOLIT_WAREHOUSE_REGISTRATION: {
-    agency: '국토교통부',
-    data: '물류창고업 등록정보',
-    usage: '물류 기반 참고',
-  },
   MOTIE_DEALING_BUSINESS_INFO: {
     agency: '산업통상부',
     data: '거래업체 정보 서비스',
@@ -181,6 +171,7 @@ const PROVIDER_META = {
   },
 }
 
+const INACTIVE_PROVIDERS = new Set(['BIZINFO_SUPPORT', 'MOLIT_WAREHOUSE_REGISTRATION'])
 const CREDENTIAL_MISSING_RAW_CODE = ['API', 'KEY', 'NOT', 'CONFIGURED'].join('_')
 const KEY_NOT_CONFIGURED = 'KEY_NOT_CONFIGURED'
 
@@ -192,7 +183,7 @@ const FAILURE_REASON_META = {
   },
   ENDPOINT_NOT_CONFIGURED: {
     label: '공식 호출 주소 확인 필요',
-    description: '공공데이터 호출 주소가 아직 확정되지 않았습니다.',
+    description: '공공데이터 호출 주소가 아직 정해지지 않았습니다.',
     nextAction: 'Swagger 또는 활용가이드 기준으로 endpoint 설정을 확인하세요.',
   },
   TIMEOUT: {
@@ -233,6 +224,7 @@ export function collectFailureReasons(runs = [], records = [], proofRun = null) 
 export function groupFailureReasons(runs = [], records = [], proofRun = null) {
   const grouped = new Map()
   const push = (providerCode, reasonValue) => {
+    if (INACTIVE_PROVIDERS.has(providerCode)) return
     const reasonCode = normalizeFailureReason(reasonValue)
     if (!reasonCode) return
     const meta = FAILURE_REASON_META[reasonCode] ?? FAILURE_REASON_META.UNKNOWN_ERROR
@@ -272,7 +264,7 @@ export function groupFailureReasons(runs = [], records = [], proofRun = null) {
 }
 
 export function sortProofProviders(providers = []) {
-  return [...providers].sort((a, b) => proofProviderRank(a) - proofProviderRank(b)
+  return providers.filter((provider) => !INACTIVE_PROVIDERS.has(provider?.providerCode)).sort((a, b) => proofProviderRank(a) - proofProviderRank(b)
     || providerDataName(a?.providerCode).localeCompare(providerDataName(b?.providerCode), 'ko'))
 }
 
@@ -360,7 +352,7 @@ export function schemaValidationLabel(status) {
 }
 
 export function formatProviderChips(providerCodes = [], limit = 5) {
-  const uniqueCodes = Array.from(new Set(providerCodes.filter(Boolean)))
+  const uniqueCodes = Array.from(new Set(providerCodes.filter((code) => code && !INACTIVE_PROVIDERS.has(code))))
   const mapped = uniqueCodes.map((code) => ({
     code,
     label: providerDataName(code),

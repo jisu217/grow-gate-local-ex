@@ -20,6 +20,9 @@ public class KotraMarketConnector extends AbstractPublicDataConnector {
     @Value("${public-data.kotra-market.key:}")
     private String apiKey;
 
+    @Value("${public-data.kotra-market.api-per-page:200}")
+    private int apiPerPage;
+
     public KotraMarketConnector(RestTemplate restTemplate, ObjectMapper objectMapper) {
         super(restTemplate, objectMapper);
     }
@@ -42,6 +45,9 @@ public class KotraMarketConnector extends AbstractPublicDataConnector {
     @Override
     public PublicDataConnectorResult collect(PublicDataRequest request) {
         return getJson(request, endpoint, apiKey, Map.of(
+                "page", "1",
+                "perPage", String.valueOf(Math.max(1, apiPerPage)),
+                "returnType", "JSON",
                 "country", safe(request.getTargetCountry()),
                 "keyword", safe(request.getProductName())
         ));

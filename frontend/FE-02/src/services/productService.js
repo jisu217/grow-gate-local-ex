@@ -229,10 +229,27 @@ export async function getKnowledgeLoopItems(productId) {
   return res.items ?? []
 }
 
+export async function getAgentKnowledgeCandidates(productId) {
+  const res = await apiFetch(`/products/${productId}/knowledge/agent-candidates`)
+  return res.items ?? []
+}
+
 export async function acceptKnowledgeLoopItem(productId, itemId) {
   return apiFetch(`/products/${productId}/knowledge/loop-items/${itemId}/accept`, { method: 'POST' })
 }
 
 export async function dismissKnowledgeLoopItem(productId, itemId) {
   return apiFetch(`/products/${productId}/knowledge/loop-items/${itemId}/dismiss`, { method: 'POST' })
+}
+
+export async function approveAgentKnowledgeCandidate(productId, itemId) {
+  return apiFetch(`/products/${productId}/knowledge/agent-candidates/${itemId}/approve`, { method: 'POST' })
+}
+
+export async function rejectAgentKnowledgeCandidate(productId, itemId) {
+  return apiFetch(`/products/${productId}/knowledge/agent-candidates/${itemId}/reject`, { method: 'POST' })
+}
+
+export async function archiveAgentKnowledgeCandidate(productId, itemId) {
+  return apiFetch(`/products/${productId}/knowledge/agent-candidates/${itemId}/archive`, { method: 'POST' })
 }

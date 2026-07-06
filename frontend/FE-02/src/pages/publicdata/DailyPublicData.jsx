@@ -2,6 +2,7 @@ import { Fragment, useEffect, useMemo, useState } from 'react'
 import styles from './DailyPublicData.module.css'
 import StatusMessage from '../../components/ui/StatusMessage.jsx'
 import {
+  collectPublicData,
   createPublicDataProofRun,
   getLatestPublicDataProofRun,
   getPublicDataDashboard,
@@ -26,6 +27,8 @@ import {
   summarizeRecentRunComparison,
 } from './publicDataProofPresenter.js'
 
+const INACTIVE_PROVIDER_CODES = new Set(['BIZINFO_SUPPORT', 'MOLIT_WAREHOUSE_REGISTRATION'])
+
 export default function DailyPublicData() {
   const authUser = getAuthUser()
   const canRunManualCollection = Boolean(authUser?.userId)
@@ -41,6 +44,14 @@ export default function DailyPublicData() {
   const [recordFilter, setRecordFilter] = useState('all')
   const [expandedProviders, setExpandedProviders] = useState({})
   const [expandedRuns, setExpandedRuns] = useState({})
+  const [manualForm, setManualForm] = useState({
+    hsCode: '850760',
+    targetCountry: 'KR',
+    productName: '무역',
+    lawSearchQuery: '무역',
+  })
+  const [manualCollectState, setManualCollectState] = useState('idle')
+  const [manualCollectMessage, setManualCollectMessage] = useState('')
 
   const load = async () => {
     setPageState('loading')
@@ -89,6 +100,7 @@ export default function DailyPublicData() {
   const failureGroups = groupFailureReasons(runs, records, proofRun)
   const proofProviders = sortProofProviders(proofRun?.providers ?? [])
   const filteredProofProviders = filterProofProviders(proofProviders, recordFilter)
+  const activeScoreWaterfall = (proofRun?.scoreWaterfall ?? []).filter((row) => !INACTIVE_PROVIDER_CODES.has(row.providerCode))
   const uniqueAgencies = new Set(proofProviders.map((provider) => providerAgencyName(provider.providerCode)))
   const totalRecordCount = proofProviders.reduce((sum, provider) => sum + Number(provider.recordCount ?? 0), 0)
   const cacheProviderCount = proofProviders.filter((provider) => provider.sourceType === 'cache').length
@@ -107,6 +119,31 @@ export default function DailyPublicData() {
     } catch {
       setRefreshState('error')
     }
+  }
+
+  const handleManualCollect = async (event) => {
+    event.preventDefault()
+    setManualCollectState('running')
+    setManualCollectMessage('')
+    try {
+      const response = await collectPublicData({
+        hsCode: manualForm.hsCode.trim(),
+        targetCountry: manualForm.targetCountry.trim(),
+        productName: manualForm.productName.trim(),
+        lawSearchQuery: manualForm.lawSearchQuery.trim(),
+      })
+      const runId = response?.run?.id || response?.runId || 'created'
+      setManualCollectMessage(`수집 run 생성: ${runId}`)
+      await load()
+      setManualCollectState('done')
+    } catch (error) {
+      setManualCollectMessage(error.message || '검색 수집에 실패했습니다.')
+      setManualCollectState('error')
+    }
+  }
+
+  const updateManualForm = (field, value) => {
+    setManualForm((prev) => ({ ...prev, [field]: value }))
   }
 
   const handleProofRun = async () => {
@@ -174,6 +211,60 @@ export default function DailyPublicData() {
               실시간 수집, 캐시 사용, 예비 데이터 사용 여부를 구분해 보여줍니다. 데이터가 부족한 경우에도 숨기지 않고 표시합니다.
             </p>
           </section>
+
+          {canRunManualCollection && (
+            <section className={styles.manualSearch}>
+              <div className={styles.sectionHead}>
+                <h2>검색 수집</h2>
+                <span>국가법령정보센터 검색어와 제품 조건으로 공공데이터를 다시 수집합니다.</span>
+              </div>
+              <form className={styles.manualForm} onSubmit={handleManualCollect}>
+                <label>
+                  <span>HS Code</span>
+                  <input
+                    value={manualForm.hsCode}
+                    onChange={(event) => updateManualForm('hsCode', event.target.value)}
+                    inputMode="numeric"
+                    pattern="[0-9]{6,10}"
+                    required
+                  />
+                </label>
+                <label>
+                  <span>대상국</span>
+                  <input
+                    value={manualForm.targetCountry}
+                    onChange={(event) => updateManualForm('targetCountry', event.target.value)}
+                    maxLength={40}
+                    required
+                  />
+                </label>
+                <label>
+                  <span>제품명</span>
+                  <input
+                    value={manualForm.productName}
+                    onChange={(event) => updateManualForm('productName', event.target.value)}
+                    maxLength={160}
+                    required
+                  />
+                </label>
+                <label>
+                  <span>법령 검색어</span>
+                  <input
+                    value={manualForm.lawSearchQuery}
+                    onChange={(event) => updateManualForm('lawSearchQuery', event.target.value)}
+                    maxLength={80}
+                    placeholder="무역"
+                  />
+                </label>
+                <button className={styles.refreshBtn} type="submit" disabled={manualCollectState === 'running'}>
+                  {manualCollectState === 'running' ? '검색 중' : '검색 수집'}
+                </button>
+              </form>
+              {manualCollectMessage && (
+                <div className={manualCollectState === 'error' ? styles.warn : styles.notice}>{manualCollectMessage}</div>
+              )}
+            </section>
+          )}
 
           <section className={styles.summaryGrid} aria-label="public data collection summary">
             <Metric label="연결 기관" value={`${uniqueAgencies.size}개`} />
@@ -321,10 +412,10 @@ export default function DailyPublicData() {
                   </tr>
                 </thead>
                 <tbody>
-                  {(!Array.isArray(proofRun?.scoreWaterfall) || proofRun.scoreWaterfall.length === 0) && (
+                  {activeScoreWaterfall.length === 0 && (
                     <tr><td colSpan="7" className={styles.empty}>진단 연결 row가 없습니다. 사전 수집 cache run은 진단 실행 시점에 연결됩니다.</td></tr>
                   )}
-                  {proofRun?.scoreWaterfall?.slice(0, 12).map((row, index) => (
+                  {activeScoreWaterfall.slice(0, 12).map((row, index) => (
                     <tr key={`${row.diagnosisId || 'cache'}-${row.providerCode}-${row.dimension}-${index}`}>
                       <td>{row.diagnosisId || 'daily cache'}</td>
                       <td>
@@ -495,6 +586,7 @@ function Metric({ label, value, detail, tone }) {
 }
 
 function filterProofProviders(providers, filter) {
+  providers = providers.filter((provider) => !INACTIVE_PROVIDER_CODES.has(provider.providerCode))
   if (filter === 'live') return providers.filter((provider) => provider.sourceType === 'live')
   if (filter === 'cache') return providers.filter((provider) => provider.sourceType === 'cache')
   if (filter === 'fallback') return providers.filter((provider) => provider.sourceType === 'fallback')

@@ -24,7 +24,7 @@ class KiprisFtoConnectorTest {
 
     @Test
     @SuppressWarnings("unchecked")
-    void collectUsesConfirmedKiprisPlusAdvancedSearchOperation() {
+    void collectUsesConfirmedKiprisPlusWordSearchOperation() {
         RestTemplate restTemplate = mock(RestTemplate.class);
         when(restTemplate.getForEntity(any(URI.class), eq(String.class)))
                 .thenReturn(ResponseEntity.ok("""
@@ -41,7 +41,7 @@ class KiprisFtoConnectorTest {
                         </response>"""));
         KiprisFtoConnector connector = new KiprisFtoConnector(restTemplate, objectMapper);
         ReflectionTestUtils.setField(connector, "endpoint",
-                "http://plus.kipris.or.kr/kipo-api/kipi/patUtiModInfoSearchSevice/getAdvancedSearch");
+                "http://plus.kipris.or.kr/kipo-api/kipi/patUtiModInfoSearchSevice/getWordSearch");
         ReflectionTestUtils.setField(connector, "apiKey", "test-key");
         ReflectionTestUtils.setField(connector, "keyParam", "ServiceKey");
         ReflectionTestUtils.setField(connector, "pageSize", 10);
@@ -59,13 +59,11 @@ class KiprisFtoConnectorTest {
 
         assertThat(result.getProvider()).isEqualTo(PublicDataProvider.KIPRIS_FTO);
         assertThat(result.getSourceType()).isEqualTo("live");
-        assertThat(uri).contains("getAdvancedSearch");
-        assertThat(uri).contains("inventionTitle=");
-        assertThat(uri).contains("astrtCont=");
+        assertThat(uri).contains("getWordSearch");
+        assertThat(uri).contains("word=");
+        assertThat(uri).contains("year=0");
         assertThat(uri).contains("pageNo=1");
         assertThat(uri).contains("numOfRows=10");
-        assertThat(uri).contains("patent=true");
-        assertThat(uri).contains("utility=false");
         assertThat(uri).contains("ServiceKey=test-key");
         assertThat(maskedParams.get("ServiceKey")).isEqualTo("[REDACTED]");
         assertThat(maskedParams).doesNotContainKey("serviceKey");

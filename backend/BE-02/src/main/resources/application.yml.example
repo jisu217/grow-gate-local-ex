@@ -36,12 +36,12 @@ app:
       max-output-tokens: ${APP_AGENT_MAX_OUTPUT_TOKENS:1024}
     gemini:
       enabled: ${APP_AGENT_GEMINI_ENABLED:true}
-      api-key: ${APP_AGENT_GEMINI_API_KEY:}
+      api-key: ${APP_AGENT_GEMINI_API_KEY:${GEMINI_API_KEY:}}
       model: ${APP_AGENT_GEMINI_MODEL:gemini-2.5-flash}
       base-url: ${APP_AGENT_GEMINI_BASE_URL:https://generativelanguage.googleapis.com/v1beta}
     openrouter:
       enabled: ${APP_AGENT_OPENROUTER_ENABLED:true}
-      api-key: ${APP_AGENT_OPENROUTER_API_KEY:}
+      api-key: ${APP_AGENT_OPENROUTER_API_KEY:${OPENROUTER_API_KEY:}}
       model: ${APP_AGENT_OPENROUTER_MODEL:google/gemini-2.5-flash}
       url: ${APP_AGENT_OPENROUTER_URL:https://openrouter.ai/api/v1/chat/completions}
       site-url: ${APP_AGENT_OPENROUTER_SITE_URL:${APP_PUBLIC_SITE_URL:}}
@@ -93,10 +93,11 @@ public-data:
     language: ${BOK_KEY_STATISTICS_LANGUAGE:kr}
     max-rows: ${BOK_KEY_STATISTICS_MAX_ROWS:100}
   kotra-market:
-    url: ${KOTRA_MARKET_API_URL:https://www.data.go.kr/data/15122648/openapi.do}
+    url: ${KOTRA_MARKET_API_URL:https://api.odcloud.kr/api/15003367/v1/uddi:8cdeb4cb-2cac-4d4b-84de-909491757336}
     key: ${KOTRA_MARKET_API_KEY:${DATAGO_SERVICE_KEY:}}
+    api-per-page: ${KOTRA_MARKET_API_PER_PAGE:200}
   kotra-overseas-exhibitions:
-    url: ${KOTRA_OVERSEAS_EXHIBITIONS_API_URL:}
+    url: ${KOTRA_OVERSEAS_EXHIBITIONS_API_URL:https://api.odcloud.kr/api/15003367/v1/uddi:8cdeb4cb-2cac-4d4b-84de-909491757336}
     key: ${KOTRA_OVERSEAS_EXHIBITIONS_API_KEY:${DATAGO_SERVICE_KEY:}}
     csv-resource: ${KOTRA_OVERSEAS_EXHIBITIONS_CSV_RESOURCE:classpath:publicdata/kotra-overseas-exhibitions-20250630.csv}
     dataset-date: ${KOTRA_OVERSEAS_EXHIBITIONS_DATASET_DATE:2025-06-30}
@@ -112,7 +113,7 @@ public-data:
     portal-total-rows: ${KIAT_RND_OUTCOMES_PORTAL_TOTAL_ROWS:8665}
     api-per-page: ${KIAT_RND_OUTCOMES_API_PER_PAGE:10000}
   kiat-tech-bank-patent:
-    url: ${KIAT_TECH_BANK_PATENT_API_URL:https://apis.data.go.kr/B552536/tech_3}
+    url: ${KIAT_TECH_BANK_PATENT_API_URL:https://apis.data.go.kr/B552536/tech_3/techpatent}
     key: ${KIAT_TECH_BANK_PATENT_API_KEY:${KIAT_TECH_BANK_API_KEY:${DATAGO_SERVICE_KEY:}}}
     key-param: ${KIAT_TECH_BANK_PATENT_KEY_PARAM:serviceKey}
     page-size: ${KIAT_TECH_BANK_PATENT_PAGE_SIZE:10}
@@ -202,6 +203,8 @@ public-data:
     url: ${KOREA_LAW_STATUTES_API_URL:https://www.law.go.kr/DRF/lawSearch.do}
     key: ${LAW_OPENAPI_OC:}
     display: ${KOREA_LAW_STATUTES_DISPLAY:20}
+    type: ${KOREA_LAW_STATUTES_TYPE:XML}
+    default-query: ${KOREA_LAW_STATUTES_DEFAULT_QUERY:무역}
   consumer-recall:
     url: ${CONSUMER_RECALL_API_URL:https://www.consumer.go.kr/openapi/recall/contents/index.do}
     count-per-page: ${CONSUMER_RECALL_COUNT_PER_PAGE:20}
@@ -234,16 +237,6 @@ public-data:
     swagger-latest-dataset-date: ${KICOX_FACTORY_REGISTRATION_SWAGGER_LATEST_DATASET_DATE:2026-03-31}
     portal-total-rows: ${KICOX_FACTORY_REGISTRATION_PORTAL_TOTAL_ROWS:26}
     api-per-page: ${KICOX_FACTORY_REGISTRATION_API_PER_PAGE:100}
-  molit-warehouse-registration:
-    url: ${MOLIT_WAREHOUSE_REGISTRATION_API_URL:https://apis.data.go.kr/1611000/whsinfoview2}
-    key: ${MOLIT_WAREHOUSE_REGISTRATION_API_KEY:${DATAGO_SERVICE_KEY:}}
-    operation: ${MOLIT_WAREHOUSE_REGISTRATION_OPERATION:WhsInfoDetail}
-    num-of-rows: ${MOLIT_WAREHOUSE_REGISTRATION_NUM_OF_ROWS:50}
-    page-no: ${MOLIT_WAREHOUSE_REGISTRATION_PAGE_NO:1}
-    region: ${MOLIT_WAREHOUSE_REGISTRATION_REGION:}
-    item: ${MOLIT_WAREHOUSE_REGISTRATION_ITEM:}
-    start-date: ${MOLIT_WAREHOUSE_REGISTRATION_START_DATE:}
-    end-date: ${MOLIT_WAREHOUSE_REGISTRATION_END_DATE:}
   khnp-safety-health-certification:
     url: ${KHNP_SAFETY_HEALTH_CERTIFICATION_API_URL:https://api.odcloud.kr/api/15101214/v1/uddi:81fdbdb3-dea1-46e7-8286-c64e83ae0743}
     key: ${KHNP_SAFETY_HEALTH_CERTIFICATION_API_KEY:${DATAGO_SERVICE_KEY:}}
@@ -317,14 +310,10 @@ public-data:
     portal-total-rows: ${TRADE_SECURITY_ITEM_KEYWORD_PORTAL_TOTAL_ROWS:1006}
     api-per-page: ${TRADE_SECURITY_ITEM_KEYWORD_API_PER_PAGE:1500}
   kipris-fto:
-    url: ${KIPRIS_API_URL:${KIPRIS_PLUS_OPERATION_URL:http://plus.kipris.or.kr/kipo-api/kipi/patUtiModInfoSearchSevice/getAdvancedSearch}}
+    url: ${KIPRIS_API_URL:${KIPRIS_PLUS_OPERATION_URL:http://plus.kipris.or.kr/kipo-api/kipi/patUtiModInfoSearchSevice/getWordSearch}}
     key: ${KIPRIS_API_KEY:${KIPRIS_PLUS_ACCESSKEY:${KIPRIS_PLUS_KEY:}}}
     key-param: ${KIPRIS_PLUS_KEY_PARAM:ServiceKey}
     page-size: ${KIPRIS_PLUS_PAGE_SIZE:10}
-  bizinfo-support:
-    url: ${BIZINFO_API_URL:https://www.exportvoucher.com/}
-    key: ${BIZINFO_API_KEY:${DATAGO_SERVICE_KEY:}}
-
 server:
   port: 8080
 

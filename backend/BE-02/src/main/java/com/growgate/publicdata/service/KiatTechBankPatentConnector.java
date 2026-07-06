@@ -14,7 +14,7 @@ import java.util.Map;
 @Component
 public class KiatTechBankPatentConnector extends AbstractPublicDataConnector {
 
-    @Value("${public-data.kiat-tech-bank-patent.url:https://apis.data.go.kr/B552536/tech_3}")
+    @Value("${public-data.kiat-tech-bank-patent.url:https://apis.data.go.kr/B552536/tech_3/techpatent}")
     private String endpoint;
 
     @Value("${public-data.kiat-tech-bank-patent.key:${KIAT_TECH_BANK_PATENT_API_KEY:${KIAT_TECH_BANK_API_KEY:${DATAGO_SERVICE_KEY:}}}}")

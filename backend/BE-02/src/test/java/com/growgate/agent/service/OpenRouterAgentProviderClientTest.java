@@ -40,7 +40,7 @@ class OpenRouterAgentProviderClientTest {
         assertThat(result.isSucceeded()).isTrue();
         assertThat(entity.getHeaders().getFirst("Authorization")).startsWith("Bearer sk-or-v1-test");
         assertThat(entity.getHeaders().getFirst("HTTP-Referer")).isEqualTo("https://growgate.local");
-        assertThat(entity.getHeaders().getFirst("X-Title")).isEqualTo("GrowGate Local EX");
+        assertThat(entity.getHeaders().getFirst("X-OpenRouter-Title")).isEqualTo("GrowGate Local EX");
         assertThat(entity.getBody()).containsEntry("model", "google/gemini-2.5-flash");
         assertThat(entity.getBody()).containsEntry("max_tokens", 1024);
         assertThat(entity.getBody().toString()).doesNotContain("sk-or-v1-test");

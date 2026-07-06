@@ -275,6 +275,17 @@ class DiagnosisServiceTest {
                 "sourceId", "KCS_TRADE-record-1"
         )));
         result.put("knowledgeLoopSuggestions", List.of(Map.of("title", "CE evidence memo")));
+        result.put("agentExplanationSummary", Map.of("candidateCount", 1, "approvedKnowledgeOnlyReusable", true));
+        result.put("agentExplanations", List.of(Map.of(
+                "agent", "REGULATION_CERTIFICATION",
+                "knowledgeStatus", "PENDING_REVIEW"
+        )));
+        result.put("agentKnowledgeCandidates", List.of(Map.of(
+                "agent", "REGULATION_CERTIFICATION",
+                "knowledgeType", "REGULATION_CHECKLIST",
+                "status", "PENDING_REVIEW",
+                "sourceIds", List.of("KCS_TRADE-record-1")
+        )));
         result.put("publicDataCollectionRunId", "run-1");
         result.put("inputTrace", Map.of("hsCode", "850760"));
         var run = diagnosisRun("diag-detail", user, objectMapper.writeValueAsString(result));
@@ -297,6 +308,11 @@ class DiagnosisServiceTest {
         assertThat(response.getResult().getClaimVerifications()).hasSize(1);
         assertThat(response.getResult().getClaimVerifications().get(0)).containsEntry("status", "PASS");
         assertThat(response.getResult().getKnowledgeLoopSuggestions()).hasSize(1);
+        assertThat(response.getResult().getAgentExplanationSummary()).containsEntry("candidateCount", 1);
+        assertThat(response.getResult().getAgentExplanations()).hasSize(1);
+        assertThat(response.getResult().getAgentKnowledgeCandidates().get(0))
+                .containsEntry("knowledgeType", "REGULATION_CHECKLIST")
+                .containsEntry("status", "PENDING_REVIEW");
     }
 
     @Test

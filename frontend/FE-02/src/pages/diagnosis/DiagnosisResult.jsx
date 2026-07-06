@@ -9,6 +9,7 @@ import StatusMessage from '../../components/ui/StatusMessage.jsx'
 import GateDecisionHero from '../../components/diagnosis/GateDecisionHero.jsx'
 import DecisionBrief from '../../components/diagnosis/DecisionBrief.jsx'
 import SourceTrustBar from '../../components/diagnosis/SourceTrustBar.jsx'
+import AgentExplanationPanel from '../../components/diagnosis/AgentExplanationPanel.jsx'
 
 import S00Overview   from '../../components/diagnosis/S00Overview.jsx'
 import S01Input      from '../../components/diagnosis/S01Input.jsx'
@@ -299,6 +300,11 @@ export default function DiagnosisResult() {
           />
           <DecisionBrief session={result.session} stages={result.stages} />
           <SourceTrustBar summary={result.session.sourceTrustSummary} onRetry={retryPublicData} retryStatus={retryStatus} />
+          <AgentExplanationPanel
+            session={result.session}
+            onSourcesClick={() => go(10)}
+            onBoardClick={() => go(8)}
+          />
 
           {['pending', 'running'].includes(String(result.session?.status ?? '').toLowerCase()) && (
             <StatusMessage type="loading" message="공공데이터와 제품 정보를 대조 중입니다. 완료되면 이 화면이 자동으로 갱신됩니다." />

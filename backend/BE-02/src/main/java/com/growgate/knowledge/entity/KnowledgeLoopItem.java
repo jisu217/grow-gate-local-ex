@@ -91,4 +91,10 @@ public class KnowledgeLoopItem {
         this.decidedBy = user;
         this.decidedAt = LocalDateTime.now();
     }
+
+    public void archive(User user) {
+        this.status = KnowledgeLoopStatus.archived;
+        this.decidedBy = user;
+        this.decidedAt = LocalDateTime.now();
+    }
 }

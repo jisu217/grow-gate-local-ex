@@ -70,12 +70,14 @@ const failureGroups = groupFailureReasons(
   null,
 )
 
-assert.equal(failureGroups[0].label, 'API 키 설정 필요')
-assert.equal(failureGroups[0].count, 2)
-assert.deepEqual(failureGroups[0].providerNames, ['기업마당 지원사업', 'KIPRIS FTO 특허 정보'])
-assert.equal(failureGroups[0].impact, '낮음')
-assert.equal(failureGroups[1].label, '응답 시간 초과')
-assert.equal(failureGroups[1].providerNames[0], 'KOTRA 해외시장 정보')
+const keyMissingGroup = failureGroups.find((group) => group.code === 'KEY_NOT_CONFIGURED')
+const timeoutGroup = failureGroups.find((group) => group.code === 'TIMEOUT')
+assert.equal(keyMissingGroup.label, 'API 키 설정 필요')
+assert.equal(keyMissingGroup.count, 1)
+assert.deepEqual(keyMissingGroup.providerNames, ['KIPRIS FTO 특허 정보'])
+assert.equal(keyMissingGroup.impact, '낮음')
+assert.equal(timeoutGroup.label, '응답 시간 초과')
+assert.equal(timeoutGroup.providerNames[0], 'KOTRA 해외시장 정보')
 
 assert.deepEqual(
   sortProofProviders([
@@ -83,7 +85,7 @@ assert.deepEqual(
     { providerCode: 'KATS_CERTIFIED_PRODUCT_INFO', sourceType: 'cache', recordCount: 10 },
     csvCacheSafetyRecall,
   ]).map((provider) => provider.providerCode),
-  ['SAFETY_RECALL', 'KATS_CERTIFIED_PRODUCT_INFO', 'BIZINFO_SUPPORT'],
+  ['SAFETY_RECALL', 'KATS_CERTIFIED_PRODUCT_INFO'],
 )
 
 assert.equal(
@@ -105,7 +107,7 @@ assert.deepEqual(
     'KCS_TARIFF_LOGISTICS',
     'KOREA_LAW_STATUTES',
   ], 5).hiddenCount,
-  1,
+  0,
 )
 
 assert.equal(diagnosisAvailabilityMeta({ liveCount: 26, cacheCount: 13, fallbackCount: 0 }).label, '진단 반영 가능')

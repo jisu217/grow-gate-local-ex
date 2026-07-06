@@ -5,13 +5,11 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.growgate.publicdata.dto.PublicDataSignal;
 import com.growgate.publicdata.enums.PublicDataProvider;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-@Component
 public class BizinfoSupportConnector extends AbstractPublicDataConnector {
 
     @Value("${public-data.bizinfo-support.url:}")

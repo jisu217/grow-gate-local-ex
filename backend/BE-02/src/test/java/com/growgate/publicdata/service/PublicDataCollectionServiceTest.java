@@ -252,17 +252,17 @@ class PublicDataCollectionServiceTest {
     @Test
     void collectForDiagnosisClampsEmptyNotConfiguredPositiveContributionBeforePersisting() {
         PublicDataConnector connector = mock(PublicDataConnector.class);
-        when(connector.provider()).thenReturn(PublicDataProvider.BIZINFO_SUPPORT);
-        when(connector.usedFor()).thenReturn("support");
-        when(connector.requestKey(any(PublicDataRequest.class))).thenReturn("BIZINFO_SUPPORT:DE:Battery pack");
+        when(connector.provider()).thenReturn(PublicDataProvider.KIPRIS_FTO);
+        when(connector.usedFor()).thenReturn("fto");
+        when(connector.requestKey(any(PublicDataRequest.class))).thenReturn("KIPRIS_FTO:DE:Battery pack");
         when(connector.collect(any(PublicDataRequest.class))).thenReturn(PublicDataConnectorResult.builder()
-                .provider(PublicDataProvider.BIZINFO_SUPPORT)
-                .endpoint("https://api.example.test/bizinfo")
-                .requestKey("BIZINFO_SUPPORT:DE:Battery pack")
+                .provider(PublicDataProvider.KIPRIS_FTO)
+                .endpoint("https://api.example.test/kipris")
+                .requestKey("KIPRIS_FTO:DE:Battery pack")
                 .hsCode("850760")
                 .targetCountry("DE")
                 .matchedKey("hsCode=850760;country=DE")
-                .usedFor("support")
+                .usedFor("fto")
                 .rawPayload("{\"items\":[]}")
                 .normalizedPayload(Map.of(
                         "rawCount", 0,
@@ -289,7 +289,7 @@ class PublicDataCollectionServiceTest {
         when(runRepository.save(any(PublicDataCollectionRun.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(recordRepository.save(any(PublicDataRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
         when(recordRepository.findTopByProviderAndRequestKeyAndExpiresAtAfterOrderByFetchedAtDesc(
-                eq(PublicDataProvider.BIZINFO_SUPPORT), eq("BIZINFO_SUPPORT:DE:Battery pack"), any(LocalDateTime.class)))
+                eq(PublicDataProvider.KIPRIS_FTO), eq("KIPRIS_FTO:DE:Battery pack"), any(LocalDateTime.class)))
                 .thenReturn(Optional.empty());
 
         PublicDataCollectionService service = service(
@@ -354,6 +354,61 @@ class PublicDataCollectionServiceTest {
         assertThat(result.getRun().getSuccessCount()).isEqualTo(1);
         assertThat(result.getRecords().get(0).getSourceType()).isEqualTo("cache");
         assertThat(result.getRecords().get(0).getSourceQualityStatus()).isEqualTo("CACHE_VERIFIED");
+    }
+
+    @Test
+    void collectForDiagnosisSkipsInactiveProviders() {
+        PublicDataConnector inactive = mock(PublicDataConnector.class);
+        when(inactive.provider()).thenReturn(PublicDataProvider.BIZINFO_SUPPORT);
+
+        PublicDataConnector active = mock(PublicDataConnector.class);
+        when(active.provider()).thenReturn(PublicDataProvider.KCS_TRADE);
+        when(active.usedFor()).thenReturn("market");
+        when(active.requestKey(any(PublicDataRequest.class))).thenReturn("KCS_TRADE:850760:DE");
+        when(active.collect(any(PublicDataRequest.class))).thenReturn(PublicDataConnectorResult.builder()
+                .provider(PublicDataProvider.KCS_TRADE)
+                .endpoint("https://api.example.test/kcs")
+                .requestKey("KCS_TRADE:850760:DE")
+                .hsCode("850760")
+                .targetCountry("DE")
+                .matchedKey("hsCode=850760;country=DE")
+                .usedFor("market")
+                .rawPayload("{\"items\":[{\"hsCode\":\"850760\"}]}")
+                .normalizedPayload(Map.of(
+                        "collectionEvidence", Map.of("operationEndpoint", true, "apiKeyConfigured", true),
+                        "metrics", Map.of("recordCount", 1)))
+                .scoreContribution(3)
+                .confidence(0.70)
+                .sourceType("live")
+                .fallbackUsed(false)
+                .build());
+
+        PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
+        PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        MembershipRepository membershipRepository = mock(MembershipRepository.class);
+        User user = user("user-1");
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(runRepository.save(any(PublicDataCollectionRun.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.save(any(PublicDataRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.findTopByProviderAndRequestKeyAndExpiresAtAfterOrderByFetchedAtDesc(
+                eq(PublicDataProvider.KCS_TRADE), eq("KCS_TRADE:850760:DE"), any(LocalDateTime.class)))
+                .thenReturn(Optional.empty());
+
+        PublicDataCollectionService service = service(
+                List.of(inactive, active), runRepository, recordRepository, userRepository, membershipRepository);
+        ReflectionTestUtils.setField(service, "enabled", true);
+        ReflectionTestUtils.setField(service, "cacheTtlHours", 24L);
+
+        PublicDataCollectionResult result = service.collectForDiagnosis(
+                "diagnosis-1", "user-1", "850760", "DE", "Battery pack");
+
+        assertThat(result.getRun().getProviderCount()).isEqualTo(1);
+        assertThat(result.getRecords()).hasSize(1);
+        assertThat(result.getRecords().get(0).getProvider()).isEqualTo(PublicDataProvider.KCS_TRADE);
+        verify(inactive, never()).requestKey(any(PublicDataRequest.class));
+        verify(inactive, never()).collect(any(PublicDataRequest.class));
     }
 
     @Test

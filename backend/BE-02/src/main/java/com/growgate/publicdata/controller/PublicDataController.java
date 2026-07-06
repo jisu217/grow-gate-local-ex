@@ -48,7 +48,8 @@ public class PublicDataController {
                         userDetails.getUsername(),
                         request.getHsCode(),
                         request.getTargetCountry(),
-                        request.getProductName()
+                        request.getProductName(),
+                        request.getLawSearchQuery()
                 )));
     }
 

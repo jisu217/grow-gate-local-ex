@@ -72,7 +72,7 @@ public class OpenRouterAgentProviderClient extends AbstractLlmAgentProviderClien
             if (siteUrl != null && !siteUrl.isBlank()) {
                 headers.add("HTTP-Referer", siteUrl);
             }
-            headers.add("X-Title", appTitle == null || appTitle.isBlank() ? "GrowGate Local EX" : appTitle);
+            headers.add("X-OpenRouter-Title", appTitle == null || appTitle.isBlank() ? "GrowGate Local EX" : appTitle);
             Map<String, Object> body = Map.of(
                     "model", model,
                     "messages", List.of(Map.of("role", "user", "content", buildPrompt(request))),

@@ -518,7 +518,7 @@ export default function Mypage() {
         <footer className={styles.footer}>
           <div className={styles.fBrand}>GROW-GATE <span className={styles.ex}>Local EX</span></div>
           <div className={styles.fNote}>
-            2026 산업통상부 공공데이터 활용 공모전 · 본 결과는 공공데이터 수집 신호와 규칙 기반 Gate 판단이며 최종 판단은 전문가와 함께 하십시오.
+            2026 산업통상부 공공데이터 활용 공모전 · 본 결과는 공공데이터 수집 신호와 규칙 기반 Gate 판단이며 담당자 의사결정은 전문가 검토와 함께 하십시오.
           </div>
         </footer>
       </div>

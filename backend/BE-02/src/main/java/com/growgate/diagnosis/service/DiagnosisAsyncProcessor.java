@@ -6,6 +6,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.agent.service.AgentInferenceRequest;
 import com.growgate.agent.service.AgentInferenceResult;
 import com.growgate.agent.service.AgentInferenceService;
+import com.growgate.agent.service.AgentExplanationValidator;
+import com.growgate.agent.service.AgentInstructionRegistry;
+import com.growgate.agent.service.AgentKnowledgeCaptureService;
 import com.growgate.agent.service.AgentTraceRecorder;
 import com.growgate.agent.service.ClaimVerificationService;
 import com.growgate.agent.service.EvidenceContextBuilder;
@@ -77,6 +80,8 @@ public class DiagnosisAsyncProcessor {
     private final RegionalIndustryProfileService regionalIndustryProfileService;
     private final AgentTraceRecorder agentTraceRecorder;
     private final PublicDataProofRunService publicDataProofRunService;
+    private final AgentKnowledgeCaptureService agentKnowledgeCaptureService =
+            new AgentKnowledgeCaptureService(new AgentInstructionRegistry(), new AgentExplanationValidator());
 
     @Async
     @Transactional
@@ -268,7 +273,20 @@ public class DiagnosisAsyncProcessor {
             );
             List<Map<String, Object>> loopSuggestions = buildKnowledgeLoopSuggestions(
                     llmResult, riskItems, sources, productName, hsCode, targetCountry);
-            persistKnowledgeLoopSuggestions(run, product, loopSuggestions);
+            AgentKnowledgeCaptureService.CaptureResult agentKnowledgeCapture = agentKnowledgeCaptureService.capture(
+                    run.getId(),
+                    product != null ? product.getId() : "",
+                    run.getCompany() != null ? run.getCompany().getId() : "",
+                    productName,
+                    hsCode,
+                    targetCountry,
+                    scoreMap,
+                    sources,
+                    riskItems,
+                    actionRoadmap,
+                    llmResult
+            );
+            persistKnowledgeLoopSuggestions(run, product, agentKnowledgeCapture.candidates());
             Map<String, Object> claimVerificationResult = claimVerificationService.verifyClaims(
                     extractLlmClaims(llmResult), validSourceIds(sources));
             List<Map<String, Object>> safeLlmClaims = objectListOrDefault(
@@ -336,6 +354,7 @@ public class DiagnosisAsyncProcessor {
             resultMap.put("pythonWorker", workerResult.map(result -> Map.of(
                     "enabled", true,
                     "succeeded", true,
+                    "status", "succeeded",
                     "engineVersion", stringValue(result.get("engineVersion")),
                     "generatedAt", stringValue(result.get("generatedAt")),
                     "latencyMs", result.getOrDefault("latencyMs", 0),
@@ -346,6 +365,7 @@ public class DiagnosisAsyncProcessor {
             )).orElseGet(() -> Map.of(
                     "enabled", fastApiAgentClient.isEnabled(),
                     "succeeded", false,
+                    "status", fastApiAgentClient.isEnabled() ? "fallback" : "unavailable",
                     "engineVersion", "spring-local-fallback",
                     "budgetGuard", Map.of("externalLlmCalls", 0, "estimatedCostUsd", 0)
             )));
@@ -373,13 +393,16 @@ public class DiagnosisAsyncProcessor {
             resultMap.put("safeLlmClaims", safeLlmClaims);
             resultMap.put("llmFallbackReasons", llmFallbackReasons);
             resultMap.put("scoringRubric", buildScoringRubric());
+            resultMap.put("agentExplanationSummary", agentKnowledgeCapture.summary());
+            resultMap.put("agentExplanations", agentKnowledgeCapture.explanations());
+            resultMap.put("agentKnowledgeCandidates", agentKnowledgeCapture.candidates());
             resultMap.put("stageCards", buildStageCards(productName, hsCode, targetCountry, overall, market,
                     regulation, recall, fto, support, riskItems, actionRoadmap, sources, agentResult.orElse(null),
                     llmResult, loopSuggestions));
             resultMap.put("reportMarkdown", extractReportMarkdown(reportResult.orElse(null),
                     run.getId(), productName, hsCode, targetCountry, overall, riskItems, actionRoadmap,
                     stringValue(diagnosisProofRun.getOrDefault("proofRunId", publicDataResult.getRun().getId())),
-                    sourceTrustSummary));
+                    sourceTrustSummary, agentKnowledgeCapture.candidates()));
             resultMap.put("reportFastApiUsed", reportResult.isPresent());
             resultMap.put("agentInference", Map.of(
                     "succeeded", llmResult.isSucceeded(),
@@ -1715,6 +1738,15 @@ public class DiagnosisAsyncProcessor {
     }
 
     private Map<String, Object> normalizeLoopSuggestion(Map<String, Object> item) {
+        if (item.containsKey("knowledgeType") || item.containsKey("plainSummary")) {
+            return Map.of(
+                    "type", defaultString(item.get("knowledgeType"), defaultString(item.get("type"), "policy_note")),
+                    "title", defaultString(item.get("title"), "workflow 근거 지식화 후보"),
+                    "evidence", compactListOrText(item.get("evidenceSummary")),
+                    "rationale", defaultString(item.get("whyItMatters"), defaultString(item.get("plainSummary"), "")),
+                    "impact", "담당자가 승인하면 다음 진단의 knowledge snapshot, 실행보드, 리포트에서 재사용"
+            );
+        }
         return Map.of(
                 "type", defaultString(item.get("type"), "policy_note"),
                 "title", defaultString(item.get("title"), "workflow 근거 지식화 후보"),
@@ -1724,17 +1756,30 @@ public class DiagnosisAsyncProcessor {
         );
     }
 
+    private String compactListOrText(Object value) {
+        if (value instanceof List<?> list) {
+            return list.stream()
+                    .filter(Objects::nonNull)
+                    .map(String::valueOf)
+                    .filter(text -> !text.isBlank())
+                    .limit(6)
+                    .collect(Collectors.joining(" / "));
+        }
+        return defaultString(value, "");
+    }
+
     private void persistKnowledgeLoopSuggestions(DiagnosisRun run, Product product, List<Map<String, Object>> suggestions) {
         if (product == null || suggestions == null || suggestions.isEmpty()) return;
         for (Map<String, Object> suggestion : suggestions) {
+            Map<String, Object> normalized = normalizeLoopSuggestion(suggestion);
             KnowledgeLoopItem item = KnowledgeLoopItem.builder()
                     .product(product)
                     .diagnosisId(run.getId())
-                    .type(prefix(defaultString(suggestion.get("type"), "policy_note"), 60))
-                    .title(prefix(defaultString(suggestion.get("title"), "workflow 근거 지식화 후보"), 200))
-                    .evidence(defaultString(suggestion.get("evidence"), ""))
-                    .rationale(defaultString(suggestion.get("rationale"), ""))
-                    .impact(defaultString(suggestion.get("impact"), ""))
+                    .type(prefix(defaultString(normalized.get("type"), "policy_note"), 60))
+                    .title(prefix(defaultString(normalized.get("title"), "workflow 근거 지식화 후보"), 200))
+                    .evidence(defaultString(normalized.get("evidence"), ""))
+                    .rationale(defaultString(normalized.get("rationale"), ""))
+                    .impact(defaultString(normalized.get("impact"), ""))
                     .status(KnowledgeLoopStatus.pending)
                     .createdBy(run.getUser())
                     .build();
@@ -1749,7 +1794,8 @@ public class DiagnosisAsyncProcessor {
                                          List<Map<String, Object>> risks,
                                          Map<String, Object> roadmap,
                                          String publicDataProofRunId,
-                                         Map<String, Object> sourceTrustSummary) {
+                                         Map<String, Object> sourceTrustSummary,
+                                         List<Map<String, Object>> agentKnowledgeCandidates) {
         MarkdownReportRenderer renderer = new MarkdownReportRenderer(
                 new ReportFrontMatterBuilder(),
                 new ReportClaimVerifier()
@@ -1764,6 +1810,7 @@ public class DiagnosisAsyncProcessor {
                 .risks(risks)
                 .roadmap(roadmap)
                 .sourceTrustSummary(sourceTrustSummary)
+                .agentKnowledgeCandidates(agentKnowledgeCandidates)
                 .build());
         if (reportResult != null && reportResult.get("markdown") instanceof String markdown && !markdown.isBlank()) {
             if (markdown.contains("publicDataProofRunId:") && markdown.contains("## Source Appendix")) {

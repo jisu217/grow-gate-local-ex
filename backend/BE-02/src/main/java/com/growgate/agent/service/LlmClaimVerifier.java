@@ -65,7 +65,7 @@ public class LlmClaimVerifier {
 
     private Map<String, Object> compactClaim(Map<String, Object> claim) {
         Map<String, Object> item = new LinkedHashMap<>();
-        item.put("text", stringValue(claim.get("text")));
+        item.put("text", safeClaimText(stringValue(claim.get("text"))));
         item.put("sourceId", stringValue(claim.get("sourceId")));
         item.put("numericEvidence", Boolean.TRUE.equals(claim.get("numericEvidence")));
         return item;
@@ -73,5 +73,10 @@ public class LlmClaimVerifier {
 
     private String stringValue(Object value) {
         return value == null ? "" : String.valueOf(value).trim();
+    }
+
+    private String safeClaimText(String text) {
+        if (containsUnsafeCertainty(text)) return "[filtered unsafe claim]";
+        return LlmSecretSanitizer.sanitize(text);
     }
 }
