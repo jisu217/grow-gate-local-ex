@@ -64,7 +64,8 @@
 
 /* card base */
 .card { background: #fff; border: 1px solid var(--line); border-radius: 20px; padding: 24px 26px; box-shadow: 0 1px 2px rgba(15,27,61,.04), 0 10px 30px rgba(15,27,61,.06); }
-.ctitle { font-size: 13px; font-weight: 600; color: var(--mute); display: flex; align-items: center; gap: 7px; }
+.ctitle { font-size: 13px; font-weight: 600; color: var(--mute); display: flex; align-items: center; gap: 7px; word-break: keep-all; }
+.cardTitleRow { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
 
 /* 클릭 가능한 카드 */
 .clickable { cursor: pointer; transition: transform .15s, box-shadow .15s; }
@@ -73,6 +74,32 @@
 /* 카드 제목 옆 이동 힌트 */
 .goHint { font-size: 11px; font-weight: 500; color: var(--dim); }
 .score .goHint { color: rgba(255,255,255,.75); }
+.linkButton {
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid #d6e3ff;
+  border-radius: 9px;
+  background: #f7faff;
+  color: var(--blue);
+  font-family: var(--kr);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.linkButton:hover { background: #edf4ff; border-color: #b9d0ff; }
+.statusBadge {
+  min-height: 28px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 9px;
+  border-radius: 999px;
+  background: #eef0f4;
+  color: var(--dim);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
 
 /* grids */
 .row { display: grid; gap: 16px; }
@@ -108,14 +135,61 @@
 
 /* todo */
 .todo .list { margin-top: 14px; display: flex; flex-direction: column; gap: 11px; }
-.item { display: flex; align-items: flex-start; gap: 10px; font-size: 14px; color: var(--ink); padding: 4px 6px; margin: 0 -6px; border-radius: 8px; }
+.item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--kr);
+  font-size: 14px;
+  text-align: left;
+  color: var(--ink);
+  padding: 10px 11px;
+  border: 1px solid #e1e8f5;
+  border-radius: 12px;
+  background: #f8fbff;
+  cursor: pointer;
+  transition: background .15s, border-color .15s, transform .15s;
+}
+.item:hover { background: #f1f5ff; border-color: #cfe0ff; transform: translateY(-1px); }
 .clickableItem { cursor: pointer; transition: background .15s; }
 .clickableItem:hover { background: #f1f5ff; }
-.box { width: 17px; height: 17px; border: 1.6px solid #c4cee2; border-radius: 5px; flex-shrink: 0; margin-top: 1px; }
+.actionMark {
+  flex-shrink: 0;
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 999px;
+  background: #eaf1ff;
+  color: var(--blue);
+  font-weight: 900;
+}
+.todoBody { display: grid; gap: 4px; min-width: 0; flex: 1; }
+.todoTask { font-weight: 800; word-break: keep-all; overflow-wrap: break-word; }
+.todoMeta { color: var(--dim); font-size: 12px; line-height: 1.35; word-break: keep-all; overflow-wrap: break-word; }
 .tag { font-size: 11px; font-weight: 600; padding: 1px 7px; border-radius: 6px; margin-left: auto; flex-shrink: 0; }
 .t30 { background: #eaf1ff; color: var(--blue); }
 .t60 { background: #fff2db; color: var(--amber); }
 .t90 { background: #eef0f4; color: var(--dim); }
+.todoEmpty {
+  display: grid;
+  gap: 10px;
+  color: var(--dim);
+  font-size: 13px;
+  line-height: 1.45;
+}
+.todoEmpty button {
+  justify-self: start;
+  min-height: 32px;
+  border: 1px solid #d6e3ff;
+  border-radius: 9px;
+  background: #fff;
+  color: var(--blue);
+  font-family: var(--kr);
+  font-weight: 800;
+  cursor: pointer;
+}
 
 /* knowledge progress */
 .kn .bar { height: 10px; border-radius: 6px; background: #eef0f6; overflow: hidden; margin-top: 16px; }

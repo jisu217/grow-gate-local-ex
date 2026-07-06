@@ -234,6 +234,8 @@
   font-size: 13.5px;
   line-height: 1.58;
   color: #293756;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 /* 수출 네트워크 SVG 맵 */
@@ -324,9 +326,12 @@
   color: var(--slate);
   text-align: center;
   margin-top: 14px;
-  max-width: 560px;
+  max-width: 680px;
   margin-left: auto;
   margin-right: auto;
+  line-height: 1.65;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 /* 기능 카드 3단 그리드 */
@@ -338,6 +343,13 @@
 }
 /* 기능 카드 */
 .feat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  width: 100%;
+  min-height: 280px;
+  text-align: left;
+  font: inherit;
   background: #fff;
   border: 1px solid var(--line);
   border-radius: 20px;
@@ -358,7 +370,7 @@
 }
 .feat:hover { transform: translateY(-5px); border-color: #d6e3ff; box-shadow: 0 18px 40px rgba(15,27,61,.12); }
 .feat:hover::before { opacity: 1; }
-.feat:hover .featGo { gap: 11px; }
+.feat:hover .detailHint { border-color: var(--blue); background: #f4f8ff; }
 
 .featNo {
   position: absolute;
@@ -394,19 +406,25 @@
   font-size: 14px;
   color: var(--slate);
   line-height: 1.7;
-  min-height: 66px;
+  min-height: 74px;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
-.featGo {
+.detailHint {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 14.5px;
-  font-weight: 600;
+  min-height: 36px;
+  padding: 0 13px;
+  border: 1px solid #d6e3ff;
+  border-radius: 9px;
+  background: #fff;
+  font-size: 13.5px;
+  font-weight: 800;
   color: var(--blue);
-  margin-top: 14px;
+  margin-top: auto;
   position: relative;
   z-index: 2;
-  transition: gap .18s;
+  transition: .18s;
 }
 
 /* 기존 방식 대비 변화 */
@@ -418,10 +436,12 @@
 }
 .compareRow {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) 44px minmax(0, 1fr);
+  align-items: stretch;
   gap: 14px;
 }
-.compareRow > div {
+.beforeCard,
+.afterCard {
   min-height: 116px;
   border: 1px solid rgba(185, 197, 219, .85);
   border-radius: 14px;
@@ -429,20 +449,65 @@
   padding: 18px 20px;
   box-shadow: 0 10px 26px rgba(15,27,61,.06);
 }
-.compareRow span {
+.beforeCard {
+  background: rgba(248, 250, 253, .88);
+  border-color: #d9e0ec;
+  box-shadow: none;
+}
+.afterCard {
+  border-color: #b9d0ff;
+  background: linear-gradient(180deg, #ffffff, #f6f9ff);
+}
+.flowArrow {
+  display: grid;
+  place-items: center;
+  align-self: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 999px;
+  background: #eaf1ff;
+  color: var(--blue);
+  font-weight: 900;
+}
+.beforeCard > span,
+.afterCard > span {
   display: block;
   font-family: var(--en);
   font-size: 11px;
   font-weight: 800;
-  color: var(--blue);
   text-transform: uppercase;
   letter-spacing: .08em;
   margin-bottom: 10px;
 }
+.beforeCard > span { color: #7c879b; }
+.afterCard > span { color: var(--blue); }
 .compareRow p {
   font-size: 14px;
   line-height: 1.65;
   color: #293756;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.afterBadges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 7px;
+  margin-top: 14px;
+}
+.afterBadges span {
+  display: inline-flex;
+  align-items: center;
+  min-height: 25px;
+  padding: 0 9px;
+  border: 1px solid #cbe0ff;
+  border-radius: 999px;
+  background: #edf5ff;
+  color: #1f5dcb;
+  font-size: 11.5px;
+  font-weight: 800;
+  letter-spacing: 0;
+  text-transform: none;
+  margin: 0;
 }
 
 /* 주요 수치 통계 섹션 */
@@ -461,12 +526,23 @@
 .statV {
   font-family: var(--en);
   font-weight: 800;
-  font-size: 42px;
+  font-size: 36px;
   color: #0b1530;
   letter-spacing: -.02em;
+  min-height: 48px;
+  display: grid;
+  place-items: center;
 }
-.statU { color: var(--blue); font-size: 24px; }
 .statL { font-size: 13.5px; color: var(--slate); margin-top: 6px; }
+.statHelp {
+  margin-top: 8px;
+  color: #8a96ad;
+  font-size: 11.5px;
+  line-height: 1.45;
+  word-break: keep-all;
+}
+.stat.warn .statV { color: #9a5b00; }
+.stat.ready .statV { color: #0b1530; }
 
 /* 하단 CTA 배너 */
 .ctaBand {
@@ -519,6 +595,85 @@
 .fLinks a:hover { color: var(--blue); }
 .fNote { font-size: 12.5px; color: var(--slate-2); width: 100%; }
 
+.modalLayer {
+  position: fixed;
+  inset: 0;
+  z-index: 60;
+  display: grid;
+  place-items: center;
+  padding: 24px;
+  background: rgba(11, 21, 48, .42);
+}
+.featureDialog {
+  position: relative;
+  width: min(560px, 100%);
+  max-height: min(82vh, 680px);
+  overflow: auto;
+  border: 1px solid #dbe5f4;
+  border-radius: 18px;
+  background: #fff;
+  padding: 28px;
+  box-shadow: 0 24px 70px rgba(15, 27, 61, .22);
+}
+.modalClose {
+  position: absolute;
+  top: 14px;
+  right: 14px;
+  width: 36px;
+  height: 36px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--slate);
+  font-size: 24px;
+  line-height: 1;
+  cursor: pointer;
+}
+.modalKicker {
+  display: inline-flex;
+  color: var(--blue);
+  font-size: 12px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+}
+.featureDialog h3 {
+  margin: 8px 40px 10px 0;
+  color: #0b1530;
+  font-size: 26px;
+  line-height: 1.25;
+  word-break: keep-all;
+}
+.modalLead {
+  color: var(--slate);
+  line-height: 1.65;
+  word-break: keep-all;
+}
+.modalFacts {
+  display: grid;
+  grid-template-columns: 86px minmax(0, 1fr);
+  gap: 10px 14px;
+  margin: 22px 0 0;
+}
+.modalFacts dt {
+  color: #6f7d96;
+  font-size: 13px;
+  font-weight: 900;
+}
+.modalFacts dd {
+  margin: 0;
+  color: #26344f;
+  line-height: 1.55;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+}
+.modalActions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 24px;
+}
+
 /* 반응형 미디어 쿼리 */
 @media (max-width: 1000px) {
   .h1 { font-size: 52px; }
@@ -526,6 +681,7 @@
   .readiness { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .featGrid { grid-template-columns: 1fr; }
   .compareRow { grid-template-columns: 1fr; }
+  .flowArrow { transform: rotate(90deg); justify-self: center; }
   .stats { grid-template-columns: repeat(2, 1fr); }
 }
 @media (max-width: 620px) {
@@ -536,4 +692,7 @@
   .readiness { grid-template-columns: 1fr; }
   .readyItem { min-height: auto; }
   .secH2, .ctaBandH2 { font-size: 28px; }
+  .stats { grid-template-columns: 1fr; }
+  .featureDialog { padding: 24px 18px; }
+  .modalFacts { grid-template-columns: 1fr; }
 }

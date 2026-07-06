@@ -38,7 +38,7 @@ function toMypageProduct(product) {
   if (expiringCount > 0) chips.push(`만료 임박 ${expiringCount}건`)
   if (missingCount > 0) chips.push(`누락 정보 ${missingCount}건`)
 
-  return {
+  const viewProduct = {
     id: product.productId,
     runId: product.runId ?? null,
     diagnosisStatus: product.diagnosisStatus ?? null,
@@ -53,16 +53,15 @@ function toMypageProduct(product) {
     buyerRequirementCount: product.buyerRequirementCount ?? 0,
     score: product.score ?? null,
     chips,
-    todo: product.diagnosisStatus === 'running' || product.diagnosisStatus === 'pending'
-      ? [{ task: '진단 완료 상태 확인하기', due: '30' }]
-      : registrationRate < 100
-      ? [{ task: '제품 정보 보완하기', due: '30' }]
-      : [{ task: 'Gate 판단 실행하기', due: '30' }],
     kn: registrationRate,
     registrationLabel,
     miss: registrationLabel.replace(/^데이터 기준 \d+% · /, ''),
     reports: product.reports ?? [],
     updatedAt: product.updatedAt,
+  }
+  return {
+    ...viewProduct,
+    todo: buildProductTodo(viewProduct),
   }
 }
 
@@ -87,7 +86,53 @@ export function buildRerunDiagnosisPath(product) {
     productId: product.id,
     mode: 'rerun',
   })
+  if (product.next) params.set('next', product.next)
   return `/diagnosis/new?${params.toString()}`
+}
+
+export function buildKnowledgeEditPath(product) {
+  if (!product?.id) return '/mypage'
+  const params = new URLSearchParams()
+  if (product.miss) params.set('missingFields', product.miss)
+  const query = params.toString()
+  return `/mypage/knowledge/${encodeURIComponent(product.id)}/edit${query ? `?${query}` : ''}`
+}
+
+export function buildActionBoardPath(product) {
+  if (product?.runId) return `/diagnosis/${encodeURIComponent(product.runId)}#action-board`
+  return buildRerunDiagnosisPath({ ...product, next: 'action-board' })
+}
+
+export function buildProductTodo(product = {}) {
+  const isRunning = product.diagnosisStatus === 'running' || product.diagnosisStatus === 'pending'
+  if (isRunning) {
+    return [{
+      task: '진단 완료 상태 확인하기',
+      due: '30',
+      owner: '수출 담당자',
+      output: '완료된 Gate 결과',
+      path: product.runId ? `/diagnosis/${encodeURIComponent(product.runId)}` : '/diagnosis',
+      actionLabel: '진단 상태 보기',
+    }]
+  }
+  if (Number(product.registrationRate ?? product.kn ?? 0) < 100) {
+    return [{
+      task: '제품 정보 보완하기',
+      due: '30',
+      owner: '제품 담당자',
+      output: '보완된 제품 지식',
+      path: buildKnowledgeEditPath(product),
+      actionLabel: '보완 화면으로 이동',
+    }]
+  }
+  return [{
+    task: 'Gate 판단 실행하기',
+    due: '30',
+    owner: '수출 담당자',
+    output: '새 Gate 판단',
+    path: buildRerunDiagnosisPath(product),
+    actionLabel: 'Gate 판단 시작',
+  }]
 }
 
 export function buildRerunDiagnosisPayload(product) {

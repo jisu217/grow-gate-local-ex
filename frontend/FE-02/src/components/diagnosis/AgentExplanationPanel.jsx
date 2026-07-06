@@ -1,8 +1,10 @@
 import { Link } from 'react-router-dom'
+import { buildAgentKnowledgeActions, humanAgentDataStatus } from './agentKnowledgePresenter.js'
 
 export default function AgentExplanationPanel({ session, onSourcesClick, onBoardClick }) {
   const candidates = session?.agentKnowledgeCandidates ?? []
   const summary = session?.agentExplanationSummary ?? {}
+  const actions = buildAgentKnowledgeActions(session)
   if (!candidates.length) return null
 
   return (
@@ -47,11 +49,18 @@ export default function AgentExplanationPanel({ session, onSourcesClick, onBoard
             </dl>
 
             <div className="agent-knowledge-actions">
-              {session?.productId && (
-                <Link to={`/mypage/knowledge/${session.productId}`}>지식관리에서 검토</Link>
-              )}
-              <button type="button" onClick={onSourcesClick}>근거 데이터 보기</button>
-              <button type="button" onClick={onBoardClick}>실행보드에 반영됨</button>
+              {actions.map((action) => {
+                if (!action.enabled) {
+                  return <span key={action.label} className="agent-knowledge-action-disabled">{action.disabledLabel}</span>
+                }
+                if (action.label === '근거 데이터 보기' && onSourcesClick) {
+                  return <button key={action.label} type="button" onClick={onSourcesClick}>{action.label}</button>
+                }
+                if (action.label === '실행보드 보기' && onBoardClick) {
+                  return <button key={action.label} type="button" onClick={onBoardClick}>{action.label}</button>
+                }
+                return <Link key={action.label} to={action.to}>{action.label}</Link>
+              })}
             </div>
           </article>
         ))}
@@ -67,7 +76,5 @@ function join(value) {
 }
 
 function dataStatus(value) {
-  if (!value || typeof value !== 'object') return 'unknown'
-  const provider = value.provider ? `${value.provider} / ` : ''
-  return `${provider}${value.mode ?? 'unknown'}`
+  return humanAgentDataStatus(value)
 }

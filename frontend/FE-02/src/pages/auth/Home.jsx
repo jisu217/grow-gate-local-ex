@@ -1,49 +1,16 @@
-import { useNavigate } from 'react-router-dom'
+import { useEffect, useRef, useState } from 'react'
+import { Link, useNavigate } from 'react-router-dom'
 import styles from './Home.module.css'
 import TopNav from '../../components/layout/TopNav.jsx'
-
-// 파트너 목록
-const PARTNERS = ['관세청', 'KOTRA', 'KTL', 'SafetyKorea', 'KIPRIS', '기업마당', 'EU']
-
-// 기능 소개
-const FEATURES = [
-  {
-    no: '01', icon: '01', title: '한 번의 Gate 판단',
-    desc: '제품 정보, HS Code, 대상국, 바이어 문의를 기준으로 견적 전 진행 가능 여부를 한 화면에서 점검합니다.',
-    link: 'Gate 판단',
-  },
-  {
-    no: '02', icon: '02', title: '근거가 보이는 데이터',
-    desc: '관세청·KOTRA·SafetyKorea·KIPRIS·지원사업의 live/cache/fallback 출처를 진단 결과에 남깁니다.',
-    link: '데이터 보기',
-  },
-  {
-    no: '03', icon: '03', title: 'Gate 통과 할 일',
-    desc: '이번 주, 견적 전, 출하 전 담당자가 무엇을 확인해야 하는지 산출물 단위로 받습니다.',
-    link: '업무 보드',
-  },
-]
-
-// 수치 통계
-const STATS = [
-  { v: '5', u: '개', l: '공공데이터 provider 상태 추적' },
-  { v: '6', u: '축', l: '시장·규제·리콜·FTO·지원 점수' },
-  { v: '100', u: '%', l: '출처 trace 포함 Gate 판단' },
-  { v: '3', u: '단계', l: '이번 주·견적 전·출하 전 업무화' },
-]
-
-const READINESS = [
-  { k: '공공데이터', v: '관세청·KOTRA·KATS·KIPRIS·지원사업 connector와 cache/fallback 기록' },
-  { k: '서비스 구현', v: 'React 메인 화면에서 Spring 진단 생성·상태 갱신·결과 리포트 흐름 연결' },
-  { k: '운영 근거', v: 'JWT 검증, 권한 검사, audit pagination, soft delete, retry/backoff 반영' },
-  { k: '제출 산출물', v: '변경사항·평가 대응·미완료 범위를 공개 문서로 분리 정리' },
-]
-
-const BEFORE_AFTER = [
-  { before: '담당자가 포털을 따로 열어 HS Code, 리콜, 특허, 지원사업을 수작업 확인', after: '제품·바이어 문의 기준으로 live/cache/fallback 출처와 규칙 근거를 한 결과에 연결' },
-  { before: '점수는 나오지만 견적을 보내도 되는지 판단하기 어려움', after: 'GO / CONDITIONAL GO / HOLD / STOP으로 견적 전 Gate를 먼저 제시' },
-  { before: '자료 누락을 알게 되어도 담당자별 다음 행동이 모호함', after: '이번 주·견적 전·출하 전 업무, 산출물, 담당 역할을 함께 생성' },
-]
+import { getPublicDataDashboard } from '../../services/publicDataService.js'
+import {
+  HOME_BEFORE_AFTER,
+  HOME_FEATURES,
+  HOME_READINESS,
+  PARTNERS,
+  buildHomeStats,
+  buildHomeStatsFallback,
+} from './homePresenter.js'
 
 // 수출 네트워크 SVG 맵 컴포넌트
 function HeroMap() {
@@ -79,6 +46,62 @@ function HeroMap() {
 // 랜딩 홈 페이지 컴포넌트
 export default function Home() {
   const navigate = useNavigate()
+  const [activeFeature, setActiveFeature] = useState(null)
+  const [statsState, setStatsState] = useState('loading')
+  const [stats, setStats] = useState(() => buildHomeStatsFallback())
+  const dialogRef = useRef(null)
+  const lastActiveRef = useRef(null)
+
+  useEffect(() => {
+    let alive = true
+    getPublicDataDashboard()
+      .then((dashboard) => {
+        if (!alive) return
+        setStats(buildHomeStats(dashboard))
+        setStatsState('ready')
+      })
+      .catch(() => {
+        if (!alive) return
+        setStats(buildHomeStatsFallback())
+        setStatsState('error')
+      })
+    return () => {
+      alive = false
+    }
+  }, [])
+
+  useEffect(() => {
+    if (!activeFeature) return undefined
+    lastActiveRef.current = document.activeElement
+    const dialog = dialogRef.current
+    const closeButton = dialog?.querySelector('button')
+    closeButton?.focus()
+
+    const onKeyDown = (event) => {
+      if (event.key === 'Escape') closeFeature()
+      if (event.key !== 'Tab' || !dialog) return
+      const focusables = dialog.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])')
+      if (!focusables.length) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault()
+        last.focus()
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault()
+        first.focus()
+      }
+    }
+
+    window.addEventListener('keydown', onKeyDown)
+    return () => {
+      window.removeEventListener('keydown', onKeyDown)
+      lastActiveRef.current?.focus?.()
+    }
+  }, [activeFeature])
+
+  const openFeature = (feature) => setActiveFeature(feature)
+  const closeFeature = () => setActiveFeature(null)
 
   return (
     <>
@@ -129,7 +152,7 @@ export default function Home() {
           </div>
 
           <div className={styles.readiness}>
-            {READINESS.map(item => (
+            {HOME_READINESS.map(item => (
               <div key={item.k} className={styles.readyItem}>
                 <span className={styles.readyKey}>{item.k}</span>
                 <span className={styles.readyValue}>{item.v}</span>
@@ -148,16 +171,16 @@ export default function Home() {
         <section className={styles.sec}>
           <div className={styles.secEyebrow}>How it works</div>
           <h2 className={styles.secH2}>조회가 아니라, 실행 근거입니다</h2>
-          <p className={styles.secSub}>흩어진 공공데이터 수집 상태와 제품 정보를 연결해, 기업이 검토할 실행 후보로 정리합니다.</p>
+          <p className={styles.secSub}>공공데이터 상태와 제품 정보를 연결해, 기업이 바로 검토할 실행 후보로 정리합니다.</p>
           <div className={styles.featGrid}>
-            {FEATURES.map(f => (
-              <div key={f.no} className={styles.feat}>
+            {HOME_FEATURES.map(f => (
+              <button key={f.no} type="button" className={styles.feat} onClick={() => openFeature(f)}>
                 <div className={styles.featNo}>{f.no}</div>
                 <div className={styles.featIc}>{f.icon}</div>
                 <h3 className={styles.featH3}>{f.title}</h3>
-                <p className={styles.featP}>{f.desc}</p>
-                <span className={styles.featGo}>{f.link}</span>
-              </div>
+                <p className={styles.featP}>{f.description}</p>
+                <span className={styles.detailHint}>{f.actionLabel}</span>
+              </button>
             ))}
           </div>
         </section>
@@ -166,15 +189,21 @@ export default function Home() {
           <div className={styles.secEyebrow}>Before / After</div>
           <h2 className={styles.secH2}>기존 체크리스트와 다른 점</h2>
           <div className={styles.compareGrid}>
-            {BEFORE_AFTER.map((row) => (
+            {HOME_BEFORE_AFTER.map((row, index) => (
               <div key={row.before} className={styles.compareRow}>
-                <div>
+                <div className={styles.beforeCard}>
                   <span>Before</span>
                   <p>{row.before}</p>
                 </div>
-                <div>
+                <div className={styles.flowArrow} aria-hidden="true">→</div>
+                <div className={styles.afterCard}>
                   <span>After</span>
                   <p>{row.after}</p>
+                  <div className={styles.afterBadges}>
+                    {row.afterOutputs.map((output) => (
+                      <span key={`${index}-${output}`}>{output}</span>
+                    ))}
+                  </div>
                 </div>
               </div>
             ))}
@@ -184,10 +213,13 @@ export default function Home() {
         {/* 통계 섹션 */}
         <section className={styles.statsSec}>
           <div className={styles.stats}>
-            {STATS.map(s => (
-              <div key={s.l} className={styles.stat}>
-                <div className={styles.statV}>{s.v}<span className={styles.statU}>{s.u}</span></div>
-                <div className={styles.statL}>{s.l}</div>
+            {stats.map(s => (
+              <div key={s.label} className={`${styles.stat} ${styles[s.tone] ?? ''}`}>
+                <div className={styles.statV}>{statsState === 'loading' ? '확인 중' : s.value}</div>
+                <div className={styles.statL}>{s.label}</div>
+                <div className={styles.statHelp}>
+                  {statsState === 'loading' ? '최근 수집 상태 확인 중' : s.helper}
+                </div>
               </div>
             ))}
           </div>
@@ -209,10 +241,9 @@ export default function Home() {
         <footer className={styles.footer}>
           <div className={styles.fBrand}>GROW-GATE <span style={{color:'var(--blue)'}}>Local EX</span></div>
           <div className={styles.fLinks}>
-            <a href="/diagnosis">수출 Gate 판단</a>
-            <a href="#">데이터</a>
-            <a href="#">업무 보드</a>
-            <a href="#">문서</a>
+            <Link to="/diagnosis">수출 Gate 판단</Link>
+            <Link to="/public-data/daily-refresh">공공데이터</Link>
+            <Link to="/mypage">마이페이지</Link>
           </div>
           <div className={styles.fNote}>
             2026 산업통상자원부 공공데이터 활용 공모전 · Regulation-to-Market Twin for Regional SMEs ·
@@ -220,6 +251,41 @@ export default function Home() {
           </div>
         </footer>
       </div>
+      {activeFeature && (
+        <div className={styles.modalLayer} onMouseDown={closeFeature}>
+          <div
+            ref={dialogRef}
+            className={styles.featureDialog}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="feature-dialog-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <button type="button" className={styles.modalClose} onClick={closeFeature} aria-label="닫기">×</button>
+            <span className={styles.modalKicker}>자세히 보기</span>
+            <h3 id="feature-dialog-title">{activeFeature.modal.title}</h3>
+            <p className={styles.modalLead}>{activeFeature.modal.description}</p>
+            <dl className={styles.modalFacts}>
+              <dt>입력값</dt>
+              <dd>{activeFeature.modal.input}</dd>
+              <dt>결과물</dt>
+              <dd>{activeFeature.modal.result}</dd>
+              <dt>연결 화면</dt>
+              <dd>{activeFeature.modal.screen}</dd>
+              <dt>주의</dt>
+              <dd>{activeFeature.modal.caution}</dd>
+            </dl>
+            <div className={styles.modalActions}>
+              <button type="button" className={`${styles.btn} ${styles.primary}`} onClick={() => navigate('/diagnosis/new')}>
+                Gate 판단 시작
+              </button>
+              <button type="button" className={`${styles.btn} ${styles.ghost}`} onClick={closeFeature}>
+                닫기
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   )
 }

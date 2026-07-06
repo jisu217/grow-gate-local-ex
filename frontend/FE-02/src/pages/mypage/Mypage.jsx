@@ -7,6 +7,8 @@ import {
   createMypageProduct,
   deleteMypageProduct,
   getMypageReport,
+  buildActionBoardPath,
+  buildKnowledgeEditPath,
   buildRerunDiagnosisPath,
 } from '../../services/mypageService.js'
 import { getDiagnosisResult, buildDecisionBrief } from '../../services/diagnosisService.js'
@@ -348,19 +350,41 @@ export default function Mypage() {
               </div>
 
               <div className={`${styles.card} ${styles.todo}`}>
-                <div className={styles.ctitle}>오늘 할 일 {current.runId && <span className={styles.goHint}>· 30·60·90일 보드로 →</span>}</div>
-                <div className={styles.list}>
-                  {current.todo.map((t, i) => (
-                    <div
-                      key={i}
-                      className={`${styles.item} ${current.runId ? styles.clickableItem : ''}`}
-                      onClick={() => current.runId && navigate(`/diagnosis/${current.runId}?step=8`)}
+                <div className={styles.cardTitleRow}>
+                  <div className={styles.ctitle}>오늘 할 일</div>
+                  {current.runId ? (
+                    <button
+                      type="button"
+                      className={styles.linkButton}
+                      onClick={() => navigate(buildActionBoardPath(current))}
                     >
-                      <span className={styles.box} />
-                      <span>{t.task}</span>
+                      실행보드 보기
+                    </button>
+                  ) : (
+                    <span className={styles.statusBadge}>실행보드 없음</span>
+                  )}
+                </div>
+                <div className={styles.list}>
+                  {current.todo.length ? current.todo.map((t, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={styles.item}
+                      onClick={() => navigate(t.path || buildActionBoardPath(current))}
+                    >
+                      <span className={styles.actionMark} aria-hidden="true">→</span>
+                      <span className={styles.todoBody}>
+                        <span className={styles.todoTask}>{t.task}</span>
+                        <span className={styles.todoMeta}>{t.owner} · {t.output}</span>
+                      </span>
                       <span className={`${styles.tag} ${styles[`t${t.due}`]}`}>{t.due}일</span>
+                    </button>
+                  )) : (
+                    <div className={styles.todoEmpty}>
+                      아직 생성된 실행보드가 없습니다.
+                      <button type="button" onClick={() => navigate(buildRerunDiagnosisPath(current))}>진단 시작</button>
                     </div>
-                  ))}
+                  )}
                 </div>
               </div>
             </div>
@@ -371,7 +395,19 @@ export default function Mypage() {
                 onClick={() => document.getElementById('my-products')?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
                 role="button"
               >
-                <div className={styles.ctitle}>제품 정보 등록 현황 <span className={styles.goHint}>· 내 제품 보러 가기 →</span></div>
+                <div className={styles.cardTitleRow}>
+                  <div className={styles.ctitle}>제품 정보 등록 현황</div>
+                  <button
+                    type="button"
+                    className={styles.linkButton}
+                    onClick={(event) => {
+                      event.stopPropagation()
+                      navigate(buildKnowledgeEditPath(current))
+                    }}
+                  >
+                    보완 화면으로 이동
+                  </button>
+                </div>
                 <div className={styles.pct}>{current.kn}%</div>
                 <div className={styles.bar}>
                   <div className={styles.fill} style={{ width: `${current.kn}%` }} />

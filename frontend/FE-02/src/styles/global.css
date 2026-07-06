@@ -1625,10 +1625,13 @@ body {
 }
 
 .agent-knowledge-card {
+  display: grid;
+  grid-template-rows: auto 1fr auto;
   border: 1px solid var(--line);
   border-radius: 8px;
   padding: 14px;
   background: #fbfcfe;
+  min-height: 100%;
 }
 
 .agent-knowledge-card-head {
@@ -1654,6 +1657,7 @@ body {
   grid-template-columns: 74px minmax(0, 1fr);
   gap: 8px 10px;
   margin: 0;
+  align-content: start;
 }
 
 .agent-knowledge-facts dt {
@@ -1672,15 +1676,20 @@ body {
 }
 
 .agent-knowledge-actions {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   margin-top: 14px;
+  align-self: end;
 }
 
 .agent-knowledge-actions a,
-.agent-knowledge-actions button {
-  min-height: 32px;
+.agent-knowledge-actions button,
+.agent-knowledge-action-disabled {
+  min-height: 36px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   padding: 0 10px;
   border: 1px solid var(--line);
   border-radius: 6px;
@@ -1691,6 +1700,13 @@ body {
   font-weight: 800;
   text-decoration: none;
   cursor: pointer;
+  text-align: center;
+  word-break: keep-all;
+}
+.agent-knowledge-action-disabled {
+  cursor: default;
+  color: var(--muted);
+  background: #f3f5f9;
 }
 .source-trust-actions {
   display: grid;
@@ -1993,6 +2009,7 @@ body {
   .agent-knowledge-card-head { flex-direction: column; }
   .agent-knowledge-summary { justify-content: flex-start; }
   .agent-knowledge-facts { grid-template-columns: 1fr; }
+  .agent-knowledge-actions { grid-template-columns: 1fr; }
   /* 좁은 본문에서 좌우 여백을 줄여 내용 폭 확보 */
   .scroll { padding: 18px 14px 40px; }
   .diagnosis-section { scroll-margin-top: 122px; }
