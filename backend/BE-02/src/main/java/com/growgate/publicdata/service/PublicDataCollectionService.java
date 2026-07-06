@@ -264,7 +264,41 @@ public class PublicDataCollectionService {
         return !record.isFallbackUsed()
                 && ("live".equals(sourceType) || "cache".equals(sourceType))
                 && !"FALLBACK_ERROR".equals(record.getSourceQualityStatus())
-                && !"EMPTY_NOT_CONFIGURED".equals(record.getSourceQualityStatus());
+                && !"EMPTY_NOT_CONFIGURED".equals(record.getSourceQualityStatus())
+                && !hasConfigurationBlocker(record);
+    }
+
+    private boolean hasConfigurationBlocker(PublicDataRecord record) {
+        Map<String, Object> normalized = parseNormalized(record);
+        Object evidenceValue = normalized.get("collectionEvidence");
+        if (evidenceValue instanceof Map<?, ?> evidence
+                && Boolean.TRUE.equals(evidence.get("operationEndpoint"))
+                && Boolean.FALSE.equals(evidence.get("apiKeyConfigured"))) {
+            return true;
+        }
+        return containsConfigurationBlocker(record.getErrorMessage())
+                || containsConfigurationBlocker(record.getSourceQualityStatus())
+                || containsConfigurationBlocker(normalized);
+    }
+
+    private boolean containsConfigurationBlocker(Object value) {
+        if (value == null) return false;
+        if (value instanceof String text) {
+            String normalized = text.toUpperCase();
+            return normalized.contains("API_KEY_NOT_CONFIGURED")
+                    || normalized.contains("EMPTY_NOT_CONFIGURED")
+                    || normalized.contains("PUBLIC_DATA_DISABLED")
+                    || normalized.contains("ENDPOINT_NOT_CONFIGURED");
+        }
+        if (value instanceof Map<?, ?> map) {
+            return map.values().stream().anyMatch(this::containsConfigurationBlocker);
+        }
+        if (value instanceof Iterable<?> iterable) {
+            for (Object item : iterable) {
+                if (containsConfigurationBlocker(item)) return true;
+            }
+        }
+        return false;
     }
 
     private PublicDataConnectorResult disabledResult(PublicDataConnector connector, PublicDataRequest request) {

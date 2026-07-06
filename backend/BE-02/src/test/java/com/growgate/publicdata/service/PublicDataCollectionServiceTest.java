@@ -122,6 +122,83 @@ class PublicDataCollectionServiceTest {
     }
 
     @Test
+    void collectForDiagnosisDoesNotReuseApiKeyNotConfiguredCache() {
+        PublicDataConnector connector = mock(PublicDataConnector.class);
+        when(connector.provider()).thenReturn(PublicDataProvider.KIPRIS_FTO);
+        when(connector.usedFor()).thenReturn("fto");
+        when(connector.requestKey(any(PublicDataRequest.class))).thenReturn("KIPRIS_FTO:DE:Battery pack");
+        when(connector.collect(any(PublicDataRequest.class))).thenReturn(PublicDataConnectorResult.builder()
+                .provider(PublicDataProvider.KIPRIS_FTO)
+                .endpoint("https://api.example.test/kipris")
+                .requestKey("KIPRIS_FTO:DE:Battery pack")
+                .hsCode("850760")
+                .targetCountry("DE")
+                .matchedKey("hsCode=850760;country=DE")
+                .usedFor("fto")
+                .rawPayload("{\"items\":[{\"title\":\"sensor patent\"}]}")
+                .normalizedPayload(Map.of(
+                        "collectionEvidence", Map.of("operationEndpoint", true, "apiKeyConfigured", true),
+                        "metrics", Map.of("recordCount", 1)))
+                .scoreContribution(2)
+                .confidence(0.75)
+                .sourceType("live")
+                .fallbackUsed(false)
+                .build());
+
+        PublicDataCollectionRunRepository runRepository = mock(PublicDataCollectionRunRepository.class);
+        PublicDataRecordRepository recordRepository = mock(PublicDataRecordRepository.class);
+        UserRepository userRepository = mock(UserRepository.class);
+        MembershipRepository membershipRepository = mock(MembershipRepository.class);
+        User user = user("user-1");
+        PublicDataRecord staleMissingKeyCache = PublicDataRecord.builder()
+                .provider(PublicDataProvider.KIPRIS_FTO)
+                .endpoint("https://api.example.test/kipris")
+                .requestKey("KIPRIS_FTO:DE:Battery pack")
+                .hsCode("850760")
+                .targetCountry("DE")
+                .matchedKey("hsCode=850760;country=DE")
+                .usedFor("fto")
+                .rawPayload("{\"items\":[]}")
+                .normalizedPayload("""
+                        {"zeroReason":"API_KEY_NOT_CONFIGURED",
+                         "collectionEvidence":{"operationEndpoint":true,"apiKeyConfigured":false}}
+                        """)
+                .scoreContribution(0)
+                .confidence(0.0)
+                .sourceType("cache")
+                .sourceQualityStatus("CACHE_VERIFIED")
+                .fallbackUsed(false)
+                .cacheHit(true)
+                .errorMessage(null)
+                .fetchedAt(LocalDateTime.now().minusMinutes(5))
+                .expiresAt(LocalDateTime.now().plusHours(2))
+                .build();
+
+        when(userRepository.findById("user-1")).thenReturn(Optional.of(user));
+        when(runRepository.save(any(PublicDataCollectionRun.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.save(any(PublicDataRecord.class))).thenAnswer(invocation -> invocation.getArgument(0));
+        when(recordRepository.findTopByProviderAndRequestKeyAndExpiresAtAfterOrderByFetchedAtDesc(
+                eq(PublicDataProvider.KIPRIS_FTO), eq("KIPRIS_FTO:DE:Battery pack"), any(LocalDateTime.class)))
+                .thenReturn(Optional.of(staleMissingKeyCache));
+
+        PublicDataCollectionService service = service(
+                List.of(connector), runRepository, recordRepository, userRepository, membershipRepository);
+        ReflectionTestUtils.setField(service, "enabled", true);
+        ReflectionTestUtils.setField(service, "cacheTtlHours", 24L);
+
+        PublicDataCollectionResult result = service.collectForDiagnosis(
+                "diagnosis-1", "user-1", "850760", "DE", "Battery pack");
+
+        assertThat(result.getRun().getStatus()).isEqualTo(PublicDataCollectionStatus.done);
+        assertThat(result.getRun().getCacheHitCount()).isZero();
+        assertThat(result.getRecords()).hasSize(1);
+        assertThat(result.getRecords().get(0).getSourceType()).isEqualTo("live");
+        assertThat(result.getRecords().get(0).isCacheHit()).isFalse();
+        assertThat(result.getRecords().get(0).getSourceQualityStatus()).isEqualTo("LIVE_VERIFIED");
+        verify(connector).collect(any(PublicDataRequest.class));
+    }
+
+    @Test
     void collectForDiagnosisDoesNotReuseFallbackRecordAsCache() {
         PublicDataConnector connector = mock(PublicDataConnector.class);
         when(connector.provider()).thenReturn(PublicDataProvider.SAFETY_RECALL);
