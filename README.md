@@ -44,7 +44,7 @@
 
 실제 공공 API 증거는 `/api/admin/public-data/proof-runs`가 생성하는 `proofRunId`, `rawResponseSha256`, `schemaValidationStatus`, `operationEndpoint`, `apiKeyConfigured` 기준으로만 인정합니다. Synthetic persona validation은 [docs/validation/README_SYNTHETIC_VALIDATION.md](docs/validation/README_SYNTHETIC_VALIDATION.md)에 분리했고, 실제 고객 검증 자료처럼 표현하지 않습니다. 보고서 공식 산출물은 Markdown이며 PDF는 [docs/report/REPORT_FORMAT_POLICY.md](docs/report/REPORT_FORMAT_POLICY.md)의 선택 인쇄/변환 전략만 사용합니다. Pilot ML artifact는 `python3 ml/pipelines/train_all.py`로 생성하며 `/api/ml/models/latest`에서 버전과 한계를 조회합니다.
 
-2026-07-06 기준 GitHub `main`에는 심사용 방어 패키지와 공개 proof 뷰어, source-bound S04-S09 화면 방어가 포함되어 있습니다.
+2026-07-06 기준 GitHub `main`에는 심사용 방어 패키지, 공개 proof 뷰어, source-bound S04-S09 화면 방어, 공공데이터 대시보드 UX 개선, 진단 상세 이동성 개선, status explanation tooltip, feature importance 확장이 포함되어 있습니다.
 
 - 3개 합성 seed 기업, 지역산업 profile, agent trace event schema, synthetic persona validation
 - public-data proof run API와 S10 proof surface
@@ -479,23 +479,26 @@ KPI 렌더링은 `eyebrow`가 없을 때 `label/title`로 fallback하고, 긴 �
 
 ## 12. Deployment Status
 
-GitHub `main`은 최신 public-data/provider, source-bound evidence, 진단 개요 KPI 명확화 코드와 합성 시연 진단 접근 보정이 반영된 기준 브랜치입니다. Lightsail HTTPS 서비스는 최신 main artifact 배포와 운영 smoke, 메뉴 QA를 통과한 상태입니다.
+GitHub `main`은 최신 public-data/provider, source-bound evidence, 진단 개요 KPI 명확화, public-data dashboard UX, status explanation tooltip, feature importance 확장, 합성 시연 진단 접근 보정이 반영된 기준 브랜치입니다. Lightsail HTTPS 서비스는 2026-07-06에 2GB 인스턴스에서 8GB 인스턴스로 snapshot 기반 이전을 완료했고, Static IP를 그대로 재연결해 운영 URL을 유지합니다.
 
 | Item | Current State |
 | :--- | :--- |
-| GitHub main | 최신 `origin/main` HEAD. 합성 시연 진단 접근 보정 `51f8a449` 포함 |
-| Deployed commit | `51f8a449486e7985878c21b0363f6014d290dbc3` |
+| GitHub main | `40492eb30e04113801fc353d2b74f571201d1663` |
+| Deployed commit | `40492eb30e04113801fc353d2b74f571201d1663` |
 | Lightsail static IP | `54.180.56.24` |
 | Current public URL | `https://growgate.54.180.56.24.sslip.io` |
-| Attached instance | `growgate-fresh-20260703-2134` |
-| SSH firewall | 작업 IP `221.139.247.7/32`가 기존 allowlist에 포함되어 있어 이번 배포에서 방화벽 변경 없음 |
-| Service status | production smoke PASS |
+| Attached instance | `growgate-8gb-20260706` |
+| Previous rollback instance | `growgate-fresh-20260703-2134` 보존 |
+| Instance size | Lightsail `large_3_0`, 8GB RAM, 2 vCPU, 160GB SSD |
+| Migration snapshot | `growgate-pre-8gb-20260706-1611`, state `available` |
+| SSH firewall | 80/443 public open, 22/tcp는 기존 allowlist 4개 CIDR + `lightsail-connect`만 허용. 임시 작업 IP는 제거 완료 |
+| Service status | production smoke PASS after 8GB Static IP cutover |
 | Public proof viewer | `/public-data/daily-refresh` returns `200` without login |
 | Auth session restore | admin login and cookie-only `/api/users/me=200` verified |
 | Synthetic validation seed | personas `5`, sessions `15`, findings `3` |
-| Latest smoke | `2026-07-06 00:16 KST`, `diagnosisId=d7ad2f06-42d7-4fc6-858d-021e81955f9c`, `collectionRunId=7707af43-2244-4e11-84cb-335b9154e253`, `cacheCount=32`, `fallbackCount=0` |
+| Latest smoke | `2026-07-06 17:08 KST`, `diagnosisId=54f6fe9d-89ba-4210-90bd-18333d178281`, `collectionRunId=c8a70531-2a06-4544-83c8-4235be9d4122`, `cacheCount=31`, `fallbackCount=0` |
 | Latest menu QA | `2026-07-06`, production menu QA `33/33 PASS`, see `docs/qa/production-menu-qa-2026-07-06.md` |
-| Live public API proof | 현재 운영 smoke 기준 source trace는 `liveCount=0`, `cacheCount=32`, `fallbackCount=0`, operation endpoint proof count `10` |
+| Live public API proof | 현재 운영 smoke 기준 source trace는 `liveCount=0`, `cacheCount=31`, `fallbackCount=0`, operation endpoint live count `9`, api-key-configured live count `0` |
 
 배포 재실행 순서:
 
@@ -508,11 +511,13 @@ sudo systemctl reload nginx
 BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/smoke-prod.sh
 ```
 
-현재 Lightsail 인스턴스는 2GB RAM 구성이므로 서버에서 full Gradle test를 실행하면 SSH/HTTPS 응답 지연이 발생할 수 있습니다. 배포 서버에서는 artifact 교체 또는 `bootJar -x test`만 수행하고, full test는 로컬/CI에서 먼저 통과시킨 뒤 배포합니다.
+현재 Lightsail 운영 인스턴스는 8GB RAM으로 업사이즈되어 기존 2GB 서버의 메모리 병목은 완화했습니다. 그래도 운영 서버에서 full Gradle/Vite build/test를 반복 실행하는 구조는 피하고, full test는 로컬/CI에서 먼저 통과시킨 뒤 jar/dist artifact만 서버에 배포하는 방식을 권장합니다.
 
 `PUBLIC_DATA_ENABLED=true`는 기본값이지만, `SMOKE_REQUIRE_LIVE_PUBLIC_DATA=true`는 실제 provider operation endpoint와 API key가 서버에 주입된 뒤에만 사용합니다.
 
 현재 운영 smoke는 앱 배포와 fallback-aware diagnosis 경로를 검증합니다. 공식 live 공공 API proof를 올리려면 서버 SSH 또는 Lightsail browser shell 접속을 복구하고 provider operation endpoint/API key를 secret/env로 주입한 뒤 proof run을 다시 생성해야 합니다. API key는 repository에 저장하지 않습니다. 현재 작업자 IP를 SSH allowlist에 임시 추가하는 작업은 production firewall 변경이므로 명시 승인 후에만 수행합니다.
+
+8GB 이전 절차, 비용 기준, 롤백 기준은 [docs/lightsail-8gb-upsize-runbook-2026-07-06.md](docs/lightsail-8gb-upsize-runbook-2026-07-06.md)에 기록했습니다. 기존 2GB 인스턴스는 즉시 삭제하지 않고 24~48시간 롤백용으로 보존한 뒤 별도 승인으로 정리합니다.
 
 ---
 

@@ -1,6 +1,6 @@
 # Production Readiness Checklist
 
-Updated: 2026-07-04
+Updated: 2026-07-06
 
 | Area | Check | Status | Evidence |
 | --- | --- | --- | --- |
@@ -18,6 +18,10 @@ Updated: 2026-07-04
 | Retry | Retry attempts and status policy documented | Done | `PUBLIC_DATA_RETRY_MAX_ATTEMPTS`, `408/429/5xx/timeout` |
 | Circuit breaker | MVP process-local circuit policy documented | Done | `PUBLIC_DATA_CIRCUIT_FAILURE_THRESHOLD`, `PUBLIC_DATA_CIRCUIT_OPEN_SECONDS` |
 | Secret masking | API key/token/password are not printed raw in logs or smoke | Done | log pattern redaction, `apiKeyMasked` |
+| Production instance size | Lightsail production server has enough memory for judging/demo traffic | Done | Static IP moved to `growgate-8gb-20260706`, `large_3_0`, 8GB RAM |
+| Production rollback | Previous instance remains available for rollback | Done | `growgate-fresh-20260703-2134` preserved; do not delete without approval |
+| Production smoke | Public URL verified after 8GB cutover | Done | `BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/smoke-prod.sh` passed |
+| SSH firewall cleanup | Temporary migration SSH allowlist removed | Done | 22/tcp restricted to existing 4 CIDRs plus `lightsail-connect` |
 
 ## Before A Judge Demo
 
@@ -32,7 +36,19 @@ Updated: 2026-07-04
 
 ## Production Server Additions Still Needed
 
-- Attach real server URL and run `BASE_URL=https://... ./scripts/smoke-public-data.sh`.
 - Store the generated proof files with deployment timestamp and git SHA.
 - Replace demo compose `JPA_DDL_AUTO=update` with pinned Flyway/Liquibase migrations for non-demo production.
 - Move circuit breaker state out of process memory if multiple backend instances are used.
+- Review the rollback 2GB instance and manual snapshot after 24-48 hours; delete only after explicit approval.
+- Continue moving builds to local/CI artifacts instead of building Gradle/Vite on the production server.
+
+## Current Production Reference
+
+| Item | Value |
+| --- | --- |
+| URL | `https://growgate.54.180.56.24.sslip.io/` |
+| Static IP | `54.180.56.24` |
+| Current instance | `growgate-8gb-20260706` |
+| Rollback instance | `growgate-fresh-20260703-2134` |
+| Snapshot | `growgate-pre-8gb-20260706-1611` |
+| Deployed commit | `40492eb30e04113801fc353d2b74f571201d1663` |
