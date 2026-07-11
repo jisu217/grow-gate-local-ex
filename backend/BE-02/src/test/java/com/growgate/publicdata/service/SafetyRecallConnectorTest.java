@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.publicdata.enums.PublicDataProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.ResourceAccessException;
@@ -52,14 +54,14 @@ class SafetyRecallConnectorTest {
         assertThat(evidence).containsEntry("cacheLineage", "file-snapshot");
         assertThat(evidence).containsEntry("csvCacheAvailable", true);
         assertThat(String.valueOf(evidence.get("reason"))).contains("API_KEY_NOT_CONFIGURED");
-        verify(restTemplate, never()).getForEntity(any(URI.class), eq(String.class));
+        verify(restTemplate, never()).exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void keyAndOperationEndpointConfiguredReturnsLiveAndWritesApiDerivedCache() throws Exception {
         RestTemplate restTemplate = mock(RestTemplate.class);
-        when(restTemplate.getForEntity(any(URI.class), eq(String.class)))
+        when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(ResponseEntity.ok("""
                         {"data":[
                           {"인증번호":"R-1","제품명":"전기요","법정제품분류":"전기용품","모델명":"E-100",
@@ -89,7 +91,7 @@ class SafetyRecallConnectorTest {
     @SuppressWarnings("unchecked")
     void apiFailureWithCsvCacheReturnsCacheWithFailureReason() throws Exception {
         RestTemplate restTemplate = mock(RestTemplate.class);
-        when(restTemplate.getForEntity(any(URI.class), eq(String.class)))
+        when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                 .thenThrow(new ResourceAccessException("timed out"));
         SafetyRecallConnector connector = connector(restTemplate, "test-key");
         Path csv = writeCsv();
@@ -107,7 +109,7 @@ class SafetyRecallConnectorTest {
     private SafetyRecallConnector connector(RestTemplate restTemplate, String apiKey) {
         SafetyRecallConnector connector = new SafetyRecallConnector(restTemplate, objectMapper);
         ReflectionTestUtils.setField(connector, "endpoint",
-                "https://api.odcloud.kr/api/15040696/v1/uddi:f13d1404-717d-4862-871d-b249899ea58f");
+                "https://www.safetykorea.kr/openapi/api/recall/recallList.json");
         ReflectionTestUtils.setField(connector, "apiKey", apiKey);
         ReflectionTestUtils.setField(connector, "datasetDate", "2023-08-09");
         ReflectionTestUtils.setField(connector, "nextUpdateDate", "2025-09-05");

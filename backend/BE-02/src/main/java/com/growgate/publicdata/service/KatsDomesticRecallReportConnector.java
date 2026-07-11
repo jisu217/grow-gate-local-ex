@@ -28,11 +28,11 @@ import java.util.Objects;
 public class KatsDomesticRecallReportConnector extends AbstractPublicDataConnector {
 
     private static final String FILE_DATA_NAME = "산업통상부_국가기술표준원_제품안전_국내리콜 보고서_20220801";
-    private static final String SWAGGER_URL = "https://infuser.odcloud.kr/oas/docs?namespace=15040695/v1";
+    private static final String SWAGGER_URL = "https://www.safetykorea.kr/release/openapi";
     private static final List<String> HEADERS = List.of("안전기준위반내용", "표시사항부적합내용", "사고사례내용");
     private final ResourceLoader resourceLoader = new DefaultResourceLoader();
 
-    @Value("${public-data.kats-domestic-recall-report.url:https://api.odcloud.kr/api/15040695/v1/uddi:d4469be3-c128-4fbc-8ef2-b6e15689625f}")
+    @Value("${public-data.kats-domestic-recall-report.url:https://www.safetykorea.kr/openapi/api/recall/recallList.json}")
     private String endpoint;
 
     @Value("${public-data.kats-domestic-recall-report.key:${DATAGO_SERVICE_KEY:}}")
@@ -78,7 +78,7 @@ public class KatsDomesticRecallReportConnector extends AbstractPublicDataConnect
     @Override
     public PublicDataConnectorResult collect(PublicDataRequest request) {
         if (shouldUseApi()) {
-            return getJson(request, endpoint, apiKey, Map.of(
+            return getJsonWithHeaderKey(request, endpoint, apiKey, "AuthKey", Map.of(
                     "page", "1",
                     "perPage", String.valueOf(Math.max(1, apiPerPage)),
                     "returnType", "JSON"

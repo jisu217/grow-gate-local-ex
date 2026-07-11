@@ -35,7 +35,7 @@ import java.util.Objects;
 public class SafetyRecallConnector extends AbstractPublicDataConnector {
 
     private static final String FILE_DATA_NAME = "산업통상부_국가기술표준원_제품안전_국내리콜정보";
-    private static final String SWAGGER_URL = "https://infuser.odcloud.kr/oas/docs?namespace=15040696/v1";
+    private static final String SWAGGER_URL = "https://www.safetykorea.kr/release/openapi";
     private static final List<String> NORMALIZED_HEADERS = List.of(
             "recallId", "productName", "category", "modelName", "manufacturer",
             "recallReason", "recallDate", "hazardType", "country", "sourceUrl",
@@ -94,7 +94,7 @@ public class SafetyRecallConnector extends AbstractPublicDataConnector {
         String apiAttemptReason = "";
 
         if (endpointReady && keyReady) {
-            PublicDataConnectorResult live = getJson(request, endpoint, apiKey, Map.of(
+            PublicDataConnectorResult live = getJsonWithHeaderKey(request, endpoint, apiKey, "AuthKey", Map.of(
                     "page", "1",
                     "perPage", String.valueOf(Math.max(1, apiPerPage)),
                     "returnType", "JSON"

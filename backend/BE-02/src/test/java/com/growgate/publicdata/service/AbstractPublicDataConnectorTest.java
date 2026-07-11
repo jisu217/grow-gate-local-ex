@@ -4,6 +4,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.publicdata.enums.PublicDataProvider;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.ArgumentCaptor;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestClientException;
 import org.springframework.web.client.RestTemplate;
@@ -16,6 +19,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 class AbstractPublicDataConnectorTest {
@@ -127,6 +131,27 @@ class AbstractPublicDataConnectorTest {
         assertThat(maskedParams.get("serviceKey")).isEqualTo("");
     }
 
+    @Test
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    void headerKeyRequestUsesAuthKeyHeaderAndDoesNotPutSecretInQueryParams() {
+        RestTemplate restTemplate = mock(RestTemplate.class);
+        when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
+                .thenReturn(ResponseEntity.ok("{\"items\":[{\"product\":\"Battery pack\"}]}"));
+        HeaderConnector connector = new HeaderConnector(restTemplate, new ObjectMapper(), "secret-header-key");
+
+        PublicDataConnectorResult result = connector.collect(
+                new PublicDataRequest("diagnosis-1", "user-1", "850760", "DE", "Battery pack"));
+
+        ArgumentCaptor<URI> uriCaptor = ArgumentCaptor.forClass(URI.class);
+        ArgumentCaptor<HttpEntity> entityCaptor = ArgumentCaptor.forClass(HttpEntity.class);
+        verify(restTemplate).exchange(uriCaptor.capture(), eq(HttpMethod.GET), entityCaptor.capture(), eq(String.class));
+        assertThat(uriCaptor.getValue().toString()).doesNotContain("secret-header-key");
+        assertThat(entityCaptor.getValue().getHeaders().getFirst("AuthKey")).isEqualTo("secret-header-key");
+        assertThat(result.getSourceType()).isEqualTo("live");
+        assertThat(((Map<String, String>) result.getNormalizedPayload().get("requestParamsMasked")).get("AuthKey"))
+                .isEqualTo("[REDACTED]");
+    }
+
     private static class TestConnector extends AbstractPublicDataConnector {
 
         private final String apiKey;
@@ -163,6 +188,22 @@ class AbstractPublicDataConnectorTest {
         @Override
         protected String endpointLabel() {
             return "test";
+        }
+    }
+
+    private static class HeaderConnector extends TestConnector {
+
+        private final String apiKey;
+
+        private HeaderConnector(RestTemplate restTemplate, ObjectMapper objectMapper, String apiKey) {
+            super(restTemplate, objectMapper, apiKey);
+            this.apiKey = apiKey;
+        }
+
+        @Override
+        public PublicDataConnectorResult collect(PublicDataRequest request) {
+            return getJsonWithHeaderKey(request, "https://api.example.test/data", apiKey, "AuthKey",
+                    Map.of("hs", request.getHsCode()));
         }
     }
 }

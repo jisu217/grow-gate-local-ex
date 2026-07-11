@@ -9,6 +9,9 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.HttpStatusCodeException;
 import org.springframework.web.client.RestClientException;
@@ -102,6 +105,60 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
             String reason = sanitizeErrorMessage(e.getMessage());
             log.warn("Public data connector failed: provider={}, reason={}", provider(), reason);
             return fallback(request, endpoint, apiKey, keyParam, "HTTP_ERROR", null, elapsedMs(started));
+        }
+    }
+
+    protected PublicDataConnectorResult getJsonWithHeaderKey(PublicDataRequest request, String endpoint, String apiKey,
+                                                             String headerName, Map<String, String> params) {
+        if (endpoint == null || endpoint.isBlank()) {
+            return fallback(request, endpoint, apiKey, headerName, "OPERATION_ENDPOINT_NOT_CONFIGURED", null, 0);
+        }
+        if (apiKey == null || apiKey.isBlank()) {
+            return fallback(request, endpoint, apiKey, headerName, "API_KEY_NOT_CONFIGURED", null, 0);
+        }
+        if (!endpoint.toLowerCase(Locale.ROOT).startsWith("https://")) {
+            return fallback(request, endpoint, apiKey, headerName, "INSECURE_AUTH_ENDPOINT", null, 0);
+        }
+        if (isCatalogOrApplicationPage(endpoint)) {
+            return fallback(request, endpoint, apiKey, headerName,
+                    "CATALOG_PAGE_ENDPOINT", null, 0);
+        }
+        if (isCircuitOpen()) {
+            return fallback(request, endpoint, apiKey, headerName, "CIRCUIT_OPEN", null, 0);
+        }
+
+        long started = System.nanoTime();
+        int attempts = Math.max(1, retryMaxAttempts);
+        RestClientException lastException = null;
+        try {
+            UriComponentsBuilder builder = UriComponentsBuilder.fromHttpUrl(endpoint);
+            params.forEach((key, value) -> {
+                if (value != null && !value.isBlank()) builder.queryParam(key, value);
+            });
+            URI uri = builder.build().encode().toUri();
+            HttpHeaders headers = new HttpHeaders();
+            headers.set(headerName == null || headerName.isBlank() ? "AuthKey" : headerName, apiKey);
+            HttpEntity<Void> entity = new HttpEntity<>(headers);
+            for (int attempt = 1; attempt <= attempts; attempt++) {
+                try {
+                    ResponseEntity<String> response = restTemplate.exchange(uri, HttpMethod.GET, entity, String.class);
+                    markSuccess();
+                    return success(request, endpoint, apiKey, headerName, params, response.getBody(),
+                            response.getStatusCode().value(), elapsedMs(started));
+                } catch (RestClientException e) {
+                    lastException = e;
+                    if (attempt >= attempts || !isRetryable(e)) break;
+                }
+            }
+            markFailure();
+            String reason = failureReason(lastException);
+            log.warn("Public data connector failed: provider={}, reason={}", provider(), reason);
+            return fallback(request, endpoint, apiKey, headerName, reason, httpStatus(lastException), elapsedMs(started));
+        } catch (IllegalArgumentException e) {
+            markFailure();
+            String reason = sanitizeErrorMessage(e.getMessage());
+            log.warn("Public data connector failed: provider={}, reason={}", provider(), reason);
+            return fallback(request, endpoint, apiKey, headerName, "HTTP_ERROR", null, elapsedMs(started));
         }
     }
 
@@ -286,6 +343,7 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
         if (fallbackUsed) {
             String safeReason = safe(reason).toLowerCase(Locale.ROOT);
             if (safeReason.contains("public_data_enabled=false")) return "PUBLIC_DATA_DISABLED";
+            if (safeReason.contains("insecure_auth_endpoint")) return "INSECURE_AUTH_ENDPOINT";
             if (safeReason.contains("operation_endpoint_not_configured")
                     || safeReason.contains("api endpoint is not configured")) return "OPERATION_ENDPOINT_NOT_CONFIGURED";
             if (safeReason.contains("api_key_not_configured")
@@ -326,6 +384,7 @@ public abstract class AbstractPublicDataConnector implements PublicDataConnector
         if (zeroReason.equals("API_KEY_NOT_CONFIGURED")
                 || zeroReason.equals("OPERATION_ENDPOINT_NOT_CONFIGURED")
                 || zeroReason.equals("CATALOG_PAGE_ENDPOINT")
+                || zeroReason.equals("INSECURE_AUTH_ENDPOINT")
                 || zeroReason.equals("PUBLIC_DATA_DISABLED")) {
             return "empty";
         }

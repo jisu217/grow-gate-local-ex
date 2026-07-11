@@ -4,6 +4,8 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.growgate.publicdata.enums.PublicDataProvider;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.test.util.ReflectionTestUtils;
 import org.springframework.web.client.RestTemplate;
@@ -61,14 +63,14 @@ class KatsDomesticRecallReportConnectorTest {
         assertThat(evidence.get("updateDue")).isEqualTo(true);
         assertThat(evidence.get("operationEndpoint")).isEqualTo(false);
         assertThat(evidence.get("apiKeyStored")).isEqualTo(false);
-        verify(restTemplate, never()).getForEntity(any(URI.class), eq(String.class));
+        verify(restTemplate, never()).exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
     }
 
     @Test
     @SuppressWarnings("unchecked")
     void collectUsesApiWhenScheduledUpdateIsDueAndKeyIsConfigured() {
         RestTemplate restTemplate = mock(RestTemplate.class);
-        when(restTemplate.getForEntity(any(URI.class), eq(String.class)))
+        when(restTemplate.exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class)))
                 .thenReturn(ResponseEntity.ok("""
                         {"page":1,"perPage":1000,"totalCount":2,"currentCount":2,
                         "data":[
@@ -87,8 +89,8 @@ class KatsDomesticRecallReportConnectorTest {
         assertThat(metrics.get("recordCount")).isEqualTo(2);
         assertThat(metrics.get("productKeywordMentionCount")).isEqualTo(1);
         assertThat(metrics.get("chemicalRiskRows")).isEqualTo(1L);
-        assertThat(result.getEndpoint()).contains("api.odcloud.kr/api/15040695");
-        verify(restTemplate).getForEntity(any(URI.class), eq(String.class));
+        assertThat(result.getEndpoint()).contains("safetykorea.kr/openapi/api/recall/recallList.json");
+        verify(restTemplate).exchange(any(URI.class), eq(HttpMethod.GET), any(HttpEntity.class), eq(String.class));
     }
 
     private Path writeCsv(String content) throws Exception {
@@ -103,7 +105,7 @@ class KatsDomesticRecallReportConnectorTest {
             ReflectionTestUtils.setField(connector, "csvResource", "file:" + csv.toAbsolutePath());
         }
         ReflectionTestUtils.setField(connector, "endpoint",
-                "https://api.odcloud.kr/api/15040695/v1/uddi:d4469be3-c128-4fbc-8ef2-b6e15689625f");
+                "https://www.safetykorea.kr/openapi/api/recall/recallList.json");
         ReflectionTestUtils.setField(connector, "apiKey", apiKey);
         ReflectionTestUtils.setField(connector, "todayOverride", today);
         ReflectionTestUtils.setField(connector, "datasetDate", "2022-08-01");

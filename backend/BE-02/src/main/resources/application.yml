@@ -70,6 +70,9 @@ public-data:
   circuit:
     failure-threshold: ${PUBLIC_DATA_CIRCUIT_FAILURE_THRESHOLD:3}
     open-seconds: ${PUBLIC_DATA_CIRCUIT_OPEN_SECONDS:60}
+  safety-korea:
+    auth-key: ${SAFETY_KOREA_AUTH_KEY:}
+    base-url: ${SAFETY_KOREA_BASE_URL:https://www.safetykorea.kr}
   daily-refresh:
     enabled: ${PUBLIC_DATA_DAILY_REFRESH_ENABLED:true}
     cron: ${PUBLIC_DATA_DAILY_REFRESH_CRON:0 0 8 * * *}
@@ -177,8 +180,8 @@ public-data:
     portal-total-rows: ${KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE_PORTAL_TOTAL_ROWS:1217}
     api-per-page: ${KSURE_COUNTRY_INDUSTRY_OVERDUE_RATE_API_PER_PAGE:1500}
   safety-recall:
-    url: ${MOTIE_SAFETY_RECALL_OPERATION_ENDPOINT:${MOTIE_SAFETY_RECALL_BASE_URL:${MOTIE_SAFETY_RECALL_API_URL:${SAFETY_RECALL_API_URL:https://api.odcloud.kr/api/15040696/v1/uddi:f13d1404-717d-4862-871d-b249899ea58f}}}}
-    key: ${MOTIE_SAFETY_RECALL_API_KEY:${SAFETY_RECALL_API_KEY:${DATAGO_SERVICE_KEY:}}}
+    url: ${SAFETY_KOREA_DOMESTIC_RECALL_API_URL:${SAFETY_KOREA_BASE_URL:https://www.safetykorea.kr}/openapi/api/recall/recallList.json}
+    key: ${SAFETY_KOREA_AUTH_KEY:${MOTIE_SAFETY_RECALL_API_KEY:${SAFETY_RECALL_API_KEY:${DATAGO_SERVICE_KEY:}}}}
     csv-resource: ${MOTIE_SAFETY_RECALL_CSV_RESOURCE:${SAFETY_RECALL_CSV_RESOURCE:classpath:publicdata/kats-domestic-recall-20230809.csv}}
     cache-root: ${MOTIE_SAFETY_RECALL_CACHE_ROOT:${SAFETY_RECALL_CACHE_ROOT:data/cache/safety_recall}}
     dataset-date: ${MOTIE_SAFETY_RECALL_DATASET_DATE:2023-08-09}
@@ -194,21 +197,25 @@ public-data:
     portal-total-rows: ${KATS_PRODUCT_SAFETY_HAZARD_INFO_PORTAL_TOTAL_ROWS:176}
     api-per-page: ${KATS_PRODUCT_SAFETY_HAZARD_INFO_API_PER_PAGE:500}
   kats-domestic-recall-report:
-    url: ${KATS_DOMESTIC_RECALL_REPORT_API_URL:https://api.odcloud.kr/api/15040695/v1/uddi:d4469be3-c128-4fbc-8ef2-b6e15689625f}
-    key: ${KATS_DOMESTIC_RECALL_REPORT_API_KEY:${DATAGO_SERVICE_KEY:}}
+    url: ${SAFETY_KOREA_DOMESTIC_RECALL_API_URL:${SAFETY_KOREA_BASE_URL:https://www.safetykorea.kr}/openapi/api/recall/recallList.json}
+    key: ${SAFETY_KOREA_AUTH_KEY:${KATS_DOMESTIC_RECALL_REPORT_API_KEY:${DATAGO_SERVICE_KEY:}}}
     csv-resource: ${KATS_DOMESTIC_RECALL_REPORT_CSV_RESOURCE:classpath:publicdata/kats-domestic-recall-report-20220801.csv}
     dataset-date: ${KATS_DOMESTIC_RECALL_REPORT_DATASET_DATE:2022-08-01}
     next-update-date: ${KATS_DOMESTIC_RECALL_REPORT_NEXT_UPDATE_DATE:2022-08-02}
     portal-total-rows: ${KATS_DOMESTIC_RECALL_REPORT_PORTAL_TOTAL_ROWS:848}
     api-per-page: ${KATS_DOMESTIC_RECALL_REPORT_API_PER_PAGE:1000}
   kats-certified-product-info:
-    url: ${KATS_CERTIFIED_PRODUCT_INFO_API_URL:}
-    key: ${KATS_CERTIFIED_PRODUCT_INFO_API_KEY:${DATAGO_SERVICE_KEY:}}
+    url: ${SAFETY_KOREA_CERTIFICATION_API_URL:${SAFETY_KOREA_BASE_URL:https://www.safetykorea.kr}/openapi/api/cert/certificationList.json}
+    key: ${SAFETY_KOREA_AUTH_KEY:${KATS_CERTIFIED_PRODUCT_INFO_API_KEY:${DATAGO_SERVICE_KEY:}}}
     csv-resource: ${KATS_CERTIFIED_PRODUCT_INFO_CSV_RESOURCE:classpath:publicdata/kats-certified-product-info-20220801.csv}
     dataset-date: ${KATS_CERTIFIED_PRODUCT_INFO_DATASET_DATE:2022-08-01}
     next-update-date: ${KATS_CERTIFIED_PRODUCT_INFO_NEXT_UPDATE_DATE:2026-08-01}
     portal-total-rows: ${KATS_CERTIFIED_PRODUCT_INFO_PORTAL_TOTAL_ROWS:152433}
     api-per-page: ${KATS_CERTIFIED_PRODUCT_INFO_API_PER_PAGE:5000}
+  kats-foreign-recall:
+    url: ${SAFETY_KOREA_FOREIGN_RECALL_API_URL:${SAFETY_KOREA_BASE_URL:https://www.safetykorea.kr}/openapi/api/recall/fRecallList.json}
+    key: ${SAFETY_KOREA_AUTH_KEY:${KATS_FOREIGN_RECALL_API_KEY:${DATAGO_SERVICE_KEY:}}}
+    api-per-page: ${KATS_FOREIGN_RECALL_API_PER_PAGE:1000}
   korea-law-statutes:
     url: ${KOREA_LAW_STATUTES_API_URL:https://www.law.go.kr/DRF/lawSearch.do}
     key: ${LAW_OPENAPI_OC:}

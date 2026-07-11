@@ -13,5 +13,6 @@
 11. reporting_docs_presentation → `CODEX_PROMPT_11_reporting_docs_presentation.md`
 12. packaging_demo → `CODEX_PROMPT_12_packaging_demo.md`
 13. multi_agent_public_data_harness → `CODEX_PROMPT_13_multi_agent_public_data_harness.md`
+14. github_main_aws_zero_downtime_deploy_rollback → `CODEX_PROMPT_14_github_main_aws_zero_downtime_deploy_rollback.md`
 
-권장 실행 방식: 01→02→03→04→05→06→07→08→09→10→11→12→13 순서. 중간마다 테스트와 빌드를 실행하고, synthetic seed를 live proof로 표시하지 않는지 확인하세요.
+권장 실행 방식: 01→02→03→04→05→06→07→08→09→10→11→12→13→14 순서. 중간마다 테스트와 빌드를 실행하고, synthetic seed를 live proof로 표시하지 않는지 확인하세요. 14번은 보안 감사와 기능 검증이 끝난 뒤 GitHub main, AWS Lightsail 운영 반영, 롤백 검증을 분리해서 실행할 때 사용하세요.

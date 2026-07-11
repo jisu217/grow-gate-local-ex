@@ -9,7 +9,7 @@ This document lists what has actually been verified for public-data collection. 
 | Category | Count | Status |
 | --- | ---: | --- |
 | API-key based live collection confirmed in this Codex environment | 0 | No provider key was present in the process environment during verification. Do not claim live API proof from this run. |
-| Operation endpoint configured and ready for key-based smoke | 6 | KCS trade, SAFETY_RECALL/KATS domestic recall, KSURE buyer search, KIPRIS Plus, KOMSA MTIS auth status, MOLIT warehouse registry. |
+| Operation endpoint configured and ready for key-based smoke | 8 | KCS trade, SafetyKorea/KATS domestic recall, SafetyKorea KC certification information, SafetyKorea foreign recall, KSURE buyer search, KIPRIS Plus, KOMSA MTIS auth status, MOLIT warehouse registry. |
 | Local cache/file collection confirmed | 10 | CSV/DOCX/catalog sources loaded successfully with `sourceType=cache`. |
 | Raw rows/documents loaded from local cache | 145845 | Sum of cache records reported by `scripts/check_public_data_providers.py --json`; SAFETY_RECALL also uses the KATS domestic recall CSV in the Spring runtime path. |
 | Real API keys stored in repository | 0 | Key leak scan found no pasted KIPRIS/data.go.kr/KOMSA keys. |
@@ -27,6 +27,7 @@ Reason: the verification shell had no configured provider key environment variab
 - `KCS_TRADE_API_KEY=false`
 - `MOTIE_IMPORT_REGULATION_API_KEY=false`
 - `TRADE_SECURITY_HSK_LINKAGE_API_KEY=false`
+- `SAFETY_KOREA_AUTH_KEY=false` for the 2026-07-05 verification run. A key was provided later for operational deployment and must remain outside repository files.
 
 Therefore, any provider that needs a key correctly reports `sourceType=empty` and `zeroReason=API_KEY_NOT_CONFIGURED` instead of pretending to be live.
 
@@ -37,7 +38,9 @@ These providers have operation endpoints configured or confirmed, but live data 
 | Provider | Runtime provider | Endpoint status | Key env | Current sourceType | zeroReason | Notes |
 | --- | --- | --- | --- | --- | --- | --- |
 | 무역/수출입 통계 | `KCS_TRADE` | operation endpoint configured | `KCS_TRADE_API_KEY` or `DATAGO_SERVICE_KEY` | `empty` | `API_KEY_NOT_CONFIGURED` | Request params are `hsCode`, `cntyCd`, `strtYymm`, `endYymm`. Country-code acceptance still needs live validation. |
-| 산업통상부/국가기술표준원 국내리콜정보 | `SAFETY_RECALL` | operation endpoint configured with CSV cache-aside | `MOTIE_SAFETY_RECALL_API_KEY`, `SAFETY_RECALL_API_KEY`, or `DATAGO_SERVICE_KEY` | `cache` without key, `live` with key | `API_KEY_NOT_CONFIGURED; CSV cache available` without key | Runtime recall connector. CSV cache is official file-data evidence and must not be displayed as fallback. Use as recall-risk context only. |
+| SafetyKorea/KATS 국내리콜정보 | `SAFETY_RECALL` | official SafetyKorea v2.0 operation endpoint configured with CSV cache-aside | `SAFETY_KOREA_AUTH_KEY`, `MOTIE_SAFETY_RECALL_API_KEY`, `SAFETY_RECALL_API_KEY`, or `DATAGO_SERVICE_KEY` | `cache` without key, `live` with key | `API_KEY_NOT_CONFIGURED; CSV cache available` without key | Runtime recall connector. The key is sent in HTTP header `AuthKey`, not query string. CSV cache is official file-data evidence and must not be displayed as fallback. Use as recall-risk context only. |
+| SafetyKorea KC 인증정보 | `KATS_CERTIFIED_PRODUCT_INFO` | official SafetyKorea v2.0 certification list endpoint configured with CSV-first refresh | `SAFETY_KOREA_AUTH_KEY`, `KATS_CERTIFIED_PRODUCT_INFO_API_KEY`, or `DATAGO_SERVICE_KEY` | `cache` before scheduled refresh, `live` when due and key succeeds | none before `2026-08-01`; then key/config errors are explicit | The key is sent in HTTP header `AuthKey`, not query string. Use as domestic KC certification-product reference only, not certification validity or export readiness proof. |
+| SafetyKorea 국외리콜정보 | `KATS_FOREIGN_RECALL` | official SafetyKorea v2.0 foreign recall list endpoint configured | `SAFETY_KOREA_AUTH_KEY`, `KATS_FOREIGN_RECALL_API_KEY`, or `DATAGO_SERVICE_KEY` | `empty` without key, `live` with key | `API_KEY_NOT_CONFIGURED` without key | The key is sent in HTTP header `AuthKey`, not query string. Use as bounded recall-risk context only, not recall absence or product safety proof. |
 | 한국무역보험공사 바이어 검색 | `NOT_RUNTIME_CONNECTED` | operation endpoint captured from data.go.kr screen | `KSURE_BUYER_SEARCH_API_KEY` or `DATAGO_SERVICE_KEY` | `empty` | `API_KEY_NOT_CONFIGURED` | Uses local codebook for country/industry code reference. Not buyer creditworthiness proof. |
 | KIPRIS Plus | `KIPRIS_FTO` | operation endpoint confirmed | `KIPRIS_PLUS_ACCESSKEY`, `KIPRIS_PLUS_KEY`, or `KIPRIS_API_KEY` | `empty` | `API_KEY_NOT_CONFIGURED` | Confirmed operation: `특허·실용 공개·등록공보 / 전체검색 - getAdvancedSearch`; key parameter `ServiceKey`; params `inventionTitle`, `astrtCont`, `pageNo`, `numOfRows`, `patent`, `utility`. FTO remains preliminary risk-signal search only. |
 | KOMSA MTIS | `NOT_RUNTIME_CONNECTED` | auth status endpoint configured | `MTIS_SERVICE_KEY` or `KOMSA_MTIS_SERVICE_KEY` | `empty` | `API_KEY_NOT_CONFIGURED` | Key/auth status smoke only. Not evidence for export readiness. |

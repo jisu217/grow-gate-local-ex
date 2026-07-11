@@ -23,7 +23,7 @@ import java.util.Objects;
 public class KatsCertifiedProductInfoConnector extends AbstractPublicDataConnector {
 
     private static final String FILE_DATA_NAME = "산업통상부_국가기술표준원_제품안전_인증제품 정보_20220801";
-    private static final String SWAGGER_URL = "https://infuser.odcloud.kr/oas/docs?namespace=15040703/v1";
+    private static final String SWAGGER_URL = "https://www.safetykorea.kr/release/openapi";
     private static final List<String> HEADERS = List.of("인증번호", "인증구분명", "인증상태", "제품명", "모델명", "제조사국가명");
     private final ResourceLoader resourceLoader = new DefaultResourceLoader();
 
@@ -73,7 +73,7 @@ public class KatsCertifiedProductInfoConnector extends AbstractPublicDataConnect
     @Override
     public PublicDataConnectorResult collect(PublicDataRequest request) {
         if (shouldUseApi()) {
-            return getJson(request, endpoint, apiKey, Map.of(
+            return getJsonWithHeaderKey(request, endpoint, apiKey, "AuthKey", Map.of(
                     "page", "1",
                     "perPage", String.valueOf(Math.max(1, apiPerPage)),
                     "returnType", "JSON"

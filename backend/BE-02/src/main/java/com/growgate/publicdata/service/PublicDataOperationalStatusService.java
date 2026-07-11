@@ -101,6 +101,9 @@ public class PublicDataOperationalStatusService {
                         prop("public-data.kats-certified-product-info.csv-resource"),
                         prop("public-data.kats-certified-product-info.url"),
                         prop("public-data.kats-certified-product-info.key")),
+                providerStatus(PublicDataProvider.KATS_FOREIGN_RECALL,
+                        prop("public-data.kats-foreign-recall.url"),
+                        prop("public-data.kats-foreign-recall.key")),
                 providerStatus(PublicDataProvider.KOREA_LAW_STATUTES,
                         prop("public-data.korea-law-statutes.url"),
                         prop("public-data.korea-law-statutes.key")),
@@ -291,6 +294,7 @@ public class PublicDataOperationalStatusService {
             case "KATS_PRODUCT_SAFETY_HAZARD_INFO" -> "katsProductSafetyHazardInfo";
             case "KATS_DOMESTIC_RECALL_REPORT" -> "katsDomesticRecallReport";
             case "KATS_CERTIFIED_PRODUCT_INFO" -> "katsCertifiedProductInfo";
+            case "KATS_FOREIGN_RECALL" -> "katsForeignRecall";
             case "KOREA_LAW_STATUTES" -> "koreaLawStatutes";
             case "CONSUMER_RECALL_SANITATION" -> "consumerRecallSanitation";
             case "CONSUMER_RECALL_CHEMICAL" -> "consumerRecallChemical";

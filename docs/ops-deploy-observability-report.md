@@ -35,7 +35,7 @@ As of 2026-07-06, production runs on an 8GB Lightsail instance created from a ma
 | Current bundle | `large_3_0`, 8GB RAM, 2 vCPU, 160GB SSD |
 | Rollback instance | `growgate-fresh-20260703-2134` |
 | Snapshot used | `growgate-pre-8gb-20260706-1611`, state `available` |
-| Deployed commit | `40492eb30e04113801fc353d2b74f571201d1663` |
+| Deployed commit | `520676a1f15c07aba291305f65f83bb62b7a0d58` |
 
 The 2GB instance is intentionally preserved for rollback. Do not delete it or the snapshot without explicit approval. The detailed migration record and rollback command are in [docs/lightsail-8gb-upsize-runbook-2026-07-06.md](lightsail-8gb-upsize-runbook-2026-07-06.md).
 
@@ -150,6 +150,41 @@ Executed against production after 8GB Static IP cutover:
 - `BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/smoke-prod.sh`: pass
 - Smoke output: `stageCards.s04-s07=present`, `publicData.successCount=31`, `fallbackCount=0`, `liveRatio=0.8611`
 - Server services after cutover: `nginx`, `growgate-backend`, and `mysql` active; backend local health `200`
+
+Executed against production after the 2026-07-11 artifact deployment:
+
+- Deployed commit marker: `520676a1f15c07aba291305f65f83bb62b7a0d58`
+- Previous deployed marker: `75c8968c`
+- Backend backup: `/opt/growgate-releases/20260711-110641/backend/grow-gate-previous-75c8968c.jar`
+- Frontend backup: `/opt/growgate-releases/20260711-110641/frontend/growgate-www-previous-75c8968c.tgz`
+- `curl https://growgate.54.180.56.24.sslip.io/health`: `200`
+- `curl https://growgate.54.180.56.24.sslip.io/`: `200`
+- `curl https://growgate.54.180.56.24.sslip.io/public-data/daily-refresh`: `200`
+- `curl https://growgate.54.180.56.24.sslip.io/api/diagnosis` without auth: `401`
+- `BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/smoke-prod.sh`: pass
+- Smoke output: `stageCards.s04-s07=present`, `publicData.successCount=27`, `fallbackCount=1`, `liveRatio=0.7941`
+- Smoke evidence: `diagnosisId=9a387892-f61b-4c27-b12c-a1f3b5439be3`, `collectionRunId=fe39445a-2c03-41bd-bd53-bae95ee89232`, `liveCount=0`, `cacheCount=27`, `fallbackCount=1`, `operationEndpointLiveCount=14`, `apiKeyConfiguredLiveCount=26`
+- Server services after deployment: `nginx` and `growgate-backend` active; backend local health `200`
+- Temporary SSH allowlist CIDR `211.217.156.140/32` was removed after verification.
+
+Executed against production after SafetyKorea Open API v2.0 AuthKey deployment on 2026-07-11:
+
+- Deployed marker: `520676a1f15c07aba291305f65f83bb62b7a0d58+local-safetykorea-authkey-20260711030227`
+- Backend backup: `/opt/growgate-releases/20260711-030227/backend/grow-gate-previous.jar`
+- Secret handling: `SAFETY_KOREA_AUTH_KEY` stored only in `/etc/growgate/backend.env`; health output masks it as `c982****f8b5`; recent `growgate-backend` journal check found no raw key string.
+- SafetyKorea operation endpoints configured:
+  - `/openapi/api/recall/recallList.json`
+  - `/openapi/api/cert/certificationList.json`
+  - `/openapi/api/recall/fRecallList.json`
+- `./gradlew test`: pass, 168 tests.
+- `./gradlew bootJar`: pass.
+- `curl https://growgate.54.180.56.24.sslip.io/health`: `200`
+- `curl https://growgate.54.180.56.24.sslip.io/public-data/daily-refresh`: `200`
+- `curl https://growgate.54.180.56.24.sslip.io/api/public-data/health`: `200`
+- `BASE_URL=https://growgate.54.180.56.24.sslip.io ./scripts/smoke-prod.sh`: pass.
+- Smoke evidence: `diagnosisId=92813bb8-7308-4d68-9019-0520de01cfcd`, `collectionRunId=f6442b28-f9c3-43d4-a845-afa3c9b95b00`, `liveCount=0`, `cacheCount=27`, `fallbackCount=1`, `operationEndpointLiveCount=14`, `apiKeyConfiguredLiveCount=26`.
+- `KATS_FOREIGN_RECALL` live operation call returned HTTP `200` with `sourceType=empty`, `rawCount=0`, `normalizedCount=0`, `zeroReason=EMPTY_LIVE_RESPONSE`. This proves endpoint/auth path reached the operation and returned no rows for the smoke request; it must not be described as foreign recall absence, safety clearance, certification proof, or final Gate evidence.
+- Temporary SSH allowlist CIDR `211.217.156.140/32` was removed after verification.
 
 Blocked in this environment:
 
